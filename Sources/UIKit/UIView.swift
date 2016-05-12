@@ -38,6 +38,8 @@ public class UIView: View {
         try! context.fill()
         
         self.draw(bounds)
+        
+        UIGraphicsPopContext()
     }
     
     public func draw(_ rect: Rect) { /* implemented by subclasses */ }
