@@ -22,6 +22,8 @@
 		6EC46E381CE476D2002A1F52 /* Cairo.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 6EC46E311CE476B6002A1F52 /* Cairo.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		6EC46E391CE476D2002A1F52 /* Silica.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 6EC46E331CE476B6002A1F52 /* Silica.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		6EC46E3A1CE476D2002A1F52 /* SwiftCoreGraphics.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 6EC46E351CE476B6002A1F52 /* SwiftCoreGraphics.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		6EC46E3C1CE47915002A1F52 /* TestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC46E3B1CE47915002A1F52 /* TestView.swift */; };
+		6EC46E3E1CE47A44002A1F52 /* TestStyleKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC46E3D1CE47A44002A1F52 /* TestStyleKit.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -84,6 +86,8 @@
 		6EC46E311CE476B6002A1F52 /* Cairo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Cairo.framework; sourceTree = "<group>"; };
 		6EC46E331CE476B6002A1F52 /* Silica.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Silica.framework; sourceTree = "<group>"; };
 		6EC46E351CE476B6002A1F52 /* SwiftCoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SwiftCoreGraphics.framework; sourceTree = "<group>"; };
+		6EC46E3B1CE47915002A1F52 /* TestView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestView.swift; sourceTree = "<group>"; };
+		6EC46E3D1CE47A44002A1F52 /* TestStyleKit.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestStyleKit.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -148,6 +152,8 @@
 			isa = PBXGroup;
 			children = (
 				6E169A781CE436E800C60B0B /* CacaoTests.swift */,
+				6EC46E3B1CE47915002A1F52 /* TestView.swift */,
+				6EC46E3D1CE47A44002A1F52 /* TestStyleKit.swift */,
 				6E169A7A1CE436E800C60B0B /* Info.plist */,
 			);
 			path = CacaoTests;
@@ -369,6 +375,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6EC46E3E1CE47A44002A1F52 /* TestStyleKit.swift in Sources */,
+				6EC46E3C1CE47915002A1F52 /* TestView.swift in Sources */,
 				6E169A791CE436E800C60B0B /* CacaoTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
