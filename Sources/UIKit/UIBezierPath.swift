@@ -27,12 +27,97 @@ public final class UIBezierPath {
     
     // MARK: - Properties
     
+    public var CGPath: SwiftCoreGraphics.CGPath
     
+    public var lineWidth: SwiftCoreGraphics.CGFloat = 1.0
+    
+    public var lineCapStyle: SwiftCoreGraphics.CGLineCap = .Butt
+    
+    public var lineJoinStyle: SwiftCoreGraphics.CGLineJoin = .Miter
+    
+    public var miterLimit: SwiftCoreGraphics.CGFloat = 10
+    
+    public var flatness: SwiftCoreGraphics.CGFloat = 0.6
+    
+    public var usesEvenOddFillRule: Bool = false
+    
+    public var lineDash: (phase: Double, lengths: [Double]) = (0.0, [])
     
     // MARK: - Initialization
     
+    public init(CGPath path: SwiftCoreGraphics.CGPath) {
+        
+        self.CGPath = path
+    }
+    
     public init(rect: SwiftCoreGraphics.CGRect) {
         
+        var path = Path()
         
+        path.add(rect: rect)
+        
+        self.CGPath = path
+    }
+    
+    public init(ovalInRect rect: SwiftCoreGraphics.CGRect) {
+        
+        var path = Path()
+        
+        path.add(ellipseInRect: rect)
+        
+        self.CGPath = path
+    }
+    
+    // MARK: - Accessors
+    
+    public var currentPoint: SwiftCoreGraphics.CGPoint {
+        
+        fatalError("Not implemented")
+    }
+    
+    public var isEmpty: Bool {
+        
+        return CGPath.elements.isEmpty
+    }
+    
+    public var bounds: SwiftCoreGraphics.CGRect {
+        
+        fatalError("Not implemented")
+    }
+    
+    // MARK: - Methods
+    
+    // MARK: Drawing
+    
+    public func fill() {
+        
+        guard let context = UIGraphicsGetCurrentContext()
+            else { return }
+        
+        try! context.save()
+        
+        setContextPath()
+        
+        try! context.fill(evenOdd: usesEvenOddFillRule)
+        
+        context.beginPath()
+        try! context.restore()
+    }
+    
+    // MARK: - Private Methods
+    
+    private func setContextPath() {
+        
+        guard let context = UIGraphicsGetCurrentContext()
+            else { return }
+        
+        context.beginPath()
+        context.add(path: CGPath)
+        context.lineWidth = lineWidth
+        context.lineCap = lineCapStyle
+        context.lineJoin = lineJoinStyle
+        context.miterLimit = miterLimit
+        context.tolerance = flatness
+        context.lineDash = lineDash
     }
 }

@@ -19,6 +19,9 @@
 		6EC46E241CE44AF4002A1F52 /* UIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC46E231CE44AF4002A1F52 /* UIView.swift */; };
 		6EC46E2A1CE45170002A1F52 /* UIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC46E291CE45170002A1F52 /* UIColor.swift */; };
 		6EC46E2B1CE45D05002A1F52 /* SwiftUIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6EC46E151CE4474C002A1F52 /* SwiftUIKit.framework */; };
+		6EC46E381CE476D2002A1F52 /* Cairo.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 6EC46E311CE476B6002A1F52 /* Cairo.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		6EC46E391CE476D2002A1F52 /* Silica.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 6EC46E331CE476B6002A1F52 /* Silica.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		6EC46E3A1CE476D2002A1F52 /* SwiftCoreGraphics.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 6EC46E351CE476B6002A1F52 /* SwiftCoreGraphics.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +48,22 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		6EC46E371CE476C6002A1F52 /* Copy Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				6EC46E381CE476D2002A1F52 /* Cairo.framework in Copy Frameworks */,
+				6EC46E391CE476D2002A1F52 /* Silica.framework in Copy Frameworks */,
+				6EC46E3A1CE476D2002A1F52 /* SwiftCoreGraphics.framework in Copy Frameworks */,
+			);
+			name = "Copy Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		6E169A691CE436E800C60B0B /* Cacao.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Cacao.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6E169A6C1CE436E800C60B0B /* Cacao.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Cacao.h; sourceTree = "<group>"; };
@@ -62,6 +81,9 @@
 		6EC46E211CE44950002A1F52 /* UIApplication.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIApplication.swift; sourceTree = "<group>"; };
 		6EC46E231CE44AF4002A1F52 /* UIView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIView.swift; sourceTree = "<group>"; };
 		6EC46E291CE45170002A1F52 /* UIColor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIColor.swift; sourceTree = "<group>"; };
+		6EC46E311CE476B6002A1F52 /* Cairo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Cairo.framework; sourceTree = "<group>"; };
+		6EC46E331CE476B6002A1F52 /* Silica.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Silica.framework; sourceTree = "<group>"; };
+		6EC46E351CE476B6002A1F52 /* SwiftCoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SwiftCoreGraphics.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +116,7 @@
 		6E169A5F1CE436E800C60B0B = {
 			isa = PBXGroup;
 			children = (
+				6EC46E2F1CE476A4002A1F52 /* Dependencies */,
 				6E169A831CE4395800C60B0B /* Sources */,
 				6E169A6B1CE436E800C60B0B /* Cacao */,
 				6E169A771CE436E800C60B0B /* CacaoTests */,
@@ -170,6 +193,25 @@
 			path = SwiftUIKit;
 			sourceTree = "<group>";
 		};
+		6EC46E2F1CE476A4002A1F52 /* Dependencies */ = {
+			isa = PBXGroup;
+			children = (
+				6EC46E301CE476B6002A1F52 /* Mac */,
+			);
+			name = Dependencies;
+			sourceTree = "<group>";
+		};
+		6EC46E301CE476B6002A1F52 /* Mac */ = {
+			isa = PBXGroup;
+			children = (
+				6EC46E311CE476B6002A1F52 /* Cairo.framework */,
+				6EC46E331CE476B6002A1F52 /* Silica.framework */,
+				6EC46E351CE476B6002A1F52 /* SwiftCoreGraphics.framework */,
+			);
+			name = Mac;
+			path = ../Carthage/Build/Mac;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -217,6 +259,7 @@
 				6E169A6F1CE436E800C60B0B /* Sources */,
 				6E169A701CE436E800C60B0B /* Frameworks */,
 				6E169A711CE436E800C60B0B /* Resources */,
+				6EC46E371CE476C6002A1F52 /* Copy Frameworks */,
 			);
 			buildRules = (
 			);

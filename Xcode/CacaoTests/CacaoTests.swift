@@ -7,6 +7,7 @@
 //
 
 import XCTest
+import Cairo
 import Silica
 import Cacao
 import SwiftCoreGraphics
@@ -15,6 +16,8 @@ import SwiftUIKit
 final class CacaoTests: XCTestCase {
     
     func testExample() {
+        
+        // define UIView subclass
         
         final class TestView: UIView {
             
@@ -40,10 +43,40 @@ final class CacaoTests: XCTestCase {
                 color2.setFill()
                 ovalPath.fill()
             }
-
         }
         
+        // create UIView subclass
         
+        let frame = Rect(x: 0, y: 0, width: 240, height: 120)
+        
+        let view = TestView(frame: frame)
+        
+        let surface = Surface(format: ImageFormat.ARGB32, width: Int(frame.width), height: Int(frame.height))
+        
+        let context = try! Silica.Context(surface: surface, size: frame.size)
+        
+        view.draw(context: context)
+        
+        // export image
+        
+        let filename = outputDirectory + "example.png"
+        
+        surface.writePNG(to: filename)
+        
+        print("Wrote to \(filename)")
+    }
+}
+
+let outputDirectory: String = {
+    
+    let outputDirectory = NSTemporaryDirectory() + "CacaoTests" + "/"
+    
+    var isDirectory: ObjCBool = false
+    
+    if NSFileManager.default().fileExists(atPath: outputDirectory, isDirectory: &isDirectory) == false {
+        
+        try! NSFileManager.default().createDirectory(atPath: outputDirectory, withIntermediateDirectories: false)
     }
     
-}
+    return outputDirectory
+}()
