@@ -145,7 +145,7 @@ public final class UIBezierPath {
     
     public func addArcWithCenter(_ center: Point, radius: Double, startAngle: Double, endAngle: Double, clockwise: Bool) {
         
-        
+        fatalError("Not implemented")
     }
     
     // MARK: - Private Methods

@@ -27,7 +27,7 @@ final class CacaoTests: XCTestCase {
         
         // export image
         
-        let filename = outputDirectory + "simpleShapes.png"
+        let filename = outputDirectory + "simpleShapes.pdf"
         
         view.export(PNG: filename)
     }
@@ -44,7 +44,7 @@ final class CacaoTests: XCTestCase {
         
         // export image
         
-        let filename = outputDirectory + "advancedShapes.png"
+        let filename = outputDirectory + "advancedShapes.pdf"
         
         view.export(PNG: filename)
     }

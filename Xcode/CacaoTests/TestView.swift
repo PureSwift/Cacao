@@ -23,13 +23,11 @@ final class TestView: UIView {
     
     func export(PNG filename: String) {
         
-        let surface = Surface(format: ImageFormat.ARGB32, width: Int(frame.width), height: Int(frame.height))
+        let surface = Surface(pdf: filename, width: frame.width, height: frame.height)
         
         let context = try! Silica.Context(surface: surface, size: frame.size)
         
         draw(context: context)
-        
-        surface.writePNG(to: filename)
         
         print("Wrote to \(filename)")
     }
