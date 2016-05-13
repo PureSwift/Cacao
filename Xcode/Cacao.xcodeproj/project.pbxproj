@@ -638,6 +638,7 @@
 				6EC46E1C1CE4474C002A1F52 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

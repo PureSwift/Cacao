@@ -27,17 +27,17 @@ public final class UIBezierPath {
     
     // MARK: - Properties
     
-    public var CGPath: SwiftCoreGraphics.CGPath
+    public var CGPath: Path
     
-    public var lineWidth: SwiftCoreGraphics.CGFloat = 1.0
+    public var lineWidth: Double = 1.0
     
-    public var lineCapStyle: SwiftCoreGraphics.CGLineCap = .Butt
+    public var lineCapStyle: LineCap = .Butt
     
-    public var lineJoinStyle: SwiftCoreGraphics.CGLineJoin = .Miter
+    public var lineJoinStyle: LineJoin = .Miter
     
-    public var miterLimit: SwiftCoreGraphics.CGFloat = 10
+    public var miterLimit: Double = 10
     
-    public var flatness: SwiftCoreGraphics.CGFloat = 0.6
+    public var flatness: Double = 0.6
     
     public var usesEvenOddFillRule: Bool = false
     
@@ -45,12 +45,12 @@ public final class UIBezierPath {
     
     // MARK: - Initialization
     
-    public init(CGPath path: SwiftCoreGraphics.CGPath) {
+    public init(CGPath path: Path = Path()) {
         
         self.CGPath = path
     }
     
-    public init(rect: SwiftCoreGraphics.CGRect) {
+    public init(rect: Rect) {
         
         var path = Path()
         
@@ -59,7 +59,7 @@ public final class UIBezierPath {
         self.CGPath = path
     }
     
-    public init(ovalInRect rect: SwiftCoreGraphics.CGRect) {
+    public init(ovalInRect rect: Rect) {
         
         var path = Path()
         
@@ -70,7 +70,7 @@ public final class UIBezierPath {
     
     // MARK: - Accessors
     
-    public var currentPoint: SwiftCoreGraphics.CGPoint {
+    public var currentPoint: Point {
         
         fatalError("Not implemented")
     }
@@ -80,7 +80,7 @@ public final class UIBezierPath {
         return CGPath.elements.isEmpty
     }
     
-    public var bounds: SwiftCoreGraphics.CGRect {
+    public var bounds: Rect {
         
         fatalError("Not implemented")
     }
@@ -102,6 +102,38 @@ public final class UIBezierPath {
         
         context.beginPath()
         try! context.restore()
+    }
+    
+    // MARK: - Constructing a Path
+    
+    public func moveToPoint(_ point: Point) {
+        
+        CGPath.elements.append(.MoveToPoint(point))
+    }
+    
+    public func addLineToPoint(_ point: Point) {
+        
+        CGPath.elements.append(.AddLineToPoint(point))
+    }
+    
+    public func addCurveToPoint(_ endPoint: Point, controlPoint1: Point, controlPoint2: Point) {
+        
+        CGPath.elements.append(.AddCurveToPoint(controlPoint1, controlPoint2, endPoint))
+    }
+    
+    public func addQuadCurveToPoint(_ endPoint: Point, controlPoint: Point) {
+        
+        CGPath.elements.append(.AddQuadCurveToPoint(controlPoint, endPoint))
+    }
+    
+    public func closePath() {
+        
+        CGPath.elements.append(.CloseSubpath)
+    }
+    
+    public func addArcWithCenter(_ center: Point, radius: Double, startAngle: Double, endAngle: Double, clockwise: Bool) {
+        
+        
     }
     
     // MARK: - Private Methods
