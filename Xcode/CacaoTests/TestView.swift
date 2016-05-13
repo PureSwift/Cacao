@@ -21,7 +21,7 @@ final class TestView: UIView {
         drawCanvas(rect)
     }
     
-    func export(PNG filename: String) {
+    func export(PDF filename: String) {
         
         let surface = Surface(pdf: filename, width: frame.width, height: frame.height)
         

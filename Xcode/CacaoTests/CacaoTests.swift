@@ -29,7 +29,7 @@ final class CacaoTests: XCTestCase {
         
         let filename = outputDirectory + "simpleShapes.pdf"
         
-        view.export(PNG: filename)
+        view.export(PDF: filename)
     }
     
     func testCanvas2() {
@@ -46,7 +46,7 @@ final class CacaoTests: XCTestCase {
         
         let filename = outputDirectory + "advancedShapes.pdf"
         
-        view.export(PNG: filename)
+        view.export(PDF: filename)
     }
 }
 
