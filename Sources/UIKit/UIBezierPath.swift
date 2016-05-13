@@ -104,6 +104,18 @@ public final class UIBezierPath {
         try! context.restore()
     }
     
+    // MARK: Clipping Paths
+    
+    public func addClip() {
+        
+        guard let context = UIGraphicsGetCurrentContext()
+            else { return }
+        
+        setContextPath()
+        
+        context.clip(evenOdd: usesEvenOddFillRule)
+    }
+    
     // MARK: - Constructing a Path
     
     public func moveToPoint(_ point: Point) {

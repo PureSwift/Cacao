@@ -40,11 +40,11 @@ final class CacaoTests: XCTestCase {
         
         let view = TestView(frame: frame)
         
-        view.drawCanvas = TestStyleKit.drawCanvas2
+        view.drawCanvas = TestStyleKit.drawAdvancedShapes
         
         // export image
         
-        let filename = outputDirectory + "canvas2.png"
+        let filename = outputDirectory + "advancedShapes.png"
         
         view.export(PNG: filename)
     }
