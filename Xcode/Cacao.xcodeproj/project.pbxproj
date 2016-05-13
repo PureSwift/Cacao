@@ -11,6 +11,7 @@
 		6E169A741CE436E800C60B0B /* Cacao.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E169A691CE436E800C60B0B /* Cacao.framework */; };
 		6E169A791CE436E800C60B0B /* CacaoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E169A781CE436E800C60B0B /* CacaoTests.swift */; };
 		6E169A861CE4397700C60B0B /* View.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E169A851CE4397700C60B0B /* View.swift */; };
+		6E1FB4681CE5C06B00F365EF /* Typealias.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E1FB4671CE5C06B00F365EF /* Typealias.swift */; };
 		6EC46E0C1CE4461C002A1F52 /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC46E0B1CE4461C002A1F52 /* Window.swift */; };
 		6EC46E181CE4474C002A1F52 /* SwiftUIKit.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EC46E171CE4474C002A1F52 /* SwiftUIKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6EC46E1D1CE44759002A1F52 /* UIBezierPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC46E0E1CE4471C002A1F52 /* UIBezierPath.swift */; };
@@ -74,6 +75,7 @@
 		6E169A781CE436E800C60B0B /* CacaoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacaoTests.swift; sourceTree = "<group>"; };
 		6E169A7A1CE436E800C60B0B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6E169A851CE4397700C60B0B /* View.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = View.swift; sourceTree = "<group>"; };
+		6E1FB4671CE5C06B00F365EF /* Typealias.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Typealias.swift; sourceTree = "<group>"; };
 		6EC46E0B1CE4461C002A1F52 /* Window.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
 		6EC46E0E1CE4471C002A1F52 /* UIBezierPath.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIBezierPath.swift; sourceTree = "<group>"; };
 		6EC46E151CE4474C002A1F52 /* SwiftUIKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftUIKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -151,6 +153,7 @@
 		6E169A771CE436E800C60B0B /* CacaoTests */ = {
 			isa = PBXGroup;
 			children = (
+				6E1FB4671CE5C06B00F365EF /* Typealias.swift */,
 				6E169A781CE436E800C60B0B /* CacaoTests.swift */,
 				6EC46E3B1CE47915002A1F52 /* TestView.swift */,
 				6EC46E3D1CE47A44002A1F52 /* TestStyleKit.swift */,
@@ -377,6 +380,7 @@
 			files = (
 				6EC46E3E1CE47A44002A1F52 /* TestStyleKit.swift in Sources */,
 				6EC46E3C1CE47915002A1F52 /* TestView.swift in Sources */,
+				6E1FB4681CE5C06B00F365EF /* Typealias.swift in Sources */,
 				6E169A791CE436E800C60B0B /* CacaoTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

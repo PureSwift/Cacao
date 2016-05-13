@@ -15,7 +15,7 @@ import SwiftUIKit
 
 final class CacaoTests: XCTestCase {
     
-    func testCanvas1() {
+    func testSimpleShapes() {
         
         // create UIView subclass
         
@@ -23,15 +23,13 @@ final class CacaoTests: XCTestCase {
         
         let view = TestView(frame: frame)
         
-        view.drawCanvas = TestStyleKit.drawCanvas1
+        view.drawCanvas = TestStyleKit.drawSimpleShapes
         
         // export image
         
-        let filename = outputDirectory + "canvas1.png"
+        let filename = outputDirectory + "simpleShapes.png"
         
         view.export(PNG: filename)
-        
-        // validate
     }
     
     func testCanvas2() {
@@ -47,23 +45,6 @@ final class CacaoTests: XCTestCase {
         // export image
         
         let filename = outputDirectory + "canvas2.png"
-        
-        view.export(PNG: filename)
-    }
-    
-    func testCanvas3() {
-        
-        // create UIView subclass
-        
-        let frame = Rect(x: 0, y: 0, width: 240, height: 120)
-        
-        let view = TestView(frame: frame)
-        
-        view.drawCanvas = TestStyleKit.drawCanvas3
-        
-        // export image
-        
-        let filename = outputDirectory + "canvas3.png"
         
         view.export(PNG: filename)
     }
