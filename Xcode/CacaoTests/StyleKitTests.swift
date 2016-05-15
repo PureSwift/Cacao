@@ -13,7 +13,7 @@ import Cacao
 import SwiftCoreGraphics
 import SwiftUIKit
 
-final class CacaoTests: XCTestCase {
+final class StyleKitTests: XCTestCase {
     
     func testSimpleShapes() {
         
@@ -32,7 +32,7 @@ final class CacaoTests: XCTestCase {
         view.export(PDF: filename)
     }
     
-    func testCanvas2() {
+    func testAdvancedShapes() {
         
         // create UIView subclass
         

@@ -9,9 +9,15 @@
 /* Begin PBXBuildFile section */
 		6E169A6D1CE436E800C60B0B /* Cacao.h in Headers */ = {isa = PBXBuildFile; fileRef = 6E169A6C1CE436E800C60B0B /* Cacao.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6E169A741CE436E800C60B0B /* Cacao.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E169A691CE436E800C60B0B /* Cacao.framework */; };
-		6E169A791CE436E800C60B0B /* CacaoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E169A781CE436E800C60B0B /* CacaoTests.swift */; };
+		6E169A791CE436E800C60B0B /* StyleKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E169A781CE436E800C60B0B /* StyleKitTests.swift */; };
 		6E169A861CE4397700C60B0B /* View.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E169A851CE4397700C60B0B /* View.swift */; };
 		6E1FB4681CE5C06B00F365EF /* Typealias.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E1FB4671CE5C06B00F365EF /* Typealias.swift */; };
+		6E71E4BB1CE7EF4200892294 /* Screen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E71E4BA1CE7EF4200892294 /* Screen.swift */; };
+		6E71E4BE1CE7F14300892294 /* UIScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E71E4BC1CE7F13600892294 /* UIScreen.swift */; };
+		6E71E4C01CE80AB000892294 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E71E4BF1CE80AB000892294 /* ViewController.swift */; };
+		6E71E4C21CE80F9D00892294 /* DarwinApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E71E4C11CE80F9D00892294 /* DarwinApplication.swift */; };
+		6E71E4CA1CE8119800892294 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E71E4C91CE8119800892294 /* main.swift */; };
+		6E71E4CF1CE811F300892294 /* ApplicationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E71E4CE1CE811F300892294 /* ApplicationDelegate.swift */; };
 		6EC46E0C1CE4461C002A1F52 /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC46E0B1CE4461C002A1F52 /* Window.swift */; };
 		6EC46E181CE4474C002A1F52 /* SwiftUIKit.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EC46E171CE4474C002A1F52 /* SwiftUIKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6EC46E1D1CE44759002A1F52 /* UIBezierPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC46E0E1CE4471C002A1F52 /* UIBezierPath.swift */; };
@@ -52,6 +58,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		6E71E4C51CE8119800892294 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		6EC46E371CE476C6002A1F52 /* Copy Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -72,10 +87,17 @@
 		6E169A6C1CE436E800C60B0B /* Cacao.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Cacao.h; sourceTree = "<group>"; };
 		6E169A6E1CE436E800C60B0B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6E169A731CE436E800C60B0B /* CacaoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CacaoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		6E169A781CE436E800C60B0B /* CacaoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacaoTests.swift; sourceTree = "<group>"; };
+		6E169A781CE436E800C60B0B /* StyleKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StyleKitTests.swift; sourceTree = "<group>"; };
 		6E169A7A1CE436E800C60B0B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6E169A851CE4397700C60B0B /* View.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = View.swift; sourceTree = "<group>"; };
 		6E1FB4671CE5C06B00F365EF /* Typealias.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Typealias.swift; sourceTree = "<group>"; };
+		6E71E4BA1CE7EF4200892294 /* Screen.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Screen.swift; sourceTree = "<group>"; };
+		6E71E4BC1CE7F13600892294 /* UIScreen.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIScreen.swift; sourceTree = "<group>"; };
+		6E71E4BF1CE80AB000892294 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		6E71E4C11CE80F9D00892294 /* DarwinApplication.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DarwinApplication.swift; sourceTree = "<group>"; };
+		6E71E4C71CE8119800892294 /* MacApp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MacApp; sourceTree = BUILT_PRODUCTS_DIR; };
+		6E71E4C91CE8119800892294 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		6E71E4CE1CE811F300892294 /* ApplicationDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationDelegate.swift; sourceTree = "<group>"; };
 		6EC46E0B1CE4461C002A1F52 /* Window.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
 		6EC46E0E1CE4471C002A1F52 /* UIBezierPath.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIBezierPath.swift; sourceTree = "<group>"; };
 		6EC46E151CE4474C002A1F52 /* SwiftUIKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftUIKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -109,6 +131,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		6E71E4C41CE8119800892294 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6EC46E111CE4474C002A1F52 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -127,6 +156,7 @@
 				6E169A6B1CE436E800C60B0B /* Cacao */,
 				6E169A771CE436E800C60B0B /* CacaoTests */,
 				6EC46E161CE4474C002A1F52 /* SwiftUIKit */,
+				6E71E4C81CE8119800892294 /* MacApp */,
 				6E169A6A1CE436E800C60B0B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -137,6 +167,7 @@
 				6E169A691CE436E800C60B0B /* Cacao.framework */,
 				6E169A731CE436E800C60B0B /* CacaoTests.xctest */,
 				6EC46E151CE4474C002A1F52 /* SwiftUIKit.framework */,
+				6E71E4C71CE8119800892294 /* MacApp */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -154,7 +185,7 @@
 			isa = PBXGroup;
 			children = (
 				6E1FB4671CE5C06B00F365EF /* Typealias.swift */,
-				6E169A781CE436E800C60B0B /* CacaoTests.swift */,
+				6E169A781CE436E800C60B0B /* StyleKitTests.swift */,
 				6EC46E3B1CE47915002A1F52 /* TestView.swift */,
 				6EC46E3D1CE47A44002A1F52 /* TestStyleKit.swift */,
 				6E169A7A1CE436E800C60B0B /* Info.plist */,
@@ -175,10 +206,22 @@
 		6E169A841CE4395800C60B0B /* Cacao */ = {
 			isa = PBXGroup;
 			children = (
-				6EC46E0B1CE4461C002A1F52 /* Window.swift */,
+				6E71E4C11CE80F9D00892294 /* DarwinApplication.swift */,
+				6E71E4CE1CE811F300892294 /* ApplicationDelegate.swift */,
+				6E71E4BA1CE7EF4200892294 /* Screen.swift */,
 				6E169A851CE4397700C60B0B /* View.swift */,
+				6EC46E0B1CE4461C002A1F52 /* Window.swift */,
+				6E71E4BF1CE80AB000892294 /* ViewController.swift */,
 			);
 			path = Cacao;
+			sourceTree = "<group>";
+		};
+		6E71E4C81CE8119800892294 /* MacApp */ = {
+			isa = PBXGroup;
+			children = (
+				6E71E4C91CE8119800892294 /* main.swift */,
+			);
+			path = MacApp;
 			sourceTree = "<group>";
 		};
 		6EC46E0D1CE446E5002A1F52 /* UIKit */ = {
@@ -189,6 +232,7 @@
 				6EC46E0E1CE4471C002A1F52 /* UIBezierPath.swift */,
 				6EC46E231CE44AF4002A1F52 /* UIView.swift */,
 				6EC46E291CE45170002A1F52 /* UIColor.swift */,
+				6E71E4BC1CE7F13600892294 /* UIScreen.swift */,
 			);
 			path = UIKit;
 			sourceTree = "<group>";
@@ -281,6 +325,23 @@
 			productReference = 6E169A731CE436E800C60B0B /* CacaoTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		6E71E4C61CE8119800892294 /* MacApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6E71E4CB1CE8119800892294 /* Build configuration list for PBXNativeTarget "MacApp" */;
+			buildPhases = (
+				6E71E4C31CE8119800892294 /* Sources */,
+				6E71E4C41CE8119800892294 /* Frameworks */,
+				6E71E4C51CE8119800892294 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MacApp;
+			productName = MacApp;
+			productReference = 6E71E4C71CE8119800892294 /* MacApp */;
+			productType = "com.apple.product-type.tool";
+		};
 		6EC46E141CE4474C002A1F52 /* SwiftUIKit */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 6EC46E1A1CE4474C002A1F52 /* Build configuration list for PBXNativeTarget "SwiftUIKit" */;
@@ -316,6 +377,9 @@
 					6E169A721CE436E800C60B0B = {
 						CreatedOnToolsVersion = 7.3.1;
 					};
+					6E71E4C61CE8119800892294 = {
+						CreatedOnToolsVersion = 7.3.1;
+					};
 					6EC46E141CE4474C002A1F52 = {
 						CreatedOnToolsVersion = 7.3.1;
 					};
@@ -336,6 +400,7 @@
 				6E169A681CE436E800C60B0B /* Cacao */,
 				6EC46E141CE4474C002A1F52 /* SwiftUIKit */,
 				6E169A721CE436E800C60B0B /* CacaoTests */,
+				6E71E4C61CE8119800892294 /* MacApp */,
 			);
 		};
 /* End PBXProject section */
@@ -371,6 +436,10 @@
 			files = (
 				6E169A861CE4397700C60B0B /* View.swift in Sources */,
 				6EC46E0C1CE4461C002A1F52 /* Window.swift in Sources */,
+				6E71E4C21CE80F9D00892294 /* DarwinApplication.swift in Sources */,
+				6E71E4CF1CE811F300892294 /* ApplicationDelegate.swift in Sources */,
+				6E71E4C01CE80AB000892294 /* ViewController.swift in Sources */,
+				6E71E4BB1CE7EF4200892294 /* Screen.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -381,7 +450,15 @@
 				6EC46E3E1CE47A44002A1F52 /* TestStyleKit.swift in Sources */,
 				6EC46E3C1CE47915002A1F52 /* TestView.swift in Sources */,
 				6E1FB4681CE5C06B00F365EF /* Typealias.swift in Sources */,
-				6E169A791CE436E800C60B0B /* CacaoTests.swift in Sources */,
+				6E169A791CE436E800C60B0B /* StyleKitTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6E71E4C31CE8119800892294 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6E71E4CA1CE8119800892294 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -390,6 +467,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6EC46E241CE44AF4002A1F52 /* UIView.swift in Sources */,
+				6E71E4BE1CE7F14300892294 /* UIScreen.swift in Sources */,
 				6EC46E221CE44950002A1F52 /* UIApplication.swift in Sources */,
 				6EC46E201CE4480C002A1F52 /* UIGraphics.swift in Sources */,
 				6EC46E1D1CE44759002A1F52 /* UIBezierPath.swift in Sources */,
@@ -569,6 +647,20 @@
 			};
 			name = Release;
 		};
+		6E71E4CC1CE8119800892294 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		6E71E4CD1CE8119800892294 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		6EC46E1B1CE4474C002A1F52 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -634,6 +726,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		6E71E4CB1CE8119800892294 /* Build configuration list for PBXNativeTarget "MacApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6E71E4CC1CE8119800892294 /* Debug */,
+				6E71E4CD1CE8119800892294 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 		6EC46E1A1CE4474C002A1F52 /* Build configuration list for PBXNativeTarget "SwiftUIKit" */ = {
 			isa = XCConfigurationList;

@@ -10,17 +10,19 @@ import SwiftCoreGraphics
 import Silica
 import Cacao
 
-public class UIView: View {
+public class UIView: DrawableView {
     
     // MARK: - Properties
     
-    public var frame: SwiftCoreGraphics.CGRect
+    public var frame: Rect
     
     public var backgroundColor: UIColor = UIColor(cgColor: Color.white)
     
+    public var subviews: [View] = []
+    
     // MARK: - Initialization
     
-    public init(frame: SwiftCoreGraphics.CGRect = CGRect()) {
+    public init(frame: Rect = Rect()) {
         
         self.frame = frame
     }

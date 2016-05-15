@@ -7,9 +7,24 @@
 //
 
 import Silica
-import Cairo
 
 public final class Window {
     
+    // MARK: - Properties
     
+    public var frame: Rect
+    
+    public var rootViewController: ViewController
+    
+    // MARK: - Initialization
+    
+    public init(frame: Rect, rootViewController: ViewController) {
+        
+        self.frame = frame
+        self.rootViewController = rootViewController
+    }
+    
+    // MARK: - Methods
+    
+    func draw(context: Silica.Context) { }
 }

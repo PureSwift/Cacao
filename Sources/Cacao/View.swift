@@ -7,12 +7,16 @@
 //
 
 import Silica
-import Cairo
 
 public protocol View {
     
     var frame: Rect { get }
     
-    func draw(context: Silica.Context)
+    var subviews: [View] { get }
 }
 
+/// View that can be drawn with Silica.
+public protocol DrawableView: View {
+    
+    func draw(context: Silica.Context)
+}
