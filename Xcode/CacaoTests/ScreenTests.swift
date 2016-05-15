@@ -13,15 +13,15 @@ import Cacao
 
 final class ScreenTests: XCTestCase {
     
-    func testSubviews() {
+    func testSimpleSubviews() {
         
         let size = Size(width: 100, height: 100)
         
-        let filename = outputDirectory + "subviews.pdf"
+        let filename = outputDirectory + "simpleSubviews.pdf"
         
         let surface = Surface(pdf: filename, width: size.width, height: size.height)
         
-        let renderer = try! UIScreen(surface: surface, size: size)
+        let screen = try! UIScreen(surface: surface, size: size)
         
         let view1 = UIView(frame: Rect(origin: Point(x: 10, y: 10), size: Size(width: 80, height: 80)))
         
@@ -35,13 +35,15 @@ final class ScreenTests: XCTestCase {
         
         subview2.backgroundColor = UIColor(cgColor: Color.blue)
         
-        subview1.subviews.append(subview2)
+        subview1.addSubview(subview2)
         
-        view1.subviews.append(subview1)
+        view1.addSubview(subview1)
         
-        renderer.views.append(view1)
+        let window = UIWindow(frame: Rect(size: size), rootViewController: UIViewController(view: view1))
         
-        try! renderer.render()
+        screen.windows.append(window)
+        
+        try! screen.render()
         
         print("Wrote to \(filename)")
     }

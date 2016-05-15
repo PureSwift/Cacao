@@ -66,11 +66,11 @@ public final class UIScreen {
         context.translate(x: view.frame.x, y: view.frame.y)
         
         // draw
-        let bounds = Rect(size: frame.size)
+        let bounds = Rect(size: view.frame.size)
         
         // draw background color
         context.fillColor = view.backgroundColor.CGColor
-        context.add(rect: Rect(size: frame.size))
+        context.add(rect: Rect(size: view.frame.size))
         try! context.fill()
         
         // render view

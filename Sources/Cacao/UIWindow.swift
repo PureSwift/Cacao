@@ -28,6 +28,6 @@ public final class UIWindow: UIView {
     
     public override func layoutSubviews() {
         
-        
+        rootViewController.view.frame = Rect(size: frame.size)
     }
 }
