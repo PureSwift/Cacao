@@ -7,13 +7,12 @@
 //
 
 import Silica
-import Cacao
 
 public final class UIWindow: UIView {
     
     // MARK: - Properties
     
-    public var rootViewController: UIViewController
+    public let rootViewController: UIViewController
     
     // MARK: - Initialization
     
@@ -21,5 +20,14 @@ public final class UIWindow: UIView {
         
         self.rootViewController = rootViewController
         super.init(frame: frame)
+        
+        self.addSubview(rootViewController.view)
+    }
+    
+    // MARK: - Methods
+    
+    public override func layoutSubviews() {
+        
+        
     }
 }

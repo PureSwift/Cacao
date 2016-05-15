@@ -6,9 +6,7 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
-import SwiftCoreGraphics
 import Silica
-import Cacao
 
 /// Returns the current graphics context.
 ///
@@ -18,13 +16,13 @@ import Cacao
 /// you must push a valid context onto the stack manually using the `UIGraphicsPushContext()` function.
 ///
 /// This function may be called from any thread of your app.
-public func UIGraphicsGetCurrentContext() -> SwiftCoreGraphics.CGContext? {
+public func UIGraphicsGetCurrentContext() -> Context? {
     
     return ContextStack.last
 }
 
 /// Makes the specified graphics context the current context.
-public func UIGraphicsPushContext(_ context: SwiftCoreGraphics.CGContext) {
+public func UIGraphicsPushContext(_ context: Context) {
     
     ContextStack.append(context)
 }
@@ -40,4 +38,4 @@ public func UIGraphicsPopContext() {
 
 // MARK: - Private
 
-private var ContextStack: [SwiftCoreGraphics.CGContext] = []
+private var ContextStack: [Context] = []

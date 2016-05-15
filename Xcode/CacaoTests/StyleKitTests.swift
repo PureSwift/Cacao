@@ -10,43 +10,45 @@ import XCTest
 import Cairo
 import Silica
 import Cacao
-import SwiftCoreGraphics
-import SwiftUIKit
 
 final class StyleKitTests: XCTestCase {
     
     func testSimpleShapes() {
         
-        // create UIView subclass
+        let filename = outputDirectory + "simpleShapes.pdf"
         
         let frame = Rect(x: 0, y: 0, width: 240, height: 120)
         
-        let view = TestView(frame: frame)
+        let surface = Surface(pdf: filename, width: frame.width, height: frame.height)
         
-        view.drawCanvas = TestStyleKit.drawSimpleShapes
+        let context = try! Silica.Context(surface: surface, size: frame.size)
         
-        // export image
+        UIGraphicsPushContext(context)
         
-        let filename = outputDirectory + "simpleShapes.pdf"
+        TestStyleKit.drawSimpleShapes(frame: frame)
         
-        view.export(PDF: filename)
+        UIGraphicsPopContext()
+        
+        print("Wrote to \(filename)")
     }
     
     func testAdvancedShapes() {
         
-        // create UIView subclass
+        let filename = outputDirectory + "advancedShapes.pdf"
         
         let frame = Rect(x: 0, y: 0, width: 240, height: 120)
         
-        let view = TestView(frame: frame)
+        let surface = Surface(pdf: filename, width: frame.width, height: frame.height)
         
-        view.drawCanvas = TestStyleKit.drawAdvancedShapes
+        let context = try! Silica.Context(surface: surface, size: frame.size)
         
-        // export image
+        UIGraphicsPushContext(context)
         
-        let filename = outputDirectory + "advancedShapes.pdf"
+        TestStyleKit.drawAdvancedShapes(frame: frame)
         
-        view.export(PDF: filename)
+        UIGraphicsPopContext()
+        
+        print("Wrote to \(filename)")
     }
 }
 

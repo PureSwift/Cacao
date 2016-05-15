@@ -6,7 +6,6 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
-import Cacao
 
 public func UIApplicationMain() {
     

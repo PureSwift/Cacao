@@ -6,9 +6,7 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
-import SwiftCoreGraphics
 import Silica
-import Cacao
 
 /// The `UIBezierPath` class lets you define a path consisting of straight and curved line segments
 /// and render that path in your custom views. You use this class initially to specify just the geometry for your path. 

@@ -8,7 +8,6 @@
 
 import Foundation
 import AppKit
-import Cacao
 
 DarwinApplicationMain()
 

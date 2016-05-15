@@ -6,28 +6,26 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
-import SwiftCoreGraphics
 import Silica
-import Cacao
 
 public final class UIColor {
     
     // MARK: - Properties
     
-    public let CGColor: SwiftCoreGraphics.CGColor
+    public let CGColor: Color
     
     // MARK: - Initialization
     
-    public init(cgColor color: SwiftCoreGraphics.CGColor) {
+    public init(cgColor color: Color) {
         
         self.CGColor = color
     }
     
     /// An initialized color object. The color information represented by this object is in the device RGB colorspace.
-    public init(red: SwiftCoreGraphics.CGFloat,
-                green: SwiftCoreGraphics.CGFloat,
-                blue: SwiftCoreGraphics.CGFloat,
-                alpha: SwiftCoreGraphics.CGFloat) {
+    public init(red: Double,
+                green: Double,
+                blue: Double,
+                alpha: Double) {
         
         self.CGColor = Color(red: red, green: green, blue: blue, alpha: alpha)
     }
@@ -36,10 +34,10 @@ public final class UIColor {
     
     // MARK: Retrieving Color Information
     
-    public func getRed(_ red: inout SwiftCoreGraphics.CGFloat,
-                       green: inout SwiftCoreGraphics.CGFloat,
-                       blue: inout SwiftCoreGraphics.CGFloat,
-                       alpha: inout SwiftCoreGraphics.CGFloat) -> Bool {
+    public func getRed(_ red: inout Double,
+                       green: inout Double,
+                       blue: inout Double,
+                       alpha: inout Double) -> Bool {
         
         red = CGColor.red
         green = CGColor.green

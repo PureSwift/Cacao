@@ -1,16 +1,16 @@
 //
-//  Screen.swift
+//  UIScreen.swift
 //  Cacao
 //
 //  Created by Alsey Coleman Miller on 5/14/16.
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
-import Silica
 import Cairo
+import Silica
 
 /// Device screen
-public final class Renderer {
+public final class UIScreen {
     
     public var scale: Double = 1.0
     
@@ -18,7 +18,7 @@ public final class Renderer {
     
     public var surface: Surface
     
-    public var views = [View]()
+    public var windows = [UIWindow]()
     
     // MARK: - Private Properties
     
@@ -46,22 +46,40 @@ public final class Renderer {
         
         let frame = Rect(size: size)
         
-        // render subviews
-        views.forEach { render(view: $0, in: frame) }
+        UIGraphicsPushContext(context)
+        
+        // render views
+        windows.forEach { render(view: $0, in: frame) }
+        
+        UIGraphicsPopContext()
     }
     
     // MARK: - Private Methods
     
-    private func render(view: View, in frame: Rect) {
+    private func render(view: UIView, in frame: Rect) {
+        
+        guard view.hidden == false
+            && view.alpha > 0
+            else { return }
         
         // add translation
         context.translate(x: view.frame.x, y: view.frame.y)
         
         // draw
-        view.draw(context: context)
+        let bounds = Rect(size: frame.size)
+        
+        // draw background color
+        context.fillColor = view.backgroundColor.CGColor
+        context.add(rect: Rect(size: frame.size))
+        try! context.fill()
+        
+        // render view
+        view.draw(bounds)
         
         // render subviews
         view.subviews.forEach { render(view: $0, in: frame) }
+        
+        // TODO: apply alpha
         
         // remove translation
         context.translate(x: -view.frame.x, y: -view.frame.y)

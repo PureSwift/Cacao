@@ -1,5 +1,5 @@
 //
-//  RendererTests.swift
+//  ScreenTests.swift
 //  Cacao
 //
 //  Created by Alsey Coleman Miller on 5/15/16.
@@ -10,10 +10,8 @@ import XCTest
 import Cairo
 import Silica
 import Cacao
-import SwiftCoreGraphics
-import SwiftUIKit
 
-final class RendererTests: XCTestCase {
+final class ScreenTests: XCTestCase {
     
     func testSubviews() {
         
@@ -23,7 +21,7 @@ final class RendererTests: XCTestCase {
         
         let surface = Surface(pdf: filename, width: size.width, height: size.height)
         
-        let renderer = try! Renderer(surface: surface, size: size)
+        let renderer = try! UIScreen(surface: surface, size: size)
         
         let view1 = UIView(frame: Rect(origin: Point(x: 10, y: 10), size: Size(width: 80, height: 80)))
         
