@@ -13,10 +13,8 @@ public protocol View {
     var frame: Rect { get }
     
     var subviews: [View] { get }
-}
-
-/// View that can be drawn with Silica.
-public protocol DrawableView: View {
+    
+    var needsLayout: Bool { get set }
     
     func draw(context: Silica.Context)
 }

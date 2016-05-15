@@ -18,15 +18,52 @@ public final class Screen {
     
     public var surface: Surface
     
+    public var views = [View]()
+    
     // MARK: - Private Properties
     
-    internal var context: Silica.Context?
+    internal var context: Silica.Context
     
     // MARK: - Initialization
     
-    public init(surface: Surface, size: Size) {
+    public init(surface: Surface, size: Size) throws {
         
         self.size = size
         self.surface = surface
+        
+        self.context = try Silica.Context(surface: surface, size: size)
+    }
+    
+    // MARK: - Methods
+    
+    public func render() throws {
+        
+        let context = try Silica.Context(surface: surface, size: size)
+        
+        self.context = context
+        
+        /// render views
+        
+        let frame = Rect(size: size)
+        
+        // render subviews
+        views.forEach { render(view: $0, in: frame) }
+    }
+    
+    // MARK: - Private Methods
+    
+    private func render(view: View, in frame: Rect) {
+        
+        // add translation
+        context.translate(x: view.frame.x, y: view.frame.y)
+        
+        // draw
+        view.draw(context: context)
+        
+        // render subviews
+        views.forEach { render(view: $0, in: frame) }
+        
+        // remove translation
+        context.translate(x: -view.frame.x, y: -view.frame.y)
     }
 }

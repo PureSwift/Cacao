@@ -14,11 +14,9 @@
 		6E1FB4681CE5C06B00F365EF /* Typealias.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E1FB4671CE5C06B00F365EF /* Typealias.swift */; };
 		6E71E4BB1CE7EF4200892294 /* Screen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E71E4BA1CE7EF4200892294 /* Screen.swift */; };
 		6E71E4BE1CE7F14300892294 /* UIScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E71E4BC1CE7F13600892294 /* UIScreen.swift */; };
-		6E71E4C01CE80AB000892294 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E71E4BF1CE80AB000892294 /* ViewController.swift */; };
-		6E71E4C21CE80F9D00892294 /* DarwinApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E71E4C11CE80F9D00892294 /* DarwinApplication.swift */; };
 		6E71E4CA1CE8119800892294 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E71E4C91CE8119800892294 /* main.swift */; };
-		6E71E4CF1CE811F300892294 /* ApplicationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E71E4CE1CE811F300892294 /* ApplicationDelegate.swift */; };
-		6EC46E0C1CE4461C002A1F52 /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC46E0B1CE4461C002A1F52 /* Window.swift */; };
+		6E71E4D41CE84CCD00892294 /* UIViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E71E4D21CE84CC400892294 /* UIViewController.swift */; };
+		6E71E4D51CE84CE700892294 /* UIWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E71E4D01CE84CA700892294 /* UIWindow.swift */; };
 		6EC46E181CE4474C002A1F52 /* SwiftUIKit.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EC46E171CE4474C002A1F52 /* SwiftUIKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6EC46E1D1CE44759002A1F52 /* UIBezierPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC46E0E1CE4471C002A1F52 /* UIBezierPath.swift */; };
 		6EC46E201CE4480C002A1F52 /* UIGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC46E1E1CE44804002A1F52 /* UIGraphics.swift */; };
@@ -93,12 +91,10 @@
 		6E1FB4671CE5C06B00F365EF /* Typealias.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Typealias.swift; sourceTree = "<group>"; };
 		6E71E4BA1CE7EF4200892294 /* Screen.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Screen.swift; sourceTree = "<group>"; };
 		6E71E4BC1CE7F13600892294 /* UIScreen.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIScreen.swift; sourceTree = "<group>"; };
-		6E71E4BF1CE80AB000892294 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
-		6E71E4C11CE80F9D00892294 /* DarwinApplication.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DarwinApplication.swift; sourceTree = "<group>"; };
 		6E71E4C71CE8119800892294 /* MacApp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MacApp; sourceTree = BUILT_PRODUCTS_DIR; };
 		6E71E4C91CE8119800892294 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		6E71E4CE1CE811F300892294 /* ApplicationDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationDelegate.swift; sourceTree = "<group>"; };
-		6EC46E0B1CE4461C002A1F52 /* Window.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
+		6E71E4D01CE84CA700892294 /* UIWindow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIWindow.swift; sourceTree = "<group>"; };
+		6E71E4D21CE84CC400892294 /* UIViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIViewController.swift; sourceTree = "<group>"; };
 		6EC46E0E1CE4471C002A1F52 /* UIBezierPath.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIBezierPath.swift; sourceTree = "<group>"; };
 		6EC46E151CE4474C002A1F52 /* SwiftUIKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftUIKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6EC46E171CE4474C002A1F52 /* SwiftUIKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SwiftUIKit.h; sourceTree = "<group>"; };
@@ -206,12 +202,8 @@
 		6E169A841CE4395800C60B0B /* Cacao */ = {
 			isa = PBXGroup;
 			children = (
-				6E71E4C11CE80F9D00892294 /* DarwinApplication.swift */,
-				6E71E4CE1CE811F300892294 /* ApplicationDelegate.swift */,
 				6E71E4BA1CE7EF4200892294 /* Screen.swift */,
 				6E169A851CE4397700C60B0B /* View.swift */,
-				6EC46E0B1CE4461C002A1F52 /* Window.swift */,
-				6E71E4BF1CE80AB000892294 /* ViewController.swift */,
 			);
 			path = Cacao;
 			sourceTree = "<group>";
@@ -231,8 +223,10 @@
 				6EC46E1E1CE44804002A1F52 /* UIGraphics.swift */,
 				6EC46E0E1CE4471C002A1F52 /* UIBezierPath.swift */,
 				6EC46E231CE44AF4002A1F52 /* UIView.swift */,
+				6E71E4D01CE84CA700892294 /* UIWindow.swift */,
 				6EC46E291CE45170002A1F52 /* UIColor.swift */,
 				6E71E4BC1CE7F13600892294 /* UIScreen.swift */,
+				6E71E4D21CE84CC400892294 /* UIViewController.swift */,
 			);
 			path = UIKit;
 			sourceTree = "<group>";
@@ -435,10 +429,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				6E169A861CE4397700C60B0B /* View.swift in Sources */,
-				6EC46E0C1CE4461C002A1F52 /* Window.swift in Sources */,
-				6E71E4C21CE80F9D00892294 /* DarwinApplication.swift in Sources */,
-				6E71E4CF1CE811F300892294 /* ApplicationDelegate.swift in Sources */,
-				6E71E4C01CE80AB000892294 /* ViewController.swift in Sources */,
 				6E71E4BB1CE7EF4200892294 /* Screen.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -466,12 +456,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6E71E4D41CE84CCD00892294 /* UIViewController.swift in Sources */,
 				6EC46E241CE44AF4002A1F52 /* UIView.swift in Sources */,
 				6E71E4BE1CE7F14300892294 /* UIScreen.swift in Sources */,
 				6EC46E221CE44950002A1F52 /* UIApplication.swift in Sources */,
 				6EC46E201CE4480C002A1F52 /* UIGraphics.swift in Sources */,
 				6EC46E1D1CE44759002A1F52 /* UIBezierPath.swift in Sources */,
 				6EC46E2A1CE45170002A1F52 /* UIColor.swift in Sources */,
+				6E71E4D51CE84CE700892294 /* UIWindow.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
