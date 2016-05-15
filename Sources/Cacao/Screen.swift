@@ -10,7 +10,7 @@ import Silica
 import Cairo
 
 /// Device screen
-public final class Screen {
+public final class Renderer {
     
     public var scale: Double = 1.0
     
@@ -61,7 +61,7 @@ public final class Screen {
         view.draw(context: context)
         
         // render subviews
-        views.forEach { render(view: $0, in: frame) }
+        view.subviews.forEach { render(view: $0, in: frame) }
         
         // remove translation
         context.translate(x: -view.frame.x, y: -view.frame.y)

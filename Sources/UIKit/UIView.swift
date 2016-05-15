@@ -54,6 +54,7 @@ public class UIView: View {
     private func drawBackgroundColor(context: Context) {
         
         context.fillColor = backgroundColor.CGColor
+        context.add(rect: Rect(size: frame.size))
         try! context.fill()
     }
 }

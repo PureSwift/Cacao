@@ -32,7 +32,10 @@ public func UIGraphicsPushContext(_ context: SwiftCoreGraphics.CGContext) {
 /// Removes the current graphics context from the top of the stack, restoring the previous context.
 public func UIGraphicsPopContext() {
     
-    ContextStack.removeLast()
+    if ContextStack.isEmpty == false {
+        
+        ContextStack.removeLast()
+    }
 }
 
 // MARK: - Private
