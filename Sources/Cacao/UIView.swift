@@ -14,13 +14,17 @@ public class UIView {
     
     public var frame: Rect
     
-    public var backgroundColor: UIColor = UIColor(cgColor: Color.white)
+    public var backgroundColor = UIColor(cgColor: Color.white)
     
     public var alpha: Double = 1.0
     
-    public var hidden: Bool = false
+    public var hidden = false
     
     public var subviews: [UIView] = []
+    
+    public var userInteractionEnabled = true
+    
+    public var tag: Int = 0
     
     //public var needsLayout: Bool = false
     

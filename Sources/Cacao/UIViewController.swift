@@ -6,17 +6,25 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
-
 public class UIViewController {
     
     // MARK: - Properties
     
-    public var view: UIView
+    public let view: UIView
+    
+    public private(set) var isViewLoaded = false
     
     // MARK: - Initialization
     
-    public init(view: UIView) {
+    public init(view: UIView = UIView()) {
         
         self.view = view
+    }
+    
+    public func viewDidLoad() {
+        
+        view.layoutSubviews()
+        
+        isViewLoaded = true
     }
 }

@@ -29,5 +29,10 @@ public final class UIWindow: UIView {
     public override func layoutSubviews() {
         
         rootViewController.view.frame = Rect(size: frame.size)
+        
+        if rootViewController.isViewLoaded == false {
+            
+            rootViewController.viewDidLoad()
+        }
     }
 }

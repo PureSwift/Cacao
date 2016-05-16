@@ -70,14 +70,16 @@ public final class UIScreen {
         
         // draw background color
         context.fillColor = view.backgroundColor.CGColor
-        context.add(rect: Rect(size: view.frame.size))
+        context.add(rect: bounds)
         try! context.fill()
         
         // render view
         view.draw(bounds)
         
+        view.layoutSubviews()
+        
         // render subviews
-        view.subviews.forEach { render(view: $0, in: frame) }
+        view.subviews.forEach { render(view: $0, in: bounds) }
         
         // TODO: apply alpha
         

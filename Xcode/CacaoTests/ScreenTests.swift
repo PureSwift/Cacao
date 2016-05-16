@@ -39,7 +39,9 @@ final class ScreenTests: XCTestCase {
         
         view1.addSubview(subview1)
         
-        let window = UIWindow(frame: Rect(size: size), rootViewController: UIViewController(view: view1))
+        let window = UIWindow(frame: Rect(size: size), rootViewController: UIViewController(view: UIView(frame: Rect(size: size))))
+        
+        window.rootViewController.view.addSubview(view1)
         
         screen.windows.append(window)
         
