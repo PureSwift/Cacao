@@ -13,6 +13,8 @@ import Cacao
 
 final class ScreenTests: XCTestCase {
     
+    static let allTests: [(String, (ScreenTests) -> () throws -> Void)] = [ ("testSimpleSubviews", testSimpleSubviews)]
+    
     func testSimpleSubviews() {
         
         let size = Size(width: 100, height: 100)

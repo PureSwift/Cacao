@@ -7,11 +7,14 @@
 //
 
 import XCTest
+import Foundation
 import Cairo
 import Silica
 import Cacao
 
 final class StyleKitTests: XCTestCase {
+    
+    static let allTests: [(String, (StyleKitTests) -> () throws -> Void)] = [("testSimpleShapes", testSimpleShapes), ("testAdvancedShapes", testAdvancedShapes)]
     
     func testSimpleShapes() {
         
@@ -65,3 +68,14 @@ let outputDirectory: String = {
     
     return outputDirectory
 }()
+
+// this is why I hate old Foundation ObjC APIs
+#if os(Linux)
+extension NSFileManager {
+    
+    public static func `default`() -> NSFileManager {
+        
+        return NSFileManager.defaultManager()
+    }
+}
+#endif

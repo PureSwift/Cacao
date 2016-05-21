@@ -14,9 +14,12 @@ public final class UIScreen {
     
     public var scale: Double = 1.0
     
-    public var size: Size
+    public var size: Size {
+        
+        didSet { self.context = try! Silica.Context(surface: surface, size: size) }
+    }
     
-    public var surface: Surface
+    public let surface: Surface
     
     public var windows = [UIWindow]()
     

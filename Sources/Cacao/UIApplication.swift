@@ -7,7 +7,7 @@
 //
 
 
-public func UIApplicationMain() {
+public func X11ApplicationMain() {
     
     
 }

@@ -8,7 +8,7 @@
 
 import Silica
 
-public class UIView {
+public class UIView: UIResponder {
     
     // MARK: - Properties
     
