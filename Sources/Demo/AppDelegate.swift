@@ -20,14 +20,12 @@ final class AppDelegate: UIApplicationDelegate {
         
         // Override point for customization after application launch.
         
-        let rootVC = UIViewController()
+        let rootVC = HelloWorldViewController()
         
         rootVC.view.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 1.0)
         
         window.rootViewController = rootVC
-        
-        
-        
+                
         //window.makeKeyAndVisible
         
         print("Started Demo app")

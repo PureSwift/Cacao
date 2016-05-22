@@ -7,10 +7,13 @@
 //
 
 import Cacao
+import Silica
 
 final class HelloWorldViewController: UIViewController {
     
     // MARK: - Views
+    
+    var logoView: SwiftLogoView!
     
     //weak var button: UIButton!
     
@@ -21,6 +24,10 @@ final class HelloWorldViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        logoView = SwiftLogoView(frame: CGRect(x: 0, y: 0, width: 150, height: 150))
         
+        logoView.backgroundColor = UIColor(cgColor: CGColor.clear)
+        
+        view.addSubview(logoView)
     }
 }

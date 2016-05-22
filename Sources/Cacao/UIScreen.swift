@@ -90,6 +90,7 @@ public final class UIScreen {
         // render view
         view.draw(bounds)
         
+        // layout subviews
         view.layoutSubviews()
         
         // render subviews
