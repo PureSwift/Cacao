@@ -25,7 +25,7 @@ public final class UIColor {
     public init(red: Double,
                 green: Double,
                 blue: Double,
-                alpha: Double) {
+                alpha: Double = 1.0) {
         
         self.CGColor = Color(red: red, green: green, blue: blue, alpha: alpha)
     }

@@ -14,7 +14,19 @@ public final class UIWindow: UIView {
     
     public var rootViewController: UIViewController? {
         
-        didSet { addSubview(rootViewController.view) }
+        willSet {
+            
+            if let rootViewController = newValue {
+                
+                addSubview(rootViewController.view)
+                
+                // remove old view
+                
+            } else {
+                
+                // remove current view
+            }
+        }
     }
     
     // MARK: - Methods
@@ -25,7 +37,7 @@ public final class UIWindow: UIView {
         
         if rootViewController?.isViewLoaded == false {
             
-            rootViewController.viewDidLoad()
+            rootViewController?.viewDidLoad()
         }
     }
 }

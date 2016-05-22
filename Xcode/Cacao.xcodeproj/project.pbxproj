@@ -7,13 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6E0F3FFA1CF139F7009CA26A /* MacAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F3FF91CF139F7009CA26A /* MacAppDelegate.swift */; };
 		6E0F3FFC1CF139F7009CA26A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6E0F3FFB1CF139F7009CA26A /* Assets.xcassets */; };
 		6E0F3FFF1CF139F7009CA26A /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6E0F3FFD1CF139F7009CA26A /* MainMenu.xib */; };
 		6E0F40061CF1424B009CA26A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F40041CF14248009CA26A /* AppDelegate.swift */; };
 		6E0F40071CF1424D009CA26A /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F3FE51CF1380F009CA26A /* main.swift */; };
 		6E0F40091CF145F2009CA26A /* libSDL2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E0F40081CF145E5009CA26A /* libSDL2.dylib */; };
 		6E0F400B1CF14D15009CA26A /* libcairo.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E0F400A1CF14D15009CA26A /* libcairo.dylib */; };
+		6E0F400F1CF15514009CA26A /* Cairo.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6EC46E311CE476B6002A1F52 /* Cairo.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		6E0F40101CF15514009CA26A /* Silica.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6EC46E331CE476B6002A1F52 /* Silica.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		6E0F40121CF15525009CA26A /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E0F40111CF15525009CA26A /* AppKit.framework */; };
+		6E0F40131CF15556009CA26A /* Cacao.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E169A691CE436E800C60B0B /* Cacao.framework */; };
+		6E0F40141CF15556009CA26A /* Cacao.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6E169A691CE436E800C60B0B /* Cacao.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		6E0F9D3D1CF05064007FDFC9 /* ScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F9D391CF05064007FDFC9 /* ScreenTests.swift */; };
 		6E0F9D3E1CF05064007FDFC9 /* StyleKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F9D3A1CF05064007FDFC9 /* StyleKitTests.swift */; };
 		6E0F9D3F1CF05064007FDFC9 /* TestStyleKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F9D3B1CF05064007FDFC9 /* TestStyleKit.swift */; };
@@ -35,6 +39,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		6E0F400C1CF153B7009CA26A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6E169A601CE436E800C60B0B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6E169A681CE436E800C60B0B;
+			remoteInfo = Cacao;
+		};
 		6E169A751CE436E800C60B0B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 6E169A601CE436E800C60B0B /* Project object */;
@@ -45,6 +56,18 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		6E0F400E1CF15508009CA26A /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				6E0F400F1CF15514009CA26A /* Cairo.framework in CopyFiles */,
+				6E0F40101CF15514009CA26A /* Silica.framework in CopyFiles */,
+				6E0F40141CF15556009CA26A /* Cacao.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6EC46E371CE476C6002A1F52 /* Copy Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -63,13 +86,13 @@
 		6E0F3FE31CF137BE009CA26A /* module.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.map; sourceTree = "<group>"; };
 		6E0F3FE51CF1380F009CA26A /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		6E0F3FF71CF139F7009CA26A /* Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Demo.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		6E0F3FF91CF139F7009CA26A /* MacAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacAppDelegate.swift; sourceTree = "<group>"; };
 		6E0F3FFB1CF139F7009CA26A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6E0F3FFE1CF139F7009CA26A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		6E0F40001CF139F7009CA26A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6E0F40041CF14248009CA26A /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		6E0F40081CF145E5009CA26A /* libSDL2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libSDL2.dylib; path = ../../../../../../../usr/local/lib/libSDL2.dylib; sourceTree = "<group>"; };
 		6E0F400A1CF14D15009CA26A /* libcairo.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcairo.dylib; path = ../../../../../../../usr/local/lib/libcairo.dylib; sourceTree = "<group>"; };
+		6E0F40111CF15525009CA26A /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		6E0F9D371CF04FF2007FDFC9 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = ../Package.swift; sourceTree = "<group>"; };
 		6E0F9D391CF05064007FDFC9 /* ScreenTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScreenTests.swift; sourceTree = "<group>"; };
 		6E0F9D3A1CF05064007FDFC9 /* StyleKitTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StyleKitTests.swift; sourceTree = "<group>"; };
@@ -99,6 +122,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6E0F40131CF15556009CA26A /* Cacao.framework in Frameworks */,
+				6E0F40121CF15525009CA26A /* AppKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -134,7 +159,6 @@
 		6E0F3FF81CF139F7009CA26A /* Demo */ = {
 			isa = PBXGroup;
 			children = (
-				6E0F3FF91CF139F7009CA26A /* MacAppDelegate.swift */,
 				6E0F3FFB1CF139F7009CA26A /* Assets.xcassets */,
 				6E0F3FFD1CF139F7009CA26A /* MainMenu.xib */,
 				6E0F40001CF139F7009CA26A /* Info.plist */,
@@ -233,6 +257,7 @@
 		6EC46E301CE476B6002A1F52 /* Mac */ = {
 			isa = PBXGroup;
 			children = (
+				6E0F40111CF15525009CA26A /* AppKit.framework */,
 				6E0F400A1CF14D15009CA26A /* libcairo.dylib */,
 				6E0F40081CF145E5009CA26A /* libSDL2.dylib */,
 				6EC46E311CE476B6002A1F52 /* Cairo.framework */,
@@ -263,10 +288,12 @@
 				6E0F3FF31CF139F7009CA26A /* Sources */,
 				6E0F3FF41CF139F7009CA26A /* Frameworks */,
 				6E0F3FF51CF139F7009CA26A /* Resources */,
+				6E0F400E1CF15508009CA26A /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				6E0F400D1CF153B7009CA26A /* PBXTargetDependency */,
 			);
 			name = Demo;
 			productName = Demo;
@@ -383,7 +410,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				6E0F40061CF1424B009CA26A /* AppDelegate.swift in Sources */,
-				6E0F3FFA1CF139F7009CA26A /* MacAppDelegate.swift in Sources */,
 				6E0F40071CF1424D009CA26A /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -419,6 +445,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		6E0F400D1CF153B7009CA26A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6E169A681CE436E800C60B0B /* Cacao */;
+			targetProxy = 6E0F400C1CF153B7009CA26A /* PBXContainerItemProxy */;
+		};
 		6E169A761CE436E800C60B0B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 6E169A681CE436E800C60B0B /* Cacao */;
@@ -443,6 +474,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
 				INFOPLIST_FILE = Demo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
@@ -456,6 +488,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
 				INFOPLIST_FILE = Demo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
