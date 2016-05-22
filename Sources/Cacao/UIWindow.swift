@@ -40,4 +40,11 @@ public final class UIWindow: UIView {
             rootViewController?.viewDidLoad()
         }
     }
+    
+    // MARK: - Internal Methods
+    
+    internal func sendEvent(_ event: UIEvent) {
+        
+        
+    }
 }
