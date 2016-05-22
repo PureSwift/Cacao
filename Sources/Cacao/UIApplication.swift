@@ -29,12 +29,14 @@ public func UIApplicationMain<Delegate: UIApplicationDelegate>(delegateClass: De
         0
     )
     
-    guard let sdlSurface = SDL_CreateRGBSurface(0, CInt(size.width), CInt(size.height), 32, 0x00FF0000, 0x0000FF00, 0x000000FF, 0)
+    let sdlWindowSurface = SDL_GetWindowSurface(window)!
+    
+    guard let sdlImageSurface = SDL_CreateRGBSurface(0, CInt(size.width), CInt(size.height), 32, 0x00FF0000, 0x0000FF00, 0x000000FF, 0)
         else { fatalError("Could not create SDL surface: \(SDL_GetError())") }
     
-    defer { SDL_FreeSurface(sdlSurface) }
+    defer { SDL_FreeSurface(sdlImageSurface) }
     
-    guard let cairoSurfacePointer = cairo_image_surface_create_for_data(UnsafeMutablePointer<UInt8>(sdlSurface.pointee.pixels), CAIRO_FORMAT_RGB24, sdlSurface.pointee.w, sdlSurface.pointee.h, sdlSurface.pointee.pitch)
+    guard let cairoSurfacePointer = cairo_image_surface_create_for_data(UnsafeMutablePointer<UInt8>(sdlImageSurface.pointee.pixels), CAIRO_FORMAT_RGB24, sdlImageSurface.pointee.w, sdlImageSurface.pointee.h, sdlImageSurface.pointee.pitch)
         else { fatalError("Could not create Cairo Image surface") }
     
     let surface = Cairo.Surface(cairoSurfacePointer)
@@ -76,8 +78,18 @@ public func UIApplicationMain<Delegate: UIApplicationDelegate>(delegateClass: De
             pollEventStatus = SDL_PollEvent(&event)
         }
         
+        // inform responder chain
+        
+        
         // update UI
         
+        try! UIScreen.main.render()
+        
+        surface.flush()
+        
+        SDL_UpperBlit(sdlImageSurface, nil, sdlWindowSurface, nil)
+        
+        SDL_UpdateWindowSurface(OpaquePointer(sdlWindowSurface))
     }
     
     UIApplication.shared.delegate?.applicationWillTerminate(UIApplication.shared)

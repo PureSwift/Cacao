@@ -16,6 +16,8 @@ final class AppDelegate: UIApplicationDelegate {
         
         window = UIWindow(frame: UIScreen.main.bounds)
         
+        window.backgroundColor = UIColor(red: 1.0, green: 1.0, blue: 1.0)
+        
         // Override point for customization after application launch.
         
         let rootVC = UIViewController()
@@ -26,6 +28,13 @@ final class AppDelegate: UIApplicationDelegate {
         
         //window.makeKeyAndVisible
         
+        print("Started Demo app")
+        
         return true
+    }
+    
+    func applicationWillTerminate(_ application: UIApplication) {
+        
+        print("Will close app")
     }
 }
