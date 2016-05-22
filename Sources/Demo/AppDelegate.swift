@@ -12,5 +12,10 @@ final class AppDelegate: UIApplicationDelegate {
     
     var window: UIWindow!
     
-    func 
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [String : Any]?) -> Bool {
+        
+        window = UIWindow(frame: UIScreen.main.bounds)
+        
+        
+    }
 }

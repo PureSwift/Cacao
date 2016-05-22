@@ -13,7 +13,7 @@ import CCairo
 
 // MARK: - Main
 
-public func UIApplicationMain<Delegate: UIApplicationDelegate>(delegateClass: Delegate.Type, size: Size = Size(width: 320, height: 480)) {
+public func UIApplicationMain<Delegate: UIApplicationDelegate>(delegateClass: Delegate.Type, size: Size = Size(width: 640, height: 480)) {
     
     let options: UInt32 = UInt32(SDL_INIT_VIDEO)
     
@@ -45,7 +45,44 @@ public func UIApplicationMain<Delegate: UIApplicationDelegate>(delegateClass: De
     
     UIApplication.shared.delegate = appDelegate
     
+    UIApplication.shared.delegate?.application(UIApplication.shared, didFinishLaunchingWithOptions: nil)
     
+    // enter main loop
+    
+    var done = false
+    
+    var event = SDL_Event()
+    
+    while !done {
+        
+        // poll event queue
+        
+        var pollEventStatus = SDL_PollEvent(&event)
+        
+        while pollEventStatus != 0 {
+            
+            let eventType = SDL_EventType(rawValue: event.type)
+            
+            switch eventType {
+                
+            case SDL_QUIT:
+                
+                done = true
+                
+            default: break
+            }
+            
+            // try again
+            pollEventStatus = SDL_PollEvent(&event)
+        }
+        
+        // update UI
+        
+    }
+    
+    UIApplication.shared.delegate?.applicationWillTerminate(UIApplication.shared)
+    
+    SDL_Quit()
 }
 
 // MARK: - UIApplicationDelegate

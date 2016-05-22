@@ -32,7 +32,6 @@
 		6E50417D1CE96FE50087E9A3 /* UIResponder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E50417C1CE96FE50087E9A3 /* UIResponder.swift */; };
 		6EC46E381CE476D2002A1F52 /* Cairo.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 6EC46E311CE476B6002A1F52 /* Cairo.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		6EC46E391CE476D2002A1F52 /* Silica.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 6EC46E331CE476B6002A1F52 /* Silica.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		6EC46E3A1CE476D2002A1F52 /* SwiftCoreGraphics.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 6EC46E351CE476B6002A1F52 /* SwiftCoreGraphics.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -54,7 +53,6 @@
 			files = (
 				6EC46E381CE476D2002A1F52 /* Cairo.framework in Copy Frameworks */,
 				6EC46E391CE476D2002A1F52 /* Silica.framework in Copy Frameworks */,
-				6EC46E3A1CE476D2002A1F52 /* SwiftCoreGraphics.framework in Copy Frameworks */,
 			);
 			name = "Copy Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -94,7 +92,6 @@
 		6E50417C1CE96FE50087E9A3 /* UIResponder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIResponder.swift; sourceTree = "<group>"; };
 		6EC46E311CE476B6002A1F52 /* Cairo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Cairo.framework; sourceTree = "<group>"; };
 		6EC46E331CE476B6002A1F52 /* Silica.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Silica.framework; sourceTree = "<group>"; };
-		6EC46E351CE476B6002A1F52 /* SwiftCoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SwiftCoreGraphics.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -240,7 +237,6 @@
 				6E0F40081CF145E5009CA26A /* libSDL2.dylib */,
 				6EC46E311CE476B6002A1F52 /* Cairo.framework */,
 				6EC46E331CE476B6002A1F52 /* Silica.framework */,
-				6EC46E351CE476B6002A1F52 /* SwiftCoreGraphics.framework */,
 			);
 			name = Mac;
 			path = ../Carthage/Build/Mac;

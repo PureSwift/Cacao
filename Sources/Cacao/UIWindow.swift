@@ -12,25 +12,18 @@ public final class UIWindow: UIView {
     
     // MARK: - Properties
     
-    public let rootViewController: UIViewController
-    
-    // MARK: - Initialization
-    
-    public init(frame: Rect, rootViewController: UIViewController) {
+    public var rootViewController: UIViewController? {
         
-        self.rootViewController = rootViewController
-        super.init(frame: frame)
-        
-        self.addSubview(rootViewController.view)
+        didSet { addSubview(rootViewController.view) }
     }
     
     // MARK: - Methods
     
     public override func layoutSubviews() {
         
-        rootViewController.view.frame = Rect(size: frame.size)
+        rootViewController?.view.frame = Rect(size: frame.size)
         
-        if rootViewController.isViewLoaded == false {
+        if rootViewController?.isViewLoaded == false {
             
             rootViewController.viewDidLoad()
         }

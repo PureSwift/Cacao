@@ -8,3 +8,4 @@
 
 import Cacao
 
+UIApplicationMain(delegateClass: AppDelegate.self)
