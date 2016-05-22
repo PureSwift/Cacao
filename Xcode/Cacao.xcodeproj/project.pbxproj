@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6E0F3FFA1CF139F7009CA26A /* MacAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F3FF91CF139F7009CA26A /* MacAppDelegate.swift */; };
+		6E0F3FFC1CF139F7009CA26A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6E0F3FFB1CF139F7009CA26A /* Assets.xcassets */; };
+		6E0F3FFF1CF139F7009CA26A /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6E0F3FFD1CF139F7009CA26A /* MainMenu.xib */; };
+		6E0F40061CF1424B009CA26A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F40041CF14248009CA26A /* AppDelegate.swift */; };
+		6E0F40071CF1424D009CA26A /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F3FE51CF1380F009CA26A /* main.swift */; };
+		6E0F40091CF145F2009CA26A /* libSDL2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E0F40081CF145E5009CA26A /* libSDL2.dylib */; };
+		6E0F400B1CF14D15009CA26A /* libcairo.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E0F400A1CF14D15009CA26A /* libcairo.dylib */; };
 		6E0F9D3D1CF05064007FDFC9 /* ScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F9D391CF05064007FDFC9 /* ScreenTests.swift */; };
 		6E0F9D3E1CF05064007FDFC9 /* StyleKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F9D3A1CF05064007FDFC9 /* StyleKitTests.swift */; };
 		6E0F9D3F1CF05064007FDFC9 /* TestStyleKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F9D3B1CF05064007FDFC9 /* TestStyleKit.swift */; };
@@ -15,7 +22,6 @@
 		6E0F9D461CF06C39007FDFC9 /* UIApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F9D451CF06C39007FDFC9 /* UIApplication.swift */; };
 		6E169A6D1CE436E800C60B0B /* Cacao.h in Headers */ = {isa = PBXBuildFile; fileRef = 6E169A6C1CE436E800C60B0B /* Cacao.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6E169A741CE436E800C60B0B /* Cacao.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E169A691CE436E800C60B0B /* Cacao.framework */; };
-		6E5041731CE8F2C90087E9A3 /* X11.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E50416B1CE8F2C90087E9A3 /* X11.swift */; };
 		6E5041741CE8F2C90087E9A3 /* UIBezierPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E50416C1CE8F2C90087E9A3 /* UIBezierPath.swift */; };
 		6E5041751CE8F2C90087E9A3 /* UIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E50416D1CE8F2C90087E9A3 /* UIColor.swift */; };
 		6E5041761CE8F2C90087E9A3 /* UIGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E50416E1CE8F2C90087E9A3 /* UIGraphics.swift */; };
@@ -56,6 +62,16 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		6E0F3FE31CF137BE009CA26A /* module.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.map; sourceTree = "<group>"; };
+		6E0F3FE51CF1380F009CA26A /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		6E0F3FF71CF139F7009CA26A /* Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Demo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6E0F3FF91CF139F7009CA26A /* MacAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacAppDelegate.swift; sourceTree = "<group>"; };
+		6E0F3FFB1CF139F7009CA26A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		6E0F3FFE1CF139F7009CA26A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		6E0F40001CF139F7009CA26A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6E0F40041CF14248009CA26A /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		6E0F40081CF145E5009CA26A /* libSDL2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libSDL2.dylib; path = ../../../../../../../usr/local/lib/libSDL2.dylib; sourceTree = "<group>"; };
+		6E0F400A1CF14D15009CA26A /* libcairo.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcairo.dylib; path = ../../../../../../../usr/local/lib/libcairo.dylib; sourceTree = "<group>"; };
 		6E0F9D371CF04FF2007FDFC9 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = ../Package.swift; sourceTree = "<group>"; };
 		6E0F9D391CF05064007FDFC9 /* ScreenTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScreenTests.swift; sourceTree = "<group>"; };
 		6E0F9D3A1CF05064007FDFC9 /* StyleKitTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StyleKitTests.swift; sourceTree = "<group>"; };
@@ -63,13 +79,11 @@
 		6E0F9D3C1CF05064007FDFC9 /* Typealias.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Typealias.swift; sourceTree = "<group>"; };
 		6E0F9D411CF0507A007FDFC9 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		6E0F9D451CF06C39007FDFC9 /* UIApplication.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIApplication.swift; sourceTree = "<group>"; };
-		6E0F9D481CF06F3D007FDFC9 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		6E169A691CE436E800C60B0B /* Cacao.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Cacao.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6E169A6C1CE436E800C60B0B /* Cacao.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Cacao.h; sourceTree = "<group>"; };
 		6E169A6E1CE436E800C60B0B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6E169A731CE436E800C60B0B /* CacaoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CacaoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6E169A7A1CE436E800C60B0B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		6E50416B1CE8F2C90087E9A3 /* X11.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = X11.swift; sourceTree = "<group>"; };
 		6E50416C1CE8F2C90087E9A3 /* UIBezierPath.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIBezierPath.swift; sourceTree = "<group>"; };
 		6E50416D1CE8F2C90087E9A3 /* UIColor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIColor.swift; sourceTree = "<group>"; };
 		6E50416E1CE8F2C90087E9A3 /* UIGraphics.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIGraphics.swift; sourceTree = "<group>"; };
@@ -78,19 +92,25 @@
 		6E5041711CE8F2C90087E9A3 /* UIViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIViewController.swift; sourceTree = "<group>"; };
 		6E5041721CE8F2C90087E9A3 /* UIWindow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIWindow.swift; sourceTree = "<group>"; };
 		6E50417C1CE96FE50087E9A3 /* UIResponder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIResponder.swift; sourceTree = "<group>"; };
-		6E71E4C91CE8119800892294 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		6EC46E171CE4474C002A1F52 /* SwiftUIKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SwiftUIKit.h; sourceTree = "<group>"; };
-		6EC46E191CE4474C002A1F52 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6EC46E311CE476B6002A1F52 /* Cairo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Cairo.framework; sourceTree = "<group>"; };
 		6EC46E331CE476B6002A1F52 /* Silica.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Silica.framework; sourceTree = "<group>"; };
 		6EC46E351CE476B6002A1F52 /* SwiftCoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SwiftCoreGraphics.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		6E0F3FF41CF139F7009CA26A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6E169A651CE436E800C60B0B /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6E0F40091CF145F2009CA26A /* libSDL2.dylib in Frameworks */,
+				6E0F400B1CF14D15009CA26A /* libcairo.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -105,6 +125,26 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		6E0F3FE41CF13803009CA26A /* Demo */ = {
+			isa = PBXGroup;
+			children = (
+				6E0F3FE51CF1380F009CA26A /* main.swift */,
+				6E0F40041CF14248009CA26A /* AppDelegate.swift */,
+			);
+			path = Demo;
+			sourceTree = "<group>";
+		};
+		6E0F3FF81CF139F7009CA26A /* Demo */ = {
+			isa = PBXGroup;
+			children = (
+				6E0F3FF91CF139F7009CA26A /* MacAppDelegate.swift */,
+				6E0F3FFB1CF139F7009CA26A /* Assets.xcassets */,
+				6E0F3FFD1CF139F7009CA26A /* MainMenu.xib */,
+				6E0F40001CF139F7009CA26A /* Info.plist */,
+			);
+			path = Demo;
+			sourceTree = "<group>";
+		};
 		6E0F9D381CF05032007FDFC9 /* CacaoTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -117,14 +157,6 @@
 			path = CacaoTests;
 			sourceTree = "<group>";
 		};
-		6E0F9D471CF06F26007FDFC9 /* X11Demo */ = {
-			isa = PBXGroup;
-			children = (
-				6E0F9D481CF06F3D007FDFC9 /* main.swift */,
-			);
-			path = X11Demo;
-			sourceTree = "<group>";
-		};
 		6E169A5F1CE436E800C60B0B = {
 			isa = PBXGroup;
 			children = (
@@ -133,8 +165,7 @@
 				6E169A831CE4395800C60B0B /* Sources */,
 				6E169A6B1CE436E800C60B0B /* Cacao */,
 				6E169A771CE436E800C60B0B /* CacaoTests */,
-				6EC46E161CE4474C002A1F52 /* SwiftUIKit */,
-				6E71E4C81CE8119800892294 /* MacApp */,
+				6E0F3FF81CF139F7009CA26A /* Demo */,
 				6E169A6A1CE436E800C60B0B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -144,6 +175,7 @@
 			children = (
 				6E169A691CE436E800C60B0B /* Cacao.framework */,
 				6E169A731CE436E800C60B0B /* CacaoTests.xctest */,
+				6E0F3FF71CF139F7009CA26A /* Demo.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -152,6 +184,7 @@
 			isa = PBXGroup;
 			children = (
 				6E169A6C1CE436E800C60B0B /* Cacao.h */,
+				6E0F3FE31CF137BE009CA26A /* module.map */,
 				6E169A6E1CE436E800C60B0B /* Info.plist */,
 			);
 			path = Cacao;
@@ -168,7 +201,7 @@
 		6E169A831CE4395800C60B0B /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				6E0F9D471CF06F26007FDFC9 /* X11Demo */,
+				6E0F3FE41CF13803009CA26A /* Demo */,
 				6E0F9D381CF05032007FDFC9 /* CacaoTests */,
 				6E169A841CE4395800C60B0B /* Cacao */,
 			);
@@ -179,7 +212,6 @@
 		6E169A841CE4395800C60B0B /* Cacao */ = {
 			isa = PBXGroup;
 			children = (
-				6E50416B1CE8F2C90087E9A3 /* X11.swift */,
 				6E0F9D451CF06C39007FDFC9 /* UIApplication.swift */,
 				6E50416C1CE8F2C90087E9A3 /* UIBezierPath.swift */,
 				6E50416D1CE8F2C90087E9A3 /* UIColor.swift */,
@@ -193,23 +225,6 @@
 			path = Cacao;
 			sourceTree = "<group>";
 		};
-		6E71E4C81CE8119800892294 /* MacApp */ = {
-			isa = PBXGroup;
-			children = (
-				6E71E4C91CE8119800892294 /* main.swift */,
-			);
-			path = MacApp;
-			sourceTree = "<group>";
-		};
-		6EC46E161CE4474C002A1F52 /* SwiftUIKit */ = {
-			isa = PBXGroup;
-			children = (
-				6EC46E171CE4474C002A1F52 /* SwiftUIKit.h */,
-				6EC46E191CE4474C002A1F52 /* Info.plist */,
-			);
-			path = SwiftUIKit;
-			sourceTree = "<group>";
-		};
 		6EC46E2F1CE476A4002A1F52 /* Dependencies */ = {
 			isa = PBXGroup;
 			children = (
@@ -221,6 +236,8 @@
 		6EC46E301CE476B6002A1F52 /* Mac */ = {
 			isa = PBXGroup;
 			children = (
+				6E0F400A1CF14D15009CA26A /* libcairo.dylib */,
+				6E0F40081CF145E5009CA26A /* libSDL2.dylib */,
 				6EC46E311CE476B6002A1F52 /* Cairo.framework */,
 				6EC46E331CE476B6002A1F52 /* Silica.framework */,
 				6EC46E351CE476B6002A1F52 /* SwiftCoreGraphics.framework */,
@@ -243,6 +260,23 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		6E0F3FF61CF139F7009CA26A /* Demo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6E0F40011CF139F7009CA26A /* Build configuration list for PBXNativeTarget "Demo" */;
+			buildPhases = (
+				6E0F3FF31CF139F7009CA26A /* Sources */,
+				6E0F3FF41CF139F7009CA26A /* Frameworks */,
+				6E0F3FF51CF139F7009CA26A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Demo;
+			productName = Demo;
+			productReference = 6E0F3FF71CF139F7009CA26A /* Demo.app */;
+			productType = "com.apple.product-type.application";
+		};
 		6E169A681CE436E800C60B0B /* Cacao */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 6E169A7D1CE436E800C60B0B /* Build configuration list for PBXNativeTarget "Cacao" */;
@@ -290,6 +324,9 @@
 				LastUpgradeCheck = 0730;
 				ORGANIZATIONNAME = PureSwift;
 				TargetAttributes = {
+					6E0F3FF61CF139F7009CA26A = {
+						CreatedOnToolsVersion = 7.3.1;
+					};
 					6E169A681CE436E800C60B0B = {
 						CreatedOnToolsVersion = 7.3.1;
 					};
@@ -304,6 +341,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = 6E169A5F1CE436E800C60B0B;
 			productRefGroup = 6E169A6A1CE436E800C60B0B /* Products */;
@@ -312,11 +350,21 @@
 			targets = (
 				6E169A681CE436E800C60B0B /* Cacao */,
 				6E169A721CE436E800C60B0B /* CacaoTests */,
+				6E0F3FF61CF139F7009CA26A /* Demo */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		6E0F3FF51CF139F7009CA26A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6E0F3FFC1CF139F7009CA26A /* Assets.xcassets in Resources */,
+				6E0F3FFF1CF139F7009CA26A /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6E169A671CE436E800C60B0B /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -334,6 +382,16 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		6E0F3FF31CF139F7009CA26A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6E0F40061CF1424B009CA26A /* AppDelegate.swift in Sources */,
+				6E0F3FFA1CF139F7009CA26A /* MacAppDelegate.swift in Sources */,
+				6E0F40071CF1424D009CA26A /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6E169A641CE436E800C60B0B /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -341,7 +399,6 @@
 				6E5041781CE8F2C90087E9A3 /* UIView.swift in Sources */,
 				6E5041761CE8F2C90087E9A3 /* UIGraphics.swift in Sources */,
 				6E5041791CE8F2C90087E9A3 /* UIViewController.swift in Sources */,
-				6E5041731CE8F2C90087E9A3 /* X11.swift in Sources */,
 				6E50417D1CE96FE50087E9A3 /* UIResponder.swift in Sources */,
 				6E5041741CE8F2C90087E9A3 /* UIBezierPath.swift in Sources */,
 				6E50417A1CE8F2C90087E9A3 /* UIWindow.swift in Sources */,
@@ -373,7 +430,44 @@
 		};
 /* End PBXTargetDependency section */
 
+/* Begin PBXVariantGroup section */
+		6E0F3FFD1CF139F7009CA26A /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				6E0F3FFE1CF139F7009CA26A /* Base */,
+			);
+			name = MainMenu.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
+		6E0F40021CF139F7009CA26A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Demo/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pureswift.Demo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		6E0F40031CF139F7009CA26A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Demo/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pureswift.Demo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		6E169A7B1CE436E800C60B0B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -398,10 +492,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					$SRCROOT/../Carthage/Build/Mac,
-					/Library/Frameworks,
-				);
+				FRAMEWORK_SEARCH_PATHS = $SRCROOT/../Carthage/Build/Mac;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -416,7 +507,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
@@ -450,10 +541,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					$SRCROOT/../Carthage/Build/Mac,
-					/Library/Frameworks,
-				);
+				FRAMEWORK_SEARCH_PATHS = $SRCROOT/../Carthage/Build/Mac;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -462,7 +550,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
@@ -480,13 +568,19 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
 				FRAMEWORK_VERSION = A;
 				INFOPLIST_FILE = Cacao/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pureswift.Cacao;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_INCLUDE_PATHS = $SRCROOT;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -500,13 +594,19 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
 				FRAMEWORK_VERSION = A;
 				INFOPLIST_FILE = Cacao/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pureswift.Cacao;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_INCLUDE_PATHS = $SRCROOT;
 			};
 			name = Release;
 		};
@@ -538,6 +638,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		6E0F40011CF139F7009CA26A /* Build configuration list for PBXNativeTarget "Demo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6E0F40021CF139F7009CA26A /* Debug */,
+				6E0F40031CF139F7009CA26A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		6E169A631CE436E800C60B0B /* Build configuration list for PBXProject "Cacao" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

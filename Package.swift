@@ -4,11 +4,11 @@ let package = Package(
     name: "Cacao",
     dependencies: [
         .Package(url: "https://github.com/PureSwift/Silica.git", majorVersion: 1),
-        .Package(url: "https://github.com/PureSwift/CXCB.git", majorVersion: 1)
+        .Package(url: "https://github.com/PureSwift/CSDL2.git", majorVersion: 1)
     ],
     targets: [
                  Target(
-                    name: "X11Demo",
+                    name: "Demo",
                     dependencies: [.Target(name: "Cacao")]),
                  Target(
                     name: "CacaoTests",

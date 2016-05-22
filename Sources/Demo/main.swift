@@ -8,4 +8,3 @@
 
 import Cacao
 
-UIApplicationMainX11()

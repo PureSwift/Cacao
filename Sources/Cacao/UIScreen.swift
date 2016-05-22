@@ -12,16 +12,29 @@ import Silica
 /// Device screen
 public final class UIScreen {
     
+    // MARK: - Singleton
+    
+    public internal(set) static var main: UIScreen!
+    
+    // MARK: - Properties
+    
     public var scale: Double = 1.0
     
-    public var size: Size {
+    public var bounds: Rect {
+        
+        return Rect(size: size)
+    }
+    
+    public var windows = [UIWindow]()
+    
+    // MARK: - Internal Properties
+    
+    internal var size: Size {
         
         didSet { self.context = try! Silica.Context(surface: surface, size: size) }
     }
     
-    public let surface: Surface
-    
-    public var windows = [UIWindow]()
+    internal let surface: Surface!
     
     // MARK: - Private Properties
     
@@ -29,7 +42,7 @@ public final class UIScreen {
     
     // MARK: - Initialization
     
-    public init(surface: Surface, size: Size) throws {
+    internal init(surface: Surface, size: Size) throws {
         
         self.size = size
         self.surface = surface
