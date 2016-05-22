@@ -53,7 +53,24 @@
         
         xcb_flush(connection)
         
-        sleep(10)
+        // create Cairo surface
+        
+        //let surfacePointer = cairo_xcb_surface_create(connection, window)
+        
+        
+        // main loop
+        
+        var done = false
+        
+        while !done {
+            
+            let event = xcb_wait_for_event(connection)!
+            defer { free(event) }
+            
+            let eventType = event.pointee.response_type & ~0x80
+            
+            
+        }
     }
     
 #endif
