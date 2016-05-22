@@ -13,7 +13,9 @@ import CCairo
 
 // MARK: - Main
 
-public func UIApplicationMain<Delegate: UIApplicationDelegate>(delegateClass: Delegate.Type, name: String, size: Size = Size(width: 640, height: 480)) {
+public func UIApplicationMain<Delegate: UIApplicationDelegate>(delegateClass: Delegate.Type, name: String, framesPerSecond: UInt32 = 60, size: Size = Size(width: 640, height: 480)) {
+    
+    // setup SDL window
     
     let options: UInt32 = UInt32(SDL_INIT_VIDEO)
     
@@ -53,11 +55,17 @@ public func UIApplicationMain<Delegate: UIApplicationDelegate>(delegateClass: De
     
     // enter main loop
     
+    var frame = 0
+    
     var done = false
     
     var event = SDL_Event()
     
     while !done {
+        
+        frame += 1
+        
+        let startTime = SDL_GetTicks()
         
         // poll event queue
         
@@ -96,6 +104,14 @@ public func UIApplicationMain<Delegate: UIApplicationDelegate>(delegateClass: De
             
             SDL_UpdateWindowSurface(window)
         }
+        
+        // sleep to save energy
+        let frameDuration = SDL_GetTicks() - startTime
+        
+        if frameDuration < 1000 / framesPerSecond {
+            
+            SDL_Delay((1000 / framesPerSecond) - frameDuration)
+        }
     }
     
     // quit application
@@ -133,6 +149,4 @@ public final class UIApplication {
     public static private(set) var shared = UIApplication()
     
     public weak var delegate: UIApplicationDelegate?
-    
-    
 }

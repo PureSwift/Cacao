@@ -10,5 +10,17 @@ import Cacao
 
 final class HelloWorldViewController: UIViewController {
     
+    // MARK: - Views
     
+    //weak var button: UIButton!
+    
+    //weak var label: UILabel!
+    
+    // MARK: - Loading
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        
+    }
 }
