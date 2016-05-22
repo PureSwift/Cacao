@@ -13,14 +13,19 @@ public class UIView: UIResponder {
     // MARK: - Properties
     
     public var frame: Rect
+        { didSet { layoutSubviews(); setNeedsDisplay() } }
     
     public var backgroundColor = UIColor(cgColor: Color.white)
+        { didSet { setNeedsDisplay() } }
     
     public var alpha: Double = 1.0
+        { didSet { setNeedsDisplay() } }
     
     public var hidden = false
+        { didSet { setNeedsDisplay() } }
     
     public var subviews: [UIView] = []
+        { didSet { layoutSubviews(); setNeedsDisplay() } }
     
     public var userInteractionEnabled = true
     
@@ -46,6 +51,18 @@ public class UIView: UIResponder {
     public final func addSubview(_ subview: UIView) {
         
         subviews.append(subview)
+    }
+    
+    public final func setNeedsDisplay() {
+        
+        UIScreen.main?.needsDisplay = true
+    }
+    
+    public final func setNeedsLayout() {
+        
+        UIScreen.main?.needsLayout = true
+        
+        setNeedsDisplay()
     }
     
     // MARK: - Private Methods

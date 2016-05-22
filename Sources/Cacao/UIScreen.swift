@@ -18,7 +18,7 @@ public final class UIScreen {
     
     // MARK: - Properties
     
-    public var scale: Double = 1.0
+    public let scale: Double = 1.0
     
     public var bounds: Rect {
         
@@ -29,34 +29,29 @@ public final class UIScreen {
     
     // MARK: - Internal Properties
     
-    internal var size: Size {
-        
-        didSet { self.context = try! Silica.Context(surface: surface, size: size) }
-    }
+    internal var size: Size
     
-    internal let surface: Surface!
+    internal var surface: Surface
     
-    // MARK: - Private Properties
+    internal var context: Silica.Context!
     
-    internal var context: Silica.Context
+    internal var needsDisplay = true
+    
+    internal var needsLayout = true
     
     // MARK: - Initialization
     
-    internal init(surface: Surface, size: Size) throws {
+    internal init(surface: Surface, size: Size) {
         
         self.size = size
         self.surface = surface
-        
-        self.context = try Silica.Context(surface: surface, size: size)
     }
     
-    // MARK: - Methods
+    // MARK: - Internal Methods
     
-    public func render() throws {
+    internal func render() throws {
         
-        let context = try Silica.Context(surface: surface, size: size)
-        
-        self.context = context
+        context = try Silica.Context(surface: surface, size: size)
         
         /// render views
         
@@ -68,6 +63,9 @@ public final class UIScreen {
         windows.forEach { render(view: $0, in: frame) }
         
         UIGraphicsPopContext()
+        
+        needsDisplay = false
+        needsLayout = false
     }
     
     // MARK: - Private Methods

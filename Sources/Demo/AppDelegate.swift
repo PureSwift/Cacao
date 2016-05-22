@@ -16,15 +16,17 @@ final class AppDelegate: UIApplicationDelegate {
         
         window = UIWindow(frame: UIScreen.main.bounds)
         
-        window.backgroundColor = UIColor(red: 1.0, green: 1.0, blue: 1.0)
+        UIScreen.main.windows.append(window)
         
         // Override point for customization after application launch.
         
         let rootVC = UIViewController()
         
-        rootVC.view.backgroundColor = UIColor(red: 1.0, green: 0.0, blue: 0.0)
+        rootVC.view.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 1.0)
         
-        window.rootViewController = UIViewController()
+        window.rootViewController = rootVC
+        
+        
         
         //window.makeKeyAndVisible
         

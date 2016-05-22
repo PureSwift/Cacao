@@ -9,7 +9,7 @@
 import XCTest
 import Cairo
 import Silica
-import Cacao
+@testable import Cacao
 
 final class ScreenTests: XCTestCase {
     
@@ -23,7 +23,7 @@ final class ScreenTests: XCTestCase {
         
         let surface = Surface(pdf: filename, width: size.width, height: size.height)
         
-        let screen = try! UIScreen(surface: surface, size: size)
+        let screen = UIScreen(surface: surface, size: size)
         
         let view1 = UIView(frame: Rect(origin: Point(x: 10, y: 10), size: Size(width: 80, height: 80)))
         
@@ -41,9 +41,11 @@ final class ScreenTests: XCTestCase {
         
         view1.addSubview(subview1)
         
-        let window = UIWindow(frame: Rect(size: size), rootViewController: UIViewController(view: UIView(frame: Rect(size: size))))
+        let window = UIWindow(frame: Rect(size: size))
         
-        window.rootViewController.view.addSubview(view1)
+        window.rootViewController = UIViewController()
+        
+        window.rootViewController?.view.addSubview(view1)
         
         screen.windows.append(window)
         

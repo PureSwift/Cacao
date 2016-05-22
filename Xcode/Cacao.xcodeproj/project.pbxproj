@@ -18,6 +18,7 @@
 		6E0F40121CF15525009CA26A /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E0F40111CF15525009CA26A /* AppKit.framework */; };
 		6E0F40131CF15556009CA26A /* Cacao.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E169A691CE436E800C60B0B /* Cacao.framework */; };
 		6E0F40141CF15556009CA26A /* Cacao.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6E169A691CE436E800C60B0B /* Cacao.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		6E0F40171CF17B84009CA26A /* HelloWorldViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F40161CF17B84009CA26A /* HelloWorldViewController.swift */; };
 		6E0F9D3D1CF05064007FDFC9 /* ScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F9D391CF05064007FDFC9 /* ScreenTests.swift */; };
 		6E0F9D3E1CF05064007FDFC9 /* StyleKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F9D3A1CF05064007FDFC9 /* StyleKitTests.swift */; };
 		6E0F9D3F1CF05064007FDFC9 /* TestStyleKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F9D3B1CF05064007FDFC9 /* TestStyleKit.swift */; };
@@ -93,6 +94,7 @@
 		6E0F40081CF145E5009CA26A /* libSDL2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libSDL2.dylib; path = ../../../../../../../usr/local/lib/libSDL2.dylib; sourceTree = "<group>"; };
 		6E0F400A1CF14D15009CA26A /* libcairo.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcairo.dylib; path = ../../../../../../../usr/local/lib/libcairo.dylib; sourceTree = "<group>"; };
 		6E0F40111CF15525009CA26A /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		6E0F40161CF17B84009CA26A /* HelloWorldViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HelloWorldViewController.swift; sourceTree = "<group>"; };
 		6E0F9D371CF04FF2007FDFC9 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = ../Package.swift; sourceTree = "<group>"; };
 		6E0F9D391CF05064007FDFC9 /* ScreenTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScreenTests.swift; sourceTree = "<group>"; };
 		6E0F9D3A1CF05064007FDFC9 /* StyleKitTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StyleKitTests.swift; sourceTree = "<group>"; };
@@ -152,6 +154,7 @@
 			children = (
 				6E0F3FE51CF1380F009CA26A /* main.swift */,
 				6E0F40041CF14248009CA26A /* AppDelegate.swift */,
+				6E0F40161CF17B84009CA26A /* HelloWorldViewController.swift */,
 			);
 			path = Demo;
 			sourceTree = "<group>";
@@ -411,6 +414,7 @@
 			files = (
 				6E0F40061CF1424B009CA26A /* AppDelegate.swift in Sources */,
 				6E0F40071CF1424D009CA26A /* main.swift in Sources */,
+				6E0F40171CF17B84009CA26A /* HelloWorldViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

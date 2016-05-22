@@ -23,8 +23,8 @@ public class UIViewController {
     
     public func viewDidLoad() {
         
-        view.layoutSubviews()
-        
         isViewLoaded = true
+        
+        view.layoutSubviews()
     }
 }

@@ -13,7 +13,7 @@ import CCairo
 
 // MARK: - Main
 
-public func UIApplicationMain<Delegate: UIApplicationDelegate>(delegateClass: Delegate.Type, size: Size = Size(width: 640, height: 480)) {
+public func UIApplicationMain<Delegate: UIApplicationDelegate>(delegateClass: Delegate.Type, name: String, size: Size = Size(width: 640, height: 480)) {
     
     let options: UInt32 = UInt32(SDL_INIT_VIDEO)
     
@@ -21,27 +21,29 @@ public func UIApplicationMain<Delegate: UIApplicationDelegate>(delegateClass: De
         else { fatalError("Could not initialize SDL") }
         
     let window = SDL_CreateWindow(
-        "Application",
+        name,
         0,
         0,
         CInt(size.width),
         CInt(size.height),
         0
-    )
+    )!
+    
+    defer { SDL_DestroyWindow(window) }
     
     let sdlWindowSurface = SDL_GetWindowSurface(window)!
     
-    guard let sdlImageSurface = SDL_CreateRGBSurface(0, CInt(size.width), CInt(size.height), 32, 0x00FF0000, 0x0000FF00, 0x000000FF, 0)
+    guard let sdlImageSurface = SDL_CreateRGBSurface(0, CInt(size.width), CInt(size.height), 32, 0, 0, 0, 0)
         else { fatalError("Could not create SDL surface: \(SDL_GetError())") }
     
     defer { SDL_FreeSurface(sdlImageSurface) }
-    
-    guard let cairoSurfacePointer = cairo_image_surface_create_for_data(UnsafeMutablePointer<UInt8>(sdlImageSurface.pointee.pixels), CAIRO_FORMAT_RGB24, sdlImageSurface.pointee.w, sdlImageSurface.pointee.h, sdlImageSurface.pointee.pitch)
+        
+    guard let cairoSurfacePointer = cairo_image_surface_create_for_data(UnsafeMutablePointer<UInt8>(sdlImageSurface.pointee.pixels), CAIRO_FORMAT_ARGB32, sdlImageSurface.pointee.w, sdlImageSurface.pointee.h, sdlImageSurface.pointee.pitch)
         else { fatalError("Could not create Cairo Image surface") }
     
     let surface = Cairo.Surface(cairoSurfacePointer)
     
-    UIScreen.main = try! UIScreen(surface: surface, size: size)
+    UIScreen.main = UIScreen(surface: surface, size: size)
     
     let appDelegate = Delegate()
     
@@ -63,6 +65,8 @@ public func UIApplicationMain<Delegate: UIApplicationDelegate>(delegateClass: De
         
         while pollEventStatus != 0 {
             
+            UIScreen.main.needsDisplay = true
+            
             let eventType = SDL_EventType(rawValue: event.type)
             
             switch eventType {
@@ -80,17 +84,21 @@ public func UIApplicationMain<Delegate: UIApplicationDelegate>(delegateClass: De
         
         // inform responder chain
         
-        
-        // update UI
-        
-        try! UIScreen.main.render()
-        
-        surface.flush()
-        
-        SDL_UpperBlit(sdlImageSurface, nil, sdlWindowSurface, nil)
-        
-        SDL_UpdateWindowSurface(OpaquePointer(sdlWindowSurface))
+        // render to screen
+        if UIScreen.main.needsDisplay {
+            
+            try! UIScreen.main.render()
+            
+            surface.flush()
+            
+            guard SDL_UpperBlit(sdlImageSurface, nil, sdlWindowSurface, nil) == 0
+                else { fatalError("Could not render to screen: \(SDL_GetError())") }
+            
+            SDL_UpdateWindowSurface(window)
+        }
     }
+    
+    // quit application
     
     UIApplication.shared.delegate?.applicationWillTerminate(UIApplication.shared)
     
