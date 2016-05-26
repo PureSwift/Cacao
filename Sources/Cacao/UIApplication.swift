@@ -144,7 +144,7 @@ public extension UIApplicationDelegate {
 
 // MARK: - UIApplication
 
-public final class UIApplication {
+public final class UIApplication: UIResponder {
     
     public static private(set) var shared = UIApplication()
     

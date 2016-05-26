@@ -6,7 +6,7 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
-public class UIViewController {
+public class UIViewController: UIResponder {
     
     // MARK: - Properties
     

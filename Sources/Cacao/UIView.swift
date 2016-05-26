@@ -29,6 +29,10 @@ public class UIView: UIResponder {
     
     public var userInteractionEnabled = true
     
+    public var multipleTouchEnabled: Bool = false
+    
+    public var contentMode = UIViewContentMode()
+    
     public var tag: Int = 0
     
     //public var needsLayout: Bool = false
@@ -68,4 +72,25 @@ public class UIView: UIResponder {
     // MARK: - Private Methods
     
     
+}
+
+// MARK: - Supporting Types
+
+public enum UIViewContentMode {
+    
+    public init() { self = .ScaleToFill }
+    
+    case ScaleToFill
+    case ScaleAspectFit
+    case ScaleAspectFill
+    case Redraw
+    case Center
+    case Top
+    case Bottom
+    case Left
+    case Right
+    case TopLeft
+    case TopRight
+    case BottomLeft
+    case BottomRight
 }
