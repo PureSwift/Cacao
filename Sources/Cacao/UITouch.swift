@@ -6,6 +6,8 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
+import Silica
+
 /// Represents the location, size, movement, and force of a finger on the screen for a particular event.
 ///
 /// - Note: A touch object persists throughout a multi-touch sequence.
@@ -28,14 +30,19 @@ public final class UITouch {
     
     public internal(set) var phase: UITouchPhase
     
+    // MARK: - Internal Properties
+    
+    internal var windowLocation: Point
+    
     // MARK: - Initialization
     
-    internal init(timestamp: Double, view: UIView, window: UIWindow, phase: UITouchPhase) {
+    internal init(timestamp: Double, view: UIView, window: UIWindow, phase: UITouchPhase, windowLocation: Point) {
         
         self.timestamp = timestamp
         self.view = view
         self.window = window
         self.phase = phase
+        self.windowLocation = windowLocation
     }
     
     // MARK: - Methods

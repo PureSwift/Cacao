@@ -12,28 +12,36 @@ public class UIView: UIResponder {
     
     // MARK: - Properties
     
-    public var frame: Rect
+    public final var frame: Rect
         { didSet { layoutSubviews(); setNeedsDisplay() } }
     
-    public var backgroundColor = UIColor(cgColor: Color.white)
+    public final var backgroundColor: UIColor = UIColor(cgColor: Color.white)
         { didSet { setNeedsDisplay() } }
     
-    public var alpha: Double = 1.0
+    public final var alpha: Double = 1.0
         { didSet { setNeedsDisplay() } }
     
-    public var hidden = false
+    public final var hidden: Bool = false
         { didSet { setNeedsDisplay() } }
     
-    public var subviews: [UIView] = []
+    public final var subviews: [UIView] = []
         { didSet { layoutSubviews(); setNeedsDisplay() } }
     
-    public var userInteractionEnabled = true
+    public final var userInteractionEnabled: Bool = true
     
-    public var multipleTouchEnabled: Bool = false
+    public final var multipleTouchEnabled: Bool = false
     
-    public var contentMode = UIViewContentMode()
+    public final var contentMode = UIViewContentMode()
+        { didSet { setNeedsDisplay() } }
     
-    public var tag: Int = 0
+    public final var tag: Int = 0
+    
+    // MARK: - Subclassable Properties
+    
+    public var intrinsicContentSize: Size {
+        
+        return frame.size
+    }
     
     //public var needsLayout: Bool = false
     
@@ -50,11 +58,26 @@ public class UIView: UIResponder {
     
     public func layoutSubviews() { /* implemented by subclasses */ }
     
+    public func sizeThatFits(_ size: Size) -> Size {
+        
+        return frame.size
+    }
+    
     // MARK: - Final Methods
     
     public final func addSubview(_ subview: UIView) {
         
+        assert(subview is UIWindow == false, "Cannot add UIWindow as a subview")
+        
         subviews.append(subview)
+    }
+    
+    public final func removeSubview(_ subview: UIView) {
+        
+        guard let subviewIndex = subviews.index(where: { $0 === subview })
+            else { fatalError("Cannot remove subview that is not in the view hierarchy.") }
+        
+        subviews.remove(at: subviewIndex)
     }
     
     public final func setNeedsDisplay() {

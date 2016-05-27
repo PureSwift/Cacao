@@ -149,4 +149,28 @@ public final class UIApplication: UIResponder {
     public static private(set) var shared = UIApplication()
     
     public weak var delegate: UIApplicationDelegate?
+    
+    public internal(set) var windows: [UIWindow] = []
+    
+    public internal(set) var keyWindow: UIWindow?
+    
+    // MARK: - Internal Methods
+    
+    internal func sendEvent(_ event: UIEvent) {
+        
+        for window in windows {
+            
+            switch event.type {
+                
+            case .Touches:
+                
+                if event.touches(for: window).count > 0 {
+                    
+                    window.sendEvent(event)
+                }
+                
+            default: window.sendEvent(event)
+            }
+        }
+    }
 }

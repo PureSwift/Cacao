@@ -10,21 +10,30 @@ public class UIViewController: UIResponder {
     
     // MARK: - Properties
     
-    public let view: UIView
+    public var view: UIView = UIView()
     
     public private(set) var isViewLoaded = false
     
     // MARK: - Initialization
     
-    public init(view: UIView = UIView()) {
-        
-        self.view = view
-    }
+    public init() { }
+    
+    // MARK: - Methods
     
     public func viewDidLoad() {
         
         isViewLoaded = true
         
         view.layoutSubviews()
+    }
+    
+    // MARK: - Cacao Extensions
+    
+    /// Routes the dynamic `IBAction` missing in the Swift runtime.
+    ///
+    /// Subclasses should override this method.
+    public func perform(action: String, sender: AnyObject) {
+        
+        print("\(self.dynamicType) \"\(action)\" called with sender: \(sender)")
     }
 }

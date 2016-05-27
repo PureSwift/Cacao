@@ -32,6 +32,8 @@
 		6E0F9D461CF06C39007FDFC9 /* UIApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F9D451CF06C39007FDFC9 /* UIApplication.swift */; };
 		6E169A6D1CE436E800C60B0B /* Cacao.h in Headers */ = {isa = PBXBuildFile; fileRef = 6E169A6C1CE436E800C60B0B /* Cacao.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6E169A741CE436E800C60B0B /* Cacao.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E169A691CE436E800C60B0B /* Cacao.framework */; };
+		6E1CF5041CF7F2A7004BEC2B /* UIViewExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E1CF5031CF7F2A7004BEC2B /* UIViewExtensions.swift */; };
+		6E1CF5061CF7F795004BEC2B /* SizeExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E1CF5051CF7F795004BEC2B /* SizeExtensions.swift */; };
 		6E5041741CE8F2C90087E9A3 /* UIBezierPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E50416C1CE8F2C90087E9A3 /* UIBezierPath.swift */; };
 		6E5041751CE8F2C90087E9A3 /* UIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E50416D1CE8F2C90087E9A3 /* UIColor.swift */; };
 		6E5041761CE8F2C90087E9A3 /* UIGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E50416E1CE8F2C90087E9A3 /* UIGraphics.swift */; };
@@ -117,6 +119,8 @@
 		6E169A6E1CE436E800C60B0B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6E169A731CE436E800C60B0B /* CacaoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CacaoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6E169A7A1CE436E800C60B0B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6E1CF5031CF7F2A7004BEC2B /* UIViewExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIViewExtensions.swift; sourceTree = "<group>"; };
+		6E1CF5051CF7F795004BEC2B /* SizeExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SizeExtensions.swift; sourceTree = "<group>"; };
 		6E50416C1CE8F2C90087E9A3 /* UIBezierPath.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIBezierPath.swift; sourceTree = "<group>"; };
 		6E50416D1CE8F2C90087E9A3 /* UIColor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIColor.swift; sourceTree = "<group>"; };
 		6E50416E1CE8F2C90087E9A3 /* UIGraphics.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIGraphics.swift; sourceTree = "<group>"; };
@@ -182,7 +186,11 @@
 		6E0F401C1CF196D5009CA26A /* Extra */ = {
 			isa = PBXGroup;
 			children = (
+				6E0F401A1CF196A2009CA26A /* SilicaTypealias.swift */,
+				6E0F40181CF19652009CA26A /* StyleKit.swift */,
 				6E0F401D1CF196E6009CA26A /* SwiftLogoView.swift */,
+				6E1CF5031CF7F2A7004BEC2B /* UIViewExtensions.swift */,
+				6E1CF5051CF7F795004BEC2B /* SizeExtensions.swift */,
 			);
 			name = Extra;
 			sourceTree = "<group>";
@@ -254,8 +262,6 @@
 		6E169A841CE4395800C60B0B /* Cacao */ = {
 			isa = PBXGroup;
 			children = (
-				6E0F401A1CF196A2009CA26A /* SilicaTypealias.swift */,
-				6E0F40181CF19652009CA26A /* StyleKit.swift */,
 				6E0F9D451CF06C39007FDFC9 /* UIApplication.swift */,
 				6E50416C1CE8F2C90087E9A3 /* UIBezierPath.swift */,
 				6E50416D1CE8F2C90087E9A3 /* UIColor.swift */,
@@ -446,6 +452,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6E5041781CE8F2C90087E9A3 /* UIView.swift in Sources */,
+				6E1CF5041CF7F2A7004BEC2B /* UIViewExtensions.swift in Sources */,
 				6E0F401B1CF196A2009CA26A /* SilicaTypealias.swift in Sources */,
 				6E5041761CE8F2C90087E9A3 /* UIGraphics.swift in Sources */,
 				6E5041791CE8F2C90087E9A3 /* UIViewController.swift in Sources */,
@@ -454,6 +461,7 @@
 				6E5041741CE8F2C90087E9A3 /* UIBezierPath.swift in Sources */,
 				6E50417A1CE8F2C90087E9A3 /* UIWindow.swift in Sources */,
 				6E0F401E1CF196E6009CA26A /* SwiftLogoView.swift in Sources */,
+				6E1CF5061CF7F795004BEC2B /* SizeExtensions.swift in Sources */,
 				6E5041771CE8F2C90087E9A3 /* UIScreen.swift in Sources */,
 				6E0F9D461CF06C39007FDFC9 /* UIApplication.swift in Sources */,
 				6E0F40191CF19652009CA26A /* StyleKit.swift in Sources */,
@@ -706,6 +714,7 @@
 				6E0F40031CF139F7009CA26A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		6E169A631CE436E800C60B0B /* Build configuration list for PBXProject "Cacao" */ = {
 			isa = XCConfigurationList;

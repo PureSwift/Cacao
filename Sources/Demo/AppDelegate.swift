@@ -15,9 +15,7 @@ final class AppDelegate: UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [String : Any]?) -> Bool {
         
         window = UIWindow(frame: UIScreen.main.bounds)
-        
-        UIScreen.main.windows.append(window)
-        
+                
         // Override point for customization after application launch.
         
         let rootVC = HelloWorldViewController()
@@ -26,7 +24,7 @@ final class AppDelegate: UIApplicationDelegate {
         
         window.rootViewController = rootVC
                 
-        //window.makeKeyAndVisible
+        window.makeKeyAndVisible()
         
         print("Started Demo app")
         

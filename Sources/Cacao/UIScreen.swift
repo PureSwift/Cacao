@@ -12,9 +12,11 @@ import Silica
 /// Device screen
 public final class UIScreen {
     
-    // MARK: - Singleton
+    // MARK: - Class Properties
     
     public internal(set) static var main: UIScreen!
+    
+    public internal(set) static var screens: [UIScreen] = [main]
     
     // MARK: - Properties
     
@@ -25,7 +27,7 @@ public final class UIScreen {
         return Rect(size: size)
     }
     
-    public var windows = [UIWindow]()
+    public internal(set) var windows = [UIWindow]()
     
     // MARK: - Internal Properties
     
