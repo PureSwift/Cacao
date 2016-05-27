@@ -13,7 +13,7 @@ import CCairo
 
 // MARK: - Main
 
-public func UIApplicationMain<Delegate: UIApplicationDelegate>(delegateClass: Delegate.Type, name: String, framesPerSecond: UInt32 = 60, size: Size = Size(width: 640, height: 480)) {
+public func UIApplicationMain<Delegate: UIApplicationDelegate>(delegateClass: Delegate.Type, name: String, size: Size = Size(width: 640, height: 480)) {
     
     // setup SDL window
     
@@ -54,6 +54,19 @@ public func UIApplicationMain<Delegate: UIApplicationDelegate>(delegateClass: De
     UIApplication.shared.delegate?.application(UIApplication.shared, didFinishLaunchingWithOptions: nil)
     
     // enter main loop
+    
+    var framesPerSecond: UInt32 = 60 // default
+    
+    var sdlDisplayMode = SDL_DisplayMode()
+    
+    if SDL_GetWindowDisplayMode(window, &sdlDisplayMode) == 0 && sdlDisplayMode.refresh_rate != 0 {
+        
+        framesPerSecond = UInt32(sdlDisplayMode.refresh_rate)
+        
+        print("Native refresh rate: \(framesPerSecond)")
+    }
+    
+    print("Running at \(framesPerSecond) FPS")
     
     var frame = 0
     

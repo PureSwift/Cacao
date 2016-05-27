@@ -43,8 +43,10 @@ public final class UIWindow: UIView {
     
     // MARK: - Initialization
     
-    public override init(frame: Rect) {
+    public override init(frame: Rect = UIScreen.main.bounds) {
         super.init(frame: frame)
+        
+        assert(frame == UIScreen.main.bounds, "Can only set to the main screen's bounds (for now)")
         
         UIApplication.shared.windows.append(self)
         self.screen.windows.append(self)
@@ -85,8 +87,23 @@ public final class UIWindow: UIView {
     
     // MARK: - Internal Methods
     
+    /// Dispatches the specified event to its views.
     internal func sendEvent(_ event: UIEvent) {
         
-        
+        /*
+        for view in subviews {
+            
+            switch event.type {
+                
+            case .Touches:
+                
+                if event.touches(for: view).count > 0 {
+                    
+                    
+                }
+                
+            default: break
+            }
+        }*/
     }
 }
