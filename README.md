@@ -1,5 +1,5 @@
-# UIKit
-Pure Swift Cross-platform UIKit implementation (Supports Linux)
+# Cacao
+Pure Swift Cross-platform UIKit (Cocoa Touch) implementation (Supports Linux)
 
 ## Installation
 
@@ -8,6 +8,8 @@ Pure Swift Cross-platform UIKit implementation (Supports Linux)
 
 ### Ubuntu
 `sudo apt-get install libcairo-dev libsdl2-dev`
+
+## Screenshots
 
 ### Run [PaintCode](http://www.paintcodeapp.com) StyleKits in Linux
 
