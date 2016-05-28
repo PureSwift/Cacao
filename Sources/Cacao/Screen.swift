@@ -23,7 +23,7 @@ public final class Screen {
     
     // MARK: - Initialization
     
-    internal init(surface: Surface, size: Size) {
+    public init(surface: Surface, size: Size) {
         
         self.target = (surface, size)
     }
