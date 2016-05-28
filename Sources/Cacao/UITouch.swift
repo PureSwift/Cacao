@@ -26,7 +26,7 @@ public final class UITouch {
     /// The window in which the touch initially occurred.
     public let window: UIWindow
     
-    public internal(set) var tapCount: Int = 0
+    public internal(set) var tapCount: Int = 1
     
     public internal(set) var phase: UITouchPhase
     
@@ -36,7 +36,7 @@ public final class UITouch {
     
     // MARK: - Initialization
     
-    internal init(timestamp: Double, view: UIView, window: UIWindow, phase: UITouchPhase, windowLocation: Point) {
+    internal init(timestamp: Double, view: UIView, window: UIWindow, phase: UITouchPhase = .Began, windowLocation: Point) {
         
         self.timestamp = timestamp
         self.view = view

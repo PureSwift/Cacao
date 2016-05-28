@@ -182,7 +182,7 @@ public final class UIApplication: UIResponder {
                     window.sendEvent(event)
                 }
                 
-            default: window.sendEvent(event)
+            default: fatalError("\(event.type) event not implemented")
             }
         }
     }

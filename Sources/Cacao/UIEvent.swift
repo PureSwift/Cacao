@@ -7,6 +7,8 @@
 //
 
 /// Represents an event.
+///
+/// - Note: Only touch events are supported in `Cacao`.
 public final class UIEvent {
     
     // MARK: - Properties
@@ -17,6 +19,11 @@ public final class UIEvent {
     public let timestamp: Double
     
     /// All the touches related to this event.
+    public var allTouches: Set<UITouch> {
+        
+        return Set(touches)
+    }
+    
     public let touches: [UITouch]
     
     public let type: UIEventType = .Touches
