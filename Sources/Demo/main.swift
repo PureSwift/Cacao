@@ -8,4 +8,7 @@
 
 import Cacao
 
-UIApplicationMain(delegateClass: AppDelegate.self, name: "CacaoDemo")
+let app = Application()
+
+// enter main loop
+app.main()

@@ -9,35 +9,49 @@
 import Silica
 
 /// View that displays the Swift logo.
-public final class SwiftLogoView: UIView {
+public struct SwiftLogoView: DrawableView {
     
     // MARK: - Properties
+    
+    public var frame: Rect
+    
+    public let subviews: [View] = []
     
     /// Whether the view also draws "Swift" text next to the logo.
     ///
     /// Note: The logo alone has a `1:1` ratio and the logo with text has a `41:12` ratio.
     public var includesText: Bool = false
     
-    /// The intrensic content size.
-    public override var intrinsicContentSize: Size  {
+    /// The intrinsic content size.
+    public var intrinsicContentSize: Size  {
         
         return includesText ? Size(width: 164, height: 48) : Size(width: 48, height: 48)
     }
     
+    // MARK: - Initialization
+    
+    public init(frame: Rect = Rect()) {
+        
+        self.frame = frame
+    }
+    
     // MARK: - Drawing
     
-    public override func draw(_ rect: CGRect) {
+    public func draw(context: Silica.Context) {
         
-        // calculate rect
-        let contentRect = UIView.rect(for: contentMode, size: (intrinsicContentSize, rect.size))
+        let bounds = Rect(size: frame.size)
+        
+        UIGraphicsPushContext(context)
         
         if includesText {
             
-            StyleKit.drawSwiftLogoWithText(frame: contentRect)
+            StyleKit.drawSwiftLogoWithText(frame: bounds)
             
         } else {
             
-            StyleKit.drawSwiftLogo(frame: contentRect)
+            StyleKit.drawSwiftLogo(frame: bounds)
         }
+        
+        UIGraphicsPopContext()
     }
 }
