@@ -70,6 +70,7 @@ public extension Application {
                 SDL_FreeSurface(sdlImageSurface)
             }
             
+            /*
             // calculate native pixels
             let nativeSize: Size = {
                 
@@ -79,7 +80,9 @@ public extension Application {
                 SDL_GL_GetDrawableSize(window, &w, &h)
                 
                 return Size(width: Double(w), height: Double(h))
-            }()
+            }()*/
+            
+            let nativeSize = windowSize // FIXME: Retina display
             
             sdlImageSurface = SDL_CreateRGBSurface(0, CInt(nativeSize.width), CInt(nativeSize.height), 32, 0, 0, 0, 0)!
             
