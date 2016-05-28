@@ -9,25 +9,20 @@
 import Cacao
 import Silica
 
-final class HelloWorldViewController: UIViewController {
+final class HelloWorldViewController: ViewController {
     
-    // MARK: - Views
+    var needsDisplay: Bool = false
     
-    var logoView: SwiftLogoView!
-    
-    //weak var button: UIButton!
-    
-    //weak var label: UILabel!
-    
-    // MARK: - Loading
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    func view(frame: Rect) -> View {
         
-        logoView = SwiftLogoView(frame: CGRect(x: 0, y: 0, width: 150, height: 150))
+        let backgroundView = UIView(frame: frame)
         
-        logoView.backgroundColor = UIColor(cgColor: CGColor.clear)
+        backgroundView.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 1.0)
         
-        view.addSubview(logoView)
+        let logoView = SwiftLogoView(frame: Rect(x: 0, y: 0, width: 150, height: 150))
+        
+        backgroundView.addSubview(logoView)
+        
+        return backgroundView
     }
 }

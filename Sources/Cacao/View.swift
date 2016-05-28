@@ -8,14 +8,22 @@
 
 import Silica
 
+/// The view protocol.
 public protocol View {
     
     var frame: Rect { get set }
     
-    var subviews: [View] { get set }
+    var subviews: [View] { get }
 }
 
+/// A view that can draw with `Silica`.
 public protocol DrawableView: View {
     
     func draw(context: Silica.Context)
+}
+
+/// A view that can recieve events.
+public protocol InteractiveView: View {
+    
+    func handle(event: Event)
 }
