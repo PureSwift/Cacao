@@ -11,6 +11,8 @@ import Silica
 public protocol Event {
     
     var timestamp: UInt32 { get }
+    
+    var location: Point { get }
 }
 
 public struct MouseEvent: Event {

@@ -9,14 +9,26 @@
 import Silica
 
 /// The view protocol.
-public protocol View {
+public protocol View: class {
     
     var frame: Rect { get set }
     
     var subviews: [View] { get }
+    
+    func layoutSubviews()
 }
 
-/// A view that can draw with `Silica`.
+public extension View {
+    
+    var subviews: [View] { return [] }
+    
+    func layoutSubviews() {
+        
+        subviews.forEach { $0.layoutSubviews() }
+    }
+}
+
+/// A view that can draw.
 public protocol DrawableView: View {
     
     func draw(context: Silica.Context)

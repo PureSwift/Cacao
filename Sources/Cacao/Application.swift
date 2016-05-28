@@ -102,7 +102,7 @@ public extension Application {
             
             var pollEventStatus = SDL_PollEvent(&event)
             
-            var needsDisplay = screen.rootViewController?.needsDisplay ?? false
+            var needsDisplay = false //screen.rootViewController?.needsDisplay ?? false
             
             while pollEventStatus != 0 {
                 

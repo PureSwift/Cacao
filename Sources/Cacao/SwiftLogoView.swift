@@ -9,13 +9,11 @@
 import Silica
 
 /// View that displays the Swift logo.
-public struct SwiftLogoView: DrawableView {
+public final class SwiftLogoView: DrawableView {
     
     // MARK: - Properties
     
     public var frame: Rect
-    
-    public let subviews: [View] = []
     
     /// Whether the view also draws "Swift" text next to the logo.
     ///

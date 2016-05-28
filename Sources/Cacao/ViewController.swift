@@ -10,28 +10,19 @@ import Silica
 
 public protocol ViewController: class {
     
-    func view(frame: Rect) -> View
+    var view: View { get }
     
-    /// Whether the view controller's contents should be redrawn.
-    var needsDisplay: Bool { get }
+    var childViewControllers: [ViewController] { get }
+    
+    func layoutView()
 }
 
-public protocol ContainerViewController: ViewController {
+public extension ViewController {
     
-    var children: [ViewController] { get }
-}
-
-public extension ContainerViewController {
+    var childViewControllers: [ViewController] { return [] }
     
-    var needsDisplay: Bool {
+    func layoutView() {
         
-        for child in children {
-            
-            guard child.needsDisplay else { continue }
-            
-            return true
-        }
-        
-        return false
+        view.layoutSubviews()
     }
 }

@@ -13,9 +13,15 @@ public final class Screen {
     
     // MARK: - Properties
     
-    public var rootViewController: ViewController?
+    public var rootViewController: ViewController? {
+        
+        didSet { updateViewLayout() }
+    }
     
-    public var target: (surface: Surface, size: Size)
+    public var target: (surface: Surface, size: Size) {
+        
+        didSet { updateViewLayout() }
+    }
     
     // MARK: - Private Properties
     
@@ -38,7 +44,7 @@ public final class Screen {
         
         // render views
         
-        if let rootView = rootViewController?.view(frame: frame) {
+        if let rootView = rootViewController?.view {
             
             render(view: rootView, in: frame)
         }
@@ -63,6 +69,13 @@ public final class Screen {
         
         // remove translation
         context.translate(x: -view.frame.x, y: -view.frame.y)
+    }
+    
+    @inline(__always)
+    private func updateViewLayout() {
+        
+        rootViewController?.view.frame = Rect(size: target.size)
+        rootViewController?.layoutView()
     }
     
     internal func handle(event: Event) {

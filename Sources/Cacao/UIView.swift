@@ -37,8 +37,6 @@ public class UIView: View, DrawableView, InteractiveView {
     
     public func draw(_ rect: Rect) { /* implemented by subclasses */ }
     
-    public func layoutSubviews() { /* implemented by subclasses */ }
-    
     // MARK: - Final Methods
     
     public final func addSubview(_ view: View) {

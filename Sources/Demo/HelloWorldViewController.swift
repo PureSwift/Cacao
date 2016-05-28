@@ -11,15 +11,17 @@ import Silica
 
 final class HelloWorldViewController: ViewController {
     
-    var needsDisplay: Bool = false
+    lazy var view: View = self.loadView()
     
-    func view(frame: Rect) -> View {
+    lazy var logoView: SwiftLogoView = SwiftLogoView(frame: Rect(x: 0, y: 0, width: 150, height: 150))
+    
+    private func loadView() -> UIView {
         
-        let backgroundView = UIView(frame: frame)
+        let defaultFrame = Rect(size: Size(width: 320, height: 480))
+        
+        let backgroundView = UIView(frame: defaultFrame)
         
         backgroundView.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 1.0)
-        
-        let logoView = SwiftLogoView(frame: Rect(x: 0, y: 0, width: 150, height: 150))
         
         backgroundView.addSubview(logoView)
         
