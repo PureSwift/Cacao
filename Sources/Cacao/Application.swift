@@ -38,30 +38,29 @@ public extension Application {
         guard SDL_Init(options) >= 0
             else { fatalError("Could not initialize SDL") }
         
-        let windowSize = self.windowSize
+        let windowFlags = SDL_WINDOW_RESIZABLE.rawValue
         
         let window = SDL_CreateWindow(
             self.name,
-            0,
-            0,
+            0x1FFF0000,
+            0x1FFF0000,
             CInt(windowSize.width),
             CInt(windowSize.height),
-            0
-            )!
+            windowFlags)!
         
         defer { SDL_DestroyWindow(window) }
         
-        let sdlWindowSurface = SDL_GetWindowSurface(window)!
+        var sdlWindowSurface = SDL_GetWindowSurface(window)!
         
-        guard let sdlImageSurface = SDL_CreateRGBSurface(0, CInt(windowSize.width), CInt(windowSize.height), 32, 0, 0, 0, 0)
+        guard var sdlImageSurface = SDL_CreateRGBSurface(0, CInt(windowSize.width), CInt(windowSize.height), 32, 0, 0, 0, 0)
             else { fatalError("Could not create SDL surface: \(SDL_GetError())") }
         
         defer { SDL_FreeSurface(sdlImageSurface) }
         
-        guard let cairoSurfacePointer = cairo_image_surface_create_for_data(UnsafeMutablePointer<UInt8>(sdlImageSurface.pointee.pixels), CAIRO_FORMAT_ARGB32, sdlImageSurface.pointee.w, sdlImageSurface.pointee.h, sdlImageSurface.pointee.pitch)
+        guard var cairoSurfacePointer = cairo_image_surface_create_for_data(UnsafeMutablePointer<UInt8>(sdlImageSurface.pointee.pixels), CAIRO_FORMAT_ARGB32, sdlImageSurface.pointee.w, sdlImageSurface.pointee.h, sdlImageSurface.pointee.pitch)
             else { fatalError("Could not create Cairo Image surface") }
         
-        let surface = Cairo.Surface(cairoSurfacePointer)
+        var surface = Cairo.Surface(cairoSurfacePointer)
         
         let screen = Screen(surface: surface, size: windowSize)
         
@@ -115,6 +114,30 @@ public extension Application {
                 case SDL_QUIT:
                     
                     done = true
+                    
+                case SDL_WINDOWEVENT:
+                    
+                    switch event.window.event {
+                        
+                    case UInt8(SDL_WINDOWEVENT_SIZE_CHANGED.rawValue):
+                        
+                        windowSize = Size(width: Double(event.window.data1), height: Double(event.window.data2))
+                        
+                        // recreate buffers
+                        SDL_FreeSurface(sdlImageSurface)
+                        
+                        sdlImageSurface = SDL_CreateRGBSurface(0, CInt(windowSize.width), CInt(windowSize.height), 32, 0, 0, 0, 0)!
+                        
+                        cairoSurfacePointer = cairo_image_surface_create_for_data(UnsafeMutablePointer<UInt8>(sdlImageSurface.pointee.pixels), CAIRO_FORMAT_ARGB32, sdlImageSurface.pointee.w, sdlImageSurface.pointee.h, sdlImageSurface.pointee.pitch)!
+                        
+                        surface = Cairo.Surface(cairoSurfacePointer)
+                        
+                        screen.target = (surface, windowSize)
+                        
+                        sdlWindowSurface = SDL_GetWindowSurface(window)!
+                        
+                    default: break
+                    }
                     
                 default: break
                 }
