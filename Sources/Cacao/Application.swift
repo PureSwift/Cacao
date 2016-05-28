@@ -19,7 +19,7 @@ public protocol Application: class {
     
     var name: String { get }
     
-    var windowSize: Size { get set }
+    var preferredWindowSize: Size { get }
     
     var framesPerSecond: Int { get set }
 }
@@ -38,31 +38,66 @@ public extension Application {
         guard SDL_Init(options) >= 0
             else { fatalError("Could not initialize SDL") }
         
-        let windowFlags = SDL_WINDOW_RESIZABLE.rawValue
+        let windowFlags = SDL_WINDOW_RESIZABLE.rawValue | SDL_WINDOW_ALLOW_HIGHDPI.rawValue
+        
+        var windowSize = preferredWindowSize
+        
+        let windowPosition: Int32 = 0x1FFF0000 // undefined
         
         let window = SDL_CreateWindow(
-            self.name,
-            0x1FFF0000,
-            0x1FFF0000,
+            name,
+            windowPosition,
+            windowPosition,
             CInt(windowSize.width),
             CInt(windowSize.height),
             windowFlags)!
         
         defer { SDL_DestroyWindow(window) }
         
-        var sdlWindowSurface = SDL_GetWindowSurface(window)!
+        // create image buffers and screen
         
-        guard var sdlImageSurface = SDL_CreateRGBSurface(0, CInt(windowSize.width), CInt(windowSize.height), 32, 0, 0, 0, 0)
-            else { fatalError("Could not create SDL surface: \(SDL_GetError())") }
+        var screen: Screen!
+        
+        var sdlImageSurface: UnsafeMutablePointer<SDL_Surface>!
         
         defer { SDL_FreeSurface(sdlImageSurface) }
         
-        guard var cairoSurfacePointer = cairo_image_surface_create_for_data(UnsafeMutablePointer<UInt8>(sdlImageSurface.pointee.pixels), CAIRO_FORMAT_ARGB32, sdlImageSurface.pointee.w, sdlImageSurface.pointee.h, sdlImageSurface.pointee.pitch)
-            else { fatalError("Could not create Cairo Image surface") }
+        func updateScreenBuffers() {
+            
+            // free old buffer
+            if sdlImageSurface != nil {
+                
+                SDL_FreeSurface(sdlImageSurface)
+            }
+            
+            // calculate native pixels
+            let nativeSize: Size = {
+                
+                var w: Int32 = 0
+                var h: Int32 = 0
+                
+                SDL_GL_GetDrawableSize(window, &w, &h)
+                
+                return Size(width: Double(w), height: Double(h))
+            }()
+            
+            sdlImageSurface = SDL_CreateRGBSurface(0, CInt(nativeSize.width), CInt(nativeSize.height), 32, 0, 0, 0, 0)!
+            
+            let cairoSurfacePointer = cairo_image_surface_create_for_data(UnsafeMutablePointer<UInt8>(sdlImageSurface.pointee.pixels), CAIRO_FORMAT_ARGB32, sdlImageSurface.pointee.w, sdlImageSurface.pointee.h, sdlImageSurface.pointee.pitch)!
+            
+            let surface = Cairo.Surface(cairoSurfacePointer)
+            
+            if screen == nil {
+                
+                screen = Screen(surface: surface, nativeSize: nativeSize, size: windowSize)
+                
+            } else {
+                
+                screen.target = (surface, nativeSize, windowSize)
+            }
+        }
         
-        var surface = Cairo.Surface(cairoSurfacePointer)
-        
-        let screen = Screen(surface: surface, size: windowSize)
+        updateScreenBuffers()
         
         // define FPS
         
@@ -123,18 +158,7 @@ public extension Application {
                         
                         windowSize = Size(width: Double(event.window.data1), height: Double(event.window.data2))
                         
-                        // recreate buffers
-                        SDL_FreeSurface(sdlImageSurface)
-                        
-                        sdlImageSurface = SDL_CreateRGBSurface(0, CInt(windowSize.width), CInt(windowSize.height), 32, 0, 0, 0, 0)!
-                        
-                        cairoSurfacePointer = cairo_image_surface_create_for_data(UnsafeMutablePointer<UInt8>(sdlImageSurface.pointee.pixels), CAIRO_FORMAT_ARGB32, sdlImageSurface.pointee.w, sdlImageSurface.pointee.h, sdlImageSurface.pointee.pitch)!
-                        
-                        surface = Cairo.Surface(cairoSurfacePointer)
-                        
-                        screen.target = (surface, windowSize)
-                        
-                        sdlWindowSurface = SDL_GetWindowSurface(window)!
+                        updateScreenBuffers()
                         
                     default: break
                     }
@@ -153,9 +177,9 @@ public extension Application {
                 
                 try! screen.render()
                 
-                surface.flush()
+                screen.target.surface.flush()
                 
-                guard SDL_UpperBlit(sdlImageSurface, nil, sdlWindowSurface, nil) == 0
+                guard SDL_UpperBlit(sdlImageSurface, nil, SDL_GetWindowSurface(window)!, nil) == 0
                     else { fatalError("Could not render to screen: \(SDL_GetError())") }
                 
                 SDL_UpdateWindowSurface(window)

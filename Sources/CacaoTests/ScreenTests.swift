@@ -23,7 +23,7 @@ final class ScreenTests: XCTestCase {
         
         let surface = Surface(pdf: filename, width: size.width, height: size.height)
         
-        let screen = Screen(surface: surface, size: size)
+        let screen = Screen(surface: surface, nativeSize: size, size: size)
         
         screen.rootViewController = SimpleSubviewsTestViewController()
         

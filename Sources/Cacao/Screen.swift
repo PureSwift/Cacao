@@ -13,12 +13,17 @@ public final class Screen {
     
     // MARK: - Properties
     
+    public var scale: Double {
+        
+        return target.nativeSize.width / target.size.width
+    }
+    
     public var rootViewController: ViewController? {
         
         didSet { updateViewLayout() }
     }
     
-    public var target: (surface: Surface, size: Size) {
+    public var target: (surface: Surface, nativeSize: Size, size: Size) {
         
         didSet { updateViewLayout() }
     }
@@ -29,16 +34,18 @@ public final class Screen {
     
     // MARK: - Initialization
     
-    public init(surface: Surface, size: Size) {
+    public init(surface: Surface, nativeSize: Size, size: Size) {
         
-        self.target = (surface, size)
+        self.target = (surface, nativeSize, size)
     }
     
     // MARK: - Methods
     
     public func render() throws {
         
-        context = try Silica.Context(surface: target.surface, size: target.size)
+        context = try Silica.Context(surface: target.surface, size: target.nativeSize)
+        
+        context.scale(x: scale, y: scale)
         
         let frame = Rect(size: target.size)
         

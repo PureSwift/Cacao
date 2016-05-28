@@ -13,7 +13,7 @@ final class Application: Cacao.Application {
     
     let name: String = "CacaoDemo"
     
-    var windowSize: Size = Size(width: 640, height: 480)
+    var preferredWindowSize = Size(width: 640, height: 480)
     
     var framesPerSecond: Int = 60
     
