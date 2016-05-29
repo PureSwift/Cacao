@@ -155,6 +155,12 @@ public extension Application {
                     
                 case SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP:
                     
+                    /*
+                    let SDL_TOUCH_MOUSEID = -1
+                    
+                    guard event.button.which != SDL_TOUCH_MOUSEID
+                        else { return }*/
+                    
                     screen.handle(event: PointerEvent(event.button))
                     
                 case SDL_FINGERDOWN, SDL_FINGERUP: break

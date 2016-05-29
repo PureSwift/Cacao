@@ -11,26 +11,38 @@ import Silica
 /// View that displays the Swift logo.
 public final class SwiftLogoView: DrawableView {
     
-    // MARK: - Properties
+    // MARK: - Static Methods
     
-    public var frame: Rect
-    
-    /// Whether the view also draws "Swift" text next to the logo.
-    ///
-    /// Note: The logo alone has a `1:1` ratio and the logo with text has a `41:12` ratio.
-    public var includesText: Bool = false
-    
-    /// The intrinsic content size.
-    public var intrinsicContentSize: Size  {
+    public static func contentSize(includesText: Bool) -> Size {
         
         return includesText ? Size(width: 164, height: 48) : Size(width: 48, height: 48)
     }
     
+    // MARK: - Properties
+    
+    public var userInteractionEnabled: Bool { return false }
+    
+    public var frame: Rect
+    
+    public var hidden: Bool = false
+    
+    /// Whether the view also draws "Swift" text next to the logo.
+    ///
+    /// Note: The logo alone has a `1:1` ratio and the logo with text has a `41:12` ratio.
+    public var includesText: Bool
+    
+    /// The intrinsic content size.
+    public var intrinsicContentSize: Size  {
+        
+        return SwiftLogoView.contentSize(includesText: includesText)
+    }
+    
     // MARK: - Initialization
     
-    public init(frame: Rect = Rect()) {
+    public init(frame: Rect? = nil, includesText: Bool = false) {
         
-        self.frame = frame
+        self.includesText = includesText
+        self.frame = frame ?? Rect(size: SwiftLogoView.contentSize(includesText: includesText))
     }
     
     // MARK: - Drawing
@@ -51,12 +63,5 @@ public final class SwiftLogoView: DrawableView {
         }
         
         UIGraphicsPopContext()
-    }
-    
-    // MARK: - Event
-    
-    public func handle(event: PointerEvent) {
-        
-        print("It's alive! (\(event.screenLocation))")
     }
 }
