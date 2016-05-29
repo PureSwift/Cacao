@@ -13,9 +13,9 @@ final class HelloWorldViewController: ViewController {
     
     lazy var view: View = self.loadView()
     
-    lazy var button: ContentView<SwiftLogoView> = ContentView(frame: Rect(x: 0, y: 0, width: 150, height: 150), content: SwiftLogoView(frame: Rect(x: 0, y: 0, width: 100, height: 100)))
+    lazy var button: Button = Button(frame: Rect(x: 0, y: 0, width: 300, height: 200), content: self.logoView, mode: .aspectFit)
     
-    lazy var logoView: SwiftLogoView = SwiftLogoView(frame: Rect(x: 0, y: 0, width: 150, height: 150))
+    lazy var logoView: SwiftLogoView = SwiftLogoView()
     
     private func loadView() -> UIView {
         

@@ -11,6 +11,7 @@ import Silica
 /// The view protocol.
 public protocol View: class {
     
+    /// The view's frame.
     var frame: Rect { get set }
     
     var subviews: [View] { get }

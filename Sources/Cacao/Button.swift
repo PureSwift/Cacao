@@ -8,7 +8,7 @@
 
 import Silica
 
-public final class Button<Content: View>: View {
+public final class Button: View {
     
     public var frame: Rect
     
@@ -16,7 +16,7 @@ public final class Button<Content: View>: View {
     
     public var hidden: Bool = false
     
-    public var contentView: ContentView<Content>
+    public var contentView: ContentView
     
     public var subviews: [View] {
         
@@ -25,10 +25,10 @@ public final class Button<Content: View>: View {
     
     // MARK: - Initialization
     
-    public init(frame: Rect = Rect(), content: Content) {
+    public init(frame: Rect = Rect(), content: View, mode: ContentMode = ContentMode()) {
         
         self.frame = frame
-        self.contentView = ContentView<Content>(frame: Rect(size: frame.size), content: content)
+        self.contentView = ContentView(frame: Rect(size: frame.size), content: content, mode: mode)
     }
     
     // MARK: - Methods
