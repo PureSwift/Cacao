@@ -13,12 +13,12 @@ Pure Swift Cross-platform UIKit (Cocoa Touch) implementation (Supports Linux)
 
 ### Run [PaintCode](http://www.paintcodeapp.com) StyleKits in Linux
 
-![Image](UbuntuStyleKit.png)
+![Image](ReadmeImages/UbuntuStyleKit.png)
 
 ### Create applications that run in the native Window Manager
 
-![Image](UbuntuWindow.jpg)
+![Image](ReadmeImages/UbuntuWindow.jpg)
 
-![Image](MacWindow.jpg)
+![Image](ReadmeImages/MacWindow.jpg)
 
 
