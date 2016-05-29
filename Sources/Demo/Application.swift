@@ -23,7 +23,7 @@ final class Application: Cacao.Application {
         
         print("Running at \(framesPerSecond) FPS")
         
-        let rootVC = HelloWorldViewController()
+        let rootVC = ContentModeViewController()
         
         screen.rootViewController = rootVC
     }

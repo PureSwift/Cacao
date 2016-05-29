@@ -42,7 +42,7 @@
 		6E6318951CFA327100894742 /* ScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6318941CFA327100894742 /* ScrollView.swift */; };
 		6E6318991CFAAAAA00894742 /* Button.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6318981CFAAAAA00894742 /* Button.swift */; };
 		6E63189B1CFAAF3B00894742 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E63189A1CFAAF3B00894742 /* ContentView.swift */; };
-		6E63189D1CFAB7F700894742 /* ContentModeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E63189C1CFAB7F700894742 /* ContentModeViewController.swift */; };
+		6E63189E1CFACC5500894742 /* ContentModeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E63189C1CFAB7F700894742 /* ContentModeViewController.swift */; };
 		6EC46E381CE476D2002A1F52 /* Cairo.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 6EC46E311CE476B6002A1F52 /* Cairo.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		6EC46E391CE476D2002A1F52 /* Silica.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 6EC46E331CE476B6002A1F52 /* Silica.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
@@ -453,6 +453,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6E0F40061CF1424B009CA26A /* Application.swift in Sources */,
+				6E63189E1CFACC5500894742 /* ContentModeViewController.swift in Sources */,
 				6E0F40071CF1424D009CA26A /* main.swift in Sources */,
 				6E0F40171CF17B84009CA26A /* HelloWorldViewController.swift in Sources */,
 			);
@@ -473,7 +474,6 @@
 				6E0F401E1CF196E6009CA26A /* SwiftLogoView.swift in Sources */,
 				6E6318861CF930DD00894742 /* ViewController.swift in Sources */,
 				6E6318931CF9819C00894742 /* TableView.swift in Sources */,
-				6E63189D1CFAB7F700894742 /* ContentModeViewController.swift in Sources */,
 				6E6318991CFAAAAA00894742 /* Button.swift in Sources */,
 				6E63188C1CF9321000894742 /* Screen.swift in Sources */,
 				6E0F9D461CF06C39007FDFC9 /* Application.swift in Sources */,

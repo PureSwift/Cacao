@@ -10,13 +10,13 @@ import Silica
 
 public final class Button: View {
     
-    public var frame: Rect
+    public var frame: Rect { didSet { layoutSubviews() } }
     
     public var userInteractionEnabled: Bool = true
     
     public var hidden: Bool = false
     
-    public var contentView: ContentView
+    public var contentView: ContentView { didSet { layoutSubviews() } }
     
     public var subviews: [View] {
         

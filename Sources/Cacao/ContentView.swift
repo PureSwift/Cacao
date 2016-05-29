@@ -13,19 +13,16 @@ public final class ContentView: View {
     
     // MARK: - Properties
     
-    public var frame: Rect
+    public var frame: Rect { didSet { layoutSubviews() } }
     
     /// Content view.
-    public var content: View {
-        
-        didSet { size = content.frame.size }
-    }
+    public var content: View { didSet { size = content.frame.size; layoutSubviews() } }
     
     /// Content's size.
     public var size: Size
     
     /// Content's display mode.
-    public var mode: ContentMode
+    public var mode: ContentMode { didSet { layoutSubviews() } }
     
     public var subviews: [View] {
         
@@ -39,7 +36,7 @@ public final class ContentView: View {
     
     // MARK: - Initialization
     
-    public init(frame: Rect, content: View, mode: ContentMode = ContentMode()) {
+    public init(frame: Rect = Rect(), content: View, mode: ContentMode = ContentMode()) {
         
         self.frame = frame
         self.content = content
@@ -68,6 +65,7 @@ public enum ContentMode {
     case scaleToFill
     case aspectFit
     case aspectFill
+    case center
     
     public init() { self = .scaleToFill }
     
@@ -84,18 +82,18 @@ public enum ContentMode {
             let widthRatio = (bounds.width / size.width)
             let heightRatio = (bounds.height / size.height)
             
-            var boundingSize = bounds.size
+            var newSize = bounds.size
             
             if (widthRatio < heightRatio) {
                 
-                boundingSize.height = bounds.size.width / size.width * size.height
+                newSize.height = bounds.size.width / size.width * size.height
                 
             } else if (heightRatio < widthRatio) {
                 
-                boundingSize.width = bounds.size.height / size.height * size.width
+                newSize.width = bounds.size.height / size.height * size.width
             }
             
-            let size = Size(width: ceil(boundingSize.width), height: ceil(boundingSize.height))
+            newSize = Size(width: ceil(newSize.width), height: ceil(newSize.height))
             
             var origin = bounds.origin
             origin.x += (bounds.size.width - size.width) / 2.0
@@ -105,7 +103,36 @@ public enum ContentMode {
             
         case .aspectFill:
             
-            fatalError()
+            let widthRatio = (bounds.size.width / size.width)
+            let heightRatio = (bounds.size.height / size.height)
+            
+            var newSize = bounds.size
+            
+            if (widthRatio > heightRatio) {
+                
+                newSize.height = bounds.size.width / size.width * size.height
+                
+            } else if (heightRatio > widthRatio) {
+                
+                newSize.width = bounds.size.height / size.height * size.width
+            }
+            
+            newSize = Size(width: ceil(newSize.width), height: ceil(newSize.height))
+            
+            var origin = Point()
+            origin.x = (bounds.size.width - size.width) / 2.0
+            origin.y = (bounds.size.height - size.height) / 2.0
+            
+            return Rect(origin: origin, size: size)
+            
+        case .center:
+            
+            var rect = Rect(size: size)
+            
+            rect.origin.x = (bounds.size.width - rect.size.width) / 2.0
+            rect.origin.y = (bounds.size.height - rect.size.height) / 2.0
+            
+            return rect
         }
     }
 }
