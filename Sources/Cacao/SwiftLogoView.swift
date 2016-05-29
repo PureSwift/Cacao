@@ -52,4 +52,11 @@ public final class SwiftLogoView: DrawableView {
         
         UIGraphicsPopContext()
     }
+    
+    // MARK: - Event
+    
+    public func handle(event: PointerEvent) {
+        
+        print("It's alive! (\(event.screenLocation))")
+    }
 }

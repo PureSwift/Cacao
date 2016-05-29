@@ -57,9 +57,28 @@ public final class Screen {
         }
     }
     
-    // MARK: - Internal / Private Methods
+    public func handle(event: PointerEvent) {
+        
+        guard let rootView = rootViewController?.view,
+            let hitView = rootView.hitTest(point: event.screenLocation)
+            else { return }
+        
+        hitView.handle(event: event)
+    }
+    
+    /*
+    /// Converts a point in the screen's coordinates to a subview's coordinates.
+    public func convert(point: Point, to view: View) {
+        
+        
+    }*/
+    
+    // MARK: - Private Methods
     
     private func render(view: View, in frame: Rect) {
+        
+        guard view.hidden == false
+            else { return }
         
         // add translation
         context.translate(x: view.frame.x, y: view.frame.y)
@@ -83,10 +102,5 @@ public final class Screen {
         
         rootViewController?.view.frame = Rect(size: target.size)
         rootViewController?.layoutView()
-    }
-    
-    internal func handle(event: Event) {
-        
-        // send to view
     }
 }

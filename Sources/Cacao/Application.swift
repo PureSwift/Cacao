@@ -149,9 +149,17 @@ public extension Application {
                 
                 switch eventType {
                     
-                case SDL_QUIT:
+                case SDL_QUIT, SDL_APP_TERMINATING:
                     
                     done = true
+                    
+                case SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP:
+                    
+                    screen.handle(event: PointerEvent(event.button))
+                    
+                case SDL_FINGERDOWN, SDL_FINGERUP: break
+                    
+                    
                     
                 case SDL_WINDOWEVENT:
                     

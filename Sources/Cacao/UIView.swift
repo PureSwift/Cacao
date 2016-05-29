@@ -8,7 +8,7 @@
 
 import Silica
 
-public class UIView: View, DrawableView, InteractiveView {
+public class UIView: View, DrawableView {
     
     // MARK: - Properties
     
@@ -66,8 +66,8 @@ public class UIView: View, DrawableView, InteractiveView {
     
     // MARK: - InteractiveView
     
-    public final func handle(event: Event) {
+    public final func handle(event: PointerEvent) {
         
-        
+        // translate to UIKit APIs
     }
 }

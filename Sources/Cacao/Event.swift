@@ -7,31 +7,88 @@
 //
 
 import Silica
+import CSDL2
 
-public protocol Event {
-    
-    var timestamp: UInt32 { get }
-    
-    var location: Point { get }
-}
+// MARK: - Pointer Event
 
-public struct MouseEvent: Event {
+/// Events related to pointer input (e.g. Mouse, Touch Screen).
+public struct PointerEvent {
     
     public let timestamp: UInt32
     
-    public let location: Point
+    public let screenLocation: Point
     
-    public let button: Button
+    public let input: PointerInput
+}
+
+public enum PointerInput {
     
-    public enum Button {
+    case Mouse(MouseEvent)
+    case Finger
+}
+
+// MARK: - Mouse
+
+public enum MouseEvent {
+    
+    case Button(MouseButtonEvent)
+    case Motion
+    case Wheel
+}
+
+public struct MouseButtonEvent {
+    
+    public let button: MouseButton
+    
+    public let state: ButtonState
+    
+    public let clicks: Int
+}
+
+public enum MouseButton {
+    
+    case left, right, middle
+    
+    internal init?(_ sdlValue: UInt8) {
         
-        case left, right, middle
+        switch CInt(sdlValue) {
+            
+        case SDL_BUTTON_LEFT: self = .left
+        case SDL_BUTTON_RIGHT: self = .right
+        case SDL_BUTTON_MIDDLE: self = .middle
+            
+        default: return nil
+        }
     }
 }
 
-public struct TouchEvent: Event {
+public enum ButtonState {
     
-    public let timestamp: UInt32
+    case pressed, released
     
-    public let location: Point
+    internal init?(_ sdlValue: UInt8) {
+        
+        switch sdlValue {
+            
+        case 0: self = .released
+        case 1: self = .pressed
+            
+        default: return nil
+        }
+    }
+}
+    
+// MARK: - SDL Conversion
+
+public extension PointerEvent {
+    
+    internal init(_ sdlEvent: SDL_MouseButtonEvent) {
+        
+        self.timestamp = sdlEvent.timestamp
+        self.screenLocation = Point(x: Double(sdlEvent.x), y: Double(sdlEvent.y))
+        
+        self.input = .Mouse(.Button(MouseButtonEvent(button: MouseButton(sdlEvent.button)!,
+                                                     state: ButtonState(sdlEvent.state)!,
+                                                     clicks: Int(sdlEvent.clicks))))
+    }
 }
