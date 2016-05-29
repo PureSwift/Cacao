@@ -24,6 +24,14 @@ public protocol View: class {
     func layoutSubviews()
     
     func handle(event: PointerEvent)
+    
+    func hitTest(point: Point) -> View?
+}
+
+/// A view that can draw.
+public protocol DrawableView: View {
+    
+    func draw(context: Silica.Context)
 }
 
 public extension View {
@@ -40,17 +48,6 @@ public extension View {
     }
     
     func handle(event: PointerEvent) { }
-}
-
-/// A view that can draw.
-public protocol DrawableView: View {
-    
-    func draw(context: Silica.Context)
-}
-
-// MARK: - Hit Testing
-
-public extension View {
     
     /// Returns the farthest descendant of the receiver in the view hierarchy (including itself) that contains a specified point.
     /// 

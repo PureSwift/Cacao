@@ -23,6 +23,8 @@ public final class Button: View {
         return [contentView]
     }
     
+    public var action: (Button) -> () = { _ in }
+    
     // MARK: - Initialization
     
     public init(frame: Rect = Rect(), content: View, mode: ContentMode = ContentMode()) {
@@ -33,9 +35,31 @@ public final class Button: View {
     
     // MARK: - Methods
     
+    public func hitTest(point: Point) -> View? {
+        
+        guard hidden == false
+            && userInteractionEnabled
+            && pointInside(point)
+            else { return nil }
+        
+        // swallows touches intended for subviews
+        
+        return self
+    }
+    
     public func handle(event: PointerEvent) {
         
-        print("Event: \(event)")
+        switch event.input {
+            
+        case let .Mouse(.Button(buttonEvent)):
+            
+            if buttonEvent.state == .released {
+                
+                action(self)
+            }
+            
+        default: break
+        }
     }
     
     public func layoutSubviews() {

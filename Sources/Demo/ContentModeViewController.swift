@@ -21,23 +21,21 @@ final class ContentModeViewController: ViewController {
     
     lazy var logoView: SwiftLogoView = SwiftLogoView()
     
-    lazy var button: Button = Button(content: self.logoView, mode: .aspectFit)
+    lazy var button: Button = Button(content: self.logoView, mode: self.modes[0])
     
     // MARK: - Properties
     
-    let defaultFrame = Rect(size: Size(width: 320, height: 320))
-    
-    let modes: [ContentMode] = [.scaleToFill, .aspectFit, .aspectFill, .center]
+    let modes: [ContentMode] = [.center, .scaleToFill, .aspectFit, .aspectFill]
     
     // MARK: - Loading
     
     private func loadView() -> UIView {
         
-        let defaultFrame = Rect(size: Size(width: 320, height: 320))
-        
-        let backgroundView = UIView(frame: defaultFrame)
+        let backgroundView = UIView()
         
         label.backgroundColor = UIColor(cgColor: Color.blue)
+        
+        button.action = changeMode
         
         backgroundView.addSubview(button)
         
@@ -45,8 +43,6 @@ final class ContentModeViewController: ViewController {
         
         return backgroundView
     }
-    
-    // MARK: - Layout
     
     func layoutView() {
         
@@ -57,5 +53,27 @@ final class ContentModeViewController: ViewController {
         labelContainer.frame = Rect(x: frame.minX + floor(frame.width * 0.00000 + 0.5), y: frame.minY + floor(frame.height * 0.82812 + 0.5), width: floor(frame.width * 1.00000 + 0.5) - floor(frame.width * 0.00000 + 0.5), height: floor(frame.height * 1.00000 + 0.5) - floor(frame.height * 0.82812 + 0.5))
         
         button.frame = Rect(x: frame.minX + floor(frame.width * 0.00000 + 0.5), y: frame.minY + floor(frame.height * 0.00000 + 0.5), width: floor(frame.width * 1.00000 + 0.5) - floor(frame.width * 0.00000 + 0.5), height: floor(frame.height * 0.82812 + 0.5) - floor(frame.height * 0.00000 + 0.5))
+    }
+    
+    // MARK: - Methods
+    
+    func changeMode(sender: Button) {
+        
+        let currentMode = button.contentView.mode
+        
+        let currentIndex = modes.index(of: currentMode)!
+        
+        var nextIndex = currentIndex + 1
+        
+        if currentIndex == modes.count - 1 {
+            
+            nextIndex = 0
+        }
+        
+        let newMode = modes[nextIndex]
+        
+        button.contentView.mode = newMode
+        
+        print("Changing to \(newMode)")
     }
 }

@@ -79,8 +79,8 @@ public enum ContentMode {
             
         case .aspectFit:
             
-            let widthRatio = (bounds.width / size.width)
-            let heightRatio = (bounds.height / size.height)
+            let widthRatio = bounds.width / size.width
+            let heightRatio = bounds.height / size.height
             
             var newSize = bounds.size
             
@@ -96,8 +96,8 @@ public enum ContentMode {
             newSize = Size(width: ceil(newSize.width), height: ceil(newSize.height))
             
             var origin = bounds.origin
-            origin.x += (bounds.size.width - size.width) / 2.0
-            origin.y += (bounds.size.height - size.height) / 2.0
+            origin.x += (bounds.size.width - newSize.width) / 2.0
+            origin.y += (bounds.size.height - newSize.height) / 2.0
             
             return Rect(origin: origin, size: newSize)
             
@@ -120,8 +120,8 @@ public enum ContentMode {
             newSize = Size(width: ceil(newSize.width), height: ceil(newSize.height))
             
             var origin = Point()
-            origin.x = (bounds.size.width - size.width) / 2.0
-            origin.y = (bounds.size.height - size.height) / 2.0
+            origin.x = (bounds.size.width - newSize.width) / 2.0
+            origin.y = (bounds.size.height - newSize.height) / 2.0
             
             return Rect(origin: origin, size: newSize)
             
