@@ -99,7 +99,7 @@ public enum ContentMode {
             origin.x += (bounds.size.width - size.width) / 2.0
             origin.y += (bounds.size.height - size.height) / 2.0
             
-            return Rect(origin: origin, size: size)
+            return Rect(origin: origin, size: newSize)
             
         case .aspectFill:
             
@@ -123,7 +123,7 @@ public enum ContentMode {
             origin.x = (bounds.size.width - size.width) / 2.0
             origin.y = (bounds.size.height - size.height) / 2.0
             
-            return Rect(origin: origin, size: size)
+            return Rect(origin: origin, size: newSize)
             
         case .center:
             

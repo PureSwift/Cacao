@@ -13,7 +13,7 @@ final class HelloWorldViewController: ViewController {
     
     lazy var view: View = self.loadView()
     
-    lazy var button: Button = Button(frame: Rect(x: 0, y: 0, width: 300, height: 200), content: self.logoView, mode: .scaleToFill)
+    lazy var button: Button = Button(content: self.logoView, mode: .aspectFit)
     
     lazy var logoView: SwiftLogoView = SwiftLogoView()
     
@@ -28,5 +28,12 @@ final class HelloWorldViewController: ViewController {
         backgroundView.addSubview(button)
         
         return backgroundView
+    }
+    
+    func layoutView() {
+        
+        let bounds = Rect(size: view.frame.size)
+        
+        button.frame = bounds
     }
 }

@@ -37,4 +37,11 @@ public final class Button: View {
         
         print("Event: \(event)")
     }
+    
+    public func layoutSubviews() {
+        
+        contentView.frame = Rect(size: frame.size)
+        
+        contentView.layoutSubviews()
+    }
 }
