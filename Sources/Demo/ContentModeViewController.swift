@@ -17,11 +17,11 @@ final class ContentModeViewController: ViewController {
     
     lazy var label: UIView = UIView(frame: Rect(x: 0, y: 0, width: 50, height: 20))
     
-    lazy var labelContainer: ContentView = ContentView(frame: self.labelContainerFrame(for: self.defaultFrame), content: self.label, mode: .center)
+    lazy var labelContainer: ContentView = ContentView(content: self.label, mode: .center)
     
     lazy var logoView: SwiftLogoView = SwiftLogoView()
     
-    lazy var button: Button = Button(frame: self.buttonFrame(for: self.defaultFrame), content: self.logoView, mode: .center)
+    lazy var button: Button = Button(content: self.logoView, mode: .aspectFit)
     
     // MARK: - Properties
     
@@ -50,20 +50,12 @@ final class ContentModeViewController: ViewController {
     
     func layoutView() {
         
+        let frame = view.frame
+        
         // from Paint Code
         
-        labelContainer.frame = labelContainerFrame(for: view.frame)
+        labelContainer.frame = Rect(x: frame.minX + floor(frame.width * 0.00000 + 0.5), y: frame.minY + floor(frame.height * 0.82812 + 0.5), width: floor(frame.width * 1.00000 + 0.5) - floor(frame.width * 0.00000 + 0.5), height: floor(frame.height * 1.00000 + 0.5) - floor(frame.height * 0.82812 + 0.5))
         
-        button.frame = buttonFrame(for: view.frame)
-    }
-    
-    private func labelContainerFrame(for frame: Rect) -> Rect {
-        
-        return Rect(x: frame.minX + floor(frame.width * 0.00000 + 0.5), y: frame.minY + floor(frame.height * 0.82812 + 0.5), width: floor(frame.width * 1.00000 + 0.5) - floor(frame.width * 0.00000 + 0.5), height: floor(frame.height * 1.00000 + 0.5) - floor(frame.height * 0.82812 + 0.5))
-    }
-    
-    private func buttonFrame(for frame: Rect) -> Rect {
-    
-        return Rect(x: frame.minX + floor(frame.width * 0.00000 + 0.5), y: frame.minY + floor(frame.height * 0.00000 + 0.5), width: floor(frame.width * 1.00000 + 0.5) - floor(frame.width * 0.00000 + 0.5), height: floor(frame.height * 0.82812 + 0.5) - floor(frame.height * 0.00000 + 0.5))
+        button.frame = Rect(x: frame.minX + floor(frame.width * 0.00000 + 0.5), y: frame.minY + floor(frame.height * 0.00000 + 0.5), width: floor(frame.width * 1.00000 + 0.5) - floor(frame.width * 0.00000 + 0.5), height: floor(frame.height * 0.82812 + 0.5) - floor(frame.height * 0.00000 + 0.5))
     }
 }
