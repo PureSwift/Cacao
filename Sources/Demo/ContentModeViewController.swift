@@ -29,7 +29,7 @@ final class ContentModeViewController: ViewController {
     
     // MARK: - Properties
     
-    let modes: [ContentMode] = [.center, .scaleToFill, .aspectFit, .aspectFill]
+    let modes: [ContentMode] = [.center, .scaleToFill, .aspectFit, .aspectFill, .top, .bottom, .left, .right, .topLeft, .topRight, .bottomLeft, .bottomRight]
     
     // MARK: - Loading
     

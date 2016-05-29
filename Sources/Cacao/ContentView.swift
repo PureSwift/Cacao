@@ -70,6 +70,14 @@ public enum ContentMode {
     case aspectFit
     case aspectFill
     case center
+    case top
+    case bottom
+    case left
+    case right
+    case topLeft
+    case topRight
+    case bottomLeft
+    case bottomRight
     
     public init() { self = .scaleToFill }
     
@@ -135,6 +143,73 @@ public enum ContentMode {
             
             rect.origin.x = (bounds.size.width - rect.size.width) / 2.0
             rect.origin.y = (bounds.size.height - rect.size.height) / 2.0
+            
+            return rect
+            
+        case .top:
+            
+            var rect = Rect(size: size)
+            
+            rect.origin.y = 0.0
+            rect.origin.x = (bounds.size.width - rect.size.width) / 2.0
+            
+            return rect
+            
+        case .bottom:
+            
+            var rect = Rect(size: size)
+            
+            rect.origin.x = (bounds.size.width - rect.size.width) / 2.0
+            rect.origin.y = bounds.size.height - rect.size.height
+            
+            return rect
+            
+        case left:
+            
+            var rect = Rect(size: size)
+            
+            rect.origin.x = 0.0
+            rect.origin.y = (bounds.size.height - rect.size.height) / 2.0
+            
+            return rect
+            
+        case .right:
+            
+            var rect = Rect(size: size)
+            
+            rect.origin.x = bounds.size.width - rect.size.width
+            rect.origin.y = (bounds.size.height - rect.size.height) / 2.0
+            
+            return rect
+            
+        case .topLeft:
+            
+            return Rect(size: size)
+            
+        case .topRight:
+            
+            var rect = Rect(size: size)
+            
+            rect.origin.x = bounds.size.width - rect.size.width
+            rect.origin.y = 0.0
+            
+            return rect
+            
+        case .bottomLeft:
+            
+            var rect = Rect(size: size)
+            
+            rect.origin.x = 0.0
+            rect.origin.y = bounds.size.height - rect.size.height
+            
+            return rect
+            
+        case .bottomRight:
+            
+            var rect = Rect(size: size)
+            
+            rect.origin.x = bounds.size.width - rect.size.width
+            rect.origin.y = bounds.size.height - rect.size.height
             
             return rect
         }
