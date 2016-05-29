@@ -15,10 +15,13 @@ Pure Swift Cross-platform UIKit (Cocoa Touch) implementation (Supports Linux)
 
 ![Image](ReadmeImages/UbuntuStyleKit.png)
 
+### Layout views according to a `UIViewContentMode`
+
+![Image](ReadmeImages/ContentMode.gif)
+
 ### Create applications that run in the native Window Manager
 
 ![Image](ReadmeImages/UbuntuWindow.jpg)
 
 ![Image](ReadmeImages/MacWindow.jpg)
-
 
