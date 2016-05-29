@@ -6,6 +6,10 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
+#if os(Linux)
+import Glibc
+#endif
+
 import Silica
 
 /// A view that lays out its content according to a `ContentMode`.
