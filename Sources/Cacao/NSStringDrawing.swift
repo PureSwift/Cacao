@@ -15,27 +15,14 @@ public extension String {
         guard let context = UIGraphicsGetCurrentContext()
             else { return }
         
-        if let font = attributes[NSFontAttributeName] as? UIFont {
-            
-            context.fontSize = font.size
-            context.setFont(font.CGFont)
-            
-        } else {
-            
-            context.fontSize = UIFont.labelFontSize()
-            //context.setFont(font.CGFont)
-        }
+        let font = attributes[NSFontAttributeName] as? UIFont ?? UIFont(name: "Verdana", size: UIFont.labelFontSize())!
         
-        if let color = attributes[NSForegroundColorAttributeName] as? UIColor {
-            
-            context.fillColor = color.CGColor
-            
-        } else {
-            
-            context.fillColor = Color.black
-        }
+        context.fontSize = font.size
+        context.setFont(font.CGFont)
         
-        var textOrigin = Point(x: rect.x, y: rect.y + context.fontSize)
+        context.fillColor = (attributes[NSForegroundColorAttributeName] as? UIColor)?.CGColor ?? Color.black
+        
+        var textOrigin = Point(x: rect.x, y: rect.y - font.CGFont.scaledFont.)
         
         if let paragraphStyle = attributes[NSParagraphStyleAttributeName] as? NSParagraphStyle {
             
@@ -50,6 +37,8 @@ public extension String {
             default: break
             }
         }
+        
+        print(font.fontName)
         
         context.textPosition = textOrigin
         
