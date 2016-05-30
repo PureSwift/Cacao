@@ -12,10 +12,51 @@ public extension String {
     
     func drawInRect(_ rect: Rect, withAttributes attributes: [String: Any] = [:]) {
         
+        guard let context = UIGraphicsGetCurrentContext()
+            else { return }
         
+        if let font = attributes[NSFontAttributeName] as? UIFont {
+            
+            context.fontSize = font.size
+            context.setFont(font.CGFont)
+            
+        } else {
+            
+            context.fontSize = UIFont.labelFontSize()
+            //context.setFont(font.CGFont)
+        }
+        
+        if let color = attributes[NSForegroundColorAttributeName] as? UIColor {
+            
+            context.fillColor = color.CGColor
+            
+        } else {
+            
+            context.fillColor = Color.black
+        }
+        
+        var textOrigin = Point(x: rect.x, y: rect.y + context.fontSize)
+        
+        if let paragraphStyle = attributes[NSParagraphStyleAttributeName] as? NSParagraphStyle {
+            
+            switch paragraphStyle.alignment {
+                
+            case .Left: break // always left by default
+                
+            case .Center: break
+                
+            case .Right: break
+                
+            default: break
+            }
+        }
+        
+        context.textPosition = textOrigin
+        
+        context.show(text: self)
     }
     
-    func boundingRectWithSize(_ size: Size, options: NSStringDrawingOptions, attributes: [String: Any] = [:], context: NSStringDrawingContext? = nil) -> Rect {
+    func boundingRectWithSize(_ size: Size, options: NSStringDrawingOptions = NSStringDrawingOptions(), attributes: [String: Any] = [:], context: NSStringDrawingContext? = nil) -> Rect {
         
         return Rect()
     }
@@ -68,6 +109,11 @@ public struct NSStringDrawingOptions: OptionSet, IntegerLiteralConvertible {
     public init(integerLiteral value: Int) {
         
         self.rawValue = value
+    }
+    
+    public init() {
+        
+        self = NSStringDrawingOptions.UsesLineFragmentOrigin
     }
 }
 

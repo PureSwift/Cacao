@@ -12,13 +12,15 @@ public final class UIFont {
     
     // MARK: - Class Methods
     
-    public static func labelFontSize() -> CGFloat { return 20 }
+    public static func labelFontSize() -> CGFloat { return 17 }
     
     // MARK: - Properties
     
     public var fontName: String { return CGFont.name }
     
     public var familyName: String { return CGFont.family }
+    
+    public let size: CGFloat
     
     public var CGFont: Silica.CGFont
     
@@ -30,6 +32,7 @@ public final class UIFont {
             else { return nil }
         
         self.CGFont = internalFont
+        self.size = size
     }
 }
 

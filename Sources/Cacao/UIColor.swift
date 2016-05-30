@@ -92,7 +92,7 @@ public final class UIColor {
     
     public static func blackColor() -> UIColor {
         
-        return UIColor(cgColor: Color.white)
+        return UIColor(cgColor: Color.black)
     }
 }
 
