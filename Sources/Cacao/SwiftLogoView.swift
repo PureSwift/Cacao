@@ -26,6 +26,8 @@ public final class SwiftLogoView: DrawableView {
     
     public var hidden: Bool = false
     
+    public var clipsToBounds: Bool = true
+    
     /// Whether the view also draws "Swift" text next to the logo.
     ///
     /// Note: The logo alone has a `1:1` ratio and the logo with text has a `41:12` ratio.

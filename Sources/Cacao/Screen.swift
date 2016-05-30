@@ -87,6 +87,12 @@ public final class Screen {
         if let drawableView = view as? DrawableView {
             
             drawableView.draw(context: context)
+            
+            if drawableView.clipsToBounds {
+                
+                // FIXME
+                //content.clip(to: view.frame)
+            }
         }
         
         // render subviews

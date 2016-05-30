@@ -32,6 +32,13 @@ public protocol View: class {
 public protocol DrawableView: View {
     
     func draw(context: Silica.Context)
+    
+    var clipsToBounds: Bool { get }
+}
+
+public extension DrawableView {
+    
+    var clipsToBounds: Bool { return false }
 }
 
 public extension View {
