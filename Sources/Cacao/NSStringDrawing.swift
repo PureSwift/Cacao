@@ -24,11 +24,14 @@ public extension String {
     
     func boundingRectWithSize(_ size: Size, options: NSStringDrawingOptions = NSStringDrawingOptions(), attributes: [String: Any], context: NSStringDrawingContext? = nil) -> Rect {
         
+        guard let context = UIGraphicsGetCurrentContext()
+            else { return Rect() }
+        
         let textAttributes = TextAttributes(UIKit: attributes)
         
         var rect = Rect()
         
-        let textFrame = self.contentFrame(for: Rect(size: size), attributes: textAttributes)
+        let textFrame = self.contentFrame(for: Rect(size: size), context: context, attributes: textAttributes)
         
         return rect
     }

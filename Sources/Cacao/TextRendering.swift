@@ -21,17 +21,27 @@ public extension String {
         
         // render
         
-        let textRect = self.contentFrame(for: rect, attributes: attributes)
+        let textRect = self.contentFrame(for: rect, context: context, attributes: attributes)
         
         context.textPosition = textRect.origin
         
         context.show(text: self)
     }
     
-    func contentFrame(for bounds: Rect, attributes: TextAttributes = TextAttributes()) -> Rect {
+    func singleLineWidth(font: Cacao.Font, context: Silica.Context) -> Double {
         
-        guard let context = UIGraphicsGetCurrentContext()
-            else { return Rect() }
+        let scaledFont = font.silicaFont.scaledFont
+        
+        let size = font.size
+        
+        let glyphs = self.unicodeScalars.map { scaledFont[UInt($0.value)] }
+        
+        let textWidth = context.advances(for: glyphs).reduce(Double(0), combine: { $0.0 +  $0.1.width })
+        
+        return textWidth
+    }
+    
+    func contentFrame(for bounds: Rect, context: Silica.Context, attributes: TextAttributes = TextAttributes()) -> Rect {
         
         // calculate frame
         
@@ -41,7 +51,7 @@ public extension String {
         
         let textWidth = context.advances(for: glyphs).reduce(Double(0), combine: { $0.0 +  $0.1.width })
         
-        var textRect = Rect(x: bounds.x, y: bounds.y + attributes.font.ascender, width: textWidth, height: attributes.font.size) // height == font.size
+        var textRect = Rect(x: bounds.x, y: bounds.y, width: textWidth, height: attributes.font.size) // height == font.size
         
         switch attributes.paragraphStyle.alignment {
             
@@ -83,4 +93,16 @@ public enum TextAlignment {
     case left
     case center
     case right
+}
+
+// MARK: - Extensions
+
+public extension Silica.Context {
+    
+    func setTextAttributes(_ attributes: TextAttributes) {
+        
+        self.fontSize = attributes.font.size
+        self.setFont(attributes.font.silicaFont)
+        self.fillColor = attributes.color
+    }
 }
