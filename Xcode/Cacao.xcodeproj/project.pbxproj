@@ -52,6 +52,7 @@
 		6ECBBF251CFD539E00D50A9E /* TextRendering.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ECBBF241CFD539E00D50A9E /* TextRendering.swift */; };
 		6ECBBF271CFD540F00D50A9E /* Font.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ECBBF261CFD540F00D50A9E /* Font.swift */; };
 		6ECBBF291CFD5B7F00D50A9E /* UIViewContentMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ECBBF281CFD5B7F00D50A9E /* UIViewContentMode.swift */; };
+		6ECBBF2B1CFD934900D50A9E /* FontTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ECBBF2A1CFD934900D50A9E /* FontTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -146,6 +147,7 @@
 		6ECBBF241CFD539E00D50A9E /* TextRendering.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextRendering.swift; sourceTree = "<group>"; };
 		6ECBBF261CFD540F00D50A9E /* Font.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Font.swift; sourceTree = "<group>"; };
 		6ECBBF281CFD5B7F00D50A9E /* UIViewContentMode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIViewContentMode.swift; sourceTree = "<group>"; };
+		6ECBBF2A1CFD934900D50A9E /* FontTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FontTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -214,6 +216,7 @@
 				6E0F9D391CF05064007FDFC9 /* ScreenTests.swift */,
 				6E0F9D3A1CF05064007FDFC9 /* StyleKitTests.swift */,
 				6E0F9D3B1CF05064007FDFC9 /* TestStyleKit.swift */,
+				6ECBBF2A1CFD934900D50A9E /* FontTests.swift */,
 			);
 			path = CacaoTests;
 			sourceTree = "<group>";
@@ -512,6 +515,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6E031AE41CFC29E9004C8431 /* CoreGraphics.swift in Sources */,
+				6ECBBF2B1CFD934900D50A9E /* FontTests.swift in Sources */,
 				6E0F9D3F1CF05064007FDFC9 /* TestStyleKit.swift in Sources */,
 				6E0F9D421CF0507A007FDFC9 /* main.swift in Sources */,
 				6E0F9D3E1CF05064007FDFC9 /* StyleKitTests.swift in Sources */,

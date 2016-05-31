@@ -14,7 +14,7 @@ import Cacao
 
 final class StyleKitTests: XCTestCase {
     
-    static let allTests: [(String, (StyleKitTests) -> () throws -> Void)] = [("testSimpleShapes", testSimpleShapes), ("testAdvancedShapes", testAdvancedShapes), ("testDrawText", testDrawText)]
+    static let allTests: [(String, (StyleKitTests) -> () throws -> Void)] = [("testSimpleShapes", testSimpleShapes), ("testAdvancedShapes", testAdvancedShapes), ("testDrawSingleLineText", testDrawSingleLineText)]
     
     func testSimpleShapes() {
         
@@ -54,7 +54,7 @@ final class StyleKitTests: XCTestCase {
         print("Wrote to \(filename)")
     }
     
-    func testDrawText() {
+    func testDrawSingleLineText() {
         
         let filename = outputDirectory + "text.pdf"
         
@@ -71,6 +71,8 @@ final class StyleKitTests: XCTestCase {
         UIGraphicsPopContext()
         
         print("Wrote to \(filename)")
+        
+        print(UIFont(name: "ComicSansMS-Bold", size: 17)!.silicaFont.scaledFont.fullName)
     }
 }
 

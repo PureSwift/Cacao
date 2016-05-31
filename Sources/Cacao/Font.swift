@@ -48,6 +48,7 @@ public struct Font: Equatable {
 public func == (lhs: Font, rhs: Font) -> Bool {
     
     return lhs.name == rhs.name
+        && lhs.size == rhs.size
 }
 
 // MARK: - Private
