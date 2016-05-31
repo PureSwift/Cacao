@@ -8,76 +8,29 @@
 
 import Silica
 
-private let DefaultFont = UIFont(name: "Helvetica", size: UIFont.labelFontSize())!
-
 public extension String {
     
-    func drawInRect(_ rect: Rect, withAttributes attributes: [String: Any] = [:]) {
+    /// UIKit compatility drawing
+    func drawInRect(_ rect: Rect, withAttributes attributes: [String: Any]) {
         
         guard let context = UIGraphicsGetCurrentContext()
             else { return }
         
         // get values from attributes
+        let textAttributes = TextAttributes(UIKit: attributes)
         
-        let font = attributes[NSFontAttributeName] as? UIFont ?? DefaultFont
-        
-        let textColor = (attributes[NSForegroundColorAttributeName] as? UIColor)?.CGColor ?? Color.black
-        
-        let paragraphStyle = attributes[NSParagraphStyleAttributeName] as? NSParagraphStyle ?? NSParagraphStyle()
-        
-        // set context values
-        
-        context.fontSize = font.size
-        context.setFont(font.CGFont)
-        context.fillColor = textColor
-        
-        // render
-        
-        let textRect = frame(for: rect, font: font, paragraphStyle: paragraphStyle)
-        
-        context.textPosition = textRect.origin
-        
-        context.show(text: self)
+        self.draw(in: rect, context: context, attributes: textAttributes)
     }
     
-    func boundingRectWithSize(_ size: Size, options: NSStringDrawingOptions = NSStringDrawingOptions(), attributes: [String: Any] = [:], context: NSStringDrawingContext? = nil) -> Rect {
+    func boundingRectWithSize(_ size: Size, options: NSStringDrawingOptions = NSStringDrawingOptions(), attributes: [String: Any], context: NSStringDrawingContext? = nil) -> Rect {
         
-        let font = attributes[NSFontAttributeName] as? UIFont ?? DefaultFont
-        
-        let paragraphStyle = attributes[NSParagraphStyleAttributeName] as? NSParagraphStyle ?? NSParagraphStyle()
+        let textAttributes = TextAttributes(UIKit: attributes)
         
         var rect = Rect()
         
-        let textFrame = self.frame(for: Rect(size: size), font: font, paragraphStyle: paragraphStyle)
+        let textFrame = self.contentFrame(for: Rect(size: size), attributes: textAttributes)
         
         return rect
-    }
-    
-    func frame(for bounds: Rect, font: UIFont, paragraphStyle: NSParagraphStyle) -> Rect {
-        
-        guard let context = UIGraphicsGetCurrentContext()
-            else { return Rect() }
-        
-        // calculate frame
-        
-        let glyphs = self.unicodeScalars.map { font.CGFont.scaledFont[UInt($0.value)] }
-        
-        let textWidth = context.advances(for: glyphs).reduce(Double(0), combine: { $0.0 +  $0.1.width })
-        
-        var textRect = Rect(x: bounds.x, y: bounds.y + font.ascender, width: textWidth, height: font.size) // height == font.size
-        
-        switch paragraphStyle.alignment {
-            
-        case .Left: break // always left by default
-            
-        case .Center: textRect.x = (bounds.width - textRect.width) / 2
-            
-        case .Right: textRect.x = bounds.width - textRect.width
-            
-        default: break
-        }
-        
-        return textRect
     }
 }
 
@@ -85,6 +38,31 @@ public extension String {
 
 public typealias NSParagraphStyle = NSMutableParagraphStyle
 public typealias NSStringDrawingContext = Void
+
+public extension TextAttributes {
+    
+    init(UIKit attributes: [String: Any]) {
+        
+        var textAttributes = TextAttributes()
+        
+        if let font = attributes[NSFontAttributeName] as? UIFont {
+            
+            textAttributes.font = font
+        }
+        
+        if let textColor = (attributes[NSForegroundColorAttributeName] as? UIColor)?.CGColor {
+            
+            textAttributes.color = textColor
+        }
+        
+        if let paragraphStyle = attributes[NSParagraphStyleAttributeName] as? NSParagraphStyle {
+            
+            textAttributes.paragraphStyle = paragraphStyle.toCacao()
+        }
+        
+        self = textAttributes
+    }
+}
 
 /// Encapsulates the paragraph or ruler attributes.
 public final class NSMutableParagraphStyle {
@@ -104,6 +82,18 @@ public final class NSMutableParagraphStyle {
     }
 }
 
+extension NSMutableParagraphStyle: CacaoConvertible {
+    
+    public func toCacao() -> ParagraphStyle {
+        
+        var paragraphStyle = ParagraphStyle()
+        
+        paragraphStyle.alignment = alignment.toCacao()
+        
+        return paragraphStyle
+    }
+}
+
 public enum NSTextAlignment {
     
     case Left
@@ -113,6 +103,21 @@ public enum NSTextAlignment {
     case Natural
     
     public init() { self = .Left }
+}
+
+extension NSTextAlignment: CacaoConvertible {
+    
+    public func toCacao() -> TextAlignment {
+        
+        switch self {
+            
+        case .Left: return .left
+        case .Center: return .center
+        case .Right: return .right
+            
+        default: return .left
+        }
+    }
 }
 
 /// Rendering options for a string when it is drawn.

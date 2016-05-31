@@ -21,4 +21,6 @@ public extension UIFont {
     public var fontName: String { return name }
     
     public var familyName: String { return family }
+    
+    public var pointSize: CGFloat { return size }
 }

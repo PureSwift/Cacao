@@ -14,9 +14,19 @@ public struct Font: Equatable {
     
     public var silicaFont: Silica.Font { return storage.silicaFont }
     
+    // MARK: Font Name Attributes
+    
     public var name: String { return silicaFont.name }
     
     public var family: String { return silicaFont.family }
+    
+    // MARK: Font Metrics
+    
+    public var size: Double { return storage.size }
+    
+    public var descender: Double { return storage.descender }
+    
+    public var ascender: Double { return storage.ascender }
     
     // MARK: - Private Properties
     
