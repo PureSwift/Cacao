@@ -5,6 +5,7 @@ Pure Swift Cross-platform UIKit (Cocoa Touch) implementation (Supports Linux)
 
 ### OS X
 `carthage bootstrap`
+
 `brew install cairo sdl2`
 
 ### Ubuntu
