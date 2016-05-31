@@ -29,11 +29,9 @@ public extension String {
         
         let textAttributes = TextAttributes(UIKit: attributes)
         
-        var rect = Rect()
+        let textFrame = self.contentFrame(for: Rect(size: size), textMatrix: context.textMatrix, attributes: textAttributes)
         
-        let textFrame = self.contentFrame(for: Rect(size: size), context: context, attributes: textAttributes)
-        
-        return rect
+        return textFrame
     }
 }
 

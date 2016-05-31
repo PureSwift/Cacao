@@ -15,43 +15,29 @@ public extension String {
     func draw(in rect: Rect, context: Silica.Context, attributes: TextAttributes = TextAttributes()) {
         
         // set context values
-        context.fontSize = attributes.font.size
-        context.setFont(attributes.font.silicaFont)
-        context.fillColor = attributes.color
+        context.setTextAttributes(attributes)
         
         // render
-        
-        let textRect = self.contentFrame(for: rect, context: context, attributes: attributes)
+        let textRect = self.contentFrame(for: rect, textMatrix: context.textMatrix, attributes: attributes)
         
         context.textPosition = textRect.origin
         
         context.show(text: self)
     }
     
-    func singleLineWidth(font: Cacao.Font, context: Silica.Context) -> Double {
+    func contentFrame(for bounds: Rect, textMatrix: AffineTransform = AffineTransform.identity, attributes: TextAttributes = TextAttributes()) -> Rect {
         
-        let scaledFont = font.silicaFont.scaledFont
-        
-        let size = font.size
-        
-        let glyphs = self.unicodeScalars.map { scaledFont[UInt($0.value)] }
-        
-        let textWidth = context.advances(for: glyphs).reduce(Double(0), combine: { $0.0 +  $0.1.width })
-        
-        return textWidth
-    }
-    
-    func contentFrame(for bounds: Rect, context: Silica.Context, attributes: TextAttributes = TextAttributes()) -> Rect {
+        // assume horizontal layout (not rendering non-latin languages)
         
         // calculate frame
         
-        let scaledFont = attributes.font.silicaFont.scaledFont
+        let textWidth = attributes.font.silicaFont.singleLineWidth(text: self, fontSize: attributes.font.size, textMatrix: textMatrix)
         
-        let glyphs = self.unicodeScalars.map { scaledFont[UInt($0.value)] }
+        let lines = 1
         
-        let textWidth = context.advances(for: glyphs).reduce(Double(0), combine: { $0.0 +  $0.1.width })
+        let textHeight = attributes.font.size * Double(lines)
         
-        var textRect = Rect(x: bounds.x, y: bounds.y, width: textWidth, height: attributes.font.size) // height == font.size
+        var textRect = Rect(x: bounds.x, y: bounds.y, width: textWidth, height: textHeight) // height == font.size
         
         switch attributes.paragraphStyle.alignment {
             
