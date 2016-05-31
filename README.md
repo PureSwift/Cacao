@@ -4,9 +4,10 @@ Pure Swift Cross-platform UIKit (Cocoa Touch) implementation (Supports Linux)
 ## Installation
 
 ### OS X
-`carthage bootstrap`
-
-`brew install cairo sdl2`
+```
+carthage bootstrap
+brew install cairo sdl2
+```
 
 ### Ubuntu
 `sudo apt-get install libcairo-dev libsdl2-dev`
