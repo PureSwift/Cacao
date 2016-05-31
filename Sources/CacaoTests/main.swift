@@ -22,5 +22,6 @@ import Cacao
 #endif
 
 XCTMain([testCase(ScreenTests.allTests),
-         testCase(StyleKitTests.allTests)
-    ])
+         testCase(StyleKitTests.allTests),
+         testCase(FontTests.allTests)
+        ])

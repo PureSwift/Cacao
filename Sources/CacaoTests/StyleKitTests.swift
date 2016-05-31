@@ -71,8 +71,6 @@ final class StyleKitTests: XCTestCase {
         UIGraphicsPopContext()
         
         print("Wrote to \(filename)")
-        
-        print(UIFont(name: "ComicSansMS-Bold", size: 17)!.silicaFont.scaledFont.fullName)
     }
 }
 

@@ -12,6 +12,8 @@ import Cacao
 
 final class FontTests: XCTestCase {
     
+    static let allTests: [(String, (FontTests) -> () throws -> Void)] = [("testCreateSimpleFont", testCreateSimpleFont), ("testCreateTraitFont", testCreateTraitFont)]
+    
     func testCreateSimpleFont() {
         
         guard let font = Font(name: "MicrosoftSansSerif", size: 17)
