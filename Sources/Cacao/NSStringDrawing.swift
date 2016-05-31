@@ -33,7 +33,7 @@ public extension String {
         
         // render
         
-        let textRect = frame(for: rect, font: font, alignment: paragraphStyle.alignment)
+        let textRect = frame(for: rect, font: font, paragraphStyle: paragraphStyle)
         
         context.textPosition = textRect.origin
         
@@ -42,12 +42,18 @@ public extension String {
     
     func boundingRectWithSize(_ size: Size, options: NSStringDrawingOptions = NSStringDrawingOptions(), attributes: [String: Any] = [:], context: NSStringDrawingContext? = nil) -> Rect {
         
+        let font = attributes[NSFontAttributeName] as? UIFont ?? DefaultFont
+        
+        let paragraphStyle = attributes[NSParagraphStyleAttributeName] as? NSParagraphStyle ?? NSParagraphStyle()
+        
         var rect = Rect()
+        
+        let textFrame = self.frame(for: Rect(size: size), font: font, paragraphStyle: paragraphStyle)
         
         return rect
     }
     
-    func frame(for bounds: Rect, font: UIFont, alignment: NSTextAlignment) -> Rect {
+    func frame(for bounds: Rect, font: UIFont, paragraphStyle: NSParagraphStyle) -> Rect {
         
         guard let context = UIGraphicsGetCurrentContext()
             else { return Rect() }
@@ -60,7 +66,7 @@ public extension String {
         
         var textRect = Rect(x: bounds.x, y: bounds.y + font.ascender, width: textWidth, height: font.size) // height == font.size
         
-        switch alignment {
+        switch paragraphStyle.alignment {
             
         case .Left: break // always left by default
             

@@ -88,4 +88,14 @@ public extension View {
         
         return bounds.contains(point: point)
     }
+    
+    func setNeedsDiplay() {
+        
+        
+    }
+    
+    func setNeedsLayout() {
+        
+        
+    }
 }

@@ -96,4 +96,13 @@ public final class UIColor {
     }
 }
 
+// MARK: - CacaoConvertible
+
+extension UIColor: CacaoConvertible {
+    
+    public func toCacao() -> Silica.Color {
+        
+        return CGColor
+    }
+}
 
