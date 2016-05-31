@@ -8,6 +8,8 @@
 
 import Silica
 
+private let DefaultFont = UIFont(name: "Helvetica", size: UIFont.labelFontSize())!
+
 public extension String {
     
     func drawInRect(_ rect: Rect, withAttributes attributes: [String: Any] = [:]) {
@@ -15,47 +17,61 @@ public extension String {
         guard let context = UIGraphicsGetCurrentContext()
             else { return }
         
-        let font = attributes[NSFontAttributeName] as? UIFont ?? UIFont(name: "Helvetica", size: UIFont.labelFontSize())!
+        // get values from attributes
+        
+        let font = attributes[NSFontAttributeName] as? UIFont ?? DefaultFont
+        
+        let textColor = (attributes[NSForegroundColorAttributeName] as? UIColor)?.CGColor ?? Color.black
+        
+        let paragraphStyle = attributes[NSParagraphStyleAttributeName] as? NSParagraphStyle ?? NSParagraphStyle()
+        
+        // set context values
         
         context.fontSize = font.size
         context.setFont(font.CGFont)
+        context.fillColor = textColor
         
-        context.fillColor = (attributes[NSForegroundColorAttributeName] as? UIColor)?.CGColor ?? Color.black
+        // render
         
-        let paragraphStyle = attributes[NSParagraphStyleAttributeName] as? NSParagraphStyle ?? NSParagraphStyle()
+        let textRect = frame(for: rect, font: font, alignment: paragraphStyle.alignment)
+        
+        context.textPosition = textRect.origin
+        
+        context.show(text: self)
+    }
+    
+    func boundingRectWithSize(_ size: Size, options: NSStringDrawingOptions = NSStringDrawingOptions(), attributes: [String: Any] = [:], context: NSStringDrawingContext? = nil) -> Rect {
+        
+        var rect = Rect()
+        
+        return rect
+    }
+    
+    func frame(for bounds: Rect, font: UIFont, alignment: NSTextAlignment) -> Rect {
+        
+        guard let context = UIGraphicsGetCurrentContext()
+            else { return Rect() }
+        
+        // calculate frame
         
         let glyphs = self.unicodeScalars.map { font.CGFont.scaledFont[UInt($0.value)] }
         
         let textWidth = context.advances(for: glyphs).reduce(Double(0), combine: { $0.0 +  $0.1.width })
         
-        var textRect = Rect(x: rect.x, y: rect.y, width: textWidth, height: rect.height)
+        var textRect = Rect(x: bounds.x, y: bounds.y + font.ascender, width: textWidth, height: font.size) // height == font.size
         
-        if let paragraphStyle = attributes[NSParagraphStyleAttributeName] as? NSParagraphStyle {
+        switch alignment {
             
-            switch paragraphStyle.alignment {
-                
-            case .Left: break // always left by default
-                
-            case .Center: textRect.x = (rect.width - textRect.width) / 2
-                
-            case .Right: textRect.x = rect.width - textRect.width
-                
-            default: break
-            }
+        case .Left: break // always left by default
+            
+        case .Center: textRect.x = (bounds.width - textRect.width) / 2
+            
+        case .Right: textRect.x = bounds.width - textRect.width
+            
+        default: break
         }
         
-        context.textPosition = textRect.origin
-        
-        print(context.textPosition)
-        
-        context.show(toyText: self)
-        
-        print(context.textPosition)
-    }
-    
-    func boundingRectWithSize(_ size: Size, options: NSStringDrawingOptions = NSStringDrawingOptions(), attributes: [String: Any] = [:], context: NSStringDrawingContext? = nil) -> Rect {
-        
-        return Rect()
+        return textRect
     }
 }
 

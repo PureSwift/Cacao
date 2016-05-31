@@ -34,6 +34,12 @@ public final class UIFont {
         self.CGFont = internalFont
         self.size = size
     }
+    
+    // MARK: - Lazy Computed Properties
+    
+    public lazy var descender: Double = (Double(self.CGFont.scaledFont.descent) * self.size) / Double(self.CGFont.scaledFont.unitsPerEm)
+    
+    public lazy var ascender: Double = (Double(self.CGFont.scaledFont.ascent) * self.size) / Double(self.CGFont.scaledFont.unitsPerEm)
 }
 
 // MARK: - Supporting Types
