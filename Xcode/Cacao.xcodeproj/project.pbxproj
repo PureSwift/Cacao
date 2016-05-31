@@ -51,6 +51,7 @@
 		6ECBBF231CFD52F700D50A9E /* CacaoConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ECBBF221CFD52F700D50A9E /* CacaoConvertible.swift */; };
 		6ECBBF251CFD539E00D50A9E /* TextRendering.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ECBBF241CFD539E00D50A9E /* TextRendering.swift */; };
 		6ECBBF271CFD540F00D50A9E /* Font.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ECBBF261CFD540F00D50A9E /* Font.swift */; };
+		6ECBBF291CFD5B7F00D50A9E /* UIViewContentMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ECBBF281CFD5B7F00D50A9E /* UIViewContentMode.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -144,6 +145,7 @@
 		6ECBBF221CFD52F700D50A9E /* CacaoConvertible.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CacaoConvertible.swift; sourceTree = "<group>"; };
 		6ECBBF241CFD539E00D50A9E /* TextRendering.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextRendering.swift; sourceTree = "<group>"; };
 		6ECBBF261CFD540F00D50A9E /* Font.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Font.swift; sourceTree = "<group>"; };
+		6ECBBF281CFD5B7F00D50A9E /* UIViewContentMode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIViewContentMode.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -296,6 +298,7 @@
 			isa = PBXGroup;
 			children = (
 				6E63188D1CF93ADE00894742 /* UIView.swift */,
+				6ECBBF281CFD5B7F00D50A9E /* UIViewContentMode.swift */,
 				6E50416C1CE8F2C90087E9A3 /* UIBezierPath.swift */,
 				6E50416D1CE8F2C90087E9A3 /* UIColor.swift */,
 				6E50416E1CE8F2C90087E9A3 /* UIGraphics.swift */,
@@ -495,6 +498,7 @@
 				6E6318991CFAAAAA00894742 /* Button.swift in Sources */,
 				6E63188C1CF9321000894742 /* Screen.swift in Sources */,
 				6E031AE31CFC296B004C8431 /* CoreGraphics.swift in Sources */,
+				6ECBBF291CFD5B7F00D50A9E /* UIViewContentMode.swift in Sources */,
 				6E0F9D461CF06C39007FDFC9 /* Application.swift in Sources */,
 				6E031AE81CFC32A7004C8431 /* NSStringDrawing.swift in Sources */,
 				6E031ACB1CFB7090004C8431 /* Label.swift in Sources */,

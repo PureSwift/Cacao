@@ -6,6 +6,20 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
+import Silica
+
+// MARK: - Methods
+
+public extension String {
+    
+    func render(in context: Silica.Context, with attributes: TextAttributes = TextAttributes()) {
+        
+        
+    }
+}
+
+// MARK: - Supporting Types
+
 public struct TextAttributes {
     
     public init() { }
