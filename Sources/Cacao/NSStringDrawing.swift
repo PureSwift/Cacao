@@ -15,14 +15,20 @@ public extension String {
         guard let context = UIGraphicsGetCurrentContext()
             else { return }
         
-        let font = attributes[NSFontAttributeName] as? UIFont ?? UIFont(name: "Verdana", size: UIFont.labelFontSize())!
+        let font = attributes[NSFontAttributeName] as? UIFont ?? UIFont(name: "Helvetica", size: UIFont.labelFontSize())!
         
         context.fontSize = font.size
         context.setFont(font.CGFont)
         
         context.fillColor = (attributes[NSForegroundColorAttributeName] as? UIColor)?.CGColor ?? Color.black
         
-        var textOrigin = Point(x: rect.x, y: rect.y - font.CGFont.scaledFont.)
+        let paragraphStyle = attributes[NSParagraphStyleAttributeName] as? NSParagraphStyle ?? NSParagraphStyle()
+        
+        let glyphs = self.unicodeScalars.map { font.CGFont.scaledFont[UInt($0.value)] }
+        
+        let textWidth = context.advances(for: glyphs).reduce(Double(0), combine: { $0.0 +  $0.1.width })
+        
+        var textRect = Rect(x: rect.x, y: rect.y, width: textWidth, height: rect.height)
         
         if let paragraphStyle = attributes[NSParagraphStyleAttributeName] as? NSParagraphStyle {
             
@@ -30,19 +36,21 @@ public extension String {
                 
             case .Left: break // always left by default
                 
-            case .Center: break
+            case .Center: textRect.x = (rect.width - textRect.width) / 2
                 
-            case .Right: break
+            case .Right: textRect.x = rect.width - textRect.width
                 
             default: break
             }
         }
         
-        print(font.fontName)
+        context.textPosition = textRect.origin
         
-        context.textPosition = textOrigin
+        print(context.textPosition)
         
-        context.show(text: self)
+        context.show(toyText: self)
+        
+        print(context.textPosition)
     }
     
     func boundingRectWithSize(_ size: Size, options: NSStringDrawingOptions = NSStringDrawingOptions(), attributes: [String: Any] = [:], context: NSStringDrawingContext? = nil) -> Rect {
@@ -67,6 +75,11 @@ public final class NSMutableParagraphStyle {
     // MARK: - Initialization
     
     public init() { }
+    
+    public static func `default`() -> NSMutableParagraphStyle {
+        
+        return NSMutableParagraphStyle()
+    }
 }
 
 public enum NSTextAlignment {
