@@ -29,7 +29,13 @@ public extension String {
         
         let textAttributes = TextAttributes(UIKit: attributes)
         
-        let textFrame = self.contentFrame(for: Rect(size: size), textMatrix: context.textMatrix, attributes: textAttributes)
+        var textFrame = self.contentFrame(for: Rect(size: size), textMatrix: context.textMatrix, attributes: textAttributes)
+        
+        let font = textAttributes.font
+        
+        let descender = (Double(font.silicaFont.scaledFont.descent) * font.size) / Double(font.silicaFont.scaledFont.unitsPerEm)
+        
+        textFrame.height -= descender
         
         return textFrame
     }
