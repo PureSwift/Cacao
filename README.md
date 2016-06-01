@@ -1,4 +1,6 @@
 # Cacao
+
+[![Join the chat at https://gitter.im/PureSwift/Cacao](https://badges.gitter.im/PureSwift/Cacao.svg)](https://gitter.im/PureSwift/Cacao?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Pure Swift Cross-platform UIKit (Cocoa Touch) implementation (Supports Linux)
 
 ## Installation
