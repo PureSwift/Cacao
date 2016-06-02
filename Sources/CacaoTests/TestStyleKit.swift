@@ -472,7 +472,7 @@ public class TestStyleKit : NSObject {
         let text4Style = NSMutableParagraphStyle()
         text4Style.alignment = .Right
 
-        let text4FontAttributes: [String: Any] = [NSFontAttributeName: UIFont(name: "ComicSansMS", size: 17)!, NSForegroundColorAttributeName: UIColor.whiteColor(), NSParagraphStyleAttributeName: text4Style]
+        let text4FontAttributes: [String: Any] = [NSFontAttributeName: UIFont(name: "ComicSansMS-Bold", size: 17)!, NSForegroundColorAttributeName: UIColor.whiteColor(), NSParagraphStyleAttributeName: text4Style]
 
         let text4TextHeight: CGFloat = text4TextContent.boundingRectWithSize(CGSize(width: text4Rect.width, height: CGFloat.infinity), options: NSStringDrawingOptions.UsesLineFragmentOrigin, attributes: text4FontAttributes, context: nil).size.height
         CGContextSaveGState(context)
