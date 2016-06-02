@@ -7,7 +7,6 @@
 //
 
 import XCTest
-
 import Cacao
 
 final class FontTests: XCTestCase {
