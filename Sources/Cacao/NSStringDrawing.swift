@@ -101,7 +101,7 @@ extension NSMutableParagraphStyle: CacaoConvertible {
     }
 }
 
-public enum NSTextAlignment {
+public enum NSTextAlignment: Int {
     
     case Left
     case Center
@@ -126,6 +126,25 @@ extension NSTextAlignment: CacaoConvertible {
         }
     }
 }
+
+public enum NSLineBreakMode: Int {
+    
+    /// Wrap at word boundaries, default
+    case ByWordWrapping = 0
+    case ByCharWrapping
+    case ByClipping
+    case ByTruncatingHead
+    case ByTruncatingTail
+    case ByTruncatingMiddle
+    
+    public init() { self = .ByWordWrapping }
+}
+
+/*
+extension NSLineBreakMode: CacaoConvertible {
+    
+    
+}*/
 
 /// Rendering options for a string when it is drawn.
 public struct NSStringDrawingOptions: OptionSet, IntegerLiteralConvertible {
