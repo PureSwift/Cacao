@@ -84,11 +84,11 @@ public final class Screen {
         context.translate(x: view.frame.x, y: view.frame.y)
         
         // render view
-        if let drawableView = view as? DrawableView {
+        if let drawable = view as? Drawable {
             
-            drawableView.draw(context: context)
+            drawable.draw(context: context)
             
-            if drawableView.clipsToBounds {
+            if drawable.clipsToBounds {
                 
                 // FIXME
                 //content.clip(to: view.frame)

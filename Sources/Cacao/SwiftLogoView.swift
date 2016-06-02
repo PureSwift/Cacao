@@ -9,7 +9,7 @@
 import Silica
 
 /// View that displays the Swift logo.
-public final class SwiftLogoView: DrawableView {
+public final class SwiftLogoView: Drawable {
     
     // MARK: - Static Methods
     
