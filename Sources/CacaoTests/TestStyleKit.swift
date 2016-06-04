@@ -21,7 +21,7 @@ public func NSString(string: String) -> String {
     return string
 }
 
-public class TestStyleKit : NSObject {
+public class TestStyleKit {
 
     //// Cache
 
