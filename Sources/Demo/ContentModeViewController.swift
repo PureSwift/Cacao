@@ -19,7 +19,7 @@ final class ContentModeViewController: ViewController {
     
     lazy var view: View = self.loadView()
     
-    lazy var label: UIView = UIView(frame: Rect(x: 0, y: 0, width: 50, height: 20))
+    lazy var label: Label = Label(frame: Rect(), text: "\(self.modes[0])")
     
     lazy var labelContainer: ContentView = ContentView(content: self.label, mode: .center)
     
@@ -36,8 +36,6 @@ final class ContentModeViewController: ViewController {
     private func loadView() -> UIView {
         
         let backgroundView = UIView()
-        
-        label.backgroundColor = UIColor(cgColor: Color.blue)
         
         button.action = changeMode
         
@@ -77,6 +75,8 @@ final class ContentModeViewController: ViewController {
         let newMode = modes[nextIndex]
         
         button.contentView.mode = newMode
+        
+        label.text = "\(newMode)"
         
         print("Changing to \(newMode)")
     }

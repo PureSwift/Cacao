@@ -24,22 +24,31 @@ public final class Label: Drawable, Appearance {
     
     public var text: String
     
-    public var font: Font
+    public var font: Font = Label.appearance.font
+    
+    public var color: Color = Label.appearance.color
     
     // MARK: - Initialization
     
-    public init(frame: Rect = Rect(), text: String = "", font: Cacao.Font? = nil) {
+    public init(frame: Rect = Rect(), text: String = "") {
         
         self.frame = frame
         self.text = text
-        self.font = font ?? Label.appearance.font
     }
     
     // MARK: - Draw
     
     public func draw(context: Context) {
         
+        let bounds = Rect(size: frame.size)
         
+        var attributes = TextAttributes()
+        
+        attributes.font = font
+        
+        attributes.color = color
+        
+        text.draw(in: bounds, context: context, attributes: attributes)
     }
 }
 
@@ -50,5 +59,7 @@ public extension Label {
     public struct Appearance {
         
         public var font: Cacao.Font = Font(name: "Helvetica", size: 17)!
+        
+        public var color: Color = Color.black
     }
 }
