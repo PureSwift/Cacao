@@ -28,6 +28,8 @@ public final class Label: Drawable, Appearance {
     
     public var color: Color = Label.appearance.color
     
+    public var textAlignment: TextAlignment = .left
+    
     // MARK: - Initialization
     
     public init(frame: Rect = Rect(), text: String = "") {
@@ -43,13 +45,16 @@ public final class Label: Drawable, Appearance {
         let bounds = Rect(size: frame.size)
         
         var attributes = TextAttributes()
-        
         attributes.font = font
-        
         attributes.color = color
+        attributes.paragraphStyle.alignment = textAlignment
         
         text.draw(in: bounds, context: context, attributes: attributes)
     }
+    
+    // MARK: - Size
+    
+    
 }
 
 // MARK: - Appearance

@@ -21,8 +21,6 @@ final class ContentModeViewController: ViewController {
     
     lazy var label: Label = Label(frame: Rect(), text: "\(self.modes[0])")
     
-    lazy var labelContainer: ContentView = ContentView(content: self.label, mode: .center)
-    
     lazy var logoView: SwiftLogoView = SwiftLogoView()
     
     lazy var button: Button = Button(content: self.logoView, mode: self.modes[0])
@@ -39,9 +37,11 @@ final class ContentModeViewController: ViewController {
         
         button.action = changeMode
         
+        label.textAlignment = .center
+        
         backgroundView.addSubview(button)
         
-        backgroundView.addSubview(labelContainer)
+        backgroundView.addSubview(label)
         
         return backgroundView
     }
@@ -52,7 +52,7 @@ final class ContentModeViewController: ViewController {
         
         // from Paint Code
         
-        labelContainer.frame = Rect(x: frame.minX + floor(frame.width * 0.00000 + 0.5), y: frame.minY + floor(frame.height * 0.82812 + 0.5), width: floor(frame.width * 1.00000 + 0.5) - floor(frame.width * 0.00000 + 0.5), height: floor(frame.height * 1.00000 + 0.5) - floor(frame.height * 0.82812 + 0.5))
+        label.frame = Rect(x: frame.minX + floor(frame.width * 0.00000 + 0.5), y: frame.minY + floor(frame.height * 0.82812 + 0.5), width: floor(frame.width * 1.00000 + 0.5) - floor(frame.width * 0.00000 + 0.5), height: floor(frame.height * 1.00000 + 0.5) - floor(frame.height * 0.82812 + 0.5))
         
         button.frame = Rect(x: frame.minX + floor(frame.width * 0.00000 + 0.5), y: frame.minY + floor(frame.height * 0.00000 + 0.5), width: floor(frame.width * 1.00000 + 0.5) - floor(frame.width * 0.00000 + 0.5), height: floor(frame.height * 0.82812 + 0.5) - floor(frame.height * 0.00000 + 0.5))
     }
