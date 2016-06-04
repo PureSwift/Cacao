@@ -14,7 +14,7 @@ import Cacao
 
 final class StyleKitTests: XCTestCase {
     
-    static let allTests: [(String, (StyleKitTests) -> () throws -> Void)] = [("testSimpleShapes", testSimpleShapes), ("testAdvancedShapes", testAdvancedShapes)]
+    static let allTests: [(String, (StyleKitTests) -> () throws -> Void)] = [("testSimpleShapes", testSimpleShapes), ("testAdvancedShapes", testAdvancedShapes), ("testDrawSingleLineText", testDrawSingleLineText), ("testDrawMultilineText", testDrawMultilineText)]
     
     func testSimpleShapes() {
         
@@ -28,7 +28,7 @@ final class StyleKitTests: XCTestCase {
         
         UIGraphicsPushContext(context)
         
-        TestStyleKit.drawSimpleShapes(frame: frame)
+        TestStyleKit.drawSimpleShapes()
         
         UIGraphicsPopContext()
         
@@ -41,13 +41,51 @@ final class StyleKitTests: XCTestCase {
         
         let frame = Rect(x: 0, y: 0, width: 240, height: 120)
         
+        let surface = Surface(pdf: filename, width: 240, height: 120)
+        
+        let context = try! Silica.Context(surface: surface, size: frame.size)
+        
+        UIGraphicsPushContext(context)
+        
+        TestStyleKit.drawAdvancedShapes()
+        
+        UIGraphicsPopContext()
+        
+        print("Wrote to \(filename)")
+    }
+    
+    func testDrawSingleLineText() {
+        
+        let filename = outputDirectory + "singleLineText.pdf"
+        
+        let frame = Rect(x: 0, y: 0, width: 240, height: 120)
+        
         let surface = Surface(pdf: filename, width: frame.width, height: frame.height)
         
         let context = try! Silica.Context(surface: surface, size: frame.size)
         
         UIGraphicsPushContext(context)
         
-        TestStyleKit.drawAdvancedShapes(frame: frame)
+        TestStyleKit.drawSingleLineText()
+        
+        UIGraphicsPopContext()
+        
+        print("Wrote to \(filename)")
+    }
+    
+    func testDrawMultilineText() {
+        
+        let filename = outputDirectory + "multilineText.pdf"
+        
+        let frame = Rect(x: 0, y: 0, width: 240, height: 180)
+        
+        let surface = Surface(pdf: filename, width: frame.width, height: frame.height)
+        
+        let context = try! Silica.Context(surface: surface, size: frame.size)
+        
+        UIGraphicsPushContext(context)
+        
+        TestStyleKit.drawMultilineText()
         
         UIGraphicsPopContext()
         

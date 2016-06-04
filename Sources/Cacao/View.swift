@@ -29,9 +29,16 @@ public protocol View: class {
 }
 
 /// A view that can draw.
-public protocol DrawableView: View {
+public protocol Drawable: View {
     
     func draw(context: Silica.Context)
+    
+    var clipsToBounds: Bool { get }
+}
+
+public extension Drawable {
+    
+    var clipsToBounds: Bool { return false }
 }
 
 public extension View {
@@ -51,7 +58,7 @@ public extension View {
     
     /// Returns the farthest descendant of the receiver in the view hierarchy (including itself) that contains a specified point.
     /// 
-    /// - Note: This method ignores view objects that are hidden. 
+    /// - Note: This method ignores view objects that are hidden or have user interaction disabled.
     /// This method does not take the view’s content into account when determining a hit. 
     /// Thus, a view can still be returned even if the specified point is in a transparent portion of that view’s content.
     func hitTest(point: Point) -> View? {
@@ -80,5 +87,15 @@ public extension View {
         let bounds = Rect(size: frame.size)
         
         return bounds.contains(point: point)
+    }
+    
+    func setNeedsDiplay() {
+        
+        
+    }
+    
+    func setNeedsLayout() {
+        
+        
     }
 }

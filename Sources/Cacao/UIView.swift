@@ -8,7 +8,7 @@
 
 import Silica
 
-public class UIView: View, DrawableView {
+public class UIView: Drawable {
     
     // MARK: - Properties
     
@@ -44,7 +44,7 @@ public class UIView: View, DrawableView {
         subviews.append(view)
     }
     
-    // MARK: - DrawableView
+    // MARK: - Drawable
     
     public final func draw(context: Context) {
         

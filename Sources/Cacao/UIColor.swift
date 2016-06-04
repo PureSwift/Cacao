@@ -67,4 +67,42 @@ public final class UIColor {
         
         UIGraphicsGetCurrentContext()?.strokeColor = CGColor
     }
+    
+    // MARK: - Singletons
+    
+    public static func redColor() -> UIColor {
+        
+        return UIColor(cgColor: Color.red)
+    }
+    
+    public static func greenColor() -> UIColor {
+        
+        return UIColor(cgColor: Color.green)
+    }
+    
+    public static func blueColor() -> UIColor {
+        
+        return UIColor(cgColor: Color.blue)
+    }
+    
+    public static func whiteColor() -> UIColor {
+        
+        return UIColor(cgColor: Color.white)
+    }
+    
+    public static func blackColor() -> UIColor {
+        
+        return UIColor(cgColor: Color.black)
+    }
 }
+
+// MARK: - CacaoConvertible
+
+extension UIColor: CacaoConvertible {
+    
+    public func toCacao() -> Silica.Color {
+        
+        return CGColor
+    }
+}
+

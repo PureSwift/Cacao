@@ -9,7 +9,7 @@
 import Silica
 
 /// View that displays the Swift logo.
-public final class SwiftLogoView: DrawableView {
+public final class SwiftLogoView: Drawable {
     
     // MARK: - Static Methods
     
@@ -25,6 +25,8 @@ public final class SwiftLogoView: DrawableView {
     public var frame: Rect
     
     public var hidden: Bool = false
+    
+    public var clipsToBounds: Bool = true
     
     /// Whether the view also draws "Swift" text next to the logo.
     ///

@@ -19,9 +19,7 @@ final class ContentModeViewController: ViewController {
     
     lazy var view: View = self.loadView()
     
-    lazy var label: UIView = UIView(frame: Rect(x: 0, y: 0, width: 50, height: 20))
-    
-    lazy var labelContainer: ContentView = ContentView(content: self.label, mode: .center)
+    lazy var label: Label = Label(frame: Rect(), text: "\(self.modes[0])")
     
     lazy var logoView: SwiftLogoView = SwiftLogoView()
     
@@ -37,13 +35,13 @@ final class ContentModeViewController: ViewController {
         
         let backgroundView = UIView()
         
-        label.backgroundColor = UIColor(cgColor: Color.blue)
-        
         button.action = changeMode
+        
+        label.textAlignment = .center
         
         backgroundView.addSubview(button)
         
-        backgroundView.addSubview(labelContainer)
+        backgroundView.addSubview(label)
         
         return backgroundView
     }
@@ -54,7 +52,7 @@ final class ContentModeViewController: ViewController {
         
         // from Paint Code
         
-        labelContainer.frame = Rect(x: frame.minX + floor(frame.width * 0.00000 + 0.5), y: frame.minY + floor(frame.height * 0.82812 + 0.5), width: floor(frame.width * 1.00000 + 0.5) - floor(frame.width * 0.00000 + 0.5), height: floor(frame.height * 1.00000 + 0.5) - floor(frame.height * 0.82812 + 0.5))
+        label.frame = Rect(x: frame.minX + floor(frame.width * 0.00000 + 0.5), y: frame.minY + floor(frame.height * 0.82812 + 0.5), width: floor(frame.width * 1.00000 + 0.5) - floor(frame.width * 0.00000 + 0.5), height: floor(frame.height * 1.00000 + 0.5) - floor(frame.height * 0.82812 + 0.5))
         
         button.frame = Rect(x: frame.minX + floor(frame.width * 0.00000 + 0.5), y: frame.minY + floor(frame.height * 0.00000 + 0.5), width: floor(frame.width * 1.00000 + 0.5) - floor(frame.width * 0.00000 + 0.5), height: floor(frame.height * 0.82812 + 0.5) - floor(frame.height * 0.00000 + 0.5))
     }
@@ -77,6 +75,8 @@ final class ContentModeViewController: ViewController {
         let newMode = modes[nextIndex]
         
         button.contentView.mode = newMode
+        
+        label.text = "\(newMode)"
         
         print("Changing to \(newMode)")
     }
