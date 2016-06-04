@@ -17,6 +17,7 @@ Pure Swift Cross-platform UIKit (Cocoa Touch) implementation (Supports Linux)
 
 ### Ubuntu
 `sudo apt-get install libcairo-dev libsdl2-dev`
+Copy [modified headers](https://github.com/PureSwift/CairoHeaders) to `/usr/include`
 
 ## Screenshots
 
