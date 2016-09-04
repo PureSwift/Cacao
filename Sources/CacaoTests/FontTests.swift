@@ -15,10 +15,10 @@ final class FontTests: XCTestCase {
     
     func testCreateSimpleFont() {
         
-        guard let font = Font(name: "MicrosoftSansSerif", size: 17)
+        guard let font = Font(name: "TimesNewRoman", size: 17)
             else { XCTFail("Could not create font"); return }
         
-        let expectedFullName = "Microsoft Sans Serif"
+        let expectedFullName = "Times New Roman"
         
         XCTAssert(font.name == font.silicaFont.name)
         XCTAssert(expectedFullName == font.silicaFont.scaledFont.fullName, "\(expectedFullName) == \(font.silicaFont.scaledFont.fullName)")
@@ -26,10 +26,10 @@ final class FontTests: XCTestCase {
     
     func testCreateTraitFont() {
         
-        guard let font = Font(name: "MicrosoftSansSerif-Bold", size: 17)
+        guard let font = Font(name: "TimesNewRoman-Bold", size: 17)
             else { XCTFail("Could not create font"); return }
         
-        let expectedFullName = "Microsoft Sans Serif"
+        let expectedFullName = "Times New Roman"
         
         XCTAssert(font.name == font.silicaFont.name)
         XCTAssert(expectedFullName == font.silicaFont.scaledFont.fullName, "\(expectedFullName) == \(font.silicaFont.scaledFont.fullName)")
