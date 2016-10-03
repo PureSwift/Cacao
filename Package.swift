@@ -2,10 +2,6 @@ import PackageDescription
 
 let package = Package(
     name: "Cacao",
-    dependencies: [
-        .Package(url: "https://github.com/PureSwift/Silica.git", majorVersion: 1),
-        .Package(url: "https://github.com/PureSwift/CSDL2.git", majorVersion: 1)
-    ],
     targets: [
                  Target(
                     name: "Demo",
@@ -15,6 +11,10 @@ let package = Package(
                     dependencies: [.Target(name: "Cacao")]),
                  Target(
                     name: "Cacao")
+    ],
+    dependencies: [
+        .Package(url: "https://github.com/PureSwift/Silica.git", majorVersion: 1),
+        .Package(url: "https://github.com/PureSwift/CSDL2.git", majorVersion: 1)
     ],
     exclude: ["Xcode"]
 )
