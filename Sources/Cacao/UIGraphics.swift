@@ -16,13 +16,13 @@ import Silica
 /// you must push a valid context onto the stack manually using the `UIGraphicsPushContext()` function.
 ///
 /// This function may be called from any thread of your app.
-public func UIGraphicsGetCurrentContext() -> Context? {
+public func UIGraphicsGetCurrentContext() -> CGContext? {
     
     return ContextStack.last
 }
 
 /// Makes the specified graphics context the current context.
-public func UIGraphicsPushContext(_ context: Context) {
+public func UIGraphicsPushContext(_ context: CGContext) {
     
     ContextStack.append(context)
 }
@@ -38,4 +38,4 @@ public func UIGraphicsPopContext() {
 
 // MARK: - Private
 
-private var ContextStack: [Context] = []
+private var ContextStack: [CGContext] = []

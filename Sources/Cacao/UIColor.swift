@@ -59,41 +59,26 @@ public final class UIColor {
     /// Sets the color of subsequent fill operations to the color that the receiver represents.
     public func setFill() {
         
-        UIGraphicsGetCurrentContext()?.fillColor = CGColor
+        UIGraphicsGetCurrentContext()?.silicaContext.fillColor = CGColor
     }
     
     /// Sets the color of subsequent stroke operations to the color that the receiver represents.
     public func setStroke() {
         
-        UIGraphicsGetCurrentContext()?.strokeColor = CGColor
+        UIGraphicsGetCurrentContext()?.silicaContext.strokeColor = CGColor
     }
     
     // MARK: - Singletons
     
-    public static func redColor() -> UIColor {
-        
-        return UIColor(cgColor: Color.red)
-    }
+    public static let red = UIColor(cgColor: Color.red)
     
-    public static func greenColor() -> UIColor {
-        
-        return UIColor(cgColor: Color.green)
-    }
+    public static var green = UIColor(cgColor: Color.green)
     
-    public static func blueColor() -> UIColor {
-        
-        return UIColor(cgColor: Color.blue)
-    }
+    public static var blue = UIColor(cgColor: Color.blue)
     
-    public static func whiteColor() -> UIColor {
-        
-        return UIColor(cgColor: Color.white)
-    }
+    public static var white = UIColor(cgColor: Color.white)
     
-    public static func blackColor() -> UIColor {
-        
-        return UIColor(cgColor: Color.black)
-    }
+    public static var black = UIColor(cgColor: Color.black)
 }
 
 // MARK: - CacaoConvertible

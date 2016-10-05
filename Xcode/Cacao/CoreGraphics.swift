@@ -10,7 +10,7 @@
 
 import Silica
 
-public typealias CGContext = Silica.Context
+public typealias CGContext = Silica.CGContextWrapper
 public typealias CGColor = Silica.Color
 public typealias CGFloat = Double
 public typealias CGLineCap = Silica.LineCap

@@ -52,16 +52,16 @@ public final class UIBezierPath {
         
         var path = Path()
         
-        path.add(rect)
+        path.addRect(rect)
         
         self.CGPath = path
     }
     
-    public init(ovalInRect rect: Rect) {
+    public init(ovalIn rect: Rect) {
         
         var path = Path()
         
-        path.add(ellipseInRect: rect)
+        path.addEllipse(in: rect)
         
         self.CGPath = path
     }
@@ -89,7 +89,7 @@ public final class UIBezierPath {
     
     public func fill() {
         
-        guard let context = UIGraphicsGetCurrentContext()
+        guard let context = UIGraphicsGetCurrentContext()?.silicaContext
             else { return }
         
         try! context.save()
@@ -97,7 +97,6 @@ public final class UIBezierPath {
         setContextPath()
         
         try! context.fill(evenOdd: usesEvenOddFillRule)
-        
         context.beginPath()
         try! context.restore()
     }
@@ -106,7 +105,7 @@ public final class UIBezierPath {
     
     public func addClip() {
         
-        guard let context = UIGraphicsGetCurrentContext()
+        guard let context = UIGraphicsGetCurrentContext()?.silicaContext
             else { return }
         
         setContextPath()
@@ -116,32 +115,32 @@ public final class UIBezierPath {
     
     // MARK: - Constructing a Path
     
-    public func moveToPoint(_ point: Point) {
+    public func move(to point: Point) {
         
         CGPath.elements.append(.moveToPoint(point))
     }
     
-    public func addLineToPoint(_ point: Point) {
+    public func addLine(to point: Point) {
         
         CGPath.elements.append(.addLineToPoint(point))
     }
     
-    public func addCurveToPoint(_ endPoint: Point, controlPoint1: Point, controlPoint2: Point) {
+    public func addCurve(to endPoint: Point, controlPoint1: Point, controlPoint2: Point) {
         
         CGPath.elements.append(.addCurveToPoint(controlPoint1, controlPoint2, endPoint))
     }
     
-    public func addQuadCurveToPoint(_ endPoint: Point, controlPoint: Point) {
+    public func addQuadCurve(to endPoint: Point, controlPoint: Point) {
         
         CGPath.elements.append(.addQuadCurveToPoint(controlPoint, endPoint))
     }
     
-    public func closePath() {
+    public func close() {
         
         CGPath.elements.append(.closeSubpath)
     }
     
-    public func addArcWithCenter(_ center: Point, radius: Double, startAngle: Double, endAngle: Double, clockwise: Bool) {
+    public func addArc(with center: Point, radius: Double, startAngle: Double, endAngle: Double, clockwise: Bool) {
         
         fatalError("Not implemented")
     }
@@ -150,7 +149,7 @@ public final class UIBezierPath {
     
     private func setContextPath() {
         
-        guard let context = UIGraphicsGetCurrentContext()
+        guard let context = UIGraphicsGetCurrentContext()?.silicaContext
             else { return }
         
         context.beginPath()

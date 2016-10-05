@@ -35,7 +35,7 @@ open class UIView: Drawable {
     
     // MARK: - Subclassable Methods
     
-    open func draw(_ rect: Rect) { /* implemented by subclasses */ }
+    open func draw(_ rect: CGRect) { /* implemented by subclasses */ }
     
     // MARK: - Final Methods
     
@@ -51,7 +51,7 @@ open class UIView: Drawable {
         guard hidden == false && alpha > 0
             else { return }
         
-        UIGraphicsPushContext(context)
+        UIGraphicsPushContext(CGContext(context))
         
         // draw background color
         context.fillColor = backgroundColor.CGColor

@@ -11,9 +11,9 @@ import Silica
 public extension String {
     
     /// UIKit compatility drawing
-    func drawInRect(_ rect: Rect, withAttributes attributes: [String: Any]) {
+    func draw(in rect: Rect, withAttributes attributes: [String: Any]) {
         
-        guard let context = UIGraphicsGetCurrentContext()
+        guard let context = UIGraphicsGetCurrentContext()?.silicaContext
             else { return }
         
         // get values from attributes
@@ -22,9 +22,9 @@ public extension String {
         self.draw(in: rect, context: context, attributes: textAttributes)
     }
     
-    func boundingRectWithSize(_ size: Size, options: NSStringDrawingOptions = NSStringDrawingOptions(), attributes: [String: Any], context: NSStringDrawingContext? = nil) -> Rect {
+    func boundingRect(with size: Size, options: NSStringDrawingOptions = NSStringDrawingOptions(), attributes: [String: Any], context: NSStringDrawingContext? = nil) -> Rect {
         
-        guard let context = UIGraphicsGetCurrentContext()
+        guard let context = UIGraphicsGetCurrentContext()?.silicaContext
             else { return Rect() }
         
         let textAttributes = TextAttributes(UIKit: attributes)

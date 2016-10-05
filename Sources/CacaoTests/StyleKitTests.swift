@@ -26,7 +26,7 @@ final class StyleKitTests: XCTestCase {
         
         let context = try! Silica.Context(surface: surface, size: frame.size)
         
-        UIGraphicsPushContext(context)
+        UIGraphicsPushContext(CGContext(context))
         
         TestStyleKit.drawSimpleShapes()
         
@@ -45,7 +45,7 @@ final class StyleKitTests: XCTestCase {
         
         let context = try! Silica.Context(surface: surface, size: frame.size)
         
-        UIGraphicsPushContext(context)
+        UIGraphicsPushContext(CGContext(context))
         
         TestStyleKit.drawAdvancedShapes()
         
@@ -64,7 +64,7 @@ final class StyleKitTests: XCTestCase {
         
         let context = try! Silica.Context(surface: surface, size: frame.size)
         
-        UIGraphicsPushContext(context)
+        UIGraphicsPushContext(CGContext(context))
         
         TestStyleKit.drawSingleLineText()
         
@@ -83,7 +83,7 @@ final class StyleKitTests: XCTestCase {
         
         let context = try! Silica.Context(surface: surface, size: frame.size)
         
-        UIGraphicsPushContext(context)
+        UIGraphicsPushContext(CGContext(context))
         
         TestStyleKit.drawMultilineText()
         

@@ -53,7 +53,7 @@ public final class SwiftLogoView: Drawable {
         
         let bounds = Rect(size: frame.size)
         
-        UIGraphicsPushContext(context)
+        UIGraphicsPushContext(CGContext(context))
         
         if includesText {
             
