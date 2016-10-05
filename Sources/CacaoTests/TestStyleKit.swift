@@ -461,7 +461,7 @@ public final class TestStyleKit : NSObject {
         "Upper alignment".draw(in: text5Rect, withAttributes: text5FontAttributes)
     }
 
-    public dynamic class func drawMultiLineText() {
+    public class func drawMultiLineText() {
         //// General Declarations
         let context = UIGraphicsGetCurrentContext()!
         
@@ -479,7 +479,7 @@ public final class TestStyleKit : NSObject {
         let text5TextContent = "Center - Lorem ipsum dolor sit amet, consectetur adipiscing elit."
         let text5Style = NSMutableParagraphStyle()
         text5Style.alignment = .center
-        let text5FontAttributes = [NSFontAttributeName: UIFont(name: "TimesNewRomanPSMT", size: 17)!, NSForegroundColorAttributeName: white, NSParagraphStyleAttributeName: text5Style] as [String : Any]
+        let text5FontAttributes = [NSFontAttributeName: UIFont(name: "TimesNewRoman", size: 17)!, NSForegroundColorAttributeName: white, NSParagraphStyleAttributeName: text5Style] as [String : Any]
         
         let text5TextHeight: CGFloat = text5TextContent.boundingRect(with: CGSize(width: text5Rect.width, height: CGFloat.infinity), options: .usesLineFragmentOrigin, attributes: text5FontAttributes, context: nil).height
         context.saveGState()
@@ -496,7 +496,7 @@ public final class TestStyleKit : NSObject {
         let textTextContent = "Left - Lorem ipsum dolor sit amet, consectetur adipiscing elit."
         let textStyle = NSMutableParagraphStyle()
         textStyle.alignment = .left
-        let textFontAttributes = [NSFontAttributeName: UIFont(name: "TimesNewRomanPSMT", size: 17)!, NSForegroundColorAttributeName: white, NSParagraphStyleAttributeName: textStyle] as [String : Any]
+        let textFontAttributes = [NSFontAttributeName: UIFont(name: "TimesNewRoman", size: 17)!, NSForegroundColorAttributeName: white, NSParagraphStyleAttributeName: textStyle] as [String : Any]
         
         let textTextHeight: CGFloat = textTextContent.boundingRect(with: CGSize(width: textRect.width, height: CGFloat.infinity), options: .usesLineFragmentOrigin, attributes: textFontAttributes, context: nil).height
         context.saveGState()
@@ -513,7 +513,7 @@ public final class TestStyleKit : NSObject {
         let text2TextContent = "Right - Lorem ipsum dolor sit amet, consectetur adipiscing elit."
         let text2Style = NSMutableParagraphStyle()
         text2Style.alignment = .right
-        let text2FontAttributes = [NSFontAttributeName: UIFont(name: "TimesNewRomanPSMT", size: 17)!, NSForegroundColorAttributeName: white, NSParagraphStyleAttributeName: text2Style] as [String : Any]
+        let text2FontAttributes = [NSFontAttributeName: UIFont(name: "TimesNewRoman", size: 17)!, NSForegroundColorAttributeName: white, NSParagraphStyleAttributeName: text2Style] as [String : Any]
         
         let text2TextHeight: CGFloat = text2TextContent.boundingRect(with: CGSize(width: text2Rect.width, height: CGFloat.infinity), options: .usesLineFragmentOrigin, attributes: text2FontAttributes, context: nil).height
         context.saveGState()

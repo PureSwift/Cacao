@@ -85,7 +85,7 @@ final class StyleKitTests: XCTestCase {
         
         UIGraphicsPushContext(CGContext(context))
         
-        TestStyleKit.drawMultilineText()
+        TestStyleKit.drawMultiLineText()
         
         UIGraphicsPopContext()
         

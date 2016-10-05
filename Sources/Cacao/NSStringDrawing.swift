@@ -149,10 +149,10 @@ extension NSLineBreakMode: CacaoConvertible {
 /// Rendering options for a string when it is drawn.
 public struct NSStringDrawingOptions: OptionSet, ExpressibleByIntegerLiteral {
     
-    public static let UsesLineFragmentOrigin = NSStringDrawingOptions(rawValue: (1 << 0))
-    public static let UsesFontLeading = NSStringDrawingOptions(rawValue: (1 << 1))
-    public static let UsesDeviceMetrics = NSStringDrawingOptions(rawValue: (1 << 3))
-    public static let TruncatesLastVisibleLine = NSStringDrawingOptions(rawValue: (1 << 5))
+    public static let usesLineFragmentOrigin = NSStringDrawingOptions(rawValue: (1 << 0))
+    public static let usesFontLeading = NSStringDrawingOptions(rawValue: (1 << 1))
+    public static let usesDeviceMetrics = NSStringDrawingOptions(rawValue: (1 << 3))
+    public static let truncatesLastVisibleLine = NSStringDrawingOptions(rawValue: (1 << 5))
     
     public var rawValue: Int
     
@@ -168,7 +168,7 @@ public struct NSStringDrawingOptions: OptionSet, ExpressibleByIntegerLiteral {
     
     public init() {
         
-        self = NSStringDrawingOptions.UsesLineFragmentOrigin
+        self = NSStringDrawingOptions.usesLineFragmentOrigin
     }
 }
 
