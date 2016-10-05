@@ -86,7 +86,7 @@ public extension View {
         
         let bounds = Rect(size: frame.size)
         
-        return bounds.contains(point: point)
+        return bounds.contains(point)
     }
     
     func setNeedsDiplay() {

@@ -164,7 +164,7 @@ public enum ContentMode {
             
             return rect
             
-        case left:
+        case .left:
             
             var rect = Rect(size: size)
             

@@ -23,17 +23,17 @@ public struct PointerEvent {
 
 public enum PointerInput {
     
-    case Mouse(MouseEvent)
-    case Finger
+    case mouse(MouseEvent)
+    case finger
 }
 
 // MARK: - Mouse
 
 public enum MouseEvent {
     
-    case Button(MouseButtonEvent)
-    case Motion
-    case Wheel
+    case button(MouseButtonEvent)
+    case motion
+    case wheel
 }
 
 public struct MouseButtonEvent {
@@ -87,7 +87,7 @@ public extension PointerEvent {
         self.timestamp = sdlEvent.timestamp
         self.screenLocation = Point(x: Double(sdlEvent.x), y: Double(sdlEvent.y))
         
-        self.input = .Mouse(.Button(MouseButtonEvent(button: MouseButton(sdlEvent.button)!,
+        self.input = .mouse(.button(MouseButtonEvent(button: MouseButton(sdlEvent.button)!,
                                                      state: ButtonState(sdlEvent.state)!,
                                                      clicks: Int(sdlEvent.clicks))))
     }

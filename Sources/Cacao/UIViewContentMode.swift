@@ -8,21 +8,21 @@
 
 public enum UIViewContentMode: Int {
     
-    public init() { self = .ScaleToFill }
+    public init() { self = .scaleToFill }
     
-    case ScaleToFill
-    case ScaleAspectFit
-    case ScaleAspectFill
-    case Redraw
-    case Center
-    case Top
-    case Bottom
-    case Left
-    case Right
-    case TopLeft
-    case TopRight
-    case BottomLeft
-    case BottomRight
+    case scaleToFill
+    case scaleAspectFit
+    case scaleAspectFill
+    case redraw
+    case center
+    case top
+    case bottom
+    case left
+    case right
+    case topLeft
+    case topRight
+    case bottomLeft
+    case bottomRight
 }
 
 extension UIViewContentMode: CacaoConvertible {
@@ -31,19 +31,19 @@ extension UIViewContentMode: CacaoConvertible {
         
         switch self {
             
-        case ScaleToFill:       return .scaleToFill
-        case ScaleAspectFit:    return .aspectFit
-        case ScaleAspectFill:   return .aspectFill
-        case Redraw:            return .scaleToFill // default
-        case Center:            return .center
-        case Top:               return .top
-        case Bottom:            return .bottom
-        case Left:              return .left
-        case Right:             return .right
-        case TopLeft:           return .topLeft
-        case TopRight:          return .topRight
-        case BottomLeft:        return .bottomLeft
-        case BottomRight:       return .bottomRight
+        case .scaleToFill:       return .scaleToFill
+        case .scaleAspectFit:    return .aspectFit
+        case .scaleAspectFill:   return .aspectFill
+        case .redraw:            return .scaleToFill // default
+        case .center:            return .center
+        case .top:               return .top
+        case .bottom:            return .bottom
+        case .left:              return .left
+        case .right:             return .right
+        case .topLeft:           return .topLeft
+        case .topRight:          return .topRight
+        case .bottomLeft:        return .bottomLeft
+        case .bottomRight:       return .bottomRight
         }
     }
 }

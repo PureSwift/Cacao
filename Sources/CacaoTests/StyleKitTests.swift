@@ -99,9 +99,9 @@ let outputDirectory: String = {
     
     var isDirectory: ObjCBool = false
     
-    if NSFileManager.default().fileExists(atPath: outputDirectory, isDirectory: &isDirectory) == false {
+    if FileManager.default.fileExists(atPath: outputDirectory, isDirectory: &isDirectory) == false {
         
-        try! NSFileManager.default().createDirectory(atPath: outputDirectory, withIntermediateDirectories: false)
+        try! FileManager.default.createDirectory(atPath: outputDirectory, withIntermediateDirectories: false)
     }
     
     return outputDirectory

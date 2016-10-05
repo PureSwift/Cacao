@@ -103,13 +103,13 @@ extension NSMutableParagraphStyle: CacaoConvertible {
 
 public enum NSTextAlignment: Int {
     
-    case Left
-    case Center
-    case Right
-    case Justified
-    case Natural
+    case left
+    case center
+    case right
+    case justified
+    case natural
     
-    public init() { self = .Left }
+    public init() { self = .left }
 }
 
 extension NSTextAlignment: CacaoConvertible {
@@ -118,9 +118,9 @@ extension NSTextAlignment: CacaoConvertible {
         
         switch self {
             
-        case .Left: return .left
-        case .Center: return .center
-        case .Right: return .right
+        case .left: return .left
+        case .center: return .center
+        case .right: return .right
             
         default: return .left
         }
@@ -130,14 +130,14 @@ extension NSTextAlignment: CacaoConvertible {
 public enum NSLineBreakMode: Int {
     
     /// Wrap at word boundaries, default
-    case ByWordWrapping = 0
-    case ByCharWrapping
-    case ByClipping
-    case ByTruncatingHead
-    case ByTruncatingTail
-    case ByTruncatingMiddle
+    case byWordWrapping = 0
+    case byCharWrapping
+    case byClipping
+    case byTruncatingHead
+    case byTruncatingTail
+    case byTruncatingMiddle
     
-    public init() { self = .ByWordWrapping }
+    public init() { self = .byWordWrapping }
 }
 
 /*
@@ -147,7 +147,7 @@ extension NSLineBreakMode: CacaoConvertible {
 }*/
 
 /// Rendering options for a string when it is drawn.
-public struct NSStringDrawingOptions: OptionSet, IntegerLiteralConvertible {
+public struct NSStringDrawingOptions: OptionSet, ExpressibleByIntegerLiteral {
     
     public static let UsesLineFragmentOrigin = NSStringDrawingOptions(rawValue: (1 << 0))
     public static let UsesFontLeading = NSStringDrawingOptions(rawValue: (1 << 1))

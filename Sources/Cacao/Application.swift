@@ -86,7 +86,7 @@ public extension Application {
             
             sdlImageSurface = SDL_CreateRGBSurface(0, CInt(nativeSize.width), CInt(nativeSize.height), 32, 0, 0, 0, 0)!
             
-            let cairoSurfacePointer = cairo_image_surface_create_for_data(UnsafeMutablePointer<UInt8>(sdlImageSurface.pointee.pixels), CAIRO_FORMAT_ARGB32, sdlImageSurface.pointee.w, sdlImageSurface.pointee.h, sdlImageSurface.pointee.pitch)!
+            let cairoSurfacePointer = cairo_image_surface_create_for_data(sdlImageSurface.pointee.pixels.assumingMemoryBound(to: UInt8.self), CAIRO_FORMAT_ARGB32, sdlImageSurface.pointee.w, sdlImageSurface.pointee.h, sdlImageSurface.pointee.pitch)!
             
             let surface = Cairo.Surface(cairoSurfacePointer)
             

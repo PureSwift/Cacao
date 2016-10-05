@@ -8,7 +8,7 @@
 
 import Silica
 
-public class UIView: Drawable {
+open class UIView: Drawable {
     
     // MARK: - Properties
     
@@ -22,7 +22,7 @@ public class UIView: Drawable {
     
     public final var hidden: Bool = false
     
-    public final private(set) var subviews: [View] = []
+    public final fileprivate(set) var subviews: [View] = []
     
     public final var tag: Int = 0
     
@@ -35,7 +35,7 @@ public class UIView: Drawable {
     
     // MARK: - Subclassable Methods
     
-    public func draw(_ rect: Rect) { /* implemented by subclasses */ }
+    open func draw(_ rect: Rect) { /* implemented by subclasses */ }
     
     // MARK: - Final Methods
     

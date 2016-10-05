@@ -51,7 +51,7 @@ public final class Button: View {
         
         switch event.input {
             
-        case let .Mouse(.Button(buttonEvent)):
+        case let .mouse(.button(buttonEvent)):
             
             if buttonEvent.state == .released {
                 

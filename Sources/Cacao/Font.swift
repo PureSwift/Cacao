@@ -30,7 +30,7 @@ public struct Font: Equatable {
     
     // MARK: - Private Properties
     
-    private let storage: Storage
+    fileprivate let storage: Storage
     
     // MARK: - Initialization
     
@@ -55,7 +55,7 @@ public func == (lhs: Font, rhs: Font) -> Bool {
 
 private extension Font {
     
-    private final class Storage {
+    final class Storage {
         
         // MARK: - Properties
         
@@ -65,7 +65,7 @@ private extension Font {
         
         // MARK: - Initialization
         
-        private init(silicaFont: Silica.Font, size: Double) {
+        fileprivate init(silicaFont: Silica.Font, size: Double) {
             
             self.silicaFont = silicaFont
             self.size = size

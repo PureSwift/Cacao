@@ -29,9 +29,9 @@ public final class UIBezierPath {
     
     public var lineWidth: Double = 1.0
     
-    public var lineCapStyle: LineCap = .Butt
+    public var lineCapStyle: LineCap = .butt
     
-    public var lineJoinStyle: LineJoin = .Miter
+    public var lineJoinStyle: LineJoin = .miter
     
     public var miterLimit: Double = 10
     
@@ -52,7 +52,7 @@ public final class UIBezierPath {
         
         var path = Path()
         
-        path.add(rect: rect)
+        path.add(rect)
         
         self.CGPath = path
     }
@@ -118,27 +118,27 @@ public final class UIBezierPath {
     
     public func moveToPoint(_ point: Point) {
         
-        CGPath.elements.append(.MoveToPoint(point))
+        CGPath.elements.append(.moveToPoint(point))
     }
     
     public func addLineToPoint(_ point: Point) {
         
-        CGPath.elements.append(.AddLineToPoint(point))
+        CGPath.elements.append(.addLineToPoint(point))
     }
     
     public func addCurveToPoint(_ endPoint: Point, controlPoint1: Point, controlPoint2: Point) {
         
-        CGPath.elements.append(.AddCurveToPoint(controlPoint1, controlPoint2, endPoint))
+        CGPath.elements.append(.addCurveToPoint(controlPoint1, controlPoint2, endPoint))
     }
     
     public func addQuadCurveToPoint(_ endPoint: Point, controlPoint: Point) {
         
-        CGPath.elements.append(.AddQuadCurveToPoint(controlPoint, endPoint))
+        CGPath.elements.append(.addQuadCurveToPoint(controlPoint, endPoint))
     }
     
     public func closePath() {
         
-        CGPath.elements.append(.CloseSubpath)
+        CGPath.elements.append(.closeSubpath)
     }
     
     public func addArcWithCenter(_ center: Point, radius: Double, startAngle: Double, endAngle: Double, clockwise: Bool) {

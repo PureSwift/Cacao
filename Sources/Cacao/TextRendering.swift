@@ -25,7 +25,7 @@ public extension String {
         context.show(text: self)
     }
     
-    func contentFrame(for bounds: Rect, textMatrix: AffineTransform = AffineTransform.identity, attributes: TextAttributes = TextAttributes()) -> Rect {
+    func contentFrame(for bounds: Rect, textMatrix: Silica.AffineTransform = AffineTransform.identity, attributes: TextAttributes = TextAttributes()) -> Rect {
         
         // assume horizontal layout (not rendering non-latin languages)
         
