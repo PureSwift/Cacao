@@ -10,29 +10,27 @@
 
 Pure Swift Cross-platform UIKit (Cocoa Touch) implementation (Supports Linux)
 
-## Installation
+## Dependencies
 
 ### OS X
-`brew install cairo sdl2 && carthage bootstrap`
+`brew install cairo sdl2 lcms2`
 
 ### Ubuntu
-`sudo apt-get install libcairo-dev libsdl2-dev`
-
-Copy [modified headers](https://github.com/PureSwift/CairoHeaders) to `/usr/include`
+`sudo apt-get install libcairo-dev libsdl2-dev liblcms2-dev`
 
 ## Screenshots
 
 ### Run [PaintCode](http://www.paintcodeapp.com) StyleKits in Linux
 
-![Image](ReadmeImages/UbuntuStyleKit.png)
+![Image](Resources/ReadmeImages/UbuntuStyleKit.png)
 
 ### Layout views according to a `UIViewContentMode`
 
-![Image](ReadmeImages/ContentMode.gif)
+![Image](Resources/ReadmeImages/ContentMode.gif)
 
 ### Create applications that run in the native Window Manager
 
-![Image](ReadmeImages/UbuntuWindow.jpg)
+![Image](Resources/ReadmeImages/UbuntuWindow.jpg)
 
-![Image](ReadmeImages/MacWindow.jpg)
+![Image](Resources/ReadmeImages/MacWindow.jpg)
 

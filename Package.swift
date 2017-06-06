@@ -7,9 +7,6 @@ let package = Package(
                     name: "Demo",
                     dependencies: [.Target(name: "Cacao")]),
                  Target(
-                    name: "CacaoTests",
-                    dependencies: [.Target(name: "Cacao")]),
-                 Target(
                     name: "Cacao")
     ],
     dependencies: [
