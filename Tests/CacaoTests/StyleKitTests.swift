@@ -106,14 +106,3 @@ let outputDirectory: String = {
     
     return outputDirectory
 }()
-
-// this is why I hate old Foundation ObjC APIs
-#if os(Linux)
-extension NSFileManager {
-    
-    public static func `default`() -> NSFileManager {
-        
-        return NSFileManager.defaultManager()
-    }
-}
-#endif

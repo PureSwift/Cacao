@@ -11,15 +11,8 @@ import Foundation
 import CCairo
 import Cairo
 import Silica
-import Cacao
-
-#if os(OSX) || os(iOS) || os(watchOS)
-    func XCTMain(_ testCases: [XCTestCaseEntry]) { fatalError("Not Implemented. Linux only") }
-    
-    func testCase<T: XCTestCase>(_ allTests: [(String, (T) -> () throws -> Void)]) -> XCTestCaseEntry { fatalError("Not Implemented. Linux only") }
-    
-    struct XCTestCaseEntry { }
-#endif
+@testable import Cacao
+@testable import CacaoTests
 
 XCTMain([testCase(ScreenTests.allTests),
          testCase(StyleKitTests.allTests),
