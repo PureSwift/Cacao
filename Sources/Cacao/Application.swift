@@ -86,18 +86,12 @@ public extension Application {
             let nativeSize = windowSize // FIXME: Retina display
             
             sdlImageSurface = SDL_CreateRGBSurface(0, CInt(nativeSize.width), CInt(nativeSize.height), 32, 0, 0, 0, 0)!
-            
-            let dataLength = sdlImageSurface.pointee.h * sdlImageSurface.pointee.pitch
-            
-            let data = Data(bytesNoCopy: sdlImageSurface.pointee.pixels, count: Int(dataLength), deallocator: .none)
                         
-            let surface = try! Cairo.Surface.Image(data: data,
+            let surface = try! Cairo.Surface.Image(mutableBytes: sdlImageSurface.pointee.pixels.assumingMemoryBound(to: UInt8.self),
                                               format: .argb32,
                                               width: Int(sdlImageSurface.pointee.w),
                                               height: Int(sdlImageSurface.pointee.h),
                                               stride: Int(sdlImageSurface.pointee.pitch))
-            
-            
             
             if screen == nil {
                 
