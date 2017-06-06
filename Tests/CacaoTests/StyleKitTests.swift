@@ -22,7 +22,7 @@ final class StyleKitTests: XCTestCase {
         
         let frame = Rect(x: 0, y: 0, width: 240, height: 120)
         
-        let surface = Surface(pdf: filename, width: frame.width, height: frame.height)
+        let surface = try! Surface.PDF(filename: filename, width: frame.size.width, height: frame.size.height)
         
         let context = try! Silica.Context(surface: surface, size: frame.size)
         
@@ -41,7 +41,7 @@ final class StyleKitTests: XCTestCase {
         
         let frame = Rect(x: 0, y: 0, width: 240, height: 120)
         
-        let surface = Surface(pdf: filename, width: 240, height: 120)
+        let surface = try! Surface.PDF(filename: filename, width: frame.size.width, height: frame.size.height)
         
         let context = try! Silica.Context(surface: surface, size: frame.size)
         
@@ -60,7 +60,7 @@ final class StyleKitTests: XCTestCase {
         
         let frame = Rect(x: 0, y: 0, width: 240, height: 120)
         
-        let surface = Surface(pdf: filename, width: frame.width, height: frame.height)
+        let surface = try! Surface.PDF(filename: filename, width: frame.size.width, height: frame.size.height)
         
         let context = try! Silica.Context(surface: surface, size: frame.size)
         
@@ -79,7 +79,7 @@ final class StyleKitTests: XCTestCase {
         
         let frame = Rect(x: 0, y: 0, width: 240, height: 180)
         
-        let surface = Surface(pdf: filename, width: frame.width, height: frame.height)
+        let surface = try! Surface.PDF(filename: filename, width: frame.size.width, height: frame.size.height)
         
         let context = try! Silica.Context(surface: surface, size: frame.size)
         

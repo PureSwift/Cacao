@@ -7,7 +7,9 @@
 //
 
 #if os(Linux)
-import Glibc
+    import Glibc
+#elseif os(macOS)
+    import Darwin.C
 #endif
 
 import Silica

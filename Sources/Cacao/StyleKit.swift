@@ -13,11 +13,13 @@
 
 #if os(Linux)
     import Glibc
+#elseif os(macOS)
+    import Darwin.C
 #endif
 
 import Silica
 
-internal final class StyleKit : NSObject {
+internal final class StyleKit {
 
     //// Drawing Methods
 

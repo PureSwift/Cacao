@@ -13,12 +13,14 @@
 
 #if os(Linux)
     import Glibc
+#elseif os(macOS)
+    import Darwin.C
 #endif
 
 import Cacao
 import Silica
 
-public final class TestStyleKit : NSObject {
+public final class TestStyleKit {
 
     //// Cache
 

@@ -11,7 +11,10 @@ import Cacao
 
 final class FontTests: XCTestCase {
     
-    static let allTests: [(String, (FontTests) -> () throws -> Void)] = [("testCreateSimpleFont", testCreateSimpleFont), ("testCreateTraitFont", testCreateTraitFont)]
+    static let allTests = [
+        ("testCreateSimpleFont", testCreateSimpleFont),
+        ("testCreateTraitFont", testCreateTraitFont)
+    ]
     
     func testCreateSimpleFont() {
         

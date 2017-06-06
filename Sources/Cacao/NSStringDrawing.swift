@@ -171,8 +171,6 @@ public struct NSStringDrawingOptions: OptionSet, ExpressibleByIntegerLiteral {
         self = NSStringDrawingOptions.usesLineFragmentOrigin
     }
 }
-
-#if os(Linux)
     
     /// Expects `UIFont` value.
     public let NSFontAttributeName = "NSFontAttributeName"
@@ -183,8 +181,6 @@ public struct NSStringDrawingOptions: OptionSet, ExpressibleByIntegerLiteral {
     /// Expects `NSMutableParagraphStyle` value.
     public let NSParagraphStyleAttributeName = "NSParagraphStyleAttributeName"
     
-#endif
-
 #if NeverCompile
     
     /// For source code compatiblity, without Foundation.

@@ -13,7 +13,9 @@ import Cacao
 
 final class ScreenTests: XCTestCase {
     
-    static let allTests: [(String, (ScreenTests) -> () throws -> Void)] = [ ("testSimpleSubviews", testSimpleSubviews)]
+    static let allTests = [
+        ("testSimpleSubviews", testSimpleSubviews)
+    ]
     
     func testSimpleSubviews() {
                 
@@ -21,7 +23,7 @@ final class ScreenTests: XCTestCase {
         
         let filename = outputDirectory + "simpleSubviews.pdf"
         
-        let surface = Surface(pdf: filename, width: size.width, height: size.height)
+        let surface = try! Surface.PDF(filename: filename, width: size.width, height: size.height)
         
         let screen = Screen(surface: surface, nativeSize: size, size: size)
         

@@ -10,6 +10,7 @@ import CSDL2
 import Silica
 import Cairo
 import CCairo
+import struct Foundation.Data
 
 public protocol Application: class {
     
@@ -86,9 +87,17 @@ public extension Application {
             
             sdlImageSurface = SDL_CreateRGBSurface(0, CInt(nativeSize.width), CInt(nativeSize.height), 32, 0, 0, 0, 0)!
             
-            let cairoSurfacePointer = cairo_image_surface_create_for_data(sdlImageSurface.pointee.pixels.assumingMemoryBound(to: UInt8.self), CAIRO_FORMAT_ARGB32, sdlImageSurface.pointee.w, sdlImageSurface.pointee.h, sdlImageSurface.pointee.pitch)!
+            let dataLength = sdlImageSurface.pointee.h * sdlImageSurface.pointee.pitch
             
-            let surface = Cairo.Surface(cairoSurfacePointer)
+            let data = Data(bytesNoCopy: sdlImageSurface.pointee.pixels, count: Int(dataLength), deallocator: .none)
+                        
+            let surface = try! Cairo.Surface.Image(data: data,
+                                              format: .argb32,
+                                              width: Int(sdlImageSurface.pointee.w),
+                                              height: Int(sdlImageSurface.pointee.h),
+                                              stride: Int(sdlImageSurface.pointee.pitch))
+            
+            
             
             if screen == nil {
                 
