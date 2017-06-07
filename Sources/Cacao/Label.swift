@@ -10,7 +10,10 @@ import Silica
 
 open class UILabel: UIView {
     
-    public static var appearance = Label.Appearance()
+    public static func appearance() -> UILabel {
+        
+        
+    }
     
     // MARK: - Properties
     
@@ -30,17 +33,9 @@ open class UILabel: UIView {
     
     public var textAlignment: TextAlignment = .left
     
-    // MARK: - Initialization
-    
-    public init(frame: Rect = Rect(), text: String = "") {
-        
-        self.frame = frame
-        self.text = text
-    }
-    
     // MARK: - Draw
     
-    public func draw(context: Context) {
+    public override func draw() {
         
         let bounds = Rect(size: frame.size)
         
@@ -57,14 +52,22 @@ open class UILabel: UIView {
     
 }
 
-// MARK: - Appearance
-
-public extension Label {
+extension UILabel: UIAppearance {
     
-    public struct Appearance {
+    public class func appearance() -> UILabel {
         
-        public var font: Cacao.Font = Font(name: "Helvetica", size: 17)!
+        struct Static {
+            static let value = create()
+            static func create() -> UILabel {
+                
+                let font = UIFont(name: "Helvetica", size: 17)!
+                
+                let color = UIColor.black
+                
+                let label = UILabel()
+            }
+        }
         
-        public var color: Color = Color.black
+        return Static.value
     }
 }

@@ -5,6 +5,7 @@
 //  Created by Alsey Coleman Miller on 6/7/17.
 //
 
+import CSDL2
 import SDL
 import Silica
 import Cairo
@@ -27,11 +28,118 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
         windowOptions.append(.resizable)
     }
     
-    let window = Window(title: options.windowName, frame: (x: .centered, y: .centered, width: Int(options.windowSize.width), height:  Int(options.windowSize.height))).sdlAssert()
+    let preferredSize = options.windowSize
     
+    let initialWindowSize = preferredSize // can we query for screen resolution?
     
+    let window = Window(title: options.windowName, frame: (x: .centered, y: .centered, width: Int(initialWindowSize.width), height:  Int(initialWindowSize.height))).sdlAssert()
     
-    let nativeSize = windowSize // FIXME: Retina display
+    let initialNativeSize = initialWindowSize // FIXME: Retina display
+    
+    // create UIScreen
+    let screen = UIScreen(window: window, size: (initialWindowSize, initialNativeSize))
+    
+    UIScreen.main = screen
+    
+    screen.update()
+    
+    let launchOptions = [UIApplicationLaunchOptionsKey: Any]()
+    
+    guard delegate.application(UIApplication.shared, willFinishLaunchingWithOptions: launchOptions),
+        delegate.application(UIApplication.shared, didFinishLaunchingWithOptions: launchOptions)
+        else { options.log("Application delegate could not launch app"); return }
+    
+    // enter main loop
+    
+    let framesPerSecond = screen.maximumFramesPerSecond
+    
+    var frame = 0
+    
+    var done = false
+    
+    var event = SDL_Event()
+    
+    while !done {
+        
+        frame += 1
+        
+        let startTime = SDL_GetTicks()
+        
+        // poll event queue
+        
+        var pollEventStatus = SDL_PollEvent(&event)
+        
+        var needsDisplay = screen.needsDisplay // UIView sets this value
+        
+        while pollEventStatus != 0 {
+            
+            needsDisplay = true
+            
+            let eventType = SDL_EventType(rawValue: event.type)
+            
+            switch eventType {
+                
+            case SDL_QUIT, SDL_APP_TERMINATING:
+                
+                done = true
+                
+            case SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP:
+                
+                /*
+                 let SDL_TOUCH_MOUSEID = -1
+                 
+                 guard event.button.which != SDL_TOUCH_MOUSEID
+                 else { return }*/
+                
+                screen.handle(event: PointerEvent(event.button))
+                
+            case SDL_FINGERDOWN, SDL_FINGERUP: break
+                
+                // TODO
+                
+            case SDL_WINDOWEVENT:
+                
+                switch event.window.event {
+                    
+                case UInt8(SDL_WINDOWEVENT_SIZE_CHANGED.rawValue):
+                    
+                    needsDisplay = true
+                    
+                    let size = Size(width: Double(event.window.data1), height: Double(event.window.data2))
+                    
+                    screen.size = (size, size)
+                    
+                default: break
+                }
+                
+            default: break
+            }
+            
+            // try again
+            pollEventStatus = SDL_PollEvent(&event)
+        }
+        
+        // inform responder chain
+        
+        
+        // render to screen
+        if needsDisplay {
+            
+            screen.update()
+        }
+        
+        // sleep to save energy
+        let frameDuration = Int(SDL_GetTicks() - startTime)
+        
+        if frameDuration < (1000 / framesPerSecond) {
+            
+            SDL_Delay(Uint32((1000 / framesPerSecond) - frameDuration))
+        }
+    }
+    
+    // quit application
+    
+    delegate.applicationWillTerminate(UIApplication.shared)
 }
 
 /// Cacao-Specific application launch settings
@@ -40,10 +148,10 @@ public struct CacaoOptions {
     public var windowName: String = "App"
     
     public var windowSize: Size = Size(width: 600, height: 800)
-    
-    public var framesPerSecond: Int = 60
-    
+        
     public var canResizeWindow: Bool = true
+    
+    public var log: (String) -> () = { print($0) }
 }
 
 public final class UIApplication {

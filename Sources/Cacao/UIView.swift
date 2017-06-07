@@ -7,54 +7,61 @@
 //
 
 import Silica
+import SDL
 
 open class UIView {
     
-    // MARK: - Initializing a View Object
+    // MARK: - Properties
     
+    public final var frame: CGRect { didSet { frameChanged() } }
+    
+    public final var bounds: CGRect { didSet { frameChanged() } }
+    
+    public final var backgroundColor: UIColor = UIColor(cgColor: Color.white) { didSet { setNeedsDisplay() } }
+    
+    public final var alpha: Double = 1.0 { didSet { setNeedsDisplay() } }
+    
+    public final var isHidden: Bool = false { didSet { setNeedsDisplay() } }
+    
+    public final private(set) var subviews: [UIView] = []
+    
+    public final var tag: Int = 0
+    
+    /// The backing rendering node / texture.
+    ///
+    /// Cacao's equivalent of `UIView.layer` / `CALayer`.
+    /// Instead of the CoreGraphics API you could draw directly to the texture's pixel data.
+    public private(set) var texture: Texture!
+    
+    public final var window: UIWindow? {
+        
+        var superview: UIView
+        
+        
+    }
+    
+    internal final var shouldDrawContent: Bool { return hidden == false && alpha > 0 }
+    
+    // MARK: - Initialization
+    
+    /// Draws the receiver’s image within the passed-in rectangle.
     public init(frame: CGRect) {
         
         self.frame = frame
     }
     
-    // MARK: - Properties
-    
-    public final var frame: CGRect
-    
-    public final var bounds: CGRect
-    
-    public final var backgroundColor: UIColor = UIColor(cgColor: Color.white)
-    
-    public final var alpha: Double = 1.0
-    
-    public final var hidden: Bool = false
-    
-    public final fileprivate(set) var subviews: [View] = []
-    
-    public final var tag: Int = 0
-    
-    // MARK: - Initialization
-    
-    public init(frame: Rect = Rect()) {
-        
-        self.frame = frame
-    }
-    
-    // MARK: - Subclassable Methods
+    // MARK: - Drawing
     
     open func draw(_ rect: CGRect) { /* implemented by subclasses */ }
     
-    // MARK: - Final Methods
-    
-    public final func addSubview(_ view: View) {
+    internal final func drawTexture() -> Texture {
         
-        subviews.append(view)
+        let shouldDrawContent = hidden == false && alpha > 0
+        
+        
     }
-        
-    internal final func draw(to context: Context) {
-        
-        guard hidden == false && alpha > 0
-            else { return }
+    
+    internal func draw(in context: Silica.Context) {
         
         UIGraphicsPushContext(CGContext(context))
         
@@ -67,6 +74,68 @@ open class UIView {
         draw(bounds)
         
         UIGraphicsPopContext()
+    }
+    
+    // MARK: - Layout
+    
+    /// Asks the view to calculate and return the size that best fits the specified size.
+    ///
+    /// The default implementation of this method returns the existing size of the view. Subclasses can override this method to return a custom value based on the desired layout of any subviews. For example, a UISwitch object returns a fixed size value that represents the standard size of a switch view, and a UIImageView object returns the size of the image it is currently displaying.
+    ///
+    /// - Note: This method does not resize the receiver.
+    open func sizeThatFits(_ size: CGSize) -> CGSize {
+        
+        return self.bounds.size
+    }
+    
+    /// Lays out subviews.
+    ///
+    /// The default implementation of this method does nothing.
+    ///
+    /// Subclasses can override this method as needed to perform more precise layout of their subviews.
+    /// You should override this method only if the autoresizing and constraint-based behaviors of
+    /// the subviews do not offer the behavior you want.
+    /// You can use your implementation to set the frame rectangles of your subviews directly.
+    ///
+    /// You should not call this method directly.
+    /// If you want to force a layout update, call the `setNeedsLayout()` method instead
+    /// to do so prior to the next drawing update.
+    /// If you want to update the layout of your views immediately, call the `layoutIfNeeded()` method.
+    open func layoutSubviews() {
+        
+        // TODO: Implement basic autoresize engine
+    }
+    
+    /// Invalidates the current layout of the receiver and triggers a layout update during the next update cycle.
+    ///
+    /// Call this method on your application’s main thread when you want to adjust the layout of a view’s subviews.
+    /// This method makes a note of the request and returns immediately.
+    /// Because this method does not force an immediate update, but instead waits for the next update cycle,
+    /// you can use it to invalidate the layout of multiple views before any of those views are updated.
+    /// This behavior allows you to consolidate all of your layout updates to one update cycle,
+    /// which is usually better for performance.
+    public final func setNeedsLayout() {
+        
+        
+    }
+    
+    /// Lays out the subviews immediately.
+    ///
+    /// Use this method to force the layout of subviews before drawing.
+    /// Using the view that receives the message as the root view,
+    /// this method lays out the view subtree starting at the root.
+    public final func layoutIfNeeded() {
+        
+        
+    }
+    
+    // MARK: - Final Methods
+    
+    public final func addSubview(_ view: UIView) {
+        
+        subviews.append(view)
+        
+        setNeedsDisplay()
     }
     
     public final func handle(event: PointerEvent) {
@@ -99,5 +168,26 @@ open class UIView {
         return self
     }
     
-    public func setNeedsDisplay(_ rect: )
+    public func setNeedsDisplay(_ rect: Rect? = nil) {
+        
+        self.window?.screen.needsDisplay = true
+    }
+    
+    // MARK: - Update Properties
+    
+    private func frameChanged() {
+        
+        // sync size
+        self.bounds.size = self.frame.size
+        
+        setNeedsLayout()
+    }
+    
+    private func boundsChanged() {
+        
+        // sync size
+        self.frame.size = self.frame.size
+        
+        setNeedsLayout()
+    }
 }

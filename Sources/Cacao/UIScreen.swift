@@ -6,13 +6,12 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
-import Cairo
 import Silica
 import SDL
 
 public final class UIScreen {
     
-    public static let main: UIScreen!
+    public static internal(set) var main: UIScreen!
     
     public static let screens = [UIScreen.main]()
     
@@ -28,9 +27,27 @@ public final class UIScreen {
     
     public var nativeBounds: CGRect { return CGRect(size: size.window) }
     
-    internal let window: Window
+    public var scale: Double { return size.native.width / size.window.width }
+    
+    public var nativeScale: Double { return scale }
+    
+    public var maximumFramesPerSecond: Int {
+        
+        return Int(sdlWindow.displayMode?.refresh_rate ?? 60)
+    }
+    
+    internal let sdlWindow: Window
     
     internal var size: (window: Size, native: Size)
+    
+    internal lazy var renderer: Renderer = Renderer(window: self.sdlWindow).sdlAssert()
+    
+    internal var needsDisplay = true
+    
+    internal var needsLayout = true
+    
+    /// Children windows
+    internal var windows = [UIWindow]()
     
     // MARK: - Intialization
     
@@ -38,7 +55,6 @@ public final class UIScreen {
         
         self.window = window
         self.size = size
-        
     }
     
     // MARK: - Methods
@@ -46,7 +62,23 @@ public final class UIScreen {
     /// Redraws the screen
     internal func update() {
         
+        renderer.drawColor = (0xFF, 0xFF, 0xFF, 0xFF)
         
+        // get data for surface
+        let imageSurface = Surface(rgb: (Int(size.window.width), Int(size.window.height)), depth: 32).sdlAssert()
+        
+        let texture = Texture(renderer: renderer, surface: imageSurface).sdlAssert()
+        
+        // render view hierarchy
+        
+        
+        // render to screen
+        renderer.copy(texture)
+        renderer.clear()
+        renderer.present()
+        
+        needsDisplay = false
+        needsLayout = false
     }
 }
 
