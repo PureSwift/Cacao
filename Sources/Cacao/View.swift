@@ -8,39 +8,6 @@
 
 import Silica
 
-/// The view protocol.
-public protocol View: class {
-    
-    /// The view's frame.
-    var frame: Rect { get set }
-    
-    var subviews: [View] { get }
-    
-    var hidden: Bool { get }
-    
-    /// A Boolean value that determines whether user events are ignored and removed from the event queue.
-    var userInteractionEnabled: Bool { get }
-    
-    func layoutSubviews()
-    
-    func handle(event: PointerEvent)
-    
-    func hitTest(point: Point) -> View?
-}
-
-/// A view that can draw.
-public protocol Drawable: View {
-    
-    func draw(context: Silica.Context)
-    
-    var clipsToBounds: Bool { get }
-}
-
-public extension Drawable {
-    
-    var clipsToBounds: Bool { return false }
-}
-
 public extension View {
     
     var subviews: [View] { return [] }

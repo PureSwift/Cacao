@@ -12,7 +12,7 @@ import Cairo
 // MARK: - UIApplicationMain
 
 @_silgen_name("_UIApplicationMain")
-public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOptions) -> Never {
+public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOptions) {
     
     SDL.initialize(subSystems: [.video]).sdlAssert()
     
@@ -25,7 +25,7 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
         windowOptions.append(.resizable)
     }
     
-    let window = SDL.Window(title: options.windowName, frame: (x: .centered, y: .centered, width: options.windowSize.width, height:  options.windowSize.height)).sdlAssert()
+    let window = Window(title: options.windowName, frame: (x: .centered, y: .centered, width: Int(options.windowSize.width), height:  Int(options.windowSize.height))).sdlAssert()
     
     
 }
@@ -47,12 +47,13 @@ public final class UIApplication {
     // MARK: - Getting the App Instance
     
     // Will be set after `UIApplicationMain()`
-    public static var shared: UIApplication { get { return _shared } }
-    fileprivate static var _shared: UIApplication!
+    public static var shared = UIApplication()
+    
+    fileprivate init() { }
     
     // MARK: - Getting the App Delegate
     
-    public fileprivate(set) var delegate: UIApplicationDelegate?
+    public fileprivate(set) weak var delegate: UIApplicationDelegate?
     
     // MARK: - Getting App Windows
     

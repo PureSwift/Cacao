@@ -1,5 +1,5 @@
 //
-//  Appearance.swift
+//  UIAppearanceAppearance.swift
 //  Cacao
 //
 //  Created by Alsey Coleman Miller on 6/2/16.
@@ -7,9 +7,7 @@
 //
 
 /// Allows a view to be configured globally for a default appearance.
-public protocol Appearance: View {
+public protocol UIAppearance: class {
     
-    associatedtype Appearance
-    
-    static var appearance: Self.Appearance { get set }
+    static var appearance: Self { get }
 }

@@ -8,7 +8,7 @@
 
 import Silica
 
-public final class Label: Drawable, Appearance {
+open class UILabel: UIView {
     
     public static var appearance = Label.Appearance()
     

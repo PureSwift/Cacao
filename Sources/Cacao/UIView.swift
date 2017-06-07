@@ -8,13 +8,20 @@
 
 import Silica
 
-open class UIView: Drawable {
+open class UIView {
+    
+    // MARK: - Initializing a View Object
+    
+    public init(frame: CGRect) {
+        
+        self.frame = frame
+    }
     
     // MARK: - Properties
     
     public final var frame: CGRect
     
-    public final var bounds: CGRect { return Rect(size: frame.size) }
+    public final var bounds: CGRect
     
     public final var backgroundColor: UIColor = UIColor(cgColor: Color.white)
     
@@ -66,4 +73,31 @@ open class UIView: Drawable {
         
         // translate to UIKit APIs
     }
+    
+    /// Returns the farthest descendant of the receiver in the view hierarchy (including itself) that contains a specified point.
+    ///
+    /// - Note: This method ignores view objects that are hidden or have user interaction disabled.
+    /// This method does not take the view’s content into account when determining a hit.
+    /// Thus, a view can still be returned even if the specified point is in a transparent portion of that view’s content.
+    public final func hitTest(point: CGPoint) -> View? {
+        
+        guard hidden == false
+            && userInteractionEnabled
+            && pointInside(point)
+            else { return nil }
+        
+        // convert point for subviews
+        let subviewPoint = Point(x: point.x - frame.x, y: point.y - frame.y)
+        
+        for subview in subviews {
+            
+            guard let descendant = subview.hitTest(point: subviewPoint) else { return nil }
+            
+            return descendant
+        }
+        
+        return self
+    }
+    
+    public func setNeedsDisplay(_ rect: )
 }
