@@ -8,7 +8,50 @@
 
 import Cairo
 import Silica
+import SDL
 
+public final class UIScreen {
+    
+    public static let main: UIScreen!
+    
+    public static let screens = [UIScreen.main]()
+    
+    // MARK: - Properties
+    
+    public var mirrored: UIScreen? { return nil }
+    
+    //public private(set) var coordinateSpace: UICoordinateSpace
+    
+    //var fixedCoordinateSpace: UICoordinateSpace
+    
+    public var bounds: CGRect { return CGRect(size: size.window) }
+    
+    public var nativeBounds: CGRect { return CGRect(size: size.window) }
+    
+    internal let window: Window
+    
+    internal var size: (window: Size, native: Size)
+    
+    // MARK: - Intialization
+    
+    internal init(window: Window, size: (window: Size, native: Size)) {
+        
+        self.window = window
+        self.size = size
+        
+    }
+    
+    // MARK: - Methods
+    
+    /// Redraws the screen
+    internal func update() {
+        
+        
+    }
+}
+
+
+/*
 public final class Screen {
     
     // MARK: - Properties
@@ -110,3 +153,5 @@ public final class Screen {
         rootViewController?.layoutView()
     }
 }
+*/
+ 

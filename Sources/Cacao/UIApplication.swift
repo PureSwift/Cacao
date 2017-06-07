@@ -14,6 +14,8 @@ import Cairo
 @_silgen_name("_UIApplicationMain")
 public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOptions) {
     
+    UIApplication.shared.delegate = delegate
+    
     SDL.initialize(subSystems: [.video]).sdlAssert()
     
     defer { SDL.quit() }
@@ -28,6 +30,8 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
     let window = Window(title: options.windowName, frame: (x: .centered, y: .centered, width: Int(options.windowSize.width), height:  Int(options.windowSize.height))).sdlAssert()
     
     
+    
+    let nativeSize = windowSize // FIXME: Retina display
 }
 
 /// Cacao-Specific application launch settings
@@ -49,7 +53,7 @@ public final class UIApplication {
     // Will be set after `UIApplicationMain()`
     public static var shared = UIApplication()
     
-    fileprivate init() { }
+    private init() { }
     
     // MARK: - Getting the App Delegate
     
@@ -59,7 +63,7 @@ public final class UIApplication {
     
     public fileprivate(set) var keyWindow: UIWindow?
     
-    public fileprivate(set) var windows = [UIWindow]()
+    public private(set) var windows = [UIWindow]()
     
     // MARK: - Controlling and Handling Events
     
