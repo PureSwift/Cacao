@@ -180,16 +180,3 @@ public struct NSStringDrawingOptions: OptionSet, ExpressibleByIntegerLiteral {
     
     /// Expects `NSMutableParagraphStyle` value.
     public let NSParagraphStyleAttributeName = "NSParagraphStyleAttributeName"
-    
-#if NeverCompile
-    
-    /// For source code compatiblity, without Foundation.
-    ///
-    /// - Note: You can later specify if you want `Cacao.NSString` or `Foundation.NSString` using typealiases.
-    @inline(__always)
-    public func NSString(string: String) -> String {
-        
-        return string
-    }
-    
-#endif

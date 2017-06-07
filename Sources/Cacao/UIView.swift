@@ -12,9 +12,9 @@ open class UIView: Drawable {
     
     // MARK: - Properties
     
-    public final var frame: Rect
+    public final var frame: CGRect
     
-    public final var bounds: Rect { return Rect(size: frame.size) }
+    public final var bounds: CGRect { return Rect(size: frame.size) }
     
     public final var backgroundColor: UIColor = UIColor(cgColor: Color.white)
     
@@ -43,10 +43,8 @@ open class UIView: Drawable {
         
         subviews.append(view)
     }
-    
-    // MARK: - Drawable
-    
-    public final func draw(context: Context) {
+        
+    internal final func draw(to context: Context) {
         
         guard hidden == false && alpha > 0
             else { return }
@@ -63,8 +61,6 @@ open class UIView: Drawable {
         
         UIGraphicsPopContext()
     }
-    
-    // MARK: - InteractiveView
     
     public final func handle(event: PointerEvent) {
         

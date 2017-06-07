@@ -13,8 +13,8 @@ let package = Package(
             targets: ["Cacao"]
         ),
         .executable(
-            name: "Demo",
-            targets: ["Demo"]
+            name: "CacaoDemo",
+            targets: ["CacaoDemo"]
         )
         ],
     dependencies: [
@@ -30,7 +30,7 @@ let package = Package(
             name: "Cacao",
             dependencies: ["Cairo", "Silica", "SDL"]),
         .target(
-            name: "Demo",
+            name: "CacaoDemo",
             dependencies: ["Cacao"]),
         .testTarget(
             name: "CacaoTests",

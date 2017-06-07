@@ -24,26 +24,3 @@ public enum UIViewContentMode: Int {
     case bottomLeft
     case bottomRight
 }
-
-extension UIViewContentMode: CacaoConvertible {
-    
-    public func toCacao() -> ContentMode {
-        
-        switch self {
-            
-        case .scaleToFill:       return .scaleToFill
-        case .scaleAspectFit:    return .aspectFit
-        case .scaleAspectFill:   return .aspectFill
-        case .redraw:            return .scaleToFill // default
-        case .center:            return .center
-        case .top:               return .top
-        case .bottom:            return .bottom
-        case .left:              return .left
-        case .right:             return .right
-        case .topLeft:           return .topLeft
-        case .topRight:          return .topRight
-        case .bottomLeft:        return .bottomLeft
-        case .bottomRight:       return .bottomRight
-        }
-    }
-}
