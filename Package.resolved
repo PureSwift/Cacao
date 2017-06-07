@@ -47,6 +47,15 @@
         }
       },
       {
+        "package": "Cairo",
+        "repositoryURL": "https://github.com/PureSwift/Cairo.git",
+        "state": {
+          "branch": "master",
+          "revision": "5bf2c328f0437f5d5859bba55beae1472b156a29",
+          "version": null
+        }
+      },
+      {
         "package": "LittleCMS",
         "repositoryURL": "https://github.com/PureSwift/LittleCMS.git",
         "state": {
