@@ -441,6 +441,8 @@ open class UIView {
                           width: width,
                           height: height).sdlAssert()
         
+        texture.blendMode = .alpha
+        
         surface = texture.withUnsafeMutableBytes { try! Cairo.Surface.Image.init(mutableBytes: $0.assumingMemoryBound(to: UInt8.self), format: .argb32, width: width, height: height, stride: $1) }
     }
     
@@ -462,11 +464,14 @@ open class UIView {
         
         let context = try! Silica.Context(surface: surface, size: bounds.size)
         
-        // CoreGraphics drawing
-        draw(in: context)
+        // unlock and modify texture
+        texture.withUnsafeMutableBytes { (_, _) in
+            
+            // CoreGraphics drawing
+            draw(in: context)
+        }
         
-        let sourceRect = SDL_Rect(x: 0, y: 0, w: Int32(width), h: Int32(height)) // not really neccesary
-        renderer.copy(texture, source:sourceRect, destination: rect)
+        renderer.copy(texture, destination: rect)
     }
     
     internal func draw(in context: Silica.Context) {

@@ -25,7 +25,7 @@ final class AppDelegate: UIApplicationDelegate {
         
         let viewController = UIViewController()
         
-        viewController.view.backgroundColor = UIColor.white
+        viewController.view.backgroundColor = UIColor.blue
         
         let swiftView = SwiftLogoView()
         

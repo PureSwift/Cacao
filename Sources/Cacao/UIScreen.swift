@@ -68,6 +68,7 @@ public final class UIScreen {
         
         // layout views
         if needsLayout {
+            
             windows.forEach { $0.layoutIfNeeded() }
             needsDisplay = true
         }
@@ -75,10 +76,9 @@ public final class UIScreen {
         // render views
         if needsDisplay {
             
-            //renderer.drawColor = (0xFF, 0xFF, 0xFF, 0xFF)
-            //renderer.clear()
+            renderer.drawColor = (0xFF, 0xFF, 0xFF, 0xFF)
+            renderer.clear()
             
-            // FIXME to support multiple windows
             for window in windows {
                 
                 // render view hierarchy
