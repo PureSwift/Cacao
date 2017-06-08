@@ -23,9 +23,9 @@ final class AppDelegate: UIApplicationDelegate {
         
         let viewController = UIViewController()
         
-        window.rootViewController = viewController
-        
         viewController.view.backgroundColor = UIColor.red
+        
+        window.rootViewController = viewController
         
         window.makeKeyAndVisible()
         

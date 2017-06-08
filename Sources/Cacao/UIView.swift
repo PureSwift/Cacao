@@ -442,8 +442,6 @@ open class UIView {
                           height: height)!
         
         surface = texture.withUnsafeMutableBytes { try! Cairo.Surface.Image.init(mutableBytes: $0.assumingMemoryBound(to: UInt8.self), format: .argb32, width: width, height: height, stride: $1) }
-        
-        
     }
     
     internal final func render(with renderer: Renderer, in rect: SDL_Rect) {
