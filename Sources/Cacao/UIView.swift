@@ -460,13 +460,13 @@ open class UIView {
             createTexture(for: renderer)
         }
         
-        let surface = self.surface!
         let context = try! Silica.Context(surface: surface, size: bounds.size)
         
         // CoreGraphics drawing
         draw(in: context)
         
-        renderer.copy(texture, destination: rect)
+        let sourceRect = SDL_Rect(x: 0, y: 0, w: Int32(width), h: Int32(height)) // not really neccesary
+        renderer.copy(texture, source:sourceRect, destination: rect)
     }
     
     internal func draw(in context: Silica.Context) {
