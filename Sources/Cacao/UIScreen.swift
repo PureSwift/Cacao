@@ -49,6 +49,8 @@ public final class UIScreen {
     /// Children windows
     internal var windows = [UIWindow]()
     
+    internal var keyWindow: UIWindow?
+    
     // MARK: - Intialization
     
     internal init(window: Window, size: (window: Size, native: Size)) {

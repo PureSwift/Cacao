@@ -9,5 +9,5 @@
 /// Allows a view to be configured globally for a default appearance.
 public protocol UIAppearance: class {
     
-    class func appearance() -> Self
+    static func appearance() -> Self
 }

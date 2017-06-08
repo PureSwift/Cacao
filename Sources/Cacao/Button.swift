@@ -8,6 +8,7 @@
 
 import Silica
 
+/*
 public final class Button: View {
     
     public var frame: Rect { didSet { layoutSubviews() } }
@@ -69,3 +70,4 @@ public final class Button: View {
         contentView.layoutSubviews()
     }
 }
+ */

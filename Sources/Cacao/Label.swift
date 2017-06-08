@@ -10,32 +10,22 @@ import Silica
 
 open class UILabel: UIView {
     
-    public static func appearance() -> UILabel {
-        
-        
-    }
-    
     // MARK: - Properties
     
-    public var frame: Rect { didSet { layoutSubviews() } }
+    public final var text: String = "" { didSet { setNeedsDisplay() } }
     
-    public var userInteractionEnabled: Bool { return false }
+    public final var font: Font = UILabel.appearance().font { didSet { setNeedsDisplay() } }
     
-    public var clipsToBounds: Bool { return false }
+    public final var color: Color = UILabel.appearance().color { didSet { setNeedsDisplay() } }
     
-    public var hidden: Bool = false
-    
-    public var text: String
-    
-    public var font: Font = Label.appearance.font
-    
-    public var color: Color = Label.appearance.color
-    
-    public var textAlignment: TextAlignment = .left
+    public final var textAlignment: TextAlignment = .left { didSet { setNeedsDisplay() } }
     
     // MARK: - Draw
     
-    public override func draw() {
+    open override func draw(_ rect: CGRect?) {
+        
+        guard let context = UIGraphicsGetCurrentContext()
+            else { return }
         
         let bounds = Rect(size: frame.size)
         
@@ -44,17 +34,14 @@ open class UILabel: UIView {
         attributes.color = color
         attributes.paragraphStyle.alignment = textAlignment
         
-        text.draw(in: bounds, context: context, attributes: attributes)
+        //text.draw(in: bounds, context: context, attributes: attributes)
     }
-    
-    // MARK: - Size
-    
-    
 }
 
-extension UILabel: UIAppearance {
+// TODO: UIAppearance
+extension UILabel {
     
-    public class func appearance() -> UILabel {
+    public static func appearance() -> UILabel {
         
         struct Static {
             static let value = create()
@@ -64,7 +51,7 @@ extension UILabel: UIAppearance {
                 
                 let color = UIColor.black
                 
-                let label = UILabel()
+                let label = UILabel(frame: CGRect())
             }
         }
         

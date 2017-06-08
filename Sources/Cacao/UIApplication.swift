@@ -91,7 +91,7 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
                  guard event.button.which != SDL_TOUCH_MOUSEID
                  else { return }*/
                 
-                screen.handle(event: PointerEvent(event.button))
+                //screen.handle(event: PointerEvent(event.button))
                 
             case SDL_FINGERDOWN, SDL_FINGERUP: break
                 
@@ -158,7 +158,6 @@ public final class UIApplication {
     
     // MARK: - Getting the App Instance
     
-    // Will be set after `UIApplicationMain()`
     public static var shared = UIApplication()
     
     private init() { }
@@ -169,9 +168,11 @@ public final class UIApplication {
     
     // MARK: - Getting App Windows
     
-    public fileprivate(set) var keyWindow: UIWindow?
+    /// The app's key window.
+    public var keyWindow: UIWindow? { return UIScreen.main.keyWindow }
     
-    public private(set) var windows = [UIWindow]()
+    /// The app's visible and hidden windows.
+    public var windows: [UIWindow] { return UIScreen.screens.reduce([UIWindow](), { $0 + $1.windows }) }
     
     // MARK: - Controlling and Handling Events
     
