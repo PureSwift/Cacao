@@ -27,7 +27,7 @@ public final class SwiftLogoView: UIView {
     public var includesText: Bool
     
     /// The intrinsic content size.
-    public var intrinsicContentSize: Size  {
+    public override var intrinsicContentSize: Size  {
         
         return SwiftLogoView.contentSize(includesText: includesText)
     }

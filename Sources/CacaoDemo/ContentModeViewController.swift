@@ -39,11 +39,11 @@ final class ContentModeViewController: UIViewController {
         
         label = UILabel(frame: CGRect()) // layoutSubviews will set size
         
-        label.text = "\(self.modes[0])"
+        label.text = "\(modes[0])"
         
         logoView = SwiftLogoView()
         
-        let button = UIButton(frame: CGRect())
+        button = UIButton(frame: CGRect())
         
         //button.action = changeMode
         
@@ -55,10 +55,12 @@ final class ContentModeViewController: UIViewController {
         
         contentView.content = logoView
         
+        contentView.contentMode = modes[0]
+        
         self.view = contentView
     }
     
-    func layoutView() {
+    override func viewWillLayoutSubviews() {
         
         let frame = view.frame
         

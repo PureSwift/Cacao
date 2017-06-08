@@ -27,7 +27,10 @@ public final class ContentView: UIView {
     
     public override func layoutSubviews() {
         
-        content?.frame = contentMode.rect(for: bounds, size: bounds.size)
+        guard let content = self.content
+            else { return }
+        
+        content.frame = contentMode.rect(for: bounds, size: content.intrinsicContentSize)
     }
     
     @inline(__always)
@@ -39,6 +42,8 @@ public final class ContentView: UIView {
             else { return }
         
         addSubview(view)
+        
+        sendSubview(toBack: view)
         
         layoutIfNeeded()
     }

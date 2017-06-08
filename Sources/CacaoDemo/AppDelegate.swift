@@ -20,9 +20,7 @@ final class AppDelegate: UIApplicationDelegate {
         print("Running at \(UIScreen.main.maximumFramesPerSecond) FPS")
         
         window = UIWindow(frame: UIScreen.main.bounds)
-        
-        window.backgroundColor = UIColor.red
-        
+                
         let viewController = ContentModeViewController()
         
         window.rootViewController = viewController
