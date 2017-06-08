@@ -15,27 +15,26 @@
 import Cacao
 import Silica
 
-final class ContentModeViewController: ViewController {
+/*
+final class ContentModeViewController: UIViewController {
     
     // MARK: - Views
     
-    lazy var view: View = self.loadView()
-    
     lazy var label: Label = Label(frame: Rect(), text: "\(self.modes[0])")
     
-    lazy var logoView: SwiftLogoView = SwiftLogoView()
+    var logoView: SwiftLogoView! = SwiftLogoView()
     
-    lazy var button: Button = Button(content: self.logoView, mode: self.modes[0])
+    var button: UIButton! = Button(content: self.logoView, mode: self.modes[0])
     
     // MARK: - Properties
     
-    let modes: [ContentMode] = [.center, .scaleToFill, .aspectFit, .aspectFill, .top, .bottom, .left, .right, .topLeft, .topRight, .bottomLeft, .bottomRight]
+    let modes: [UIViewContentMode] = [.center, .redraw, .scaleToFill, .scaleAspectFit, .scaleAspectFill, .top, .bottom, .left, .right, .topLeft, .topRight, .bottomLeft, .bottomRight]
     
     // MARK: - Loading
     
     private func loadView() -> UIView {
         
-        let backgroundView = UIView()
+        let backgroundView = UIView(frame: CGRect(x: 0, y: 0, width: 600, height: 400))
         
         button.action = changeMode
         
@@ -60,8 +59,8 @@ final class ContentModeViewController: ViewController {
     }
     
     // MARK: - Methods
-    
-    func changeMode(sender: Button) {
+    /*
+    func changeMode(sender: UIButton) {
         
         let currentMode = button.contentView.mode
         
@@ -81,5 +80,5 @@ final class ContentModeViewController: ViewController {
         label.text = "\(newMode)"
         
         print("Changing to \(newMode)")
-    }
-}
+    }*/
+}*/

@@ -18,6 +18,7 @@
 #endif
 
 import Silica
+import Cacao
 
 internal final class StyleKit {
 

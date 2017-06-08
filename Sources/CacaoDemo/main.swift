@@ -8,7 +8,7 @@
 
 import Cacao
 
-let app = Application()
+var options = CacaoOptions()
+options.windowName = "CacaoDemo"
 
-// enter main loop
-app.main()
+UIApplicationMain(delegate: AppDelegate.shared, options: options)

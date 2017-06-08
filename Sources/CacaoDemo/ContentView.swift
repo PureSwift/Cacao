@@ -24,26 +24,13 @@ public final class ContentView: UIView {
     public var content: UIView? { didSet { layoutSubviews() } }
     
     /// Content's display mode.
-    public var mode: UIContentMode { didSet { layoutSubviews() } }
-    
-    // MARK: - Initialization
-    
-    public init(frame: Rect = Rect(), content: View, mode: ContentMode = ContentMode()) {
-        
-        self.frame = frame
-        self.content = content
-        self.mode = mode
-        self.size = content.frame.size
-        self.layoutSubviews()
-    }
+    public var mode: UIViewContentMode = .scaleAspectFill { didSet { layoutSubviews() } }
     
     // MARK: - Methods
     
-    public func layoutSubviews() {
+    public override func layoutSubviews() {
         
-        let bounds = Rect(size: frame.size)
-        
-        content.frame = mode.rect(for: bounds, size: size)
+        content?.frame = mode.rect(for: bounds, size: bounds.size)
         
         // layout all subviews
         subviews.forEach { $0.layoutSubviews() }

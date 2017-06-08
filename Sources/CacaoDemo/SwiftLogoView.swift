@@ -7,9 +7,10 @@
 //
 
 import Silica
+import Cacao
 
 /// View that displays the Swift logo.
-public final class SwiftLogoView: Drawable {
+public final class SwiftLogoView: UIView {
     
     // MARK: - Static Methods
     
@@ -19,14 +20,6 @@ public final class SwiftLogoView: Drawable {
     }
     
     // MARK: - Properties
-    
-    public var userInteractionEnabled: Bool { return false }
-    
-    public var frame: Rect
-    
-    public var hidden: Bool = false
-    
-    public var clipsToBounds: Bool = true
     
     /// Whether the view also draws "Swift" text next to the logo.
     ///
@@ -44,16 +37,15 @@ public final class SwiftLogoView: Drawable {
     public init(frame: Rect? = nil, includesText: Bool = false) {
         
         self.includesText = includesText
-        self.frame = frame ?? Rect(size: SwiftLogoView.contentSize(includesText: includesText))
+        
+        let frame = frame ?? Rect(size: SwiftLogoView.contentSize(includesText: includesText))
+        
+        super.init(frame: frame)
     }
     
     // MARK: - Drawing
     
-    public func draw(context: Silica.Context) {
-        
-        let bounds = Rect(size: frame.size)
-        
-        UIGraphicsPushContext(CGContext(context))
+    public override func draw(_ rect: CGRect) {
         
         if includesText {
             
@@ -63,7 +55,5 @@ public final class SwiftLogoView: Drawable {
             
             StyleKit.drawSwiftLogo(frame: bounds)
         }
-        
-        UIGraphicsPopContext()
     }
 }

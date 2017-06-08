@@ -13,7 +13,7 @@ import Cairo
 // MARK: - UIApplicationMain
 
 @_silgen_name("_UIApplicationMain")
-public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOptions) {
+public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOptions = CacaoOptions()) {
     
     UIApplication.shared.delegate = delegate
     
@@ -40,8 +40,6 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
     let screen = UIScreen(window: window, size: (initialWindowSize, initialNativeSize))
     
     UIScreen.main = screen
-    
-    screen.update()
     
     let launchOptions = [UIApplicationLaunchOptionsKey: Any]()
     
@@ -138,11 +136,13 @@ public struct CacaoOptions {
     
     public var windowName: String = "App"
     
-    public var windowSize: Size = Size(width: 600, height: 800)
+    public var windowSize: Size = Size(width: 600, height: 480)
         
     public var canResizeWindow: Bool = true
     
     public var log: (String) -> () = { print($0) }
+    
+    public init() { }
 }
 
 public final class UIApplication {
