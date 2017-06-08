@@ -385,7 +385,37 @@ open class UIView {
     
     // MARK: - Configuring the Resizing Behavior
     
+    /// A flag used to determine how a view lays out its content when its bounds change
+    public final var contentMode: UIViewContentMode = .scaleAspectFill { didSet { setNeedsLayout() } }
     
+    /// Asks the view to calculate and return the size that best fits the specified size.
+    ///
+    /// The default implementation of this method returns the existing size of the view.
+    /// Subclasses can override this method to return a custom value based on the desired layout of any subviews.
+    /// For example, a `UISwitch` object returns a fixed size value that represents the standard size of a switch view,
+    /// and a `UIImageView` object returns the size of the image it is currently displaying.
+    ///
+    /// - Note: This method does not resize the receiver.
+    open func sizeThatFits(_ size: CGSize) -> CGSize {
+        
+        return bounds.size
+    }
+    
+    /// Resizes and moves the receiver view so it just encloses its subviews.
+    ///
+    /// Call this method when you want to resize the current view so that it uses the most appropriate amount of space.
+    /// Specific views resize themselves according to their own internal needs.
+    /// In some cases, if a view does not have a superview, it may size itself to the screen bounds.
+    /// Thus, if you want a given view to size itself to its parent view,
+    /// you should add it to the parent view before calling this method.
+    ///
+    /// - Note: You should not override this method.
+    /// If you want to change the default sizing information for your view, override the `sizeThatFits(_:)` instead.
+    /// That method performs any needed calculations and returns them to this method, which then makes the change.
+    public final func sizeToFit() {
+        
+        // TODO
+    }
     
     // MARK: - Identifying the View at Runtime
     
@@ -425,7 +455,11 @@ open class UIView {
     /// Instead of the CoreGraphics API you could draw directly to the texture's pixel data.
     private var texture: Texture!
     
-    internal final var shouldRender: Bool { return isHidden == false && alpha > 0 }
+    internal final var shouldRender: Bool {
+        return isHidden == false
+            && alpha > 0
+            && (bounds.size.width >= 1.0 || bounds.size.height >= 1.0)
+    }
     
     open func draw(_ rect: CGRect) { /* implemented by subclasses */ }
     
@@ -496,16 +530,6 @@ open class UIView {
     }
     
     // MARK: - Layout
-    
-    /// Asks the view to calculate and return the size that best fits the specified size.
-    ///
-    /// The default implementation of this method returns the existing size of the view. Subclasses can override this method to return a custom value based on the desired layout of any subviews. For example, a UISwitch object returns a fixed size value that represents the standard size of a switch view, and a UIImageView object returns the size of the image it is currently displaying.
-    ///
-    /// - Note: This method does not resize the receiver.
-    open func sizeThatFits(_ size: CGSize) -> CGSize {
-        
-        return self.bounds.size
-    }
     
     /// Lays out subviews.
     ///
@@ -583,7 +607,7 @@ open class UIView {
     /// - Note: This method ignores view objects that are hidden or have user interaction disabled.
     /// This method does not take the view’s content into account when determining a hit.
     /// Thus, a view can still be returned even if the specified point is in a transparent portion of that view’s content.
-    public final func hitTest(point: CGPoint) -> UIView? {
+    open func hitTest(point: CGPoint) -> UIView? {
         
         guard isHidden == false
             && isUserInteractionEnabled
@@ -626,20 +650,14 @@ open class UIView {
     private func setFrame(_ newValue: CGRect) {
         
         _frame = newValue
-        
         _bounds.size = newValue.size
-        
-        //setNeedsLayout()
     }
     
     @inline(__always)
     private func setBounds(_ newValue: CGRect) {
         
         _bounds = newValue
-        
         _frame.size = newValue.size
-        
-        //setNeedsLayout()
     }
     
     @inline(__always)
