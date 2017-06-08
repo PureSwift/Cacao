@@ -6,8 +6,9 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
-import Silica
+import CSDL2
 import SDL
+import Silica
 
 public final class UIScreen {
     
@@ -64,19 +65,27 @@ public final class UIScreen {
     /// Layout (if needed) and redraw the screen
     internal func update() {
         
+        // layout views
         if needsLayout {
             windows.forEach { $0.layoutIfNeeded() }
         }
         
-        renderer.drawColor = (0x00, 0x00, 0x00, 0xFF)
-        renderer.clear()
-        
-        // render view hierarchy
-        
-        
-        // render to screen
-        renderer.copy(<#T##texture: Texture##Texture#>, source: <#T##SDL_Rect?#>, destination: <#T##SDL_Rect?#>)
-        renderer.present()
+        // render views
+        if needsLayout || needsDisplay {
+            
+            renderer.drawColor = (0x00, 0x00, 0x00, 0xFF)
+            renderer.clear()
+            
+            // FIXME to support multiple windows
+            for window in [keyWindow!] {
+                
+                // render view hierarchy
+                render(view: window)
+                
+                // render to screen
+                renderer.present()
+            }
+        }
         
         needsDisplay = false
         needsLayout = false
@@ -84,7 +93,35 @@ public final class UIScreen {
     
     private func sizeChanged() {
         
+        // update windows
+        keyWindow?.frame = Rect(size: size.window)
         
+        needsDisplay = true
+        needsLayout = true
+    }
+    
+    private func render(view: UIView, origin: Point = Point()) {
+        
+        guard view.isHidden == false
+            else { return }
+        
+        // add translation
+        //context.translate(x: view.frame.x, y: view.frame.y)
+        var relativeOrigin = origin
+        relativeOrigin.x += view.frame.origin.x
+        relativeOrigin.y += view.frame.origin.y
+        
+        // frame of view relative to SDL window
+        let rect = SDL_Rect(x: Int32(relativeOrigin.x),
+                            y: Int32(relativeOrigin.y),
+                            w: Int32(view.frame.size.width),
+                            h: Int32(view.frame.size.height))
+        
+        // render view
+        view.render(with: renderer, in: rect)
+        
+        // render subviews
+        view.subviews.forEach { render(view: $0, origin: relativeOrigin) }
     }
 }
 

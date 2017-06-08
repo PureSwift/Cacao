@@ -21,7 +21,7 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
     
     defer { SDL.quit() }
     
-    var windowOptions: [Window.Option] = [.allowRetina]
+    var windowOptions: [Window.Option] = [] // [.allowRetina]
     
     if options.canResizeWindow {
         
@@ -69,11 +69,7 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
         
         var pollEventStatus = SDL_PollEvent(&event)
         
-        var needsDisplay = screen.needsDisplay // UIView sets this value
-        
         while pollEventStatus != 0 {
-            
-            needsDisplay = true
             
             let eventType = SDL_EventType(rawValue: event.type)
             
@@ -104,8 +100,6 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
                     
                 case UInt8(SDL_WINDOWEVENT_SIZE_CHANGED.rawValue):
                     
-                    needsDisplay = true
-                    
                     let size = Size(width: Double(event.window.data1), height: Double(event.window.data2))
                     
                     screen.size = (size, size)
@@ -123,10 +117,7 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
         // inform responder chain
         
         // render to screen
-        if needsDisplay {
-            
-            screen.update()
-        }
+        screen.update()
         
         // sleep to save energy
         let frameDuration = Int(SDL_GetTicks() - startTime)

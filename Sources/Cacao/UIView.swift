@@ -446,13 +446,19 @@ open class UIView {
         
     }
     
-    internal final func render(in renderer: Renderer) {
+    internal final func render(with renderer: Renderer, in rect: SDL_Rect) {
         
         guard shouldRender
             else { return }
         
+        let width = Int(bounds.size.width)
+        let height = Int(bounds.size.height)
+        
         // create SDL texture
-        if texture == nil {
+        if texture == nil
+            || texture.width != width
+            || texture.height != height {
+            
             createTexture(for: renderer)
         }
         
@@ -461,7 +467,7 @@ open class UIView {
         // CoreGraphics drawing
         draw(in: context)
         
-        
+        renderer.copy(texture, destination: rect)
     }
     
     internal func draw(in context: Silica.Context) {
@@ -478,6 +484,7 @@ open class UIView {
         
         // draw rect
         draw(bounds)
+        surface.flush()
         
         UIGraphicsPopContext()
     }
