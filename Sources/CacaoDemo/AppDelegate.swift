@@ -21,9 +21,11 @@ final class AppDelegate: UIApplicationDelegate {
         
         window = UIWindow(frame: UIScreen.main.bounds)
         
+        window.backgroundColor = UIColor.red
+        
         let viewController = UIViewController()
         
-        viewController.view.backgroundColor = UIColor.red
+        viewController.view.backgroundColor = UIColor.white
         
         window.rootViewController = viewController
         

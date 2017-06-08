@@ -73,15 +73,14 @@ public final class UIScreen {
         // render views
         if needsLayout || needsDisplay {
             
-            renderer.drawColor = (0xFF, 0xFF, 0xFF, 0xFF)
-            renderer.clear()
+            //renderer.drawColor = (0xFF, 0xFF, 0xFF, 0xFF)
+            //renderer.clear()
             
             // FIXME to support multiple windows
             for window in [keyWindow!] {
                 
                 // render view hierarchy
                 render(view: window)
-                
             }
             
             // render to screen

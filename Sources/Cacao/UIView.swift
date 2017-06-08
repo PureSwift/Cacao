@@ -439,7 +439,7 @@ open class UIView {
                           format: PixelFormat.RawValue(SDL_PIXELFORMAT_ARGB8888),
                           access: .streaming,
                           width: width,
-                          height: height)!
+                          height: height).sdlAssert()
         
         surface = texture.withUnsafeMutableBytes { try! Cairo.Surface.Image.init(mutableBytes: $0.assumingMemoryBound(to: UInt8.self), format: .argb32, width: width, height: height, stride: $1) }
     }
@@ -460,6 +460,7 @@ open class UIView {
             createTexture(for: renderer)
         }
         
+        let surface = self.surface!
         let context = try! Silica.Context(surface: surface, size: bounds.size)
         
         // CoreGraphics drawing
@@ -566,8 +567,8 @@ open class UIView {
     /// this method lays out the view subtree starting at the root.
     public final func layoutIfNeeded() {
         
-        subviews.forEach { $0.layoutIfNeeded() }
         layoutSubviews()
+        subviews.forEach { $0.layoutIfNeeded() }
     }
     
     /// Returns the farthest descendant of the receiver in the view hierarchy (including itself) that contains a specified point.
