@@ -55,7 +55,7 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
     
     var done = false
     
-    var event = SDL_Event()
+    var sdlEvent = SDL_Event()
     
     while !done {
         
@@ -65,13 +65,13 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
         
         // poll event queue
         
-        var pollEventStatus = SDL_PollEvent(&event)
+        var pollEventStatus = SDL_PollEvent(&sdlEvent)
         
         let event = UIEvent()
         
         while pollEventStatus != 0 {
             
-            let eventType = SDL_EventType(rawValue: event.type)
+            let eventType = SDL_EventType(rawValue: sdlEvent.type)
                         
             switch eventType {
                 
@@ -96,11 +96,11 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
                 
             case SDL_WINDOWEVENT:
                 
-                switch event.window.event {
+                switch sdlEvent.window.event {
                     
                 case UInt8(SDL_WINDOWEVENT_SIZE_CHANGED.rawValue):
                     
-                    let size = Size(width: Double(event.window.data1), height: Double(event.window.data2))
+                    let size = Size(width: Double(sdlEvent.window.data1), height: Double(sdlEvent.window.data2))
                     
                     screen.size = (size, size)
                     
@@ -111,7 +111,7 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
             }
             
             // try again
-            pollEventStatus = SDL_PollEvent(&event)
+            pollEventStatus = SDL_PollEvent(&sdlEvent)
         }
         
         // inform responder chain
@@ -147,14 +147,12 @@ public struct CacaoOptions {
     public init() { }
 }
 
-public final class UIApplication: NSResponder {
+public final class UIApplication: UIResponder {
     
     // MARK: - Getting the App Instance
     
     public static var shared = UIApplication()
-    
-    private init() { }
-    
+        
     // MARK: - Getting the App Delegate
     
     public fileprivate(set) weak var delegate: UIApplicationDelegate?

@@ -187,7 +187,7 @@ open class UIViewController: UIResponder {
     
     // MARK: - UIResponder
     
-    open var next: UIResponder? {
+    open override var next: UIResponder? {
         
         return view?.superview
     }

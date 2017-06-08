@@ -24,6 +24,8 @@ open class UIView: UIResponder {
     /// Initializes and returns a newly allocated view object with the specified frame rectangle.
     public init(frame: CGRect) {
         
+        super.init()
+        
         self.frame = frame
     }
     

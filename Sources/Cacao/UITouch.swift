@@ -17,6 +17,8 @@ public final class UITouch: NSObject {
     internal init(location: CGPoint, view: UIView?, window: UIWindow?) {
         
         self.location = location
+        self.view = view
+        self.window = window
     }
     
     // MARK: - Getting the Location of a Touch
@@ -46,6 +48,4 @@ public final class UITouch: NSObject {
     
     /// The window in which the touch initially occurred.
     public let window: UIWindow?
-    
-    
 }
