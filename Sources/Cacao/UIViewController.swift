@@ -52,7 +52,12 @@ open class UIViewController {
     /// view if it is not currently in memory.
     public final var view: UIView! {
         get { loadViewIfNeeded(); return _view }
-        set { _view = newValue }
+        set {
+            let oldValue = _view
+            oldValue?.viewController = nil
+            newValue.viewController = self
+            _view = newValue
+        }
     }
     private var _view: UIView?
     public final var isViewLoaded: Bool { return _view != nil }
@@ -109,7 +114,21 @@ open class UIViewController {
     
     // MARK: - Responding to View Events
     
+    open func viewWillAppear(animated: Bool) {
+        
+        
+    }
+    
     // MARK: - Configuring the View’s Layout Behavior
+    
+    /// Called to notify the view controller that its view is about to layout its subviews.
+    ///
+    /// When a view's bounds change, the view adjusts the position of its subviews.
+    /// Your view controller can override this method to make changes before the view lays out its subviews.
+    /// The default implementation of this method does nothing.
+    open func viewWillLayoutSubviews() { }
+    
+    open func viewDidLayoutSubviews() { }
     
     // MARK: - Configuring the View Rotation Settings
     

@@ -417,6 +417,22 @@ open class UIView {
         // TODO
     }
     
+    /// The natural size for the receiving view, considering only properties of the view itself.
+    ///
+    /// Custom views typically have content that they display of which the layout system is unaware.
+    /// Setting this property allows a custom view to communicate to the layout system
+    /// what size it would like to be based on its content.
+    /// This intrinsic size must be independent of the content frame,
+    /// because there’s no way to dynamically communicate a changed width to the
+    /// layout system based on a changed height, for example.
+    ///
+    /// If a custom view has no intrinsic size for a given dimension,
+    /// it can use `UIViewNoIntrinsicMetric` for that dimension.
+    open var intrinsicContentSize: CGSize {
+        
+        return CGSize(width: UIViewNoIntrinsicMetric, height: UIViewNoIntrinsicMetric)
+    }
+    
     // MARK: - Identifying the View at Runtime
     
     /// An integer that you can use to identify view objects in your application.
@@ -531,6 +547,9 @@ open class UIView {
     
     // MARK: - Layout
     
+    /// This view is the main view of the specified view controller.
+    internal weak var viewController: UIViewController?
+    
     /// Lays out subviews.
     ///
     /// The default implementation of this method does nothing.
@@ -598,8 +617,10 @@ open class UIView {
     /// this method lays out the view subtree starting at the root.
     public final func layoutIfNeeded() {
         
+        viewController?.viewWillLayoutSubviews()
         layoutSubviews()
         subviews.forEach { $0.layoutIfNeeded() }
+        viewController?.viewDidLayoutSubviews()
     }
     
     /// Returns the farthest descendant of the receiver in the view hierarchy (including itself) that contains a specified point.
@@ -668,3 +689,7 @@ open class UIView {
         //setNeedsLayout()
     }
 }
+
+// MARK: - Supporting Types
+
+public let UIViewNoIntrinsicMetric: CGFloat = -1.0
