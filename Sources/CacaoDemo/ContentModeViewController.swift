@@ -33,7 +33,7 @@ final class ContentModeViewController: UIViewController {
     
     internal override func loadView() {
         
-        logoView = SwiftLogoView() // since we dont use autoresizing, initial size doesnt matter
+        logoView = SwiftLogoView(frame: CGRect()) // since we dont use autoresizing, initial size doesnt matter
         
         self.view = logoView
         

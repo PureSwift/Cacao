@@ -20,35 +20,30 @@ import Cacao
 /// Drawing code generated with [PaintCode](https://www.paintcodeapp.com)
 public final class SwiftLogoView: UIView {
     
-    // MARK: - Static Methods
-    
-    public static func contentSize(includesText: Bool) -> Size {
-        
-        return includesText ? Size(width: 164, height: 48) : Size(width: 48, height: 48)
-    }
-    
     // MARK: - Properties
     
     /// Whether the view also draws "Swift" text next to the logo.
     ///
     /// Note: The logo alone has a `1:1` ratio and the logo with text has a `41:12` ratio.
-    public var includesText: Bool
+    public var includesText: Bool = false { didSet { setNeedsDisplay() } }
+    
+    /// The multiplier for drawing.
+    /// This value is multiplied by the aspect ratio to get the intrinsic content size.
+    ///
+    /// For example, if this value is is 10, then the logo is drawn at 10x10
+    /// and the logo including text is drawn at 10x36
+    public var pointSize: CGFloat = 32
+    
+    /// The aspect ratio for the content.
+    public var aspectRatio: CGFloat {
+        
+        return includesText ? 41 / 12 : 1
+    }
     
     /// The intrinsic content size.
     public override var intrinsicContentSize: Size  {
         
-        return SwiftLogoView.contentSize(includesText: includesText)
-    }
-    
-    // MARK: - Initialization
-    
-    public init(frame: Rect? = nil, includesText: Bool = false) {
-        
-        self.includesText = includesText
-        
-        let frame = frame ?? Rect(size: SwiftLogoView.contentSize(includesText: includesText))
-        
-        super.init(frame: frame)
+        return Size(width: pointSize, height:  pointSize * aspectRatio)
     }
     
     // MARK: - Drawing
