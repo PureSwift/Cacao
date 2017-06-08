@@ -13,7 +13,7 @@ public final class UIScreen {
     
     public static internal(set) var main: UIScreen!
     
-    public static let screens: [UIScreen] = [UIScreen.main]()
+    public static var screens: [UIScreen] { return [UIScreen.main] }
     
     // MARK: - Properties
     
@@ -38,7 +38,7 @@ public final class UIScreen {
     
     internal let window: Window
     
-    internal var size: (window: Size, native: Size)
+    internal var size: (window: Size, native: Size) { didSet { sizeChanged() } }
     
     internal lazy var renderer: Renderer = Renderer(window: self.window).sdlAssert()
     
@@ -66,10 +66,10 @@ public final class UIScreen {
         
         if needsLayout {
             
-            
+            windows.forEach { $0.layoutIfNeeded() }
         }
         
-        renderer.drawColor = (0xFF, 0xFF, 0xFF, 0xFF)
+        renderer.drawColor = (0x00, 0x00, 0x00, 0xFF)
         
         // get data for surface
         let imageSurface = Surface(rgb: (Int(size.window.width), Int(size.window.height)), depth: 32).sdlAssert()
@@ -86,6 +86,11 @@ public final class UIScreen {
         
         needsDisplay = false
         needsLayout = false
+    }
+    
+    private func sizeChanged() {
+        
+        
     }
 }
 

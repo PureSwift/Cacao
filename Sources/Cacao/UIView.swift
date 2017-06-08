@@ -430,7 +430,7 @@ open class UIView {
     
     
     
-    internal final var shouldDrawContent: Bool { return isHidden == false && alpha > 0 }
+    internal final var shouldRender: Bool { return isHidden == false && alpha > 0 }
     
     
     
@@ -438,9 +438,10 @@ open class UIView {
     
     open func draw(_ rect: CGRect) { /* implemented by subclasses */ }
     
-    internal final func render(in renderer) {
+    internal final func render(in renderer: Renderer) {
         
-        let shouldDrawContent = hidden == false && alpha > 0
+        guard shouldRender
+            else { return }
         
         
     }
@@ -450,7 +451,7 @@ open class UIView {
         UIGraphicsPushContext(CGContext(context))
         
         // draw background color
-        context.fillColor = backgroundColor.CGColor
+        context.fillColor = backgroundColor?.cgColor
         context.add(rect: bounds)
         try! context.fill()
         

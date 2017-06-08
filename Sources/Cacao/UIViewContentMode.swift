@@ -6,6 +6,12 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
+#if os(macOS)
+    import Darwin.C.math
+#elseif os(Linux)
+    import Glibc
+#endif
+
 import Silica
 
 public enum UIViewContentMode: Int {

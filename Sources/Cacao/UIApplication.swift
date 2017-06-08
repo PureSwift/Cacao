@@ -91,6 +91,7 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
                  guard event.button.which != SDL_TOUCH_MOUSEID
                  else { return }*/
                 
+                break
                 //screen.handle(event: PointerEvent(event.button))
                 
             case SDL_FINGERDOWN, SDL_FINGERUP: break

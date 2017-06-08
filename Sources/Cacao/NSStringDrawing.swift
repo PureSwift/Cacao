@@ -57,7 +57,7 @@ public extension TextAttributes {
             textAttributes.font = font
         }
         
-        if let textColor = (attributes[NSForegroundColorAttributeName] as? UIColor)?.CGColor {
+        if let textColor = (attributes[NSForegroundColorAttributeName] as? UIColor)?.cgColor {
             
             textAttributes.color = textColor
         }
