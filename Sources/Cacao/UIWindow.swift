@@ -5,7 +5,7 @@
 //  Created by Alsey Coleman Miller on 6/7/17.
 //
 
-import typealias Silica.CGFloat
+import Silica
 
 /// An object that provides the backdrop for your app’s user interface and provides important event-handling behaviors.
 open class UIWindow: UIView {
@@ -24,6 +24,15 @@ open class UIWindow: UIView {
     /// A Boolean value that indicates whether the window is the key window for the app.
     public final var isKeyWindow: Bool { return UIScreen.main.keyWindow === self }
     
+    // MARK: - Initialization
+    
+    public override init(frame: CGRect) {
+        
+        super.init(frame: frame)
+        
+        screen.addWindow(self)
+    }
+    
     // MARK: - Methods
     
     /// Shows the window and makes it the key window.
@@ -37,7 +46,7 @@ open class UIWindow: UIView {
     /// Makes the receiver the key window.
     public final func makeKey() {
         
-        UIScreen.main.keyWindow = self
+        UIScreen.main.setKeyWindow(self)
     }
     
     /// Called automatically to inform the window that it has become the key window.

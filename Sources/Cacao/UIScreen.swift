@@ -48,9 +48,10 @@ public final class UIScreen {
     internal var needsLayout = true
     
     /// Children windows
-    internal var windows = [UIWindow]()
+    private var _windows = WeakArray<UIWindow>()
+    internal var windows: [UIWindow] { return _windows.values() }
     
-    internal var keyWindow: UIWindow?
+    internal private(set) weak var keyWindow: UIWindow?
     
     // MARK: - Intialization
     
@@ -68,16 +69,17 @@ public final class UIScreen {
         // layout views
         if needsLayout {
             windows.forEach { $0.layoutIfNeeded() }
+            needsDisplay = true
         }
         
         // render views
-        if needsLayout || needsDisplay {
+        if needsDisplay {
             
             //renderer.drawColor = (0xFF, 0xFF, 0xFF, 0xFF)
             //renderer.clear()
             
             // FIXME to support multiple windows
-            for window in [keyWindow!] {
+            for window in windows {
                 
                 // render view hierarchy
                 render(view: window)
@@ -94,7 +96,7 @@ public final class UIScreen {
     private func sizeChanged() {
         
         // update windows
-        keyWindow?.frame = Rect(size: size.window)
+        windows.forEach { $0.frame = Rect(size: size.window) }
         
         needsDisplay = true
         needsLayout = true
@@ -122,6 +124,21 @@ public final class UIScreen {
         
         // render subviews
         view.subviews.forEach { render(view: $0, origin: relativeOrigin) }
+    }
+    
+    internal func addWindow(_ window: UIWindow) {
+        
+        _windows.append(window)
+    }
+    
+    internal func setKeyWindow(_ window: UIWindow) {
+        
+        if windows.contains(where: { $0 === window }) == false {
+            
+            addWindow(window)
+        }
+        
+        keyWindow = window
     }
 }
 
