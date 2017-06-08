@@ -9,7 +9,7 @@ import class Foundation.NSCoder
 import class Foundation.Bundle
 import Silica
 
-open class UIViewController {
+open class UIViewController: UIResponder {
     
     // MARK: - Configuring a View Controller Using Nib Files
     
@@ -185,5 +185,10 @@ open class UIViewController {
         childViewControllers.forEach { $0.didReceiveMemoryWarning() }
     }
     
+    // MARK: - UIResponder
     
+    open var next: UIResponder? {
+        
+        return view?.superview
+    }
 }

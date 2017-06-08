@@ -12,7 +12,7 @@ public final class UIButton: UIView {
     
     // MARK: - Methods
     
-    public override func hitTest(point: Point) -> UIView? {
+    public override func hitTest(point: CGPoint, with event: UIEvent?) -> UIView? {
         
         guard isHidden == false
             && isUserInteractionEnabled

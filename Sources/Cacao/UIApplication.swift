@@ -67,10 +67,12 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
         
         var pollEventStatus = SDL_PollEvent(&event)
         
+        let event = UIEvent()
+        
         while pollEventStatus != 0 {
             
             let eventType = SDL_EventType(rawValue: event.type)
-            
+                        
             switch eventType {
                 
             case SDL_QUIT, SDL_APP_TERMINATING:
@@ -145,7 +147,7 @@ public struct CacaoOptions {
     public init() { }
 }
 
-public final class UIApplication {
+public final class UIApplication: NSResponder {
     
     // MARK: - Getting the App Instance
     
@@ -167,9 +169,16 @@ public final class UIApplication {
     
     // MARK: - Controlling and Handling Events
     
+    /// Dispatches an event to the appropriate responder objects in the app.
+    ///
+    /// - Parameter event: A UIEvent object encapsulating the information about an event, including the touches involved.
+    ///
+    /// If you require it, you can intercept incoming events by subclassing UIApplication and overriding this method.
+    /// For every event you intercept, you must dispatch it by calling super`sendEvent()`
+    /// after handling the event in your implementation.
     public func sendEvent(_ event: UIEvent) {
         
-        
+        keyWindow?.sendEvent(event)
     }
     
     public func sendAction(_ selector: String, to target: AnyObject?, from sender: AnyObject?, for event: UIEvent?) {
@@ -179,15 +188,15 @@ public final class UIApplication {
     
     public func beginIgnoringInteractionEvents() {
         
-        
+        isIgnoringInteractionEvents = true
     }
     
     public func endIgnoringInteractionEvents() {
         
-        
+        isIgnoringInteractionEvents = false
     }
     
-    public fileprivate(set) var isIgnoringInteractionEvents: Bool = false
+    public private(set) var isIgnoringInteractionEvents: Bool = false
     
     public var applicationSupportsShakeToEdit: Bool { return false }
     

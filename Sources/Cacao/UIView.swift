@@ -17,7 +17,7 @@ import Cairo
 /// with that content. The `UIView` class itself provides basic behavior for filling its rectangular area
 /// with a background color. More sophisticated content can be presented by subclassing `UIView`
 /// and implementing the necessary drawing and event-handling code yourself.
-open class UIView {
+open class UIView: UIResponder {
     
     // MARK: - Initializing a View Object
     
@@ -628,7 +628,7 @@ open class UIView {
     /// - Note: This method ignores view objects that are hidden or have user interaction disabled.
     /// This method does not take the view’s content into account when determining a hit.
     /// Thus, a view can still be returned even if the specified point is in a transparent portion of that view’s content.
-    open func hitTest(point: CGPoint) -> UIView? {
+    open func hitTest(point: CGPoint, with event: UIEvent?) -> UIView? {
         
         guard isHidden == false
             && isUserInteractionEnabled
@@ -640,7 +640,7 @@ open class UIView {
         
         for subview in subviews {
             
-            guard let descendant = subview.hitTest(point: subviewPoint) else { return nil }
+            guard let descendant = subview.hitTest(point: subviewPoint, with: event) else { return nil }
             
             return descendant
         }
@@ -663,7 +663,12 @@ open class UIView {
     
     // MARK: - Event Handling
     
+    // MARK: - UIResponder
     
+    open override var next: UIResponder? {
+        
+        return viewController ?? superview
+    }
     
     // MARK: - Update Properties
     

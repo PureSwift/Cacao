@@ -68,6 +68,13 @@ open class UIWindow: UIView {
         self.rootViewController?.view.frame = self.bounds
     }
     
+    // MARK: - UIResponder
+    
+    open override var next: UIResponder? {
+        
+        return UIApplication.shared
+    }
+    
     // MARK: - Private Methods
     
     private func rootViewControllerChanged(_ oldValue: UIViewController?) {
