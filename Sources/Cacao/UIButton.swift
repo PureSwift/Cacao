@@ -8,7 +8,7 @@
 
 import Silica
 
-public final class UIButton: UIView {
+public final class UIButton: UIControl {
     
     // MARK: - Methods
     

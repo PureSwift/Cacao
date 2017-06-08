@@ -18,6 +18,21 @@ public final class UIEvent {
     /// - Returns: A set of `UITouch` objects representing all touches associated with the event.
     public internal(set) var allTouches: Set<UITouch>?
     
+    public func touches(for view: UIView) -> Set<UITouch>? {
+        
+        return allTouches?.filter({ $0.view === view })
+    }
+    
+    public func touches(for window: UIWindow) -> Set<UITouch>? {
+        
+        return allTouches?.filter({ $0.window === window })
+    }
+    
+    public func touches(for gestureRecognizer: UIGestureRecognizer) -> Set<UITouch>? {
+        
+        return allTouches?.filter({ $0.gestureRecognizers?.contains(where: { $0 === gestureRecognizer }) ?? false })
+    }
+    
     // MARK: - Getting Event Attributes
     
     /// The time when the event occurred.

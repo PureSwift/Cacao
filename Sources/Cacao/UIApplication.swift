@@ -65,11 +65,11 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
         
         // poll event queue
         
-        var pollEventStatus = SDL_PollEvent(&sdlEvent)
+        var pollEventStatus: Int32 = 0
         
-        let event = UIEvent()
-        
-        while pollEventStatus != 0 {
+        repeat {
+            
+            pollEventStatus = SDL_PollEvent(&sdlEvent)
             
             let eventType = SDL_EventType(rawValue: sdlEvent.type)
                         
@@ -79,7 +79,19 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
                 
                 done = true
                 
-            case SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP:
+            case SDL_MOUSEBUTTONDOWN:
+                
+                let event = UIEvent()
+                
+                let timestamp = sdlEvent.button.timestamp
+                let screenLocation = CGPoint(x: Double(sdlEvent.button.x), y: Double(sdlEvent.button.y))
+                
+                guard let window = UIApplication.shared.keyWindow
+                    else { continue }
+                
+                window.hitTest(point: screenLocation, with: event)
+                 
+            case SDL_MOUSEBUTTONUP:
                 
                 /*
                  let SDL_TOUCH_MOUSEID = -1
@@ -110,9 +122,7 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
             default: break
             }
             
-            // try again
-            pollEventStatus = SDL_PollEvent(&sdlEvent)
-        }
+        } while pollEventStatus != 0
         
         // inform responder chain
         

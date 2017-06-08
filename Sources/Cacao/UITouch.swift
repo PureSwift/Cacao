@@ -48,4 +48,6 @@ public final class UITouch: NSObject {
     
     /// The window in which the touch initially occurred.
     public let window: UIWindow?
+    
+    public internal(set) var gestureRecognizers: [UIGestureRecognizer]?
 }
