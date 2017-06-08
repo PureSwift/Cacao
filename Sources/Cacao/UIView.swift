@@ -424,7 +424,6 @@ open class UIView {
     /// Cacao's equivalent of `UIView.layer` / `CALayer`.
     /// Instead of the CoreGraphics API you could draw directly to the texture's pixel data.
     private var texture: Texture!
-    private var surface: Cairo.Surface.Image!
     
     internal final var shouldRender: Bool { return isHidden == false && alpha > 0 }
     
@@ -442,8 +441,6 @@ open class UIView {
                           height: height).sdlAssert()
         
         texture.blendMode = .alpha
-        
-        surface = texture.withUnsafeMutableBytes { try! Cairo.Surface.Image.init(mutableBytes: $0.assumingMemoryBound(to: UInt8.self), format: .argb32, width: width, height: height, stride: $1) }
     }
     
     internal final func render(with renderer: Renderer, in rect: SDL_Rect) {
@@ -462,13 +459,19 @@ open class UIView {
             createTexture(for: renderer)
         }
         
-        let context = try! Silica.Context(surface: surface, size: bounds.size)
-        
         // unlock and modify texture
-        texture.withUnsafeMutableBytes { (_, _) in
+        texture.withUnsafeMutableBytes {
+            
+            let surface = try! Cairo.Surface.Image(mutableBytes: $0.assumingMemoryBound(to: UInt8.self), format: .argb32, width: width, height: height, stride: $1)
+            
+            let context = try! Silica.Context(surface: surface, size: bounds.size)
             
             // CoreGraphics drawing
             draw(in: context)
+            
+            /// flush surface
+            surface.flush()
+            surface.finish()
         }
         
         renderer.copy(texture, destination: rect)
@@ -488,7 +491,6 @@ open class UIView {
         
         // draw rect
         draw(bounds)
-        surface.flush()
         
         UIGraphicsPopContext()
     }
