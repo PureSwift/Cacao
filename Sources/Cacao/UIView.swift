@@ -6,8 +6,10 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
-import Silica
+import CSDL2
 import SDL
+import Silica
+import Cairo
 
 /// An object that represents a rectangular area on the screen and manages the content in that area.
 ///
@@ -415,33 +417,49 @@ open class UIView {
         return nil
     }
     
-    
-    
-    
-    
-    
-    
+    // MARK: - Drawing
     
     /// The backing rendering node / texture.
     ///
     /// Cacao's equivalent of `UIView.layer` / `CALayer`.
     /// Instead of the CoreGraphics API you could draw directly to the texture's pixel data.
-    public private(set) var texture: Texture!
-    
-    
+    private var texture: Texture!
+    private var surface: Cairo.Surface.Image!
     
     internal final var shouldRender: Bool { return isHidden == false && alpha > 0 }
     
-    
-    
-    // MARK: - Drawing
-    
     open func draw(_ rect: CGRect) { /* implemented by subclasses */ }
+    
+    private func createTexture(for renderer: Renderer) {
+        
+        let width = Int(bounds.size.width)
+        let height = Int(bounds.size.height)
+        
+        texture = Texture(renderer: renderer,
+                          format: PixelFormat.RawValue(SDL_PIXELFORMAT_ARGB8888),
+                          access: .streaming,
+                          width: width,
+                          height: height)!
+        
+        surface = texture.withUnsafeMutableBytes { try! Cairo.Surface.Image.init(mutableBytes: $0.assumingMemoryBound(to: UInt8.self), format: .argb32, width: width, height: height, stride: $1) }
+        
+        
+    }
     
     internal final func render(in renderer: Renderer) {
         
         guard shouldRender
             else { return }
+        
+        // create SDL texture
+        if texture == nil {
+            createTexture(for: renderer)
+        }
+        
+        let context = try! Silica.Context(surface: surface, size: bounds.size)
+        
+        // CoreGraphics drawing
+        draw(in: context)
         
         
     }

@@ -122,7 +122,6 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
         
         // inform responder chain
         
-        
         // render to screen
         if needsDisplay {
             

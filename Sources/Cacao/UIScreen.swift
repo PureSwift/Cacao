@@ -65,23 +65,17 @@ public final class UIScreen {
     internal func update() {
         
         if needsLayout {
-            
             windows.forEach { $0.layoutIfNeeded() }
         }
         
         renderer.drawColor = (0x00, 0x00, 0x00, 0xFF)
-        
-        // get data for surface
-        let imageSurface = Surface(rgb: (Int(size.window.width), Int(size.window.height)), depth: 32).sdlAssert()
-        
-        let texture = Texture(renderer: renderer, surface: imageSurface).sdlAssert()
+        renderer.clear()
         
         // render view hierarchy
         
         
         // render to screen
-        renderer.copy(texture)
-        renderer.clear()
+        renderer.copy(<#T##texture: Texture##Texture#>, source: <#T##SDL_Rect?#>, destination: <#T##SDL_Rect?#>)
         renderer.present()
         
         needsDisplay = false
