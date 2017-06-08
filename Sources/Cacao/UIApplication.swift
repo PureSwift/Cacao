@@ -21,18 +21,18 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
     
     defer { SDL.quit() }
     
-    var windowOptions: [Window.Option] = [] // [.allowRetina]
+    var windowOptions: Set<Window.Option> = [] // [.allowRetina]
     
     if options.canResizeWindow {
         
-        windowOptions.append(.resizable)
+        windowOptions.insert(.resizable)
     }
     
     let preferredSize = options.windowSize
     
     let initialWindowSize = preferredSize // can we query for screen resolution?
     
-    let window = Window(title: options.windowName, frame: (x: .centered, y: .centered, width: Int(initialWindowSize.width), height:  Int(initialWindowSize.height))).sdlAssert()
+    let window = Window(title: options.windowName, frame: (x: .centered, y: .centered, width: Int(initialWindowSize.width), height:  Int(initialWindowSize.height)), options: windowOptions).sdlAssert()
     
     let initialNativeSize = initialWindowSize // FIXME: Retina display
     

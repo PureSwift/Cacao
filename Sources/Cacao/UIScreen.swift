@@ -73,7 +73,7 @@ public final class UIScreen {
         // render views
         if needsLayout || needsDisplay {
             
-            renderer.drawColor = (0x00, 0x00, 0x00, 0xFF)
+            renderer.drawColor = (0xFF, 0xFF, 0xFF, 0xFF)
             renderer.clear()
             
             // FIXME to support multiple windows
@@ -82,9 +82,10 @@ public final class UIScreen {
                 // render view hierarchy
                 render(view: window)
                 
-                // render to screen
-                renderer.present()
             }
+            
+            // render to screen
+            renderer.present()
         }
         
         needsDisplay = false
@@ -102,7 +103,7 @@ public final class UIScreen {
     
     private func render(view: UIView, origin: Point = Point()) {
         
-        guard view.isHidden == false
+        guard view.shouldRender
             else { return }
         
         // add translation
