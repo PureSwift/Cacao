@@ -31,7 +31,7 @@ public extension String {
         
         // calculate frame
         
-        let textWidth = attributes.font.cgFont.singleLineWidth(text: self, fontSize: attributes.font.size, textMatrix: textMatrix)
+        let textWidth = attributes.font.cgFont.singleLineWidth(text: self, fontSize: attributes.font.pointSize, textMatrix: textMatrix)
         
         let lines = 1
         
@@ -87,8 +87,8 @@ public extension Silica.Context {
     
     func setTextAttributes(_ attributes: TextAttributes) {
         
-        self.fontSize = attributes.font.size
-        self.setFont(attributes.font.silicaFont)
-        self.fillColor = attributes.color
+        self.fontSize = attributes.font.pointSize
+        self.setFont(attributes.font.cgFont)
+        self.fillColor = attributes.color.cgColor
     }
 }

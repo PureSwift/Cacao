@@ -23,8 +23,8 @@ final class FontTests: XCTestCase {
         
         let expectedFullName = "Times New Roman"
         
-        XCTAssert(font.name == font.silicaFont.name)
-        XCTAssert(expectedFullName == font.silicaFont.scaledFont.fullName, "\(expectedFullName) == \(font.silicaFont.scaledFont.fullName)")
+        XCTAssert(font.name == font.cgFont.name)
+        XCTAssert(expectedFullName == font.cgFont.scaledFont.fullName, "\(expectedFullName) == \(font.cgFont.scaledFont.fullName)")
     }
     
     func testCreateTraitFont() {
@@ -34,7 +34,7 @@ final class FontTests: XCTestCase {
         
         let expectedFullName = "Times New Roman"
         
-        XCTAssert(font.name == font.silicaFont.name)
-        XCTAssert(expectedFullName == font.silicaFont.scaledFont.fullName, "\(expectedFullName) == \(font.silicaFont.scaledFont.fullName)")
+        XCTAssert(font.name == font.cgFont.name)
+        XCTAssert(expectedFullName == font.cgFont.scaledFont.fullName, "\(expectedFullName) == \(font.cgFont.scaledFont.fullName)")
     }
 }

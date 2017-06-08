@@ -40,16 +40,13 @@ public extension UIViewContentMode {
         
         switch self {
             
-        case .redraw:
-            
-            // tiled?
-            fallthrough
+        case .redraw: fallthrough
             
         case .scaleToFill:
             
             return Rect(size: bounds.size)
             
-        case .aspectFit:
+        case .scaleAspectFit:
             
             let widthRatio = bounds.width / size.width
             let heightRatio = bounds.height / size.height
@@ -73,7 +70,7 @@ public extension UIViewContentMode {
             
             return Rect(origin: origin, size: newSize)
             
-        case .aspectFill:
+        case .scaleAspectFill:
             
             let widthRatio = (bounds.size.width / size.width)
             let heightRatio = (bounds.size.height / size.height)

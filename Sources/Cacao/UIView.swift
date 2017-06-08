@@ -451,7 +451,7 @@ open class UIView {
         UIGraphicsPushContext(CGContext(context))
         
         // draw background color
-        context.fillColor = backgroundColor?.cgColor
+        context.fillColor = backgroundColor?.cgColor ?? CGColor.clear
         context.add(rect: bounds)
         try! context.fill()
         

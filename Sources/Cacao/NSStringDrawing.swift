@@ -33,7 +33,7 @@ public extension String {
         
         let font = textAttributes.font
         
-        let descender = (Double(font.silicaFont.scaledFont.descent) * font.size) / Double(font.silicaFont.scaledFont.unitsPerEm)
+        let descender = (Double(font.cgFont.scaledFont.descent) * font.pointSize) / Double(font.cgFont.scaledFont.unitsPerEm)
         
         textFrame.height -= descender
         
@@ -57,7 +57,7 @@ public extension TextAttributes {
             textAttributes.font = font
         }
         
-        if let textColor = (attributes[NSForegroundColorAttributeName] as? UIColor)?.cgColor {
+        if let textColor = (attributes[NSForegroundColorAttributeName] as? UIColor) {
             
             textAttributes.color = textColor
         }

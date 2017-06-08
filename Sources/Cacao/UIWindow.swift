@@ -16,10 +16,10 @@ open class UIWindow: UIView {
     public final var rootViewController: UIViewController?
     
     /// The screen on which the window is displayed.
-    public final var screen: UIScreen { return UIScreen.main }
+    public final var screen: UIScreen = UIScreen.main
     
     /// The position of the window in the z-axis.
-    public final var windowLevel: UIWindowLevel = .normal
+    public final var windowLevel: UIWindowLevel = UIWindowLevelNormal
     
     /// A Boolean value that indicates whether the window is the key window for the app.
     public final var isKeyWindow: Bool { return UIScreen.main.keyWindow === self }
@@ -31,7 +31,7 @@ open class UIWindow: UIView {
         
         makeKey()
         
-        hidden = false
+        isHidden = false
     }
     
     /// Makes the receiver the key window.
@@ -63,10 +63,10 @@ open class UIWindow: UIView {
 public typealias UIWindowLevel = CGFloat
 
 /// The default level. Use this level for the majority of your content, including for your app’s main window.
-public let UIWindowLevelNormal: UIWindowLevel
+public let UIWindowLevelNormal: UIWindowLevel = 0
 
 /// The level for an alert view. Windows at this level appear on top of windows at the UIWindowLevelNormal level.
-public let UIWindowLevelAlert: UIWindowLevel
+public let UIWindowLevelAlert: UIWindowLevel = 2000
 
 /// The level for a status window. Windows at this level appear on top of windows at the UIWindowLevelAlert level.
-public let UIWindowLevelStatusBar: UIWindowLevel
+public let UIWindowLevelStatusBar: UIWindowLevel = 1000

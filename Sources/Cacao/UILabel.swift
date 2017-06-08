@@ -14,9 +14,9 @@ open class UILabel: UIView {
     
     public final var text: String = "" { didSet { setNeedsDisplay() } }
     
-    public final var font: Font = UILabel.appearance().font { didSet { setNeedsDisplay() } }
+    public final var font: UIFont = UIFont(name: "Helvetica", size: 17)! { didSet { setNeedsDisplay() } }
     
-    public final var color: Color = UILabel.appearance().color { didSet { setNeedsDisplay() } }
+    public final var color: UIColor = UIColor.black { didSet { setNeedsDisplay() } }
     
     public final var textAlignment: TextAlignment = .left { didSet { setNeedsDisplay() } }
     
@@ -43,18 +43,6 @@ extension UILabel {
     
     public static func appearance() -> UILabel {
         
-        struct Static {
-            static let value = create()
-            static func create() -> UILabel {
-                
-                let font = UIFont(name: "Helvetica", size: 17)!
-                
-                let color = UIColor.black
-                
-                let label = UILabel(frame: CGRect())
-            }
-        }
-        
-        return Static.value
+        return UILabel(frame: CGRect())
     }
 }

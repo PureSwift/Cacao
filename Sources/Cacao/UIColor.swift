@@ -8,7 +8,7 @@
 
 import Silica
 
-public final class UIColor {
+public struct UIColor {
     
     // MARK: - Properties
     
@@ -80,14 +80,3 @@ public final class UIColor {
     
     public static var black = UIColor(cgColor: Color.black)
 }
-
-// MARK: - CacaoConvertible
-
-extension UIColor: CacaoConvertible {
-    
-    public func toCacao() -> Silica.Color {
-        
-        return cgColor
-    }
-}
-
