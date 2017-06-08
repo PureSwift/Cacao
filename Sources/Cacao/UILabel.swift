@@ -34,7 +34,7 @@ open class UILabel: UIView {
         attributes.color = color
         attributes.paragraphStyle.alignment = textAlignment
         
-        //text.draw(in: bounds, context: context, attributes: attributes)
+        text.draw(in: bounds, context: context.silicaContext, attributes: attributes)
     }
 }
 

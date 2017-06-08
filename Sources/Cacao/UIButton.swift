@@ -8,38 +8,14 @@
 
 import Silica
 
-/*
-public final class Button: View {
-    
-    public var frame: Rect { didSet { layoutSubviews() } }
-    
-    public var userInteractionEnabled: Bool = true
-    
-    public var hidden: Bool = false
-    
-    public var contentView: ContentView { didSet { layoutSubviews() } }
-    
-    public var subviews: [View] {
-        
-        return [contentView]
-    }
-    
-    public var action: (Button) -> () = { _ in }
-    
-    // MARK: - Initialization
-    
-    public init(frame: Rect = Rect(), content: View, mode: ContentMode = ContentMode()) {
-        
-        self.frame = frame
-        self.contentView = ContentView(frame: Rect(size: frame.size), content: content, mode: mode)
-    }
+public final class UIButton: UIView {
     
     // MARK: - Methods
     
-    public func hitTest(point: Point) -> View? {
+    public override func hitTest(point: Point) -> UIView? {
         
-        guard hidden == false
-            && userInteractionEnabled
+        guard isHidden == false
+            && isUserInteractionEnabled
             && pointInside(point)
             else { return nil }
         
@@ -48,6 +24,7 @@ public final class Button: View {
         return self
     }
     
+    /*
     public func handle(event: PointerEvent) {
         
         switch event.input {
@@ -61,13 +38,6 @@ public final class Button: View {
             
         default: break
         }
-    }
-    
-    public func layoutSubviews() {
-        
-        contentView.frame = Rect(size: frame.size)
-        
-        contentView.layoutSubviews()
-    }
+    }*/
 }
- */
+ 
