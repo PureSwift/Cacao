@@ -13,7 +13,7 @@ open class UIWindow: UIView {
     // MARK: - Properties
     
     /// The root view controller for the window.
-    public final var rootViewController: UIViewController?
+    public final var rootViewController: UIViewController? { didSet { rootViewControllerChanged(oldValue) } }
     
     /// The screen on which the window is displayed.
     public final var screen: UIScreen = UIScreen.main
@@ -50,6 +50,27 @@ open class UIWindow: UIView {
     public final func sendEvent(_ event: UIEvent) {
         
         
+    }
+    
+    // MARK: - Subclassed Methods
+    
+    open override func layoutSubviews() {
+        
+        self.rootViewController?.view.frame = self.bounds
+    }
+    
+    // MARK: - Private Methods
+    
+    private func rootViewControllerChanged(_ oldValue: UIViewController?) {
+        
+        oldValue?.view?.removeFromSuperview()
+        
+        guard let viewController = rootViewController
+            else { return }
+        
+        addSubview(viewController.view)
+        
+        layoutIfNeeded()
     }
 }
 

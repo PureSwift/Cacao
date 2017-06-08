@@ -622,7 +622,7 @@ open class UIView {
         
         _bounds.size = newValue.size
         
-        setNeedsLayout()
+        //setNeedsLayout()
     }
     
     @inline(__always)
@@ -632,7 +632,7 @@ open class UIView {
         
         _frame.size = newValue.size
         
-        setNeedsLayout()
+        //setNeedsLayout()
     }
     
     @inline(__always)
@@ -640,6 +640,6 @@ open class UIView {
         
         // TODO calculate new values
         
-        setNeedsLayout()
+        //setNeedsLayout()
     }
 }

@@ -27,6 +27,10 @@ final class AppDelegate: UIApplicationDelegate {
         
         viewController.view.backgroundColor = UIColor.white
         
+        let swiftView = SwiftLogoView()
+        
+        viewController.view.addSubview(swiftView)
+        
         window.rootViewController = viewController
         
         window.makeKeyAndVisible()
