@@ -47,13 +47,15 @@ public final class SwiftLogoView: UIView {
     
     public override func draw(_ rect: CGRect) {
         
+        let frame = contentMode.rect(for: bounds, size: intrinsicContentSize)
+        
         if includesText {
             
-            StyleKit.drawSwiftLogoWithText(frame: bounds)
+            StyleKit.drawSwiftLogoWithText(frame: frame)
             
         } else {
             
-            StyleKit.drawSwiftLogo(frame: bounds)
+            StyleKit.drawSwiftLogo(frame: frame)
         }
     }
 }

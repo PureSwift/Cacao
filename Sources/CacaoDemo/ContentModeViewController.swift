@@ -25,8 +25,6 @@ final class ContentModeViewController: UIViewController {
     
     private(set) var button: UIButton!
     
-    private(set) var contentView: ContentView!
-    
     // MARK: - Properties
     
     let modes: [UIViewContentMode] = [.center, .redraw, .scaleToFill, .scaleAspectFit, .scaleAspectFill, .top, .bottom, .left, .right, .topLeft, .topRight, .bottomLeft, .bottomRight]
@@ -35,13 +33,15 @@ final class ContentModeViewController: UIViewController {
     
     internal override func loadView() {
         
-        contentView = ContentView(frame: CGRect()) // since we dont use autoresizing, initial size doesnt matter
+        logoView = SwiftLogoView() // since we dont use autoresizing, initial size doesnt matter
+        
+        self.view = logoView
+        
+        logoView.contentMode = modes[0]
         
         label = UILabel(frame: CGRect()) // layoutSubviews will set size
         
         label.text = "\(modes[0])"
-        
-        logoView = SwiftLogoView()
         
         button = UIButton(frame: CGRect())
         
@@ -49,15 +49,9 @@ final class ContentModeViewController: UIViewController {
         
         label.textAlignment = .center
         
-        contentView.addSubview(button)
+        view.addSubview(button)
         
-        contentView.addSubview(label)
-        
-        contentView.content = logoView
-        
-        contentView.contentMode = modes[0]
-        
-        self.view = contentView
+        view.addSubview(label)
     }
     
     override func viewWillLayoutSubviews() {
@@ -75,7 +69,7 @@ final class ContentModeViewController: UIViewController {
  
     func changeMode(sender: UIButton) {
         
-        let currentMode = contentView.contentMode
+        let currentMode = logoView.contentMode
         
         let currentIndex = modes.index(of: currentMode)!
         
@@ -88,7 +82,7 @@ final class ContentModeViewController: UIViewController {
         
         let newMode = modes[nextIndex]
         
-        contentView.contentMode = newMode
+        logoView.contentMode = newMode
         
         label.text = "\(newMode)"
         
