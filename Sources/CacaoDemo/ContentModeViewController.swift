@@ -15,16 +15,17 @@
 import Cacao
 import Silica
 
-/*
 final class ContentModeViewController: UIViewController {
     
     // MARK: - Views
     
-    lazy var label: Label = Label(frame: Rect(), text: "\(self.modes[0])")
+    private(set) var label: UILabel!
     
-    var logoView: SwiftLogoView! = SwiftLogoView()
+    private(set) var logoView: SwiftLogoView!
     
-    var button: UIButton! = Button(content: self.logoView, mode: self.modes[0])
+    private(set) var button: UIButton!
+    
+    private(set) var contentView: ContentView!
     
     // MARK: - Properties
     
@@ -32,19 +33,29 @@ final class ContentModeViewController: UIViewController {
     
     // MARK: - Loading
     
-    private func loadView() -> UIView {
+    internal override func loadView() {
         
-        let backgroundView = UIView(frame: CGRect(x: 0, y: 0, width: 600, height: 400))
+        contentView = ContentView(frame: CGRect()) // since we dont use autoresizing, initial size doesnt matter
         
-        button.action = changeMode
+        label = UILabel(frame: CGRect()) // layoutSubviews will set size
+        
+        label.text = "\(self.modes[0])"
+        
+        logoView = SwiftLogoView()
+        
+        let button = UIButton(frame: CGRect())
+        
+        //button.action = changeMode
         
         label.textAlignment = .center
         
-        backgroundView.addSubview(button)
+        contentView.addSubview(button)
         
-        backgroundView.addSubview(label)
+        contentView.addSubview(label)
         
-        return backgroundView
+        contentView.content = logoView
+        
+        self.view = contentView
     }
     
     func layoutView() {
@@ -59,10 +70,10 @@ final class ContentModeViewController: UIViewController {
     }
     
     // MARK: - Methods
-    /*
+ 
     func changeMode(sender: UIButton) {
         
-        let currentMode = button.contentView.mode
+        let currentMode = contentView.contentMode
         
         let currentIndex = modes.index(of: currentMode)!
         
@@ -75,10 +86,10 @@ final class ContentModeViewController: UIViewController {
         
         let newMode = modes[nextIndex]
         
-        button.contentView.mode = newMode
+        contentView.contentMode = newMode
         
         label.text = "\(newMode)"
         
         print("Changing to \(newMode)")
-    }*/
-}*/
+    }
+}

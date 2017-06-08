@@ -23,13 +23,7 @@ final class AppDelegate: UIApplicationDelegate {
         
         window.backgroundColor = UIColor.red
         
-        let viewController = UIViewController()
-        
-        viewController.view.backgroundColor = UIColor.blue
-        
-        let swiftView = SwiftLogoView()
-        
-        viewController.view.addSubview(swiftView)
+        let viewController = ContentModeViewController()
         
         window.rootViewController = viewController
         

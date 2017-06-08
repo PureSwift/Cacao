@@ -21,18 +21,25 @@ public final class ContentView: UIView {
     // MARK: - Properties
     
     /// Content view.
-    public var content: UIView? { didSet { layoutSubviews() } }
-    
-    /// Content's display mode.
-    public var mode: UIViewContentMode = .scaleAspectFill { didSet { layoutSubviews() } }
+    public var content: UIView? { didSet { contentChanged(oldValue) } }
     
     // MARK: - Methods
     
     public override func layoutSubviews() {
         
-        content?.frame = mode.rect(for: bounds, size: bounds.size)
+        content?.frame = contentMode.rect(for: bounds, size: bounds.size)
+    }
+    
+    @inline(__always)
+    private func contentChanged(_ oldValue: UIView?) {
         
-        // layout all subviews
-        subviews.forEach { $0.layoutSubviews() }
+        oldValue?.removeFromSuperview()
+        
+        guard let view = content
+            else { return }
+        
+        addSubview(view)
+        
+        layoutIfNeeded()
     }
 }
