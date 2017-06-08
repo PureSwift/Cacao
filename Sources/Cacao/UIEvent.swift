@@ -16,7 +16,7 @@ public final class UIEvent {
     /// Returns all touches associated with the event.
     ///
     /// - Returns: A set of `UITouch` objects representing all touches associated with the event.
-    public internal(set) var allTouches: Set<UITouch>?
+    public internal(set) var allTouches: Set<UITouch>? = []
     
     public func touches(for view: UIView) -> Set<UITouch>? {
         

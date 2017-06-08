@@ -14,9 +14,10 @@ public final class UITouch: NSObject {
     /// The absolute location, relative to screen.
     internal let location: CGPoint
     
-    internal init(location: CGPoint, view: UIView?, window: UIWindow?) {
+    internal init(location: CGPoint, phase: UITouchPhase, view: UIView?, window: UIWindow?) {
         
         self.location = location
+        self.phase = phase
         self.view = view
         self.window = window
     }
@@ -50,4 +51,27 @@ public final class UITouch: NSObject {
     public let window: UIWindow?
     
     public internal(set) var gestureRecognizers: [UIGestureRecognizer]?
+    
+    /// The phase of the touch.
+    public let phase: UITouchPhase
+}
+
+// MARK: - Supporting Types
+
+public enum UITouchPhase: Int {
+    
+    /// A finger for a given event touched the screen.
+    case began
+    
+    /// A finger for a given event moved on the screen.
+    case moved
+    
+    /// A finger is touching the surface but hasn't moved since the previous event.
+    case stationary
+    
+    /// A finger for a given event was lifted from the screen.
+    case ended
+    
+    ///  The system canceled tracking for the touch, as when (for example) the user moves the device against his or her face.
+    case cancelled
 }

@@ -67,11 +67,15 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
         
         var pollEventStatus: Int32 = 0
         
+        let event = UIEvent()
+        
         repeat {
             
             pollEventStatus = SDL_PollEvent(&sdlEvent)
             
             let eventType = SDL_EventType(rawValue: sdlEvent.type)
+            
+            let screenLocation = CGPoint(x: Double(sdlEvent.button.x), y: Double(sdlEvent.button.y))
                         
             switch eventType {
                 
@@ -79,32 +83,22 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
                 
                 done = true
                 
-            case SDL_MOUSEBUTTONDOWN:
+            case SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP:
                 
-                let event = UIEvent()
+                guard sdlEvent.button.which != -1
+                    else { return }
                 
-                let timestamp = sdlEvent.button.timestamp
-                let screenLocation = CGPoint(x: Double(sdlEvent.button.x), y: Double(sdlEvent.button.y))
-                
-                guard let window = UIApplication.shared.keyWindow
+                guard let window = UIApplication.shared.keyWindow,
+                    let view = window.hitTest(screenLocation, with: event)
                     else { continue }
                 
-                window.hitTest(point: screenLocation, with: event)
-                 
-            case SDL_MOUSEBUTTONUP:
+                let touchPhase = UITouchPhase.began
                 
-                /*
-                 let SDL_TOUCH_MOUSEID = -1
-                 
-                 guard event.button.which != SDL_TOUCH_MOUSEID
-                 else { return }*/
+                let touch = UITouch(location: screenLocation, phase: touchPhase, view: view, window: window)
                 
-                break
-                //screen.handle(event: PointerEvent(event.button))
+                event.allTouches?.insert(touch)
                 
-            case SDL_FINGERDOWN, SDL_FINGERUP: break
-                
-                // TODO
+                window.sendEvent(event)
                 
             case SDL_WINDOWEVENT:
                 

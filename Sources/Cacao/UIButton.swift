@@ -12,7 +12,7 @@ public final class UIButton: UIControl {
     
     // MARK: - Methods
     
-    public override func hitTest(point: CGPoint, with event: UIEvent?) -> UIView? {
+    public override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         
         guard isHidden == false
             && isUserInteractionEnabled
@@ -24,20 +24,9 @@ public final class UIButton: UIControl {
         return self
     }
     
-    /*
-    public func handle(event: PointerEvent) {
+    public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         
-        switch event.input {
-            
-        case let .mouse(.button(buttonEvent)):
-            
-            if buttonEvent.state == .released {
-                
-                action(self)
-            }
-            
-        default: break
-        }
-    }*/
+        
+    }
 }
  

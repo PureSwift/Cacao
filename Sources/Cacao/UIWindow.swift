@@ -58,7 +58,29 @@ open class UIWindow: UIView {
     /// Dispatches the specified event to its views.
     public final func sendEvent(_ event: UIEvent) {
         
+        // handle gestures
         
+        // handle touches
+        
+        switch event.type {
+            
+        case .touches:
+            
+            let touches = event.allTouches ?? []
+            
+            for touch in touches {
+                                
+                switch touch.phase {
+                case .began: touch.view?.touchesBegan(touches, with: event)
+                case .moved: touch.view?.touchesBegan(touches, with: event)
+                case .stationary: break
+                case .ended: touch.view?.touchesBegan(touches, with: event)
+                case .cancelled: touch.view?.touchesBegan(touches, with: event)
+                }
+            }
+            
+        default: break
+        }
     }
     
     // MARK: - Subclassed Methods

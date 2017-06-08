@@ -630,7 +630,7 @@ open class UIView: UIResponder {
     /// - Note: This method ignores view objects that are hidden or have user interaction disabled.
     /// This method does not take the view’s content into account when determining a hit.
     /// Thus, a view can still be returned even if the specified point is in a transparent portion of that view’s content.
-    open func hitTest(point: CGPoint, with event: UIEvent?) -> UIView? {
+    open func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         
         guard isHidden == false
             && isUserInteractionEnabled
@@ -642,7 +642,7 @@ open class UIView: UIResponder {
         
         for subview in subviews {
             
-            guard let descendant = subview.hitTest(point: subviewPoint, with: event) else { return nil }
+            guard let descendant = subview.hitTest(subviewPoint, with: event) else { return nil }
             
             return descendant
         }
