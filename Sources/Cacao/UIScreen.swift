@@ -13,7 +13,7 @@ public final class UIScreen {
     
     public static internal(set) var main: UIScreen!
     
-    public static let screens = [UIScreen.main]()
+    public static let screens: [UIScreen] = [UIScreen.main]()
     
     // MARK: - Properties
     
@@ -33,14 +33,14 @@ public final class UIScreen {
     
     public var maximumFramesPerSecond: Int {
         
-        return Int(sdlWindow.displayMode?.refresh_rate ?? 60)
+        return Int(window.displayMode?.refresh_rate ?? 60)
     }
     
-    internal let sdlWindow: Window
+    internal let window: Window
     
     internal var size: (window: Size, native: Size)
     
-    internal lazy var renderer: Renderer = Renderer(window: self.sdlWindow).sdlAssert()
+    internal lazy var renderer: Renderer = Renderer(window: self.window).sdlAssert()
     
     internal var needsDisplay = true
     
@@ -59,8 +59,13 @@ public final class UIScreen {
     
     // MARK: - Methods
     
-    /// Redraws the screen
+    /// Layout (if needed) and redraw the screen
     internal func update() {
+        
+        if needsLayout {
+            
+            
+        }
         
         renderer.drawColor = (0xFF, 0xFF, 0xFF, 0xFF)
         
@@ -81,7 +86,6 @@ public final class UIScreen {
         needsLayout = false
     }
 }
-
 
 /*
 public final class Screen {
