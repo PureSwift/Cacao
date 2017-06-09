@@ -21,8 +21,48 @@ open class UIControl: UIView {
     
     // MARK: - Accessing the Control’s Targets and Actions
     
+    /// Target-Action pairs
+    private var targetActions: [Selector]
     
+    /// Associates a target object and action method with the control.
+    public func addTarget<Target>(_ target: Target, action: Selector, for controlEvents: UIControlEvents)
+        where Target: AnyObject, Target: Hashable {
+        
+        
+    }
+    
+    /// Stops the delivery of events to the specified target object.
+    public func removeTarget<Target>(_ target: Target, action: Selector, for controlEvents: UIControlEvents)
+        where Target: AnyObject, Target: Hashable {
+        
+        
+    }
+    
+    ///
+    /// - Parameter target: The target object—that is, an object that has an action method associated with this control.
+    /// You must pass an explicit object for this method to return a meaningful result.
+    /// Specifying `nil` always returns `nil`.
+    /// - Parameter controlEvent: A single control event constant representing the event
+    /// for which you want the list of action methods.
+    /// For a list of possible constants, see `UIControlEvents`.
+    public func actions(forTarget target: Any?, forControlEvent controlEvent: UIControlEvents) -> [String]? {
+        
+        guard let target = target
+            else { return nil }
+        
+        
+    }
 }
+
+/// Cacao extension since Swift doesn't support ObjC runtime (on non-Darwin platforms)
+public struct Selector {
+    
+    public let action: (_ sender: AnyObject?) -> ()
+    
+    public let name: String
+}
+
+extension Selector
 
 /// Constants describing the state of a control.
 ///
@@ -34,7 +74,7 @@ public struct UIControlState: OptionSet {
     
     public let rawValue: Int
     
-    public init(rawValue: Int) {
+    public init(rawValue: Int = 0) {
         
         self.rawValue = rawValue
     }
@@ -51,4 +91,14 @@ public struct UIControlState: OptionSet {
     public static let focused = UIControlState(rawValue: 1 << 3)
     
     public static let application = UIControlState(rawValue: 0x00FF0000)
+}
+
+public struct UIControlEvents: OptionSet {
+    
+    public let rawValue: Int
+    
+    public init(rawValue: Int = 0) {
+        
+        self.rawValue = rawValue
+    }
 }
