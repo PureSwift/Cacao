@@ -5,6 +5,8 @@
 //  Created by Alsey Coleman Miller on 6/7/17.
 //
 
+import class Foundation.NSNull
+
 /// The base class for controls, which are visual elements that convey
 /// a specific action or intention in response to user interactions.
 open class UIControl: UIView {
@@ -22,22 +24,28 @@ open class UIControl: UIView {
     // MARK: - Accessing the Control’s Targets and Actions
     
     /// Target-Action pairs
-    private var targetActions: [Selector]
+    private var targetActions = [Target: [UIControlEvents: [Selector]]]()
     
     /// Associates a target object and action method with the control.
-    public func addTarget<Target>(_ target: Target, action: Selector, for controlEvents: UIControlEvents)
-        where Target: AnyObject, Target: Hashable {
+    public func addTarget(_ target: AnyHashable?, action: Selector, for controlEvents: UIControlEvents) {
         
+        let target = Target(target)
         
+        targetActions[target, default: [:]][controlEvents,  default: []].append(action)
     }
     
     /// Stops the delivery of events to the specified target object.
-    public func removeTarget<Target>(_ target: Target, action: Selector, for controlEvents: UIControlEvents)
-        where Target: AnyObject, Target: Hashable {
+    public func removeTarget(_ target: AnyHashable?, action: Selector, for controlEvents: UIControlEvents) {
+            
+        let target = Target(target)
         
+        guard let index = targetActions[target, default: [:]][controlEvents,  default: []].index(of: action)
+            else { return }
         
+        targetActions[target, default: [:]][controlEvents,  default: []].remove(at: index)
     }
     
+    /// Returns the actions performed on a target object when the specified event occurs.
     ///
     /// - Parameter target: The target object—that is, an object that has an action method associated with this control.
     /// You must pass an explicit object for this method to return a meaningful result.
@@ -45,24 +53,78 @@ open class UIControl: UIView {
     /// - Parameter controlEvent: A single control event constant representing the event
     /// for which you want the list of action methods.
     /// For a list of possible constants, see `UIControlEvents`.
-    public func actions(forTarget target: Any?, forControlEvent controlEvent: UIControlEvents) -> [String]? {
+    public func actions(forTarget target: AnyHashable?, forControlEvent controlEvent: UIControlEvents) -> [Selector]? {
         
-        guard let target = target
+        guard let targetValue = target
             else { return nil }
         
+        let target = Target(targetValue)
         
+        return targetActions[target, default: [:]][controlEvent, default: []]
+    }
+    
+    /// Returns the events for which the control has associated actions.
+    ///
+    /// - Returns: A bitmask of constants indicating the events for which this control has associated actions.
+    public var allControlEvents: UIControlEvents {
+        
+        return targetActions
+            .reduce([UIControlEvents](), { $0 + Array($1.value.keys) })
+            .reduce(UIControlEvents(), { $0.union($1) })
+    }
+    
+    /// Returns all target objects associated with the control.
+    ///
+    /// - Returns: A set of all target objects associated with the control.
+    /// The returned set may include one or more `NSNull` objects to indicate actions that are dispatched to the responder chain.
+    public var allTargets: Set<AnyHashable> {
+        
+        let targets = targetActions.keys.map { $0.value ?? NSNull() as AnyHashable }
+        
+        return Set(targets)
+    }
+}
+
+private extension UIControl {
+    
+    final class Target: Hashable {
+        
+        let value: AnyHashable?
+        
+        init(_ value: AnyHashable? = nil) {
+            
+            self.value = value
+        }
+        
+        var hashValue: Int {
+            
+            return value?.hashValue ?? 0
+        }
+        
+        static func == (lhs: Target, rhs: Target) -> Bool {
+            
+            return lhs.value == rhs.value
+        }
     }
 }
 
 /// Cacao extension since Swift doesn't support ObjC runtime (on non-Darwin platforms)
-public struct Selector {
+public struct Selector: Hashable {
     
-    public let action: (_ sender: AnyObject?) -> ()
+    public let action: (_ target: AnyHashable, _ sender: AnyObject?) -> ()
     
     public let name: String
+    
+    public var hashValue: Int {
+        
+        return name.hashValue
+    }
+    
+    public static func == (lhs: Selector, rhs: Selector) -> Bool {
+        
+        return lhs.name == rhs.name
+    }
 }
-
-extension Selector
 
 /// Constants describing the state of a control.
 ///
@@ -100,5 +162,12 @@ public struct UIControlEvents: OptionSet {
     public init(rawValue: Int = 0) {
         
         self.rawValue = rawValue
+    }
+}
+
+extension UIControlEvents: Hashable {
+    
+    public var hashValue: Int {
+        return rawValue
     }
 }
