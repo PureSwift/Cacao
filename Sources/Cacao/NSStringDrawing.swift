@@ -33,7 +33,7 @@ public extension String {
         
         let font = textAttributes.font
         
-        let descender = (Double(font.silicaFont.scaledFont.descent) * font.size) / Double(font.silicaFont.scaledFont.unitsPerEm)
+        let descender = (Double(font.cgFont.scaledFont.descent) * font.pointSize) / Double(font.cgFont.scaledFont.unitsPerEm)
         
         textFrame.height -= descender
         
@@ -57,7 +57,7 @@ public extension TextAttributes {
             textAttributes.font = font
         }
         
-        if let textColor = (attributes[NSForegroundColorAttributeName] as? UIColor)?.CGColor {
+        if let textColor = (attributes[NSForegroundColorAttributeName] as? UIColor) {
             
             textAttributes.color = textColor
         }
@@ -180,16 +180,3 @@ public struct NSStringDrawingOptions: OptionSet, ExpressibleByIntegerLiteral {
     
     /// Expects `NSMutableParagraphStyle` value.
     public let NSParagraphStyleAttributeName = "NSParagraphStyleAttributeName"
-    
-#if NeverCompile
-    
-    /// For source code compatiblity, without Foundation.
-    ///
-    /// - Note: You can later specify if you want `Cacao.NSString` or `Foundation.NSString` using typealiases.
-    @inline(__always)
-    public func NSString(string: String) -> String {
-        
-        return string
-    }
-    
-#endif

@@ -11,30 +11,23 @@ import Cacao
 
 final class FontTests: XCTestCase {
     
-    static let allTests = [
-        ("testCreateSimpleFont", testCreateSimpleFont),
-        ("testCreateTraitFont", testCreateTraitFont)
-    ]
+    static let allTests = [("testCreateFont", testCreateFont)]
     
-    func testCreateSimpleFont() {
+    func testCreateFont() {
         
-        guard let font = Font(name: "TimesNewRoman", size: 17)
-            else { XCTFail("Could not create font"); return }
+        let fontNames = [
+            ("MicrosoftSansSerif", "Microsoft Sans Serif"),
+            ("MicrosoftSansSerif-Bold", "Microsoft Sans Serif"),
+            ("TimesNewRoman", "Times New Roman"),
+            ("TimesNewRoman-Bold", "Times New Roman")
+        ]
         
-        let expectedFullName = "Times New Roman"
-        
-        XCTAssert(font.name == font.silicaFont.name)
-        XCTAssert(expectedFullName == font.silicaFont.scaledFont.fullName, "\(expectedFullName) == \(font.silicaFont.scaledFont.fullName)")
-    }
-    
-    func testCreateTraitFont() {
-        
-        guard let font = Font(name: "TimesNewRoman-Bold", size: 17)
-            else { XCTFail("Could not create font"); return }
-        
-        let expectedFullName = "Times New Roman"
-        
-        XCTAssert(font.name == font.silicaFont.name)
-        XCTAssert(expectedFullName == font.silicaFont.scaledFont.fullName, "\(expectedFullName) == \(font.silicaFont.scaledFont.fullName)")
+        for (fontName, expectedFullName) in fontNames {
+            
+            guard let font = UIFont(name: fontName, size: 17)
+                else { XCTFail("Could not create font"); return }
+            
+            XCTAssert(fontName == font.fontName, "\(expectedFullName) == \(fontName)")
+        }
     }
 }

@@ -38,15 +38,6 @@
         }
       },
       {
-        "package": "CSDL2",
-        "repositoryURL": "https://github.com/PureSwift/CSDL2.git",
-        "state": {
-          "branch": "master",
-          "revision": "a4798aa0174f6661404b9df4ccaf2ba1dc9cc92c",
-          "version": null
-        }
-      },
-      {
         "package": "Cairo",
         "repositoryURL": "https://github.com/PureSwift/Cairo.git",
         "state": {
@@ -61,24 +52,6 @@
         "state": {
           "branch": "master",
           "revision": "32871723c3bd58d1dc3532125bd2c21e5acec5e1",
-          "version": null
-        }
-      },
-      {
-        "package": "SDL",
-        "repositoryURL": "https://github.com/PureSwift/SDL.git",
-        "state": {
-          "branch": "master",
-          "revision": "a6c13873889d539e6e2f7167623dde59f8332f82",
-          "version": null
-        }
-      },
-      {
-        "package": "Silica",
-        "repositoryURL": "https://github.com/PureSwift/Silica.git",
-        "state": {
-          "branch": "master",
-          "revision": "78eba13f53876cdc40faabeeb2602224c256f1f7",
           "version": null
         }
       }

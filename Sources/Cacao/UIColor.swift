@@ -8,17 +8,17 @@
 
 import Silica
 
-public final class UIColor {
+public struct UIColor {
     
     // MARK: - Properties
     
-    public let CGColor: Color
+    public let cgColor: CGColor
     
     // MARK: - Initialization
     
-    public init(cgColor color: Color) {
+    public init(cgColor color: CGColor) {
         
-        self.CGColor = color
+        self.cgColor = color
     }
     
     /// An initialized color object. The color information represented by this object is in the device RGB colorspace.
@@ -27,7 +27,7 @@ public final class UIColor {
                 blue: Double,
                 alpha: Double = 1.0) {
         
-        self.CGColor = Color(red: red, green: green, blue: blue, alpha: alpha)
+        self.cgColor = Color(red: red, green: green, blue: blue, alpha: alpha)
     }
     
     // MARK: - Methods
@@ -39,10 +39,10 @@ public final class UIColor {
                        blue: inout Double,
                        alpha: inout Double) -> Bool {
         
-        red = CGColor.red
-        green = CGColor.green
-        blue = CGColor.blue
-        alpha = CGColor.alpha
+        red = cgColor.red
+        green = cgColor.green
+        blue = cgColor.blue
+        alpha = cgColor.alpha
         
         return true
     }
@@ -59,13 +59,13 @@ public final class UIColor {
     /// Sets the color of subsequent fill operations to the color that the receiver represents.
     public func setFill() {
         
-        UIGraphicsGetCurrentContext()?.silicaContext.fillColor = CGColor
+        UIGraphicsGetCurrentContext()?.silicaContext.fillColor = cgColor
     }
     
     /// Sets the color of subsequent stroke operations to the color that the receiver represents.
     public func setStroke() {
         
-        UIGraphicsGetCurrentContext()?.silicaContext.strokeColor = CGColor
+        UIGraphicsGetCurrentContext()?.silicaContext.strokeColor = cgColor
     }
     
     // MARK: - Singletons
@@ -80,14 +80,3 @@ public final class UIColor {
     
     public static var black = UIColor(cgColor: Color.black)
 }
-
-// MARK: - CacaoConvertible
-
-extension UIColor: CacaoConvertible {
-    
-    public func toCacao() -> Silica.Color {
-        
-        return CGColor
-    }
-}
-

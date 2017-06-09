@@ -6,6 +6,14 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
+#if os(macOS)
+    import Darwin.C.math
+#elseif os(Linux)
+    import Glibc
+#endif
+
+import Silica
+
 public enum UIViewContentMode: Int {
     
     public init() { self = .scaleToFill }
@@ -25,25 +33,142 @@ public enum UIViewContentMode: Int {
     case bottomRight
 }
 
-extension UIViewContentMode: CacaoConvertible {
+// Cacao extension
+public extension UIViewContentMode {
     
-    public func toCacao() -> ContentMode {
+    public func rect(for bounds: Rect, size: Size) -> Rect {
         
         switch self {
             
-        case .scaleToFill:       return .scaleToFill
-        case .scaleAspectFit:    return .aspectFit
-        case .scaleAspectFill:   return .aspectFill
-        case .redraw:            return .scaleToFill // default
-        case .center:            return .center
-        case .top:               return .top
-        case .bottom:            return .bottom
-        case .left:              return .left
-        case .right:             return .right
-        case .topLeft:           return .topLeft
-        case .topRight:          return .topRight
-        case .bottomLeft:        return .bottomLeft
-        case .bottomRight:       return .bottomRight
+        case .redraw: fallthrough
+            
+        case .scaleToFill:
+            
+            return Rect(size: bounds.size)
+            
+        case .scaleAspectFit:
+            
+            let widthRatio = bounds.width / size.width
+            let heightRatio = bounds.height / size.height
+            
+            var newSize = bounds.size
+            
+            if (widthRatio < heightRatio) {
+                
+                newSize.height = bounds.size.width / size.width * size.height
+                
+            } else if (heightRatio < widthRatio) {
+                
+                newSize.width = bounds.size.height / size.height * size.width
+            }
+            
+            newSize = Size(width: ceil(newSize.width), height: ceil(newSize.height))
+            
+            var origin = bounds.origin
+            origin.x += (bounds.size.width - newSize.width) / 2.0
+            origin.y += (bounds.size.height - newSize.height) / 2.0
+            
+            return Rect(origin: origin, size: newSize)
+            
+        case .scaleAspectFill:
+            
+            let widthRatio = (bounds.size.width / size.width)
+            let heightRatio = (bounds.size.height / size.height)
+            
+            var newSize = bounds.size
+            
+            if (widthRatio > heightRatio) {
+                
+                newSize.height = bounds.size.width / size.width * size.height
+                
+            } else if (heightRatio > widthRatio) {
+                
+                newSize.width = bounds.size.height / size.height * size.width
+            }
+            
+            newSize = Size(width: ceil(newSize.width), height: ceil(newSize.height))
+            
+            var origin = Point()
+            origin.x = (bounds.size.width - newSize.width) / 2.0
+            origin.y = (bounds.size.height - newSize.height) / 2.0
+            
+            return Rect(origin: origin, size: newSize)
+            
+        case .center:
+            
+            var rect = Rect(size: size)
+            
+            rect.origin.x = (bounds.size.width - rect.size.width) / 2.0
+            rect.origin.y = (bounds.size.height - rect.size.height) / 2.0
+            
+            return rect
+            
+        case .top:
+            
+            var rect = Rect(size: size)
+            
+            rect.origin.y = 0.0
+            rect.origin.x = (bounds.size.width - rect.size.width) / 2.0
+            
+            return rect
+            
+        case .bottom:
+            
+            var rect = Rect(size: size)
+            
+            rect.origin.x = (bounds.size.width - rect.size.width) / 2.0
+            rect.origin.y = bounds.size.height - rect.size.height
+            
+            return rect
+            
+        case .left:
+            
+            var rect = Rect(size: size)
+            
+            rect.origin.x = 0.0
+            rect.origin.y = (bounds.size.height - rect.size.height) / 2.0
+            
+            return rect
+            
+        case .right:
+            
+            var rect = Rect(size: size)
+            
+            rect.origin.x = bounds.size.width - rect.size.width
+            rect.origin.y = (bounds.size.height - rect.size.height) / 2.0
+            
+            return rect
+            
+        case .topLeft:
+            
+            return Rect(size: size)
+            
+        case .topRight:
+            
+            var rect = Rect(size: size)
+            
+            rect.origin.x = bounds.size.width - rect.size.width
+            rect.origin.y = 0.0
+            
+            return rect
+            
+        case .bottomLeft:
+            
+            var rect = Rect(size: size)
+            
+            rect.origin.x = 0.0
+            rect.origin.y = bounds.size.height - rect.size.height
+            
+            return rect
+            
+        case .bottomRight:
+            
+            var rect = Rect(size: size)
+            
+            rect.origin.x = bounds.size.width - rect.size.width
+            rect.origin.y = bounds.size.height - rect.size.height
+            
+            return rect
         }
     }
 }

@@ -31,11 +31,11 @@ public extension String {
         
         // calculate frame
         
-        let textWidth = attributes.font.silicaFont.singleLineWidth(text: self, fontSize: attributes.font.size, textMatrix: textMatrix)
+        let textWidth = attributes.font.cgFont.singleLineWidth(text: self, fontSize: attributes.font.pointSize, textMatrix: textMatrix)
         
         let lines = 1
         
-        let textHeight = attributes.font.size * Double(lines)
+        let textHeight = attributes.font.pointSize * Double(lines)
         
         var textRect = Rect(x: bounds.x, y: bounds.y, width: textWidth, height: textHeight) // height == font.size
         
@@ -58,9 +58,9 @@ public struct TextAttributes {
     
     public init() { }
     
-    public var font = Font(name: "Helvetica", size: 17)!
+    public var font = UIFont(name: "Helvetica", size: 17)!
     
-    public var color = Color.black
+    public var color = UIColor.black
     
     public var paragraphStyle = ParagraphStyle()
 }
@@ -87,8 +87,8 @@ public extension Silica.Context {
     
     func setTextAttributes(_ attributes: TextAttributes) {
         
-        self.fontSize = attributes.font.size
-        self.setFont(attributes.font.silicaFont)
-        self.fillColor = attributes.color
+        self.fontSize = attributes.font.pointSize
+        self.setFont(attributes.font.cgFont)
+        self.fillColor = attributes.color.cgColor
     }
 }

@@ -12,43 +12,58 @@
     import Darwin.C
 #endif
 
+import Foundation
 import Cacao
 import Silica
 
-final class ContentModeViewController: ViewController {
+final class ContentModeViewController: UIViewController {
     
     // MARK: - Views
     
-    lazy var view: View = self.loadView()
+    private(set) var label: UILabel!
     
-    lazy var label: Label = Label(frame: Rect(), text: "\(self.modes[0])")
+    private(set) var logoView: SwiftLogoView!
     
-    lazy var logoView: SwiftLogoView = SwiftLogoView()
-    
-    lazy var button: Button = Button(content: self.logoView, mode: self.modes[0])
+    private(set) var button: UIButton!
     
     // MARK: - Properties
     
-    let modes: [ContentMode] = [.center, .scaleToFill, .aspectFit, .aspectFill, .top, .bottom, .left, .right, .topLeft, .topRight, .bottomLeft, .bottomRight]
+    let modes: [UIViewContentMode] = [.center, .redraw, .scaleToFill, .scaleAspectFit, .scaleAspectFill, .top, .bottom, .left, .right, .topLeft, .topRight, .bottomLeft, .bottomRight]
     
     // MARK: - Loading
     
-    private func loadView() -> UIView {
+    internal override func loadView() {
         
-        let backgroundView = UIView()
+        logoView = SwiftLogoView(frame: CGRect()) // since we dont use autoresizing, initial size doesnt matter
         
-        button.action = changeMode
+        self.view = logoView
+        
+        logoView.contentMode = modes[0]
+        
+        logoView.pointSize = 150
+        
+        label = UILabel(frame: CGRect()) // layoutSubviews will set size
+        
+        label.text = "\(modes[0])"
+        
+        label.color = UIColor.white
+        
+        button = UIButton(frame: CGRect())
+        
+        let selector = Selector(name: "changeMode", action: { (_, sender, _) in self.changeMode(sender: sender as! UIButton) })
+        
+        button.addTarget(self, action: selector, for: .touchUpInside)
         
         label.textAlignment = .center
         
-        backgroundView.addSubview(button)
+        view.addSubview(button)
         
-        backgroundView.addSubview(label)
+        view.addSubview(label)
         
-        return backgroundView
+        view.backgroundColor = UIColor.blue
     }
     
-    func layoutView() {
+    override func viewWillLayoutSubviews() {
         
         let frame = view.frame
         
@@ -59,11 +74,11 @@ final class ContentModeViewController: ViewController {
         button.frame = Rect(x: frame.minX + floor(frame.width * 0.00000 + 0.5), y: frame.minY + floor(frame.height * 0.00000 + 0.5), width: floor(frame.width * 1.00000 + 0.5) - floor(frame.width * 0.00000 + 0.5), height: floor(frame.height * 0.82812 + 0.5) - floor(frame.height * 0.00000 + 0.5))
     }
     
-    // MARK: - Methods
+    // MARK: - Actions
     
-    func changeMode(sender: Button) {
+    @IBAction func changeMode(sender: UIButton) {
         
-        let currentMode = button.contentView.mode
+        let currentMode = logoView.contentMode
         
         let currentIndex = modes.index(of: currentMode)!
         
@@ -76,7 +91,7 @@ final class ContentModeViewController: ViewController {
         
         let newMode = modes[nextIndex]
         
-        button.contentView.mode = newMode
+        logoView.contentMode = newMode
         
         label.text = "\(newMode)"
         
