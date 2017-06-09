@@ -33,7 +33,16 @@
         "repositoryURL": "https://github.com/PureSwift/CLCMS.git",
         "state": {
           "branch": "master",
-          "revision": "20d18d62ebc642e52758512cab59af06f2d3655e",
+          "revision": "4808ad3fa6d244eb5a328a1b3fe0439f5954a831",
+          "version": null
+        }
+      },
+      {
+        "package": "CSDL2",
+        "repositoryURL": "https://github.com/PureSwift/CSDL2.git",
+        "state": {
+          "branch": "master",
+          "revision": "a4798aa0174f6661404b9df4ccaf2ba1dc9cc92c",
           "version": null
         }
       },
@@ -42,7 +51,7 @@
         "repositoryURL": "https://github.com/PureSwift/Cairo.git",
         "state": {
           "branch": "master",
-          "revision": "5bf2c328f0437f5d5859bba55beae1472b156a29",
+          "revision": "0a46d6b2f4b40750cf371fd3925c852e847411fe",
           "version": null
         }
       },
@@ -51,7 +60,25 @@
         "repositoryURL": "https://github.com/PureSwift/LittleCMS.git",
         "state": {
           "branch": "master",
-          "revision": "32871723c3bd58d1dc3532125bd2c21e5acec5e1",
+          "revision": "5bfebf596b080f8c7dc5f403f2f0784cef130906",
+          "version": null
+        }
+      },
+      {
+        "package": "SDL",
+        "repositoryURL": "https://github.com/PureSwift/SDL.git",
+        "state": {
+          "branch": "master",
+          "revision": "46d9e1636221f3722785a9a5bf55755968b8ebf7",
+          "version": null
+        }
+      },
+      {
+        "package": "Silica",
+        "repositoryURL": "https://github.com/PureSwift/Silica.git",
+        "state": {
+          "branch": "master",
+          "revision": "d6e76413bccc70eef36b7c646a3527f8b9fd8363",
           "version": null
         }
       }

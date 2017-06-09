@@ -76,7 +76,7 @@ final class ContentModeViewController: UIViewController {
     
     // MARK: - Actions
     
-    @IBAction func changeMode(sender: UIButton) {
+    func changeMode(sender: UIButton) {
         
         let currentMode = logoView.contentMode
         
