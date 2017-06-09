@@ -487,9 +487,11 @@ open class UIView: UIResponder {
             && (bounds.size.width >= 1.0 || bounds.size.height >= 1.0)
     }
     
+    internal var scale: Double { return window?.screen.scale ?? 1 }
+    
     internal var nativeSize: (width: Int, height: Int) {
         
-        let scale = window?.screen.scale ?? 1
+        let scale = self.scale
         let width = Int(bounds.size.width * scale)
         let height = Int(bounds.size.height * scale)
         
@@ -516,6 +518,7 @@ open class UIView: UIResponder {
         guard shouldRender
             else { return }
         
+        let scale = self.scale
         let nativeSize = self.nativeSize
         
         // create SDL texture
@@ -531,7 +534,8 @@ open class UIView: UIResponder {
             
             let surface = try! Cairo.Surface.Image(mutableBytes: $0.assumingMemoryBound(to: UInt8.self), format: .argb32, width: nativeSize.width, height: nativeSize.height, stride: $1)
             
-            let context = try! Silica.Context(surface: surface, size: Size(width: Double(nativeSize.width), height: Double(nativeSize.height)))
+            let context = try! Silica.Context(surface: surface, size: bounds.size)
+            context.scale(x: scale, y: scale)
             
             // CoreGraphics drawing
             draw(in: context)

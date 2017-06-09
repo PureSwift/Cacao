@@ -39,6 +39,8 @@ final class ContentModeViewController: UIViewController {
         
         logoView.contentMode = modes[0]
         
+        logoView.pointSize = 150
+        
         label = UILabel(frame: CGRect()) // layoutSubviews will set size
         
         label.text = "\(modes[0])"
