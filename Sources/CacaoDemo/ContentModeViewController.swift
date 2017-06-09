@@ -12,6 +12,7 @@
     import Darwin.C
 #endif
 
+import Foundation
 import Cacao
 import Silica
 
@@ -49,7 +50,9 @@ final class ContentModeViewController: UIViewController {
         
         button = UIButton(frame: CGRect())
         
-        //button.action = changeMode
+        let selector = Selector(name: "changeMode", action: { (_, sender, _) in self.changeMode(sender: sender as! UIButton) })
+        
+        button.addTarget(self, action: selector, for: .touchUpInside)
         
         label.textAlignment = .center
         
@@ -71,9 +74,9 @@ final class ContentModeViewController: UIViewController {
         button.frame = Rect(x: frame.minX + floor(frame.width * 0.00000 + 0.5), y: frame.minY + floor(frame.height * 0.00000 + 0.5), width: floor(frame.width * 1.00000 + 0.5) - floor(frame.width * 0.00000 + 0.5), height: floor(frame.height * 0.82812 + 0.5) - floor(frame.height * 0.00000 + 0.5))
     }
     
-    // MARK: - Methods
- 
-    func changeMode(sender: UIButton) {
+    // MARK: - Actions
+    
+    @IBAction func changeMode(sender: UIButton) {
         
         let currentMode = logoView.contentMode
         

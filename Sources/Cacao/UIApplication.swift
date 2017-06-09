@@ -64,8 +64,6 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
         
         var pollEventStatus: Int32 = 0
         
-        let event = UIEvent()
-        
         repeat {
             
             pollEventStatus = SDL_PollEvent(&sdlEvent)
@@ -85,6 +83,8 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
                 guard sdlEvent.button.which != -1
                     else { return }
                 
+                let event = UIEvent()
+                
                 guard let window = UIApplication.shared.keyWindow,
                     let view = window.hitTest(screenLocation, with: event)
                     else { continue }
@@ -92,10 +92,11 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
                 let touchPhase = UITouchPhase.began
                 
                 let touch = UITouch(location: screenLocation, phase: touchPhase, view: view, window: window)
-                
+                                
                 event.allTouches?.insert(touch)
                 
-                window.sendEvent(event)
+                // inform responder chain
+                UIApplication.shared.keyWindow?.sendEvent(event)
                 
             case SDL_WINDOWEVENT:
                 
@@ -113,7 +114,6 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
             
         } while pollEventStatus != 0
         
-        // inform responder chain
         
         
         // render to screen

@@ -83,6 +83,30 @@ open class UIControl: UIView {
         
         return Set(targets)
     }
+    
+    // MARK: - Triggering Actions
+    
+    /// Calls the specified action method.
+    public func sendAction(_ action: Selector, to target: AnyHashable?, for event: UIEvent?) {
+        
+        let target = target ?? (self.next ?? NSNull()) as AnyHashable
+        
+        action.action(target, self, event)
+    }
+    
+    /// Calls the action methods associated with the specified events.
+    public func sendActions(for controlEvents: UIControlEvents) {
+        
+        for (target, eventActions) in targetActions {
+            
+            let actions = eventActions[controlEvents, default: []]
+            
+            for action in actions {
+                
+                sendAction(action, to: target.value, for: nil)
+            }
+        }
+    }
 }
 
 private extension UIControl {
@@ -111,9 +135,17 @@ private extension UIControl {
 /// Cacao extension since Swift doesn't support ObjC runtime (on non-Darwin platforms)
 public struct Selector: Hashable {
     
-    public let action: (_ target: AnyHashable, _ sender: AnyObject?) -> ()
+    public typealias Action = (_ target: AnyHashable, _ sender: AnyObject?, _ event: UIEvent?) -> ()
+    
+    public let action: Action
     
     public let name: String
+    
+    public init(name: String, action: @escaping Action) {
+        
+        self.name = name
+        self.action = action
+    }
     
     public var hashValue: Int {
         
@@ -163,6 +195,27 @@ public struct UIControlEvents: OptionSet {
         
         self.rawValue = rawValue
     }
+    
+    public static let touchDown = UIControlEvents(rawValue: 1 << 0)
+    public static let touchDownRepeat = UIControlEvents(rawValue: 1 << 1)
+    public static let touchDragInside = UIControlEvents(rawValue: 1 << 2)
+    public static let touchDragOutside = UIControlEvents(rawValue: 1 << 3)
+    public static let touchDragEnter = UIControlEvents(rawValue: 1 << 4)
+    public static let touchDragExit = UIControlEvents(rawValue: 1 << 5)
+    public static let touchUpInside = UIControlEvents(rawValue: 1 << 6)
+    public static let touchUpOutside = UIControlEvents(rawValue: 1 << 7)
+    public static let touchCancel = UIControlEvents(rawValue: 1 << 8)
+    public static let valueChanged = UIControlEvents(rawValue: 1 << 12)
+    public static let primaryActionTriggered = UIControlEvents(rawValue: 1 << 13)
+    public static let editingDidBegin = UIControlEvents(rawValue: 1 << 16)
+    public static let editingChanged = UIControlEvents(rawValue: 1 << 17)
+    public static let editingDidEnd = UIControlEvents(rawValue: 1 << 18)
+    public static let editingDidEndOnExit = UIControlEvents(rawValue: 1 << 19)
+    public static let allTouchEvents = UIControlEvents(rawValue: 0x00000FFF)
+    public static let allEditingEvents = UIControlEvents(rawValue: 0x000F0000)
+    public static let applicationReserved = UIControlEvents(rawValue: 0x0F000000)
+    public static let systemReserved = UIControlEvents(rawValue: 0xF0000000)
+    public static let allEvents = UIControlEvents(rawValue: 0xFFFFFFFF)
 }
 
 extension UIControlEvents: Hashable {

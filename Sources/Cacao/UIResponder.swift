@@ -5,8 +5,10 @@
 //  Created by Alsey Coleman Miller on 6/8/17.
 //
 
+import class Foundation.NSObject
+
 /// An abstract interface for responding to and handling events.
-open class UIResponder {
+open class UIResponder: NSObject {
     
     // MARK: - Managing the Responder Chain
     
@@ -37,7 +39,5 @@ open class UIResponder {
     /// Many `UI*` classes override this method and use it to handle the corresponding touch events.
     /// The default implementation of this method forwards the message up the responder chain.
     /// When creating your own subclasses, call super to forward any events that you do not handle yourself.
-    open func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        
-    }
+    open func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) { }
 }
