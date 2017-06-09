@@ -50,10 +50,10 @@ open class UIWindow: UIView {
     }
     
     /// Called automatically to inform the window that it has become the key window.
-    public func becomeKey() { /* subclass implementation */ }
+    open func becomeKey() { /* subclass implementation */ }
     
     /// Called automatically to inform the window that it is no longer the key window.
-    public func resignKey() { /* subclass implementation */ }
+    open func resignKey() { /* subclass implementation */ }
     
     /// Dispatches the specified event to its views.
     public final func sendEvent(_ event: UIEvent) {
@@ -72,10 +72,10 @@ open class UIWindow: UIView {
                                 
                 switch touch.phase {
                 case .began: touch.view?.touchesBegan(touches, with: event)
-                case .moved: touch.view?.touchesBegan(touches, with: event)
+                case .moved: touch.view?.touchesMoved(touches, with: event)
                 case .stationary: break
-                case .ended: touch.view?.touchesBegan(touches, with: event)
-                case .cancelled: touch.view?.touchesBegan(touches, with: event)
+                case .ended: touch.view?.touchesEnded(touches, with: event)
+                case .cancelled: touch.view?.touchesCancelled(touches, with: event)
                 }
             }
             

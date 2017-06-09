@@ -57,9 +57,9 @@ public final class UIEvent {
     
     // MARK: - Initialization
     
-    internal init() {
+    internal init(timestamp: TimeInterval = ProcessInfo.processInfo.systemUptime) {
         
-        self.timestamp = ProcessInfo.processInfo.systemUptime
+        self.timestamp = timestamp
     }
 }
 

@@ -6,16 +6,23 @@
 //
 
 import class Foundation.NSObject
+import typealias Foundation.TimeInterval
+import class Foundation.ProcessInfo
 import Silica
 
 /// An object representing the location, size, movement, and force of a touch occurring on the screen.
 public final class UITouch: NSObject {
     
     /// The absolute location, relative to screen.
-    internal let location: CGPoint
+    internal let location: Point
     
-    internal init(location: CGPoint, phase: UITouchPhase, view: UIView?, window: UIWindow?) {
+    internal init(timestamp: TimeInterval = ProcessInfo.processInfo.systemUptime,
+                  location: Point,
+                  phase: UITouchPhase,
+                  view: UIView?,
+                  window: UIWindow?) {
         
+        self.timestamp = timestamp
         self.location = location
         self.phase = phase
         self.view = view
@@ -54,6 +61,8 @@ public final class UITouch: NSObject {
     
     /// The phase of the touch.
     public let phase: UITouchPhase
+    
+    public let timestamp: TimeInterval
 }
 
 // MARK: - Supporting Types

@@ -54,6 +54,8 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
     
     var sdlEvent = SDL_Event()
     
+    var lastEvent: UIEvent?
+    
     while !done {
         
         frame += 1
@@ -83,20 +85,51 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
                 guard sdlEvent.button.which != -1
                     else { return }
                 
-                let event = UIEvent()
+                let timestamp = Double(sdlEvent.button.timestamp) / 1000
                 
+                let event = UIEvent(timestamp: timestamp)
+                
+                /// Only the key window can recieve touch input
                 guard let window = UIApplication.shared.keyWindow,
                     let view = window.hitTest(screenLocation, with: event)
                     else { continue }
                 
-                let touchPhase = UITouchPhase.began
+                let touchPhase: UITouchPhase
                 
-                let touch = UITouch(location: screenLocation, phase: touchPhase, view: view, window: window)
-                                
+                // mouse released
+                if eventType == SDL_MOUSEBUTTONUP {
+                    
+                    touchPhase = .ended
+                    
+                } else if let previousTouch = lastEvent?.allTouches?.first {
+                    
+                    touchPhase = previousTouch.location == screenLocation ? .stationary : .moved
+                    
+                    if view != previousTouch.view {
+                        
+                        // TODO
+                    }
+                    
+                } else {
+                    
+                    touchPhase = .began
+                }
+                
+                if let previousTouch = lastEvent?.allTouches?.first {
+                    
+                    // guard againt multiple touchesEnded events
+                    guard (previousTouch.phase == .ended && touchPhase == .ended) == false
+                        else { continue }
+                }
+                
+                let touch = UITouch(timestamp: timestamp, location: screenLocation, phase: touchPhase, view: view, window: window)
+                
                 event.allTouches?.insert(touch)
                 
                 // inform responder chain
-                UIApplication.shared.keyWindow?.sendEvent(event)
+                window.sendEvent(event)
+                
+                lastEvent = event
                 
             case SDL_WINDOWEVENT:
                 
@@ -113,8 +146,6 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
             }
             
         } while pollEventStatus != 0
-        
-        
         
         // render to screen
         screen.update()

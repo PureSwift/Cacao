@@ -40,4 +40,10 @@ open class UIResponder: NSObject {
     /// The default implementation of this method forwards the message up the responder chain.
     /// When creating your own subclasses, call super to forward any events that you do not handle yourself.
     open func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) { }
+    
+    open func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) { }
+    
+    open func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) { }
+    
+    open func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) { }
 }

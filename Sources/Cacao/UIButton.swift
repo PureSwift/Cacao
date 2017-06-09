@@ -26,6 +26,11 @@ public final class UIButton: UIControl {
     
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         
+        sendActions(for: .touchDown)
+    }
+    
+    public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        
         sendActions(for: .touchUpInside)
     }
 }

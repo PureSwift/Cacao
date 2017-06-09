@@ -152,11 +152,16 @@ public final class UIScreen {
     
     internal func setKeyWindow(_ window: UIWindow) {
         
+        guard UIScreen.main.keyWindow !== self
+            else { return }
+        
         if windows.contains(where: { $0 === window }) == false {
             
             addWindow(window)
         }
         
+        keyWindow?.resignKey()
         keyWindow = window
+        keyWindow?.becomeKey()
     }
 }
