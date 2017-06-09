@@ -534,6 +534,9 @@ open class UIView: UIResponder {
             
             let surface = try! Cairo.Surface.Image(mutableBytes: $0.assumingMemoryBound(to: UInt8.self), format: .argb32, width: nativeSize.width, height: nativeSize.height, stride: $1)
             
+            // reset memory
+            memset($0, 0, surface.stride * surface.height)
+            
             let context = try! Silica.Context(surface: surface, size: bounds.size)
             context.scale(x: scale, y: scale)
             
