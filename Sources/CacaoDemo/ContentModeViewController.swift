@@ -45,6 +45,8 @@ final class ContentModeViewController: UIViewController {
         
         label.text = "\(modes[0])"
         
+        label.color = UIColor.white
+        
         button = UIButton(frame: CGRect())
         
         //button.action = changeMode
@@ -54,6 +56,8 @@ final class ContentModeViewController: UIViewController {
         view.addSubview(button)
         
         view.addSubview(label)
+        
+        view.backgroundColor = UIColor.blue
     }
     
     override func viewWillLayoutSubviews() {

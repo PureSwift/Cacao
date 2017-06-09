@@ -374,7 +374,7 @@ open class UIView: UIResponder {
     /// Exchanges the subviews at the specified indices.
     public final func exchangeSubview(at index1: Int, withSubviewAt index2: Int) {
         
-        fatalError()
+        subviews.swapAt(index1, index2)
     }
     
     /// Returns a Boolean value indicating whether the receiver is a subview of a given view or identical to that view.
@@ -396,7 +396,7 @@ open class UIView: UIResponder {
     // MARK: - Configuring the Resizing Behavior
     
     /// A flag used to determine how a view lays out its content when its bounds change
-    public final var contentMode: UIViewContentMode = .scaleAspectFill { didSet { setNeedsLayout() } }
+    public final var contentMode: UIViewContentMode = .scaleAspectFill { didSet { setNeedsDisplay() } }
     
     /// Asks the view to calculate and return the size that best fits the specified size.
     ///
@@ -584,6 +584,7 @@ open class UIView: UIResponder {
     /// If you want to force a layout update, call the `setNeedsLayout()` method instead
     /// to do so prior to the next drawing update.
     /// If you want to update the layout of your views immediately, call the `layoutIfNeeded()` method.
+    @inline(__always)
     open func layoutSubviews() { }
     
     /// Tells the view that a subview was added.
@@ -591,6 +592,7 @@ open class UIView: UIResponder {
     /// The default implementation of this method does nothing.
     /// Subclasses can override it to perform additional actions when subviews are added.
     /// This method is called in response to adding a subview using any of the relevant view methods.
+    @inline(__always)
     open func didAddSubview(_ subview: UIView) { }
     
     /// Tells the view that a subview is about to be removed.
@@ -599,23 +601,28 @@ open class UIView: UIResponder {
     /// Subclasses can override it to perform additional actions whenever subviews are removed.
     /// This method is called when the subview’s superview changes
     /// or when the subview is removed from the view hierarchy completely.
+    @inline(__always)
     open func willRemoveSubview(_ subview: UIView) { }
     
     /// Tells the view that its superview is about to change to the specified superview.
+     @inline(__always)
     open func willMove(toSuperview newSuperview: UIView?) { }
     
     /// Tells the view that its superview changed.
     ///
     /// The default implementation of this method does nothing.
+     @inline(__always)
     open func didMoveToSuperview() { }
     
     /// Tells the view that its window object is about to change.
     ///
     /// The default implementation of this method does nothing.
     /// Subclasses can override it to perform additional actions whenever the window changes.
+     @inline(__always)
     open func willMove(toWindow newWindow: UIWindow?) { }
     
     /// Tells the view that its window object changed.
+    @inline(__always)
     open func didMoveToWindow() { }
     
     /// Invalidates the current layout of the receiver and triggers a layout update during the next update cycle.

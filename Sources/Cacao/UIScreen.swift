@@ -39,7 +39,7 @@ public final class UIScreen {
     
     internal let window: Window
     
-    private var size: (window: Size, native: Size)
+    private var size: (window: Size, native: Size) { didSet { sizeChanged() } }
     
     internal let renderer: Renderer
     
@@ -60,7 +60,10 @@ public final class UIScreen {
         self.renderer = Renderer(window: window).sdlAssert()
         self.window = window
         self.size = (size, size)
+        
+        // update values
         self.updateSize()
+        self.renderer.drawColor = (0x00, 0x00, 0x00, 0xFF)
     }
     
     // MARK: - Methods
@@ -74,6 +77,7 @@ public final class UIScreen {
         let nativeSize = Size(width: Double(rendererSize.width), height: Double(rendererSize.height))
         
         self.size = (size, nativeSize)
+        self.needsLayout = true
         self.needsDisplay = true
     }
     
@@ -83,14 +87,18 @@ public final class UIScreen {
         // layout views
         if needsLayout {
             
+            defer { needsLayout = false }
+            
             windows.forEach { $0.layoutIfNeeded() }
-            needsDisplay = true // also updated render views
+            
+            needsDisplay = true // also render views
         }
         
         // render views
         if needsDisplay {
             
-            renderer.drawColor = (0xFF, 0xFF, 0xFF, 0xFF)
+            defer { needsDisplay = false }
+            
             renderer.clear()
             
             for window in windows {
@@ -102,9 +110,6 @@ public final class UIScreen {
             // render to screen
             renderer.present()
         }
-        
-        needsDisplay = false
-        needsLayout = false
     }
     
     private func sizeChanged() {
