@@ -235,13 +235,21 @@ open class UIView: UIResponder {
     /// This property is nil if the view has not yet been added to a window.
     public final var window: UIWindow? {
         
-        var superview: UIView? = self.superview
+        var superview: UIView? = self
+        var superViewFound = true
         
         repeat {
             
-            superview = self.superview
+            if let newValue = superview?.superview {
+                
+                superview = newValue
+                
+            } else {
+                
+                superViewFound = false
+            }
             
-        } while superview != nil
+        } while superViewFound
         
         // upmost view should be a window
         return superview as? UIWindow
@@ -473,24 +481,32 @@ open class UIView: UIResponder {
     /// Instead of the CoreGraphics API you could draw directly to the texture's pixel data.
     private var texture: Texture!
     
-    internal final var shouldRender: Bool {
+    internal var shouldRender: Bool {
         return isHidden == false
             && alpha > 0
             && (bounds.size.width >= 1.0 || bounds.size.height >= 1.0)
+    }
+    
+    internal var nativeSize: (width: Int, height: Int) {
+        
+        let scale = window?.screen.scale ?? 1
+        let width = Int(bounds.size.width * scale)
+        let height = Int(bounds.size.height * scale)
+        
+        return (width, height)
     }
     
     open func draw(_ rect: CGRect) { /* implemented by subclasses */ }
     
     private func createTexture(for renderer: Renderer) {
         
-        let width = Int(bounds.size.width)
-        let height = Int(bounds.size.height)
+        let nativeSize = self.nativeSize
         
         texture = Texture(renderer: renderer,
                           format: PixelFormat.RawValue(SDL_PIXELFORMAT_ARGB8888),
                           access: .streaming,
-                          width: width,
-                          height: height).sdlAssert()
+                          width: nativeSize.width,
+                          height: nativeSize.height).sdlAssert()
         
         texture.blendMode = .alpha
     }
@@ -500,13 +516,12 @@ open class UIView: UIResponder {
         guard shouldRender
             else { return }
         
-        let width = Int(bounds.size.width)
-        let height = Int(bounds.size.height)
+        let nativeSize = self.nativeSize
         
         // create SDL texture
         if texture == nil
-            || texture.width != width
-            || texture.height != height {
+            || texture.width != nativeSize.width
+            || texture.height != nativeSize.height {
             
             createTexture(for: renderer)
         }
@@ -514,9 +529,9 @@ open class UIView: UIResponder {
         // unlock and modify texture
         texture.withUnsafeMutableBytes {
             
-            let surface = try! Cairo.Surface.Image(mutableBytes: $0.assumingMemoryBound(to: UInt8.self), format: .argb32, width: width, height: height, stride: $1)
+            let surface = try! Cairo.Surface.Image(mutableBytes: $0.assumingMemoryBound(to: UInt8.self), format: .argb32, width: nativeSize.width, height: nativeSize.height, stride: $1)
             
-            let context = try! Silica.Context(surface: surface, size: bounds.size)
+            let context = try! Silica.Context(surface: surface, size: Size(width: Double(nativeSize.width), height: Double(nativeSize.height)))
             
             // CoreGraphics drawing
             draw(in: context)

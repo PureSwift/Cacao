@@ -21,7 +21,7 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
     
     defer { SDL.quit() }
     
-    var windowOptions: Set<Window.Option> = [] // [.allowRetina]
+    var windowOptions: Set<Window.Option> = [.allowRetina, .opengl]
     
     if options.canResizeWindow {
         
@@ -34,10 +34,9 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
     
     let window = Window(title: options.windowName, frame: (x: .centered, y: .centered, width: Int(initialWindowSize.width), height:  Int(initialWindowSize.height)), options: windowOptions).sdlAssert()
     
-    let initialNativeSize = initialWindowSize // FIXME: Retina display
-    
     // create UIScreen
-    let screen = UIScreen(window: window, size: (initialWindowSize, initialNativeSize))
+    let rendererSize = window.drawableSize
+    let screen = UIScreen(window: window, size: (initialWindowSize, Size(width: Double(rendererSize.width), height: Double(rendererSize.height))))
     
     UIScreen.main = screen
     
@@ -106,9 +105,12 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
                     
                 case UInt8(SDL_WINDOWEVENT_SIZE_CHANGED.rawValue):
                     
-                    let size = Size(width: Double(sdlEvent.window.data1), height: Double(sdlEvent.window.data2))
+                    let windowSize = Size(width: Double(sdlEvent.window.data1), height: Double(sdlEvent.window.data2))
                     
-                    screen.size = (size, size)
+                    let rendererSize = window.drawableSize
+                    let nativeSize = Size(width: Double(rendererSize.width), height: Double(rendererSize.height))
+                    
+                    screen.size = (windowSize, nativeSize)
                     
                 default: break
                 }
