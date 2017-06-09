@@ -26,7 +26,7 @@ public final class UIScreen {
     
     public var bounds: CGRect { return CGRect(size: size.window) }
     
-    public var nativeBounds: CGRect { return CGRect(size: size.window) }
+    public var nativeBounds: CGRect { return CGRect(size: size.native) }
     
     public var scale: Double { return size.native.width / size.window.width }
     
@@ -39,9 +39,9 @@ public final class UIScreen {
     
     internal let window: Window
     
-    internal var size: (window: Size, native: Size) { didSet { sizeChanged() } }
+    private var size: (window: Size, native: Size)
     
-    internal lazy var renderer: Renderer = Renderer(window: self.window).sdlAssert()
+    internal let renderer: Renderer
     
     internal var needsDisplay = true
     
@@ -55,13 +55,27 @@ public final class UIScreen {
     
     // MARK: - Intialization
     
-    internal init(window: Window, size: (window: Size, native: Size)) {
+    internal init(window: Window, size: Size) {
         
+        self.renderer = Renderer(window: window).sdlAssert()
         self.window = window
-        self.size = size
+        self.size = (size, size)
+        self.updateSize()
     }
     
     // MARK: - Methods
+    
+    internal func updateSize() {
+        
+        let windowSize = window.size
+        let size = Size(width: Double(windowSize.width), height: Double(windowSize.height))
+        
+        let rendererSize = window.drawableSize
+        let nativeSize = Size(width: Double(rendererSize.width), height: Double(rendererSize.height))
+        
+        self.size = (size, nativeSize)
+        self.needsDisplay = true
+    }
     
     /// Layout (if needed) and redraw the screen
     internal func update() {
@@ -70,7 +84,7 @@ public final class UIScreen {
         if needsLayout {
             
             windows.forEach { $0.layoutIfNeeded() }
-            needsDisplay = true
+            needsDisplay = true // also updated render views
         }
         
         // render views
@@ -110,14 +124,14 @@ public final class UIScreen {
         // add translation
         //context.translate(x: view.frame.x, y: view.frame.y)
         var relativeOrigin = origin
-        relativeOrigin.x += view.frame.origin.x
-        relativeOrigin.y += view.frame.origin.y
+        relativeOrigin.x += view.frame.origin.x * scale
+        relativeOrigin.y += view.frame.origin.y * scale
         
         // frame of view relative to SDL window
         let rect = SDL_Rect(x: Int32(relativeOrigin.x),
                             y: Int32(relativeOrigin.y),
-                            w: Int32(view.frame.size.width),
-                            h: Int32(view.frame.size.height))
+                            w: Int32(view.frame.size.width * scale),
+                            h: Int32(view.frame.size.height * scale))
         
         // render view
         view.render(with: renderer, in: rect)

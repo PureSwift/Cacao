@@ -35,9 +35,7 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
     let window = Window(title: options.windowName, frame: (x: .centered, y: .centered, width: Int(initialWindowSize.width), height:  Int(initialWindowSize.height)), options: windowOptions).sdlAssert()
     
     // create UIScreen
-    let rendererSize = window.drawableSize
-    let screen = UIScreen(window: window, size: (initialWindowSize, Size(width: Double(rendererSize.width), height: Double(rendererSize.height))))
-    
+    let screen = UIScreen(window: window, size: initialWindowSize)
     UIScreen.main = screen
     
     let launchOptions = [UIApplicationLaunchOptionsKey: Any]()
@@ -105,12 +103,7 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
                     
                 case UInt8(SDL_WINDOWEVENT_SIZE_CHANGED.rawValue):
                     
-                    let windowSize = Size(width: Double(sdlEvent.window.data1), height: Double(sdlEvent.window.data2))
-                    
-                    let rendererSize = window.drawableSize
-                    let nativeSize = Size(width: Double(rendererSize.width), height: Double(rendererSize.height))
-                    
-                    screen.size = (windowSize, nativeSize)
+                    screen.updateSize()
                     
                 default: break
                 }
@@ -121,6 +114,7 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
         } while pollEventStatus != 0
         
         // inform responder chain
+        
         
         // render to screen
         screen.update()
