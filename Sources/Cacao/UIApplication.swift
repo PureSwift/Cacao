@@ -143,7 +143,11 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
                     
                 case SDL_WINDOWEVENT_FOCUS_GAINED, SDL_WINDOWEVENT_FOCUS_LOST:
                     
+                    #if os(Linux)
                     screen.needsDisplay = true
+                    #else
+                    break
+                    #endif
                     
                 default: break
                 }
