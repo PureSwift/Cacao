@@ -540,6 +540,10 @@ open class UIView: UIResponder {
             // CoreGraphics drawing
             draw(in: context)
             
+            #if os(Linux) // FIXME: temporary workaround for Linux
+            surface.writePNG(atPath: "/tmp/cacaodump.png")
+            #endif
+            
             /// flush surface
             surface.flush()
             surface.finish()
