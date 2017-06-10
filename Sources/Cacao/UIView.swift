@@ -540,8 +540,13 @@ open class UIView: UIResponder {
             // CoreGraphics drawing
             draw(in: context)
             
-            #if os(Linux) // FIXME: temporary workaround for Linux
-            surface.writePNG(atPath: "/tmp/cacaodump.png")
+            /// FIXME: temporary workaround for Linux
+            /// We have to convert the surface to PNG, even though we discard it.
+            /// For some reason this changes something internally in Cairo,
+            /// even though the texture and surface pixel buffer doesn't seem to change.
+            #if os(Linux)
+            let pngData = try! surface.writePNG()
+            assert(pngData.isEmpty == false)
             #endif
             
             /// flush surface
