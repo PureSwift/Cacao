@@ -41,16 +41,9 @@ final class RenderingTest: XCTestCase {
             // render
             screen.update()
             
-            let scale = screen.scale
-            let nativeSize = (width: Int(view.bounds.size.width * scale),
-                              height: Int(view.bounds.size.height * scale))
-            
             // get surface data
             guard let texture = view.texture,
-                let result = try! texture.withUnsafeMutableBytes({
-                
-                try Cairo.Surface.Image(mutableBytes: $0.assumingMemoryBound(to: UInt8.self), format: .argb32, width: nativeSize.width, height: nativeSize.height, stride: $1).data }),
-                let surfaceData = result
+                let surfaceData = texture.withUnsafeMutableBytes({ Data.init(bytesNoCopy: $0, count: texture.height * $1, deallocator: .none) })
                 else { XCTFail("Could not get surface data"); return }
             
             let base64 = surfaceData.base64EncodedString(options: Data.Base64EncodingOptions())
