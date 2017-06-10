@@ -33,7 +33,7 @@ final class RenderingTest: XCTestCase {
         
         for frame in 1 ... 10 {
             
-            let filePath = outputDirectory + "testViewSurface\(frame).png"
+            let filePath = TestPath.testData + "testViewSurface\(frame).png"
             
             // render
             screen.update()

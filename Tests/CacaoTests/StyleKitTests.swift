@@ -18,7 +18,7 @@ final class StyleKitTests: XCTestCase {
     
     func testSimpleShapes() {
         
-        let filename = outputDirectory + "simpleShapes.pdf"
+        let filename = TestPath.testData + "simpleShapes.pdf"
         
         let frame = Rect(x: 0, y: 0, width: 240, height: 120)
         
@@ -37,7 +37,7 @@ final class StyleKitTests: XCTestCase {
     
     func testAdvancedShapes() {
         
-        let filename = outputDirectory + "advancedShapes.pdf"
+        let filename = TestPath.testData + "advancedShapes.pdf"
         
         let frame = Rect(x: 0, y: 0, width: 240, height: 120)
         
@@ -56,7 +56,7 @@ final class StyleKitTests: XCTestCase {
     
     func testDrawSingleLineText() {
         
-        let filename = outputDirectory + "singleLineText.pdf"
+        let filename = TestPath.testData + "singleLineText.pdf"
         
         let frame = Rect(x: 0, y: 0, width: 240, height: 120)
         
@@ -75,7 +75,7 @@ final class StyleKitTests: XCTestCase {
     
     func testDrawMultilineText() {
         
-        let filename = outputDirectory + "multilineText.pdf"
+        let filename = TestPath.testData + "multilineText.pdf"
         
         let frame = Rect(x: 0, y: 0, width: 240, height: 180)
         
@@ -92,17 +92,3 @@ final class StyleKitTests: XCTestCase {
         print("Wrote to \(filename)")
     }
 }
-
-let outputDirectory: String = {
-    
-    let outputDirectory = NSTemporaryDirectory() + "CacaoTests" + "/"
-    
-    var isDirectory: ObjCBool = false
-    
-    if FileManager.default.fileExists(atPath: outputDirectory, isDirectory: &isDirectory) == false {
-        
-        try! FileManager.default.createDirectory(atPath: outputDirectory, withIntermediateDirectories: false)
-    }
-    
-    return outputDirectory
-}()
