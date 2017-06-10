@@ -14,7 +14,7 @@ import Silica
 @testable import Cacao
 @testable import CacaoTests
 
-XCTMain([testCase(ScreenTests.allTests),
-         testCase(StyleKitTests.allTests),
-         testCase(FontTests.allTests)
+XCTMain([testCase(StyleKitTests.allTests),
+         testCase(FontTests.allTests),
+         testCase(RenderingTest.allTests)
         ])
