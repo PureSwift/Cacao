@@ -475,11 +475,18 @@ open class UIView: UIResponder {
     
     // MARK: - Drawing
     
+    open func draw(_ rect: CGRect) { /* implemented by subclasses */ }
+    
     /// The backing rendering node / texture.
     ///
     /// Cacao's equivalent of `UIView.layer` / `CALayer`.
     /// Instead of the CoreGraphics API you could draw directly to the texture's pixel data.
-    private var texture: Texture!
+    ///
+    /// The value is guarenteed to be valid during `draw()` calls and can be used directly
+    /// (e.g. video streaming, SDL game) instead of the CoreGraphics drawing API.
+    ///
+    /// - Warning: Do not hold a reference to this object as it can be recreated as needed for rendering.
+    public private(set) var texture: Texture?
     
     internal var shouldRender: Bool {
         return isHidden == false
@@ -487,46 +494,36 @@ open class UIView: UIResponder {
             && (bounds.size.width >= 1.0 || bounds.size.height >= 1.0)
     }
     
-    internal var scale: Double { return window?.screen.scale ?? 1 }
-    
-    internal var nativeSize: (width: Int, height: Int) {
-        
-        let scale = self.scale
-        let width = Int(bounds.size.width * scale)
-        let height = Int(bounds.size.height * scale)
-        
-        return (width, height)
-    }
-    
-    open func draw(_ rect: CGRect) { /* implemented by subclasses */ }
-    
-    private func createTexture(for renderer: Renderer) {
-        
-        let nativeSize = self.nativeSize
-        
-        texture = Texture(renderer: renderer,
-                          format: PixelFormat.RawValue(SDL_PIXELFORMAT_ARGB8888),
-                          access: .streaming,
-                          width: nativeSize.width,
-                          height: nativeSize.height).sdlAssert()
-        
-        texture.blendMode = .alpha
-    }
-    
-    internal final func render(with renderer: Renderer, in rect: SDL_Rect) {
+    internal final func render(on screen: UIScreen, in rect: SDL_Rect) {
         
         guard shouldRender
             else { return }
         
-        let scale = self.scale
-        let nativeSize = self.nativeSize
+        let scale = screen.scale
+        let nativeSize = (width: Int(bounds.size.width * scale),
+                          height: Int(bounds.size.height * scale))
         
-        // create SDL texture
-        if texture == nil
-            || texture.width != nativeSize.width
-            || texture.height != nativeSize.height {
+        let texture: Texture
+        
+        // reuse cached texture if view hasn't been resized.
+        if let cachedTexture = self.texture,
+            cachedTexture.width == nativeSize.width,
+            cachedTexture.height == nativeSize.height {
             
-            createTexture(for: renderer)
+            texture = cachedTexture
+            
+        } else {
+            
+            texture = Texture(renderer: screen.renderer,
+                              format: PixelFormat.RawValue(SDL_PIXELFORMAT_ARGB8888),
+                              access: .streaming,
+                              width: nativeSize.width,
+                              height: nativeSize.height).sdlAssert()
+            
+            texture.blendMode = .alpha
+            
+            // cache for reuse if view size isn't changed
+            self.texture = texture
         }
         
         // unlock and modify texture
@@ -548,7 +545,7 @@ open class UIView: UIResponder {
             surface.finish()
         }
         
-        renderer.copy(texture, destination: rect)
+        screen.renderer.copy(texture, destination: rect)
     }
     
     internal func draw(in context: Silica.Context) {

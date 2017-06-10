@@ -139,7 +139,7 @@ public final class UIScreen {
                             h: Int32(view.frame.size.height * scale))
         
         // render view
-        view.render(with: renderer, in: rect)
+        view.render(on: self, in: rect)
         
         // render subviews
         view.subviews.forEach { render(view: $0, origin: relativeOrigin) }
