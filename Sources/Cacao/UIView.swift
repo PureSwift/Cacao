@@ -80,7 +80,7 @@ open class UIView: UIResponder {
     /// You only need to set a value for the opaque property in subclasses of `UIView`
     /// that draw their own content using the `draw(_:)` method.
     /// The opaque property has no effect in system-provided classes such as `UIButton`, `UILabel`, `UITableViewCell`, and so on.
-    public final var isOpaque: Bool = true
+    public final var isOpaque: Bool = true { didSet { setNeedsDisplay() } }
     
     /// The first nondefault tint color value in the view’s hierarchy, ascending from and starting with the view itself.
     ///
@@ -103,7 +103,7 @@ open class UIView: UIResponder {
     /// If set to false, subviews whose frames extend beyond the visible bounds of the receiver are not clipped.
     ///
     /// The default value is false.
-    public final var clipsToBounds: Bool = false
+    public final var clipsToBounds: Bool = false { didSet { setNeedsDisplay() } }
     
     /// A Boolean value that determines whether the view’s bounds should be automatically cleared before drawing.
     ///
