@@ -677,7 +677,8 @@ open class UIView: UIResponder {
         
         for subview in subviews {
             
-            guard let descendant = subview.hitTest(subviewPoint, with: event) else { return nil }
+            guard let descendant = subview.hitTest(subviewPoint, with: event)
+                else { continue }
             
             return descendant
         }
