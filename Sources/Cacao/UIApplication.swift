@@ -133,11 +133,17 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
                 
             case SDL_WINDOWEVENT:
                 
-                switch sdlEvent.window.event {
+                let windowEvent = SDL_WindowEventID(rawValue: SDL_WindowEventID.RawValue(sdlEvent.window.event))
+                
+                switch windowEvent {
                     
-                case UInt8(SDL_WINDOWEVENT_SIZE_CHANGED.rawValue):
+                case SDL_WINDOWEVENT_SIZE_CHANGED:
                     
                     screen.updateSize()
+                    
+                case SDL_WINDOWEVENT_FOCUS_GAINED, SDL_WINDOWEVENT_FOCUS_LOST:
+                    
+                    screen.needsDisplay = true
                     
                 default: break
                 }
