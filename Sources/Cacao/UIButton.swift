@@ -14,9 +14,10 @@ public final class UIButton: UIControl {
     
     public override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         
-        guard isHidden == false
-            && isUserInteractionEnabled
-            && pointInside(point)
+        guard isHidden == false,
+            alpha > 0,
+            isUserInteractionEnabled,
+            self.point(inside: point, with: event)
             else { return nil }
         
         // swallows touches intended for subviews

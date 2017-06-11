@@ -174,7 +174,10 @@ open class UIView: UIResponder {
     /// the value of this property is undefined and therefore should be ignored.
     public final var frame: CGRect {
         get { return _frame }
-        set { setFrame(newValue) }
+        set {
+            _frame = newValue
+            _bounds.size = newValue.size
+        }
     }
     private var _frame = CGRect()
     
@@ -195,7 +198,10 @@ open class UIView: UIResponder {
     /// The default bounds origin is `(0,0)` and the size is the same as the frame rectangle’s size.
     public final var bounds: CGRect {
         get { return _bounds }
-        set { setBounds(newValue) }
+        set {
+            _bounds = newValue
+            _frame.size = newValue.size
+        }
     }
     private var _bounds = CGRect()
     
@@ -204,10 +210,17 @@ open class UIView: UIResponder {
     /// The center is specified within the coordinate system of its superview and is measured in points.
     /// Setting this property changes the values of the frame properties accordingly.
     public final var center: CGPoint {
-        get { return _center }
-        set { setCenter(newValue) }
+        get {
+            return CGPoint(x: _frame.origin.x + (_frame.size.width / 2),
+                           y: _frame.origin.y + (_frame.size.height / 2))
+        }
+        set {
+            // adjust frame
+            let oldValue = self.center
+            _frame.origin.x += newValue.x - oldValue.x
+            _frame.origin.y += newValue.y - oldValue.y
+        }
     }
-    private var _center = CGPoint()
     
     /// Specifies the transform applied to the receiver, relative to the center of its bounds.
     ///
@@ -235,12 +248,18 @@ open class UIView: UIResponder {
     /// This property is nil if the view has not yet been added to a window.
     public final var window: UIWindow? {
         
-        var superview: UIView? = self
+        return rootSuperview as? UIWindow
+    }
+    
+    /// The root view in the hierarchy.
+    private var rootSuperview: UIView {
+        
+        var superview: UIView = self
         var superViewFound = true
         
         repeat {
             
-            if let newValue = superview?.superview {
+            if let newValue = superview.superview {
                 
                 superview = newValue
                 
@@ -251,8 +270,7 @@ open class UIView: UIResponder {
             
         } while superViewFound
         
-        // upmost view should be a window
-        return superview as? UIWindow
+        return superview
     }
     
     /// Adds a view to the end of the receiver’s list of subviews.
@@ -473,6 +491,62 @@ open class UIView: UIResponder {
         return nil
     }
     
+    // MARK: - Converting Between View Coordinate Systems
+    
+    /// Converts a point from the receiver’s coordinate system to that of the specified view.
+    public final func convert(_ point: CGPoint, to view: UIView?) -> CGPoint {
+        
+        let view = view ?? rootSuperview
+        
+        //assert(view.rootSuperview === rootSuperview, "Both views must descend from same root super view or window")
+        
+        // get origin offset for both views
+        let offset = self.offsetFromRootSuperview
+        let viewOffset = view.offsetFromRootSuperview
+        let delta = CGSize(width: offset.width - viewOffset.width, height: offset.height - viewOffset.height)
+        
+        return CGPoint(x: point.x + delta.width, y: point.y + delta.height)
+    }
+    
+    private var offsetFromRootSuperview: CGSize {
+        
+        var superview: UIView = self
+        var superViewFound = true
+        var offset = CGSize()
+        
+        repeat {
+            
+            if let newValue = superview.superview {
+                
+                superview = newValue
+                offset.width += newValue.frame.x
+                offset.height += newValue.frame.y
+                
+            } else {
+                
+                superViewFound = false
+            }
+            
+        } while superViewFound
+        
+        return offset
+    }
+    
+    public final func convert(_ point: CGPoint, from view: UIView?) -> CGPoint {
+        
+        fatalError()
+    }
+    
+    public final func convert(_ rect: CGRect, to view: UIView?) -> CGPoint {
+        
+        fatalError()
+    }
+    
+    public final func convert(_ rect: CGRect, from view: UIView?) -> CGPoint {
+        
+        fatalError()
+    }
+    
     // MARK: - Drawing
     
     open func draw(_ rect: CGRect) { /* implemented by subclasses */ }
@@ -667,15 +741,16 @@ open class UIView: UIResponder {
     /// Thus, a view can still be returned even if the specified point is in a transparent portion of that view’s content.
     open func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         
-        guard isHidden == false
-            && isUserInteractionEnabled
-            && pointInside(point)
+        guard isHidden == false,
+            alpha > 0,
+            isUserInteractionEnabled,
+            self.point(inside: point, with: event)
             else { return nil }
         
-        // convert point for subviews
-        let subviewPoint = Point(x: point.x - frame.x, y: point.y - frame.y)
-        
         for subview in subviews.reversed() {
+            
+            // convert point for subviews
+            let subviewPoint = Point(x: point.x - frame.x, y: point.y - frame.y)
             
             guard let descendant = subview.hitTest(subviewPoint, with: event)
                 else { continue }
@@ -687,11 +762,12 @@ open class UIView: UIResponder {
     }
     
     /// Returns a Boolean value indicating whether the receiver contains the specified point.
-    public final func pointInside(_ point: Point) -> Bool {
+    public final func point(inside point: Point, with event: UIEvent?) -> Bool {
         
-        let bounds = Rect(size: frame.size)
-        
-        return bounds.contains(point)
+        return point.x > 0
+            && point.y > 0
+            && point.x <= frame.size.width
+            && point.y <= frame.size.height
     }
     
     public final func setNeedsDisplay(_ rect: CGRect? = nil) {
@@ -706,30 +782,6 @@ open class UIView: UIResponder {
     open override var next: UIResponder? {
         
         return viewController ?? superview
-    }
-    
-    // MARK: - Update Properties
-    
-    @inline(__always)
-    private func setFrame(_ newValue: CGRect) {
-        
-        _frame = newValue
-        _bounds.size = newValue.size
-    }
-    
-    @inline(__always)
-    private func setBounds(_ newValue: CGRect) {
-        
-        _bounds = newValue
-        _frame.size = newValue.size
-    }
-    
-    @inline(__always)
-    private func setCenter(_ newValue: CGPoint) {
-        
-        // TODO calculate new values
-        
-        //setNeedsLayout()
     }
 }
 

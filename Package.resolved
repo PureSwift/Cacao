@@ -2,15 +2,6 @@
   "object": {
     "pins": [
       {
-        "package": "Cairo",
-        "repositoryURL": "https://github.com/PureSwift/Cairo.git",
-        "state": {
-          "branch": "master",
-          "revision": "9fa92e223d8f596e3c545f320f1235178dec79d2",
-          "version": null
-        }
-      },
-      {
         "package": "CCairo",
         "repositoryURL": "https://github.com/PureSwift/CCairo.git",
         "state": {
@@ -52,6 +43,15 @@
         "state": {
           "branch": "master",
           "revision": "a4798aa0174f6661404b9df4ccaf2ba1dc9cc92c",
+          "version": null
+        }
+      },
+      {
+        "package": "Cairo",
+        "repositoryURL": "https://github.com/PureSwift/Cairo.git",
+        "state": {
+          "branch": "master",
+          "revision": "9fa92e223d8f596e3c545f320f1235178dec79d2",
           "version": null
         }
       },
