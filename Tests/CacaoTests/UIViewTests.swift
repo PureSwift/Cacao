@@ -31,9 +31,14 @@ final class UIViewTests: XCTestCase {
         
         let testView = testView1()
         
-        //XCTAssert(testView.0.convert(CGPoint(x: 10, y: 10), to: testView.0) == CGPoint(x: 10, y: 10))
+        XCTAssert(testView.0.convert(CGPoint(x: 10, y: 10), to: testView.0) == CGPoint(x: 10, y: 10))
         XCTAssert(testView.0.convert(CGPoint(x: 15, y: 15), to: testView.1) == CGPoint(x: 5, y: 5))
         XCTAssert(testView.0.convert(CGPoint(x: 25, y: 25), to: testView.2) == CGPoint(x: 5, y: 5))
+        XCTAssert(testView.0.convert(CGPoint(x: 40, y: 40), to: testView.3) == CGPoint())
+        
+        XCTAssert(testView.0.convert(testView.1.frame.origin, to: testView.1) == CGPoint())
+        XCTAssert(testView.0.convert(testView.2.frame.origin, to: testView.2) == CGPoint())
+        XCTAssert(testView.0.convert(testView.3.frame.origin, to: testView.3) == CGPoint())
     }
 }
 
