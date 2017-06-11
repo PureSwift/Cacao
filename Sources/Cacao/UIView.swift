@@ -496,40 +496,39 @@ open class UIView: UIResponder {
     /// Converts a point from the receiver’s coordinate system to that of the specified view.
     public final func convert(_ point: CGPoint, to view: UIView?) -> CGPoint {
         
+        let rootSuperview = self.rootSuperview
+        
         let view = view ?? rootSuperview
         
-        //assert(view.rootSuperview === rootSuperview, "Both views must descend from same root super view or window")
+        assert(view.rootSuperview === rootSuperview, "Both views must descend from same root super view or window")
         
         // get origin offset for both views
-        let offset = self.offsetFromRootSuperview
-        let viewOffset = view.offsetFromRootSuperview
+        let offset = rootSuperview.offset(for: self)!
+        let viewOffset = rootSuperview.offset(for: view)!
         let delta = CGSize(width: offset.width - viewOffset.width, height: offset.height - viewOffset.height)
         
         return CGPoint(x: point.x + delta.width, y: point.y + delta.height)
     }
     
-    private var offsetFromRootSuperview: CGSize {
+    private func offset(for subview: UIView, offset: CGSize = CGSize()) -> CGSize? {
         
-        var superview: UIView = self
-        var superViewFound = true
-        var offset = CGSize()
+        var offset = offset
+        guard subview !== self
+            else { return offset }
         
-        repeat {
+        // add delta
+        offset.width += subview.frame.x
+        offset.height += subview.frame.y
+        
+        for view in subviews {
             
-            if let newValue = superview.superview {
-                
-                superview = newValue
-                offset.width += newValue.frame.x
-                offset.height += newValue.frame.y
-                
-            } else {
-                
-                superViewFound = false
-            }
+            guard let foundOffset = view.offset(for: subview, offset: offset)
+                else { continue }
             
-        } while superViewFound
+            return foundOffset
+        }
         
-        return offset
+        return nil
     }
     
     public final func convert(_ point: CGPoint, from view: UIView?) -> CGPoint {
