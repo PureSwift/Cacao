@@ -72,8 +72,7 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
             
             let eventType = SDL_EventType(rawValue: sdlEvent.type)
             
-            let screenLocation = CGPoint(x: Double(sdlEvent.button.x) / screen.scale,
-                                         y: Double(sdlEvent.button.y) / screen.scale)
+            let screenLocation = CGPoint(x: Double(sdlEvent.button.x), y: Double(sdlEvent.button.y))
                         
             switch eventType {
                 
