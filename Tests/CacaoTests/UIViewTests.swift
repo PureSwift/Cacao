@@ -42,6 +42,7 @@ final class UIViewTests: XCTestCase {
         XCTAssert(testView.0.convert(testView.3.frame.origin, to: testView.3) == CGPoint(x: -20, y: -20))
     }
     
+    /* Private API
     func testRootSuperviewOffset() {
         
         let testView = loadTestView1()
@@ -50,7 +51,7 @@ final class UIViewTests: XCTestCase {
         XCTAssert(testView.0.offset(for: testView.1) == CGSize(width: 10, height: 10))
         XCTAssert(testView.0.offset(for: testView.2) == CGSize(width: 20, height: 20))
         XCTAssert(testView.0.offset(for: testView.3) == CGSize(width: 40, height: 40))
-    }
+    }*/
 }
 
 private extension UIViewTests {
