@@ -750,7 +750,7 @@ open class UIView: UIResponder {
         for subview in subviews.reversed() {
             
             // convert point for subviews
-            let subviewPoint = Point(x: point.x - frame.x, y: point.y - frame.y)
+            let subviewPoint = self.convert(point, to: subview)
             
             guard let descendant = subview.hitTest(subviewPoint, with: event)
                 else { continue }
@@ -764,10 +764,10 @@ open class UIView: UIResponder {
     /// Returns a Boolean value indicating whether the receiver contains the specified point.
     public final func point(inside point: Point, with event: UIEvent?) -> Bool {
         
-        return point.x > 0
-            && point.y > 0
-            && point.x <= frame.size.width
-            && point.y <= frame.size.height
+        let rect = CGRect(origin: CGPoint(), size: frame.size)
+        
+        return (point.x >= rect.minX && point.x <= rect.maxX)
+            && (point.y >= rect.minY && point.y <= rect.maxY)
     }
     
     public final func setNeedsDisplay(_ rect: CGRect? = nil) {
