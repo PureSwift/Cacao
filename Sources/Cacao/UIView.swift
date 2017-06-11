@@ -736,3 +736,44 @@ open class UIView: UIResponder {
 // MARK: - Supporting Types
 
 public let UIViewNoIntrinsicMetric: CGFloat = -1.0
+
+// MARK: - Xcode Quick Look
+
+#if os(macOS) && Xcode
+    
+    import class AppKit.NSImage
+    import class Foundation.NSString
+    
+    public extension UIView {
+        
+        @objc(debugQuickLookObject)
+        public var debugQuickLookObject: AnyObject {
+            
+            if let cachedTexture = self.texture,
+                let screen = self.window?.screen {
+                
+                let scale = screen.scale
+                let nativeSize = (width: Int(bounds.size.width * scale),
+                                  height: Int(bounds.size.height * scale))
+                
+                let surface = cachedTexture.withUnsafeMutableBytes {
+                    
+                    try! Cairo.Surface.Image(mutableBytes: $0.assumingMemoryBound(to: UInt8.self), format: .argb32, width: nativeSize.width, height: nativeSize.height, stride: $1)
+                }
+                
+                let data = try! surface!.writePNG()
+                
+                let image = NSImage(data: data)!
+                
+                return image
+                
+            } else {
+                
+                return "\(self)" as NSString
+            }
+        }
+    }
+    
+#endif
+
+
