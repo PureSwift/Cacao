@@ -510,15 +510,16 @@ open class UIView: UIResponder {
         return CGPoint(x: point.x + delta.width, y: point.y + delta.height)
     }
     
-    private func offset(for subview: UIView, offset: CGSize = CGSize()) -> CGSize? {
+    internal func offset(for subview: UIView, offset: CGSize = CGSize()) -> CGSize? {
         
         var offset = offset
-        guard subview !== self
-            else { return offset }
         
         // add delta
-        offset.width += subview.frame.x
-        offset.height += subview.frame.y
+        offset.width += frame.origin.x
+        offset.height += frame.origin.y
+        
+        guard subview !== self
+            else { return offset }
         
         for view in subviews {
             

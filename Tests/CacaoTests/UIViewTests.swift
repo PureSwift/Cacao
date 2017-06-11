@@ -14,7 +14,7 @@ final class UIViewTests: XCTestCase {
     
     func testHitTest() {
         
-        let (backgroundView, view1, subview1, subview2) = testView1()
+        let (backgroundView, view1, subview1, subview2) = loadTestView1()
         
         backgroundView.addSubview(view1)
         
@@ -29,7 +29,7 @@ final class UIViewTests: XCTestCase {
     
     func testConvertToView() {
         
-        let testView = testView1()
+        let testView = loadTestView1()
         
         XCTAssert(testView.0.convert(CGPoint(x: 10, y: 10), to: testView.0) == CGPoint(x: 10, y: 10))
         XCTAssert(testView.0.convert(CGPoint(x: 15, y: 15), to: testView.1) == CGPoint(x: 5, y: 5))
@@ -40,11 +40,21 @@ final class UIViewTests: XCTestCase {
         XCTAssert(testView.0.convert(testView.2.frame.origin, to: testView.2) == CGPoint())
         XCTAssert(testView.0.convert(testView.3.frame.origin, to: testView.3) == CGPoint())
     }
+    
+    func testRootSuperviewOffset() {
+        
+        let testView = loadTestView1()
+        
+        XCTAssert(testView.0.offset(for: testView.0) == CGSize())
+        XCTAssert(testView.0.offset(for: testView.1) == CGSize(width: 10, height: 10))
+        XCTAssert(testView.0.offset(for: testView.2) == CGSize(width: 20, height: 20))
+        XCTAssert(testView.0.offset(for: testView.3) == CGSize(width: 40, height: 40))
+    }
 }
 
 private extension UIViewTests {
     
-    func testView1() -> (UIView, UIView, UIView, UIView)  {
+    func loadTestView1() -> (UIView, UIView, UIView, UIView)  {
         
         let view1 = UIView(frame: Rect(size: Size(width: 100, height: 100)))
         view1.tag = 1
