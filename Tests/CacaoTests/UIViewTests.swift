@@ -37,8 +37,9 @@ final class UIViewTests: XCTestCase {
         XCTAssert(testView.0.convert(CGPoint(x: 40, y: 40), to: testView.3) == CGPoint())
         
         XCTAssert(testView.0.convert(testView.1.frame.origin, to: testView.1) == CGPoint())
-        XCTAssert(testView.0.convert(testView.2.frame.origin, to: testView.2) == CGPoint())
-        XCTAssert(testView.0.convert(testView.3.frame.origin, to: testView.3) == CGPoint())
+        // this is what UIKit also gives us
+        XCTAssert(testView.0.convert(testView.2.frame.origin, to: testView.2) == CGPoint(x: -10, y: -10))
+        XCTAssert(testView.0.convert(testView.3.frame.origin, to: testView.3) == CGPoint(x: -20, y: -20))
     }
     
     func testRootSuperviewOffset() {
