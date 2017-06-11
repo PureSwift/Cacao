@@ -675,7 +675,7 @@ open class UIView: UIResponder {
         // convert point for subviews
         let subviewPoint = Point(x: point.x - frame.x, y: point.y - frame.y)
         
-        for subview in subviews {
+        for subview in subviews.reversed() {
             
             guard let descendant = subview.hitTest(subviewPoint, with: event)
                 else { continue }
