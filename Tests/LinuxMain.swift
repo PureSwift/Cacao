@@ -16,5 +16,6 @@ import Silica
 
 XCTMain([testCase(StyleKitTests.allTests),
          testCase(FontTests.allTests),
-         testCase(RenderingTest.allTests)
+         testCase(RenderingTests.allTests),
+         testCase(UIViewTests.allTests)
         ])

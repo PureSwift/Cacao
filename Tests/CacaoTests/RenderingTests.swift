@@ -1,5 +1,5 @@
 //
-//  RenderingTest.swift
+//  RenderingTests.swift
 //  CacaoTests
 //
 //  Created by Alsey Coleman Miller on 6/9/17.
@@ -12,7 +12,7 @@ import Silica
 import SDL
 @testable import Cacao
 
-final class RenderingTest: XCTestCase {
+final class RenderingTests: XCTestCase {
     
     static let allTests = [("testViewSurface", testViewSurface)]
 
@@ -57,7 +57,7 @@ final class RenderingTest: XCTestCase {
     }
 }
 
-private extension RenderingTest {
+private extension RenderingTests {
     
     final class TestView: UIWindow {
         

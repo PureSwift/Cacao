@@ -12,6 +12,11 @@ import Silica
 
 final class UIViewTests: XCTestCase {
     
+    static let allTests = [
+        ("testHitTest", testHitTest),
+        ("testConvertToView", testConvertToView)
+    ]
+    
     func testHitTest() {
         
         let (backgroundView, view1, subview1, subview2) = loadTestView1()
