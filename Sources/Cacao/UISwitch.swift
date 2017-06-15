@@ -56,4 +56,8 @@ open class UISwitch: UIControl {
     
     /// The image displayed while the switch is in the off position.
     public var offImage: UIImage?
+    
+    // MARK: - Private
+    
+    
 }
