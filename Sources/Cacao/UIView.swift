@@ -89,13 +89,37 @@ open class UIView: UIResponder {
     /// If the view’s tintAdjustmentMode property’s value is dimmed, then the tintColor property value is automatically dimmed.
     ///
     /// To refresh subview rendering when this property changes, override the tintColorDidChange() method.
-    public final var tintColor: UIColor {
+    public final var tintColor: UIColor! {
         
-        // TODO
-        return UIColor.blue
+        get {
+            if let tintColor = _tintColor {
+                return tintColor
+            }
+            
+            // TODO
+            return UIColor.blue
+        }
+        
+        set {
+            
+            _tintColor = newValue
+        }
+        
+    }
+    private var _tintColor: UIColor?
+    
+    /// Called by the system when the `tintColor` property changes.
+    ///
+    /// The system calls this method on a view when your code changes the value of the `tintColor` property on that view.
+    /// In addition, the system calls this method on a subview that inherits a changed interaction tint color.
+    ///
+    /// In your implementation, refresh the view rendering as needed.
+    open func tintColorDidChange() {
+        
+        setNeedsDisplay()
     }
     
-    // var tintAdjustmentMode: UIViewTintAdjustmentMode
+    //var tintAdjustmentMode: UIViewTintAdjustmentMode
     
     /// A Boolean value that determines whether subviews are confined to the bounds of the view.
     ///
