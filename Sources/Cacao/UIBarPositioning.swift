@@ -21,7 +21,12 @@ public enum UIBarPosition: Int {
     case topAttached
 }
 
-// MARK: - Supporting Types
+/// A set of methods for defining the ways that bars can be positioned.
+public protocol UIBarPositioning: class {
+    
+    /// The position of the bar.
+    var barPosition: UIBarPosition { get }
+}
 
 /// A set of methods that support the positioning of a bar that conforms to the `UIBarPositioning` protocol.
 public protocol UIBarPositioningDelegate: class {
@@ -34,6 +39,6 @@ public extension UIBarPositioningDelegate {
     
     func position(for bar: UIBarPositioning) -> UIBarPosition {
         
-        return .default
+        return .any
     }
 }

@@ -5,8 +5,6 @@
 //  Created by Alsey Coleman Miller on 6/14/17.
 //
 
-import Foundation
-
 /// An object that manages the buttons and views to be displayed in a navigation bar object.
 public final class UINavigationItem {
     

@@ -5,12 +5,14 @@
 //  Created by Alsey Coleman Miller on 6/12/17.
 //
 
+import Silica
+
 /// A control that supports navigation of hierarchical content, most often used in navigation controllers.
 open class UINavigationBar: UIView {
     
     // MARK: - Initialization
     
-    open override init(frame: CGRect) {
+    public override init(frame: CGRect) {
         super.init(frame: frame)
         
         // load view
@@ -25,7 +27,6 @@ open class UINavigationBar: UIView {
     // MARK: - Pushing and Popping Items
     
     /// Pushes the given navigation item onto the navigation bar's stack and updates the UI.
-    @inline(__always)
     public func pushItem(_ item: UINavigationItem, animated: Bool) {
         
         var items = _items
@@ -36,7 +37,6 @@ open class UINavigationBar: UIView {
     }
     
     /// Pops the top item from the navigation bar's stack and updates the UI.
-    @inline(__always)
     public func popItem(animated: Bool) -> UINavigationItem? {
         
         var items = _items

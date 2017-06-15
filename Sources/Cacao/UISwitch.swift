@@ -5,6 +5,8 @@
 //  Created by Alsey Coleman Miller on 6/15/17.
 //
 
+import Silica
+
 /// A control that offers a binary choice, such as On/Off.
 ///
 /// The `UISwitch` class declares a property and a method to control its on/off state.
@@ -12,7 +14,7 @@ open class UISwitch: UIControl {
     
     // MARK: - Initializing the Switch Object
     
-    open init(frame: CGRect) {
+    public override init(frame: CGRect) {
         super.init(frame: frame)
         
         
@@ -28,7 +30,7 @@ open class UISwitch: UIControl {
         get { return _on }
         set { setOn(newValue, animated: false) }
     }
-    private var _on: bool = false
+    private var _on: Bool = false
     
     /// Set the state of the switch to On or Off, optionally animating the transition.
     ///
