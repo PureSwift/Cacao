@@ -21,6 +21,11 @@ Pure Swift Cross-platform UIKit (Cocoa Touch) implementation (Supports Linux)
 
 ![Image](Resources/ReadmeImages/UbuntuStyleKit.png)
 
+### Hardware-accelered `UIView` animations
+
+![Image](Resources/ReadmeImages/UbuntuSwitch.gif)
+![Image](Resources/ReadmeImages/MacSwitch.gif)
+
 ### Layout views according to a `UIViewContentMode`
 
 ![Image](Resources/ReadmeImages/ContentMode.gif)
