@@ -64,6 +64,7 @@ public struct UIColor {
     public func setFill() {
         
         UIGraphicsGetCurrentContext()?.fillColor = cgColor
+        UIGraphicsGetCurrentContext()?.alpha = UIGraphicsGetCurrentContext()?.alpha ?? 1 // apply alpha again
     }
     
     /// Sets the color of subsequent stroke operations to the color that the receiver represents.
