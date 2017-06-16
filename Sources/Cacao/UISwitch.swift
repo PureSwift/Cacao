@@ -89,6 +89,13 @@ open class UISwitch: UIControl {
     
     open override func draw(_ rect: CGRect) {
         
+        assert(_internalState.on.isNaN == false)
+        assert(_internalState.on >= 0)
+        assert(_internalState.on <= 1)
+        assert(_internalState.tapped.isNaN == false)
+        assert(_internalState.tapped >= 0)
+        assert(_internalState.tapped <= 1)
+        
         UISwitchStyleKit.drawSwitchView(frame: bounds,
                                         resizing: .center,
                                         thumbColor: UIColor(cgColor: _internalState.thumbColor),
@@ -126,12 +133,64 @@ open class UISwitch: UIControl {
                 
                 let oldValue = _internalState
                 
-                let onAnimation = Animation(view: self,
-                                            duration: animationDuration,
-                                            value: (start: oldValue.on, end: newValue.on),
-                                            keyPath: \UISwitch.internalState.on)
+                // On
                 
-                UIView.animations.append(onAnimation)
+                UIView.animations.append(Animation(view: self,
+                                                   duration: animationDuration,
+                                                   value: (start: oldValue.on, end: newValue.on),
+                                                   keyPath: \UISwitch.internalState.on))
+                
+                // Tapped
+                
+                UIView.animations.append(Animation(view: self,
+                                                   duration: animationDuration,
+                                                   value: (start: oldValue.tapped, end: newValue.tapped),
+                                                   keyPath: \UISwitch.internalState.tapped))
+                
+                // Fill color
+                
+                UIView.animations.append(Animation(view: self,
+                                                   duration: animationDuration,
+                                                   value: (start: oldValue.fillColor.red, end: newValue.fillColor.red),
+                                                   keyPath: \UISwitch.internalState.fillColor.red))
+                
+                UIView.animations.append(Animation(view: self,
+                                                   duration: animationDuration,
+                                                   value: (start: oldValue.fillColor.green, end: newValue.fillColor.green),
+                                                   keyPath: \UISwitch.internalState.fillColor.green))
+                
+                UIView.animations.append(Animation(view: self,
+                                                   duration: animationDuration,
+                                                   value: (start: oldValue.fillColor.blue, end: newValue.fillColor.blue),
+                                                   keyPath: \UISwitch.internalState.fillColor.blue))
+                
+                UIView.animations.append(Animation(view: self,
+                                                   duration: animationDuration,
+                                                   value: (start: oldValue.fillColor.alpha, end: newValue.fillColor.alpha),
+                                                   keyPath: \UISwitch.internalState.fillColor.alpha))
+                
+                // Thumb Color
+                
+                UIView.animations.append(Animation(view: self,
+                                                   duration: animationDuration,
+                                                   value: (start: oldValue.thumbColor.red, end: newValue.thumbColor.red),
+                                                   keyPath: \UISwitch.internalState.thumbColor.red))
+                
+                UIView.animations.append(Animation(view: self,
+                                                   duration: animationDuration,
+                                                   value: (start: oldValue.thumbColor.green, end: newValue.thumbColor.green),
+                                                   keyPath: \UISwitch.internalState.thumbColor.green))
+                
+                UIView.animations.append(Animation(view: self,
+                                                   duration: animationDuration,
+                                                   value: (start: oldValue.thumbColor.blue, end: newValue.thumbColor.blue),
+                                                   keyPath: \UISwitch.internalState.thumbColor.blue))
+                
+                UIView.animations.append(Animation(view: self,
+                                                   duration: animationDuration,
+                                                   value: (start: oldValue.thumbColor.alpha, end: newValue.thumbColor.alpha),
+                                                   keyPath: \UISwitch.internalState.thumbColor.alpha))
+                
                 
             } else {
                 

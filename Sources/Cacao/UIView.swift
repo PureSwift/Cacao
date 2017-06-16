@@ -864,11 +864,13 @@ internal class Animation {
         // calculate delta
         let delta = value.end - value.start
         
-        let totalFrames = Int(CGFloat(duration) / CGFloat(framesPerSecond))
+        let totalFrames = CGFloat(framesPerSecond) / CGFloat(duration)
         
-        var currentFrame = 0
+        let incrementPerFrame = delta / totalFrames
         
-        let incrementPerFrame = delta / CGFloat(totalFrames)
+        var counter: CGFloat = 0
+        
+        let counterEnd = totalFrames * incrementPerFrame
         
         let weakView = WeakReference(view)
         
@@ -881,9 +883,9 @@ internal class Animation {
             
             view[keyPath: keyPath] += incrementPerFrame
             
-            currentFrame += 1
+            counter += incrementPerFrame
             
-            return currentFrame < totalFrames
+            return counter < counterEnd
         }
     }
 }
