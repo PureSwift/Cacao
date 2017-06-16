@@ -2,6 +2,15 @@
   "object": {
     "pins": [
       {
+        "package": "Cairo",
+        "repositoryURL": "https://github.com/PureSwift/Cairo.git",
+        "state": {
+          "branch": "master",
+          "revision": "9fa92e223d8f596e3c545f320f1235178dec79d2",
+          "version": null
+        }
+      },
+      {
         "package": "CCairo",
         "repositoryURL": "https://github.com/PureSwift/CCairo.git",
         "state": {
@@ -47,15 +56,6 @@
         }
       },
       {
-        "package": "Cairo",
-        "repositoryURL": "https://github.com/PureSwift/Cairo.git",
-        "state": {
-          "branch": "master",
-          "revision": "9fa92e223d8f596e3c545f320f1235178dec79d2",
-          "version": null
-        }
-      },
-      {
         "package": "LittleCMS",
         "repositoryURL": "https://github.com/PureSwift/LittleCMS.git",
         "state": {
@@ -78,7 +78,7 @@
         "repositoryURL": "https://github.com/PureSwift/Silica.git",
         "state": {
           "branch": "master",
-          "revision": "d6e76413bccc70eef36b7c646a3527f8b9fd8363",
+          "revision": "3cac69edbc8483bd602fa6064d6697a47c860acf",
           "version": null
         }
       }
