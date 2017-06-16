@@ -27,7 +27,8 @@ open class UISwitch: UIControl {
         
         super.init(frame: frame)
         
-        self.tintColor = UISwitchStyleKit.defaultOnColor
+        self.onTintColor = UISwitchStyleKit.defaultOnColor
+        self.tintColor = UISwitchStyleKit.defaultStrokeColor
     }
     
     // MARK: - Setting the Off/On State

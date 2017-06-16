@@ -109,9 +109,16 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
                     
                     touchPhase = previousTouch.location == screenLocation ? .stationary : .moved
                     
-                    if view != previousTouch.view {
+                    // send touches ended if finger moved to another view
+                    if view != previousTouch.view,
+                        touchPhase == .moved {
                         
-                        // TODO
+                        let touch = UITouch(timestamp: timestamp, location: screenLocation, phase: .ended, view: previousTouch.view, window: window)
+                        
+                        event.allTouches?.insert(touch)
+                        
+                        // inform responder chain
+                        window.sendEvent(event)
                     }
                     
                 } else {
