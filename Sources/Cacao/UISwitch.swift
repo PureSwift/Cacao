@@ -58,7 +58,7 @@ open class UISwitch: UIControl {
         
         let phase = Phase(on: on, tapped: tapped)
         
-        let animationDuration: TimeInterval = animated ? 2.0 : 0.0
+        let animationDuration: TimeInterval = animated ? 1.0 : 0.0
         
         let targetState = State(phase, tintColor: tintColor, onTintColor: onTintColor, thumbTintColor: thumbTintColor)
         
