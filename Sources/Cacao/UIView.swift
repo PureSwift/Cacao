@@ -11,6 +11,7 @@ import struct Foundation.CGPoint
 import struct Foundation.CGSize
 import struct Foundation.CGRect
 import typealias Foundation.TimeInterval
+import struct Foundation.Date
 import CSDL2
 import SDL
 import Silica
@@ -66,7 +67,7 @@ open class UIView: UIResponder {
     /// The value of this property is a floating-point number in the range 0.0 to 1.0,
     /// where 0.0 represents totally transparent and 1.0 represents totally opaque.
     /// This value affects only the current view and does not affect any of its embedded subviews.
-    public final var alpha: Double = 1.0 { didSet { setNeedsDisplay() } }
+    public final var alpha: CGFloat = 1.0 { didSet { setNeedsDisplay() } }
     
     /// A Boolean value that determines whether the view is opaque.
     ///
@@ -632,7 +633,11 @@ open class UIView: UIResponder {
         // unlock and modify texture
         texture.withUnsafeMutableBytes {
             
-            let surface = try! Cairo.Surface.Image(mutableBytes: $0.assumingMemoryBound(to: UInt8.self), format: .argb32, width: nativeSize.width, height: nativeSize.height, stride: $1)
+            let surface = try! Cairo.Surface.Image(mutableBytes: $0.assumingMemoryBound(to: UInt8.self),
+                                                   format: .argb32,
+                                                   width: nativeSize.width,
+                                                   height: nativeSize.height,
+                                                   stride: $1)
             
             // reset memory
             memset($0, 0, surface.stride * surface.height)
@@ -670,7 +675,7 @@ open class UIView: UIResponder {
         context.fillPath()
         
         // apply alpha
-        
+        context.setAlpha(alpha)
         
         // draw rect
         draw(bounds)
@@ -817,7 +822,7 @@ open class UIView: UIResponder {
     
     internal private(set) static var animationDuration: TimeInterval?
     
-    internal private(set) static var animations = [AnyObject]()
+    internal static var animations = [Animation]()
     
     /// Animate changes to one or more views using the specified duration.
     public class func animate(withDuration duration: TimeInterval, animations: @escaping () -> ()) {
@@ -838,32 +843,48 @@ public let UIViewNoIntrinsicMetric: CGFloat = -1.0
 
 // MARK: - Internal Animations
 
-internal class AnimationBox {
+internal class Animation {
     
-    let animation: Animation<AnimableValue, UIView>
-}
-
-internal class Animation<Value: AnimableValue, View: UIView> {
-    
-    let view: View
-    
-    let originalValue: Value
-    
-    let targetValue: Value
-    
-    private(set) var currentValue: Value
+    let frameChange: () -> Bool
     
     let duration: TimeInterval
     
-    let keyPath: ReferenceWritableKeyPath<View, Value>
+    let start = Date()
     
-    init(view: View, duration: TimeInterval, originalValue: Value, targetValue: Value, keyPath: ReferenceWritableKeyPath<View, Value>) {
+    init<View: UIView>(view: View,
+                       duration: TimeInterval,
+                       value: (start: CGFloat, end: CGFloat),
+                       keyPath: ReferenceWritableKeyPath<View, CGFloat>) {
         
-        self.view = view
+        guard let screen = view.window?.screen
+            else { fatalError("Cannot animate a view not attached to a screen") }
+        
+        let framesPerSecond = screen.maximumFramesPerSecond
+        
+        // calculate delta
+        let delta = value.end - value.start
+        
+        let totalFrames = Int(CGFloat(duration) / CGFloat(framesPerSecond))
+        
+        var currentFrame = 0
+        
+        let incrementPerFrame = delta / CGFloat(totalFrames)
+        
+        let weakView = WeakReference(view)
+        
         self.duration = duration
-        self.originalValue = originalValue
-        self.targetValue = targetValue
-        self.keyPath = keyPath
+        
+        self.frameChange = {
+            
+            guard let view = weakView.value
+                else { return false }
+            
+            view[keyPath: keyPath] += incrementPerFrame
+            
+            currentFrame += 1
+            
+            return currentFrame < totalFrames
+        }
     }
 }
 
@@ -873,14 +894,14 @@ internal protocol AnimableValue {
     static func - (lhs: Self, rhs: Self) -> Self
 }
 
-extension CGFloat: AnimableValue { }
+extension CGFloat: AnimableValue {
+    
+    static func - (lhs: CGFloat, rhs: CGFloat) -> CGFloat {
+        return CGFloat(lhs.native - rhs.native)
+    }
+}
 
 //extension CGRect: AnimableValue
-
-internal extension UIView {
-    
-    
-}
 
 // MARK: - Xcode Quick Look
 

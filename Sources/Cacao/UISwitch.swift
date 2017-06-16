@@ -9,6 +9,7 @@ import struct Foundation.CGFloat
 import struct Foundation.CGPoint
 import struct Foundation.CGSize
 import struct Foundation.CGRect
+import struct Foundation.TimeInterval
 import Silica
 
 /// A control that offers a binary choice, such as On/Off.
@@ -56,9 +57,15 @@ open class UISwitch: UIControl {
         _on = on
         
         let phase = Phase(on: on, tapped: tapped)
-        internalState = State(phase, tintColor: tintColor, onTintColor: onTintColor, thumbTintColor: thumbTintColor)
         
-        setNeedsDisplay()
+        let animationDuration: TimeInterval = animated ? 2.0 : 0.0
+        
+        let targetState = State(phase, tintColor: tintColor, onTintColor: onTintColor, thumbTintColor: thumbTintColor)
+        
+        UIView.animate(withDuration: animationDuration) { [weak self] in
+            
+            self?.internalState = targetState
+        }
     }
     
     // MARK: - Customizing the Appearance of the Switch
@@ -84,10 +91,10 @@ open class UISwitch: UIControl {
         
         UISwitchStyleKit.drawSwitchView(frame: bounds,
                                         resizing: .center,
-                                        thumbColor: UIColor(cgColor: internalState.thumbColor),
-                                        fillColor: UIColor(cgColor: internalState.fillColor),
-                                        switchOn: internalState.on,
-                                        tapped: internalState.tapped)
+                                        thumbColor: UIColor(cgColor: _internalState.thumbColor),
+                                        fillColor: UIColor(cgColor: _internalState.fillColor),
+                                        switchOn: _internalState.on,
+                                        tapped: _internalState.tapped)
     }
     
     // MARK: - Events
@@ -108,7 +115,32 @@ open class UISwitch: UIControl {
     
     // MARK: - Private
     
-    private var internalState = State(.off)
+    private var internalState: State {
+        
+        @inline(__always)
+        get { return _internalState }
+        
+        set {
+            
+            if let animationDuration = UIView.animationDuration {
+                
+                let oldValue = _internalState
+                
+                let onAnimation = Animation(view: self,
+                                            duration: animationDuration,
+                                            value: (start: oldValue.on, end: newValue.on),
+                                            keyPath: \UISwitch.internalState.on)
+                
+                UIView.animations.append(onAnimation)
+                
+            } else {
+                
+                _internalState = newValue
+            }
+        }
+    }
+    
+    private var _internalState = State(.off)
 }
 
 // MARK: - Supporting Types

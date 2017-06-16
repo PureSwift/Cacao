@@ -90,6 +90,15 @@ public final class UIScreen {
     /// Layout (if needed) and redraw the screen
     internal func update() {
         
+        // apply animations
+        if UIView.animations.isEmpty == false {
+            
+            needsDisplay = true
+            needsLayout = true
+            
+            UIView.animations = UIView.animations.filter { $0.frameChange() }
+        }
+        
         // layout views
         if needsLayout {
             
