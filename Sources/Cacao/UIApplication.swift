@@ -16,7 +16,7 @@ import Cairo
 
 // MARK: - UIApplicationMain
 
-@_silgen_name("_UIApplicationMain")
+@_silgen_name("UIApplicationMain")
 public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOptions = CacaoOptions()) {
     
     UIApplication.shared.delegate = delegate
@@ -48,6 +48,8 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
         delegate.application(UIApplication.shared, didFinishLaunchingWithOptions: launchOptions)
         else { options.log("Application delegate could not launch app"); return }
     
+    defer { delegate.applicationWillTerminate(UIApplication.shared) }
+    
     // enter main loop
     
     let framesPerSecond = screen.maximumFramesPerSecond
@@ -58,7 +60,7 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
     
     var sdlEvent = SDL_Event()
     
-    var lastEvent: UIEvent?
+    var lastTouch: UITouch?
     
     while !done {
         
@@ -66,107 +68,7 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
         
         let startTime = SDL_GetTicks()
         
-        // poll event queue
-        
-        var pollEventStatus: Int32 = 0
-        
-        repeat {
-            
-            pollEventStatus = SDL_PollEvent(&sdlEvent)
-            
-            let eventType = SDL_EventType(rawValue: sdlEvent.type)
-            
-            let screenLocation = CGPoint(x: Double(sdlEvent.button.x), y: Double(sdlEvent.button.y))
-                        
-            switch eventType {
-                
-            case SDL_QUIT, SDL_APP_TERMINATING:
-                
-                done = true
-                
-            case SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP:
-                
-                guard sdlEvent.button.which != -1
-                    else { return }
-                
-                let timestamp = Double(sdlEvent.button.timestamp) / 1000
-                
-                let event = UIEvent(timestamp: timestamp)
-                
-                /// Only the key window can recieve touch input
-                guard let window = UIApplication.shared.keyWindow,
-                    let view = window.hitTest(screenLocation, with: event)
-                    else { continue }
-                
-                let touchPhase: UITouchPhase
-                
-                // mouse released
-                if eventType == SDL_MOUSEBUTTONUP {
-                    
-                    touchPhase = .ended
-                    
-                } else if let previousTouch = lastEvent?.allTouches?.first {
-                    
-                    touchPhase = previousTouch.location == screenLocation ? .stationary : .moved
-                    
-                    // send touches ended if finger moved to another view
-                    if view != previousTouch.view,
-                        touchPhase == .moved {
-                        
-                        let touch = UITouch(timestamp: timestamp, location: screenLocation, phase: .ended, view: previousTouch.view, window: window)
-                        
-                        event.allTouches?.insert(touch)
-                        
-                        // inform responder chain
-                        window.sendEvent(event)
-                    }
-                    
-                } else {
-                    
-                    touchPhase = .began
-                }
-                
-                if let previousTouch = lastEvent?.allTouches?.first {
-                    
-                    // guard againt multiple touchesEnded events
-                    guard (previousTouch.phase == .ended && touchPhase == .ended) == false
-                        else { continue }
-                }
-                
-                let touch = UITouch(timestamp: timestamp, location: screenLocation, phase: touchPhase, view: view, window: window)
-                
-                event.allTouches?.insert(touch)
-                
-                // inform responder chain
-                window.sendEvent(event)
-                
-                lastEvent = event
-                
-            case SDL_WINDOWEVENT:
-                
-                let windowEvent = SDL_WindowEventID(rawValue: SDL_WindowEventID.RawValue(sdlEvent.window.event))
-                
-                switch windowEvent {
-                    
-                case SDL_WINDOWEVENT_SIZE_CHANGED:
-                    
-                    screen.updateSize()
-                    
-                case SDL_WINDOWEVENT_FOCUS_GAINED, SDL_WINDOWEVENT_FOCUS_LOST:
-                    
-                    #if os(Linux)
-                    screen.needsDisplay = true
-                    #else
-                    break
-                    #endif
-                    
-                default: break
-                }
-                
-            default: break
-            }
-            
-        } while pollEventStatus != 0
+        SDL.poll(event: &sdlEvent, screen: screen, lastTouch: &lastTouch, done: &done)
         
         // render to screen
         screen.update()
@@ -179,10 +81,6 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
             SDL_Delay(Uint32((1000 / framesPerSecond) - frameDuration))
         }
     }
-    
-    // quit application
-    
-    delegate.applicationWillTerminate(UIApplication.shared)
 }
 
 /// Cacao-Specific application launch settings

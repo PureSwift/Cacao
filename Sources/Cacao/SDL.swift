@@ -5,7 +5,144 @@
 //  Created by Alsey Coleman Miller on 6/7/17.
 //
 
+import struct Foundation.CGFloat
+import struct Foundation.CGPoint
+import struct Foundation.CGSize
+import struct Foundation.CGRect
+import CSDL2
 import SDL
+
+// MARK: - Events
+
+internal extension SDL {
+    
+    static func poll(event sdlEvent: inout SDL_Event, screen: UIScreen, lastTouch: inout UITouch?, done: inout Bool) {
+        
+        // poll event queue
+        
+        var pollEventStatus: Int32 = 0
+        
+        repeat {
+            
+            pollEventStatus = SDL_PollEvent(&sdlEvent)
+            
+            let eventType = SDL_EventType(rawValue: sdlEvent.type)
+            
+            switch eventType {
+                
+            case SDL_QUIT, SDL_APP_TERMINATING:
+                
+                done = true
+                
+            case SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP:
+                
+                mouse(event: &sdlEvent, lastTouch: &lastTouch)
+                
+            case SDL_WINDOWEVENT:
+                
+                let windowEvent = SDL_WindowEventID(rawValue: SDL_WindowEventID.RawValue(sdlEvent.window.event))
+                
+                switch windowEvent {
+                    
+                case SDL_WINDOWEVENT_SIZE_CHANGED:
+                    
+                    screen.updateSize()
+                    
+                case SDL_WINDOWEVENT_FOCUS_GAINED, SDL_WINDOWEVENT_FOCUS_LOST:
+                    
+                    #if os(Linux)
+                        screen.needsDisplay = true
+                    #else
+                        break
+                    #endif
+                    
+                default: break
+                }
+                
+            default: break
+            }
+            
+        } while pollEventStatus != 0
+    }
+    
+    static func mouse(event sdlEvent: inout SDL_Event, lastTouch: inout UITouch?) {
+        
+        let eventType = SDL_EventType(rawValue: sdlEvent.type)
+        
+        guard sdlEvent.button.which != -1
+            else { return }
+        
+        let screenLocation = CGPoint(x: CGFloat(sdlEvent.button.x), y: CGFloat(sdlEvent.button.y))
+        
+        let timestamp = Double(sdlEvent.button.timestamp) / 1000
+        
+        let event = UIEvent(timestamp: timestamp)
+        
+        /// Only the key window can recieve touch input
+        guard let window = UIApplication.shared.keyWindow,
+            let view = window.hitTest(screenLocation, with: event)
+            else { return }
+        
+        func send(touch phase: UITouchPhase, to view: UIView) {
+            
+            // prevent duplicate events
+            if let lastTouch = lastTouch {
+                
+                guard (lastTouch.phase == .ended && phase == .ended) == false
+                    else { return }
+            }
+            
+            let touch = UITouch(timestamp: timestamp,
+                                location: screenLocation,
+                                phase: phase,
+                                view: view,
+                                window: window)
+            
+            event.allTouches?.insert(touch)
+            
+            // inform responder chain
+            window.sendEvent(event)
+            
+            if phase == .ended {
+                lastTouch = nil
+            } else {
+                lastTouch = touch
+            }
+        }
+        
+        // mouse released
+        if eventType == SDL_MOUSEBUTTONUP {
+            
+            send(touch: .ended, to: view)
+            
+        } else if let previousTouch = lastTouch {
+            
+            if previousTouch.location == screenLocation {
+                
+                send(touch: .stationary, to: view)
+                
+            } else {
+                
+                if let previousView = previousTouch.view,
+                    previousView != view {
+                    
+                    send(touch: .ended, to: previousView)
+                    send(touch: .began, to: view)
+                    
+                } else {
+                    
+                    send(touch: .moved, to: view)
+                }
+            }
+            
+        } else {
+            
+            send(touch: .began, to: view)
+        }
+    }
+}
+
+// MARK: - Assertions
 
 internal extension Bool {
     

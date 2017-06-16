@@ -94,12 +94,12 @@ open class UISwitch: UIControl {
     
     open override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         
-        setOn(self.isOn, tapped: true, animated: true)
+        setOn(isOn, tapped: true, animated: true)
     }
     
     open override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         
-        let newValue = !_on
+        let newValue = !isOn
         
         setOn(newValue, tapped: false, animated: true)
         
