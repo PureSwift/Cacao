@@ -847,70 +847,43 @@ internal class Animation {
     
     let frameChange: () -> Bool
     
-    let duration: TimeInterval
-    
-    let start = Date()
-    
     init<View: UIView>(view: View,
                        duration: TimeInterval,
                        value: (start: CGFloat, end: CGFloat),
                        keyPath: ReferenceWritableKeyPath<View, CGFloat>) {
         
-        guard let screen = view.window?.screen
-            else { fatalError("Cannot animate a view not attached to a screen") }
+        let startDate = Date()
         
-        let framesPerSecond = screen.maximumFramesPerSecond
-        
-        // calculate delta
         let delta = value.end - value.start
         
-        let totalFrames = Int(CGFloat(framesPerSecond) * CGFloat(duration))
-        
-        var currentFrame = 0
-        
-        let incrementPerFrame = delta / CGFloat(totalFrames)
-        
         let weakView = WeakReference(view)
-        
-        self.duration = duration
         
         self.frameChange = {
             
             guard let view = weakView.value
                 else { return false }
             
-            currentFrame += 1
+            let now = Date()
             
-            let currentValue = view[keyPath: keyPath]
+            var secondsLeft = duration - now.timeIntervalSince(startDate)
             
-            var newValue = currentValue + incrementPerFrame
-            
-            if currentFrame == totalFrames {
+            if secondsLeft < 0 {
                 
-                newValue = value.end
+                secondsLeft = 0
             }
             
-            view[keyPath: keyPath] = newValue
+            let progress = 1 - CGFloat(secondsLeft / duration)
             
-            return currentFrame < totalFrames
+            let currentValue = value.start + (progress * delta)
+            
+            view[keyPath: keyPath] = currentValue
+            
+            print(progress)
+            
+            return progress < 1.0
         }
     }
 }
-
-internal protocol AnimableValue {
-    
-    /// Subtracts one value from another and produces their difference.
-    static func - (lhs: Self, rhs: Self) -> Self
-}
-
-extension CGFloat: AnimableValue {
-    
-    static func - (lhs: CGFloat, rhs: CGFloat) -> CGFloat {
-        return CGFloat(lhs.native - rhs.native)
-    }
-}
-
-//extension CGRect: AnimableValue
 
 // MARK: - Xcode Quick Look
 

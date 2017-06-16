@@ -58,8 +58,8 @@ open class UISwitch: UIControl {
         
         let phase = Phase(on: on, tapped: tapped)
         
-        let animationDuration: TimeInterval = animated ? 1.0 : 0.0
-        
+        let animationDuration: TimeInterval = animated ? 0.2 : 0.0
+    2
         let targetState = State(phase, tintColor: tintColor, onTintColor: onTintColor, thumbTintColor: thumbTintColor)
         
         UIView.animate(withDuration: animationDuration) { [weak self] in
