@@ -34,7 +34,7 @@ internal extension SDL {
                 
                 done = true
                 
-            case SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP:
+            case SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP, SDL_MOUSEMOTION:
                 
                 mouse(event: &sdlEvent, lastTouch: &lastTouch)
                 
@@ -85,13 +85,6 @@ internal extension SDL {
         
         func send(touch phase: UITouchPhase, to view: UIView) {
             
-            // prevent duplicate events
-            if let lastTouch = lastTouch {
-                
-                guard (lastTouch.phase == .ended && phase == .ended) == false
-                    else { return }
-            }
-            
             let touch = UITouch(timestamp: timestamp,
                                 location: screenLocation,
                                 phase: phase,
@@ -108,6 +101,13 @@ internal extension SDL {
         
         // mouse released
         if eventType == SDL_MOUSEBUTTONUP {
+            
+            // prevent duplicate events
+            if let lastTouch = lastTouch {
+                
+                guard lastTouch.phase != .ended
+                    else { return }
+            }
             
             send(touch: .ended, to: view)
             
@@ -132,7 +132,7 @@ internal extension SDL {
                 }
             }
             
-        } else {
+        } else if eventType == SDL_MOUSEBUTTONDOWN {
             
             send(touch: .began, to: view)
         }
