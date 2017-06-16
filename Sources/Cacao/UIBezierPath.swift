@@ -79,10 +79,15 @@ public final class UIBezierPath {
         
         var path = CGPath()
         
+        func addCurve(_ control1: CGPoint, _ control2: CGPoint, _ end: CGPoint) {
+            
+            path.addCurve(to: end, control1: control1, control2: control2)
+        }
+        
         let topLeft = rect.origin
-        let topRight = CGPoint(x: rect.maxX, y: rect.maxY)
+        let topRight = CGPoint(x: rect.maxX, y: rect.minY)
         let bottomRight = CGPoint(x: rect.maxX, y: rect.maxY)
-        let bottomLeft = CGPoint(x: rect.maxX, y: rect.maxY)
+        let bottomLeft = CGPoint(x: rect.minX, y: rect.maxY)
         
         if corners.contains(.topLeft) {
             path.move(to: CGPoint(x: topLeft.x+cornerRadii.width, y:topLeft.y))
@@ -91,33 +96,33 @@ public final class UIBezierPath {
         }
         if corners.contains(.topRight) {
             path.addLine(to: CGPoint(x: topRight.x-cornerRadii.width, y: topRight.y))
-            path.addCurve(to: CGPoint(x: topRight.x, y: topRight.y),
-                          control1: CGPoint(x: topRight.x, y: topRight.y+cornerRadii.height),
-                          control2: CGPoint(x: topRight.x, y: topRight.y+cornerRadii.height))
+            addCurve(CGPoint(x: topRight.x, y: topRight.y),
+                     CGPoint(x: topRight.x, y: topRight.y+cornerRadii.height),
+                     CGPoint(x: topRight.x, y: topRight.y+cornerRadii.height))
         } else {
             path.addLine(to: CGPoint(x: topRight.x, y: topRight.y))
         }
         if corners.contains(.bottomRight) {
             path.addLine(to: CGPoint(x: bottomRight.x, y: bottomRight.y-cornerRadii.height))
-            path.addCurve(to: CGPoint(x: bottomRight.x, y: bottomRight.y),
-                          control1: CGPoint(x: bottomRight.x-cornerRadii.width, y: bottomRight.y),
-                          control2: CGPoint(x: bottomRight.x-cornerRadii.width, y: bottomRight.y))
+            addCurve(CGPoint(x: bottomRight.x, y: bottomRight.y),
+                     CGPoint(x: bottomRight.x-cornerRadii.width, y: bottomRight.y),
+                     CGPoint(x: bottomRight.x-cornerRadii.width, y: bottomRight.y))
         } else {
             path.addLine(to: CGPoint(x: bottomRight.x, y: bottomRight.y))
         }
         if corners.contains(.bottomLeft) {
             path.addLine(to: CGPoint(x: bottomLeft.x+cornerRadii.width, y: bottomLeft.y))
-            path.addCurve(to: CGPoint(x: bottomLeft.x, y: bottomLeft.y),
-                          control1: CGPoint(x: bottomLeft.x, y: bottomLeft.y-cornerRadii.height),
-                          control2: CGPoint(x:bottomLeft.x, y: bottomLeft.y-cornerRadii.height))
+            addCurve(CGPoint(x: bottomLeft.x, y: bottomLeft.y),
+                     CGPoint(x: bottomLeft.x, y: bottomLeft.y-cornerRadii.height),
+                     CGPoint(x:bottomLeft.x, y: bottomLeft.y-cornerRadii.height))
         } else {
             path.addLine(to: CGPoint(x: bottomLeft.x, y: bottomLeft.y))
         }
         if corners.contains(.topLeft) {
             path.addLine(to: CGPoint(x: topLeft.x, y: topLeft.y+cornerRadii.height))
-            path.addCurve(to: CGPoint(x: topLeft.x, y: topLeft.y),
-                          control1: CGPoint(x: topLeft.x+cornerRadii.width, y: topLeft.y),
-                          control2: CGPoint(x: topLeft.x+cornerRadii.width, y: topLeft.y))
+            addCurve(CGPoint(x: topLeft.x, y: topLeft.y),
+                     CGPoint(x: topLeft.x+cornerRadii.width, y: topLeft.y),
+                     CGPoint(x: topLeft.x+cornerRadii.width, y: topLeft.y))
         } else {
             path.addLine(to: CGPoint(x: topLeft.x, y: topLeft.y))
         }
