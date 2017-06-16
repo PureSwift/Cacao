@@ -20,13 +20,15 @@ final class StyleKitTests: XCTestCase {
         
         let filename = TestPath.testData + "simpleShapes.pdf"
         
-        let frame = Rect(x: 0, y: 0, width: 240, height: 120)
+        let frame = CGRect(x: 0, y: 0, width: 240, height: 120)
         
-        let surface = try! Surface.PDF(filename: filename, width: frame.size.width, height: frame.size.height)
+        let surface = try! Surface.PDF(filename: filename,
+                                       width: Double(frame.size.width),
+                                       height: Double(frame.size.height))
         
-        let context = try! Silica.Context(surface: surface, size: frame.size)
+        let context = try! CGContext(surface: surface, size: frame.size)
         
-        UIGraphicsPushContext(CGContext(context))
+        UIGraphicsPushContext(context)
         
         TestStyleKit.drawSimpleShapes()
         
@@ -39,13 +41,15 @@ final class StyleKitTests: XCTestCase {
         
         let filename = TestPath.testData + "advancedShapes.pdf"
         
-        let frame = Rect(x: 0, y: 0, width: 240, height: 120)
+        let frame = CGRect(x: 0, y: 0, width: 240, height: 120)
         
-        let surface = try! Surface.PDF(filename: filename, width: frame.size.width, height: frame.size.height)
+        let surface = try! Surface.PDF(filename: filename,
+                                       width: Double(frame.size.width),
+                                       height: Double(frame.size.height))
         
-        let context = try! Silica.Context(surface: surface, size: frame.size)
+        let context = try! CGContext(surface: surface, size: frame.size)
         
-        UIGraphicsPushContext(CGContext(context))
+        UIGraphicsPushContext(context)
         
         TestStyleKit.drawAdvancedShapes()
         
@@ -58,13 +62,15 @@ final class StyleKitTests: XCTestCase {
         
         let filename = TestPath.testData + "singleLineText.pdf"
         
-        let frame = Rect(x: 0, y: 0, width: 240, height: 120)
+        let frame = CGRect(x: 0, y: 0, width: 240, height: 120)
         
-        let surface = try! Surface.PDF(filename: filename, width: frame.size.width, height: frame.size.height)
+        let surface = try! Surface.PDF(filename: filename,
+                                       width: Double(frame.size.width),
+                                       height: Double(frame.size.height))
         
-        let context = try! Silica.Context(surface: surface, size: frame.size)
+        let context = try! CGContext(surface: surface, size: frame.size)
         
-        UIGraphicsPushContext(CGContext(context))
+        UIGraphicsPushContext(context)
         
         TestStyleKit.drawSingleLineText()
         
@@ -77,13 +83,15 @@ final class StyleKitTests: XCTestCase {
         
         let filename = TestPath.testData + "multilineText.pdf"
         
-        let frame = Rect(x: 0, y: 0, width: 240, height: 180)
+        let frame = CGRect(x: 0, y: 0, width: 240, height: 180)
         
-        let surface = try! Surface.PDF(filename: filename, width: frame.size.width, height: frame.size.height)
+        let surface = try! Surface.PDF(filename: filename,
+                                       width: Double(frame.size.width),
+                                       height: Double(frame.size.height))
         
-        let context = try! Silica.Context(surface: surface, size: frame.size)
+        let context = try! CGContext(surface: surface, size: frame.size)
         
-        UIGraphicsPushContext(CGContext(context))
+        UIGraphicsPushContext(context)
         
         TestStyleKit.drawMultiLineText()
         

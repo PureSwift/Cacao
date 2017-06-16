@@ -20,10 +20,8 @@ final class AppDelegate: UIApplicationDelegate {
         print("Running at \(UIScreen.main.maximumFramesPerSecond) FPS")
         
         window = UIWindow(frame: UIScreen.main.bounds)
-                
-        let viewController = ContentModeViewController()
         
-        window.rootViewController = viewController
+        window.rootViewController = SwitchViewController()
         
         window.makeKeyAndVisible()
         

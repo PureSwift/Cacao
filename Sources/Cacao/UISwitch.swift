@@ -16,12 +16,16 @@ import Silica
 /// The `UISwitch` class declares a property and a method to control its on/off state.
 open class UISwitch: UIControl {
     
+    /// Constant size
+    private static let size = CGSize(width: 51, height: 31)
+    
     // MARK: - Initializing the Switch Object
     
     public override init(frame: CGRect) {
+        
+        let frame = CGRect(origin: frame.origin, size: UISwitch.size)
+        
         super.init(frame: frame)
-        
-        
     }
     
     // MARK: - Setting the Off/On State
@@ -42,6 +46,8 @@ open class UISwitch: UIControl {
     public func setOn(_ on: Bool, animated: Bool) {
         
         _on = on
+        
+        setNeedsDisplay()
     }
     
     // MARK: - Customizing the Appearance of the Switch
@@ -61,7 +67,70 @@ open class UISwitch: UIControl {
     /// The image displayed while the switch is in the off position.
     public var offImage: UIImage?
     
+    // MARK: - Drawing
+    
+    open override func draw(_ rect: CGRect) {
+        
+        UISwitchStyleKit.drawSwitchView(frame: bounds,
+                                        resizing: .center,
+                                        thumbColor: UIColor(cgColor: internalState.thumbColor),
+                                        fillColor: UIColor(cgColor: internalState.fillColor),
+                                        switchOn: internalState.on,
+                                        tapped: internalState.tapped)
+    }
+    
     // MARK: - Private
     
+    private var internalState = State(.off)
+}
+
+// MARK: - Supporting Types
+
+private extension UISwitch {
     
+    enum Phase {
+        case off
+        case on
+        case tapped(on: Bool)
+    }
+    
+    struct State {
+        
+        var on: CGFloat
+        var tapped: CGFloat
+        var fillColor: CGColor
+        var thumbColor: CGColor
+        
+        init(_ phase: Phase,
+             tintColor: UIColor? = nil,
+             onTintColor: UIColor? = nil,
+             thumbTintColor: UIColor? = nil) {
+            
+            self.thumbColor = thumbTintColor?.cgColor ?? UISwitchStyleKit.defaultThumbColor.cgColor
+            
+            switch phase {
+                
+            case .off:
+                self.on = 0
+                self.tapped = 0
+                self.fillColor = tintColor?.cgColor ?? UISwitchStyleKit.defaultStrokeColor.cgColor
+                
+            case .tapped(on: false):
+                self.on = 0
+                self.tapped = 1
+                self.fillColor = tintColor?.cgColor ?? UISwitchStyleKit.defaultStrokeColor.cgColor
+                
+            case .on:
+                self.on = 1
+                self.tapped = 0
+                self.fillColor = onTintColor?.cgColor ?? UISwitchStyleKit.defaultOnColor.cgColor
+                
+            case .tapped(on: true):
+                self.on = 1
+                self.tapped = 1
+                self.fillColor = onTintColor?.cgColor ?? UISwitchStyleKit.defaultOnColor.cgColor
+                
+            }
+        }
+    }
 }

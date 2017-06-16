@@ -17,6 +17,7 @@
     import Darwin.C
 #endif
 
+import Foundation
 import Cacao
 import Silica
 

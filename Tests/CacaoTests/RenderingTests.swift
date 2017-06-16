@@ -18,7 +18,7 @@ final class RenderingTests: XCTestCase {
 
     func testViewSurface() {
         
-        let imageSize = Size(width: 240, height: 120)
+        let imageSize = CGSize(width: 240, height: 120)
         
         let window = Window(title: "\(#function)", frame: (x: .undefined, y: .undefined, width: Int(imageSize.width), height: Int(imageSize.height)))!
         
@@ -26,7 +26,7 @@ final class RenderingTests: XCTestCase {
         UIScreen.main = screen
         defer { UIScreen.main = nil }
         
-        let view = TestView(frame: CGRect(size: imageSize))
+        let view = TestView(frame: CGRect(origin: .zero, size: imageSize))
         
         view.drawMethod = TestStyleKit.drawAdvancedShapes
         
@@ -63,7 +63,7 @@ private extension RenderingTests {
         
         var drawMethod: () -> () = { }
         
-        override func draw(_ rect: Rect) {
+        override func draw(_ rect: CGRect) {
             
             drawMethod()
         }
