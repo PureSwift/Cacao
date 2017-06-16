@@ -96,6 +96,15 @@ open class UISwitch: UIControl {
         setOn(self.isOn, tapped: true, animated: true)
     }
     
+    open override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        
+        let newValue = !_on
+        
+        setOn(newValue, tapped: false, animated: true)
+        
+        sendActions(for: .valueChanged)
+    }
+    
     // MARK: - Private
     
     private var internalState = State(.off)
