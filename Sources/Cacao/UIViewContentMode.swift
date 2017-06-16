@@ -12,6 +12,10 @@
     import Glibc
 #endif
 
+import struct Foundation.CGFloat
+import struct Foundation.CGPoint
+import struct Foundation.CGSize
+import struct Foundation.CGRect
 import Silica
 
 public enum UIViewContentMode: Int {
@@ -36,7 +40,7 @@ public enum UIViewContentMode: Int {
 // Cacao extension
 public extension UIViewContentMode {
     
-    public func rect(for bounds: Rect, size: Size) -> Rect {
+    public func rect(for bounds: CGRect, size: CGSize) -> CGRect {
         
         switch self {
             
@@ -44,7 +48,7 @@ public extension UIViewContentMode {
             
         case .scaleToFill:
             
-            return Rect(size: bounds.size)
+            return CGRect(origin: .zero, size: bounds.size)
             
         case .scaleAspectFit:
             
@@ -62,13 +66,13 @@ public extension UIViewContentMode {
                 newSize.width = bounds.size.height / size.height * size.width
             }
             
-            newSize = Size(width: ceil(newSize.width), height: ceil(newSize.height))
+            newSize = CGSize(width: ceil(newSize.width), height: ceil(newSize.height))
             
             var origin = bounds.origin
             origin.x += (bounds.size.width - newSize.width) / 2.0
             origin.y += (bounds.size.height - newSize.height) / 2.0
             
-            return Rect(origin: origin, size: newSize)
+            return CGRect(origin: origin, size: newSize)
             
         case .scaleAspectFill:
             
@@ -86,17 +90,17 @@ public extension UIViewContentMode {
                 newSize.width = bounds.size.height / size.height * size.width
             }
             
-            newSize = Size(width: ceil(newSize.width), height: ceil(newSize.height))
+            newSize = CGSize(width: ceil(newSize.width), height: ceil(newSize.height))
             
-            var origin = Point()
+            var origin = CGPoint()
             origin.x = (bounds.size.width - newSize.width) / 2.0
             origin.y = (bounds.size.height - newSize.height) / 2.0
             
-            return Rect(origin: origin, size: newSize)
+            return CGRect(origin: origin, size: newSize)
             
         case .center:
             
-            var rect = Rect(size: size)
+            var rect = CGRect(origin: .zero, size: size)
             
             rect.origin.x = (bounds.size.width - rect.size.width) / 2.0
             rect.origin.y = (bounds.size.height - rect.size.height) / 2.0
@@ -105,7 +109,7 @@ public extension UIViewContentMode {
             
         case .top:
             
-            var rect = Rect(size: size)
+            var rect = CGRect(origin: .zero, size: size)
             
             rect.origin.y = 0.0
             rect.origin.x = (bounds.size.width - rect.size.width) / 2.0
@@ -114,7 +118,7 @@ public extension UIViewContentMode {
             
         case .bottom:
             
-            var rect = Rect(size: size)
+            var rect = CGRect(origin: .zero, size: size)
             
             rect.origin.x = (bounds.size.width - rect.size.width) / 2.0
             rect.origin.y = bounds.size.height - rect.size.height
@@ -123,7 +127,7 @@ public extension UIViewContentMode {
             
         case .left:
             
-            var rect = Rect(size: size)
+            var rect = CGRect(origin: .zero, size: size)
             
             rect.origin.x = 0.0
             rect.origin.y = (bounds.size.height - rect.size.height) / 2.0
@@ -132,7 +136,7 @@ public extension UIViewContentMode {
             
         case .right:
             
-            var rect = Rect(size: size)
+            var rect = CGRect(origin: .zero, size: size)
             
             rect.origin.x = bounds.size.width - rect.size.width
             rect.origin.y = (bounds.size.height - rect.size.height) / 2.0
@@ -141,11 +145,11 @@ public extension UIViewContentMode {
             
         case .topLeft:
             
-            return Rect(size: size)
+            return CGRect(origin: .zero, size: size)
             
         case .topRight:
             
-            var rect = Rect(size: size)
+            var rect = CGRect(origin: .zero, size: size)
             
             rect.origin.x = bounds.size.width - rect.size.width
             rect.origin.y = 0.0
@@ -154,7 +158,7 @@ public extension UIViewContentMode {
             
         case .bottomLeft:
             
-            var rect = Rect(size: size)
+            var rect = CGRect(origin: .zero, size: size)
             
             rect.origin.x = 0.0
             rect.origin.y = bounds.size.height - rect.size.height
@@ -163,7 +167,7 @@ public extension UIViewContentMode {
             
         case .bottomRight:
             
-            var rect = Rect(size: size)
+            var rect = CGRect(origin: .zero, size: size)
             
             rect.origin.x = bounds.size.width - rect.size.width
             rect.origin.y = bounds.size.height - rect.size.height

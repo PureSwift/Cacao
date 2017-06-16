@@ -6,14 +6,18 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
+import struct Foundation.CGFloat
+import struct Foundation.CGPoint
+import struct Foundation.CGSize
+import struct Foundation.CGRect
 import Silica
 
 public extension String {
     
     /// UIKit compatility drawing
-    func draw(in rect: Rect, withAttributes attributes: [String: Any]) {
+    func draw(in rect: CGRect, withAttributes attributes: [String: Any]) {
         
-        guard let context = UIGraphicsGetCurrentContext()?.silicaContext
+        guard let context = UIGraphicsGetCurrentContext()
             else { return }
         
         // get values from attributes
@@ -22,20 +26,20 @@ public extension String {
         self.draw(in: rect, context: context, attributes: textAttributes)
     }
     
-    func boundingRect(with size: Size, options: NSStringDrawingOptions = NSStringDrawingOptions(), attributes: [String: Any], context: NSStringDrawingContext? = nil) -> Rect {
+    func boundingRect(with size: CGSize, options: NSStringDrawingOptions = NSStringDrawingOptions(), attributes: [String: Any], context: NSStringDrawingContext? = nil) -> CGRect {
         
-        guard let context = UIGraphicsGetCurrentContext()?.silicaContext
-            else { return Rect() }
+        guard let context = UIGraphicsGetCurrentContext()
+            else { return CGRect.zero }
         
         let textAttributes = TextAttributes(UIKit: attributes)
         
-        var textFrame = self.contentFrame(for: Rect(size: size), textMatrix: context.textMatrix, attributes: textAttributes)
+        var textFrame = self.contentFrame(for: CGRect(origin: CGPoint(), size: size), textMatrix: context.textMatrix, attributes: textAttributes)
         
         let font = textAttributes.font
         
-        let descender = (Double(font.cgFont.scaledFont.descent) * font.pointSize) / Double(font.cgFont.scaledFont.unitsPerEm)
+        let descender = (CGFloat(font.cgFont.scaledFont.descent) * font.pointSize) / CGFloat(font.cgFont.scaledFont.unitsPerEm)
         
-        textFrame.height -= descender
+        textFrame.size.height -= descender
         
         return textFrame
     }

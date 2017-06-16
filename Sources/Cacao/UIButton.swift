@@ -6,6 +6,10 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
+import struct Foundation.CGFloat
+import struct Foundation.CGPoint
+import struct Foundation.CGSize
+import struct Foundation.CGRect
 import Silica
 
 public final class UIButton: UIControl {

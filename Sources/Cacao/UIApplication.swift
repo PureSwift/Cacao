@@ -5,6 +5,10 @@
 //  Created by Alsey Coleman Miller on 6/7/17.
 //
 
+import struct Foundation.CGFloat
+import struct Foundation.CGPoint
+import struct Foundation.CGSize
+import struct Foundation.CGRect
 import CSDL2
 import SDL
 import Silica
@@ -179,7 +183,7 @@ public struct CacaoOptions {
     
     public var windowName: String = "App"
     
-    public var windowSize: Size = Size(width: 600, height: 480)
+    public var windowSize: CGSize = CGSize(width: 600, height: 480)
         
     public var canResizeWindow: Bool = true
     

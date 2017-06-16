@@ -6,6 +6,7 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
+import struct Foundation.CGFloat
 import Silica
 
 public final class UIFont: Equatable {
@@ -22,15 +23,15 @@ public final class UIFont: Equatable {
     
     // MARK: Font Metrics
     
-    public let pointSize: Double
+    public let pointSize: CGFloat
     
-    public lazy var descender: Double = (Double(self.cgFont.scaledFont.descent) * self.pointSize) / Double(self.cgFont.scaledFont.unitsPerEm)
+    public lazy var descender: CGFloat = (CGFloat(self.cgFont.scaledFont.descent) * self.pointSize) / CGFloat(self.cgFont.scaledFont.unitsPerEm)
     
-    public lazy var ascender: Double = (Double(self.cgFont.scaledFont.ascent) * self.pointSize) / Double(self.cgFont.scaledFont.unitsPerEm)
+    public lazy var ascender: CGFloat = (CGFloat(self.cgFont.scaledFont.ascent) * self.pointSize) / CGFloat(self.cgFont.scaledFont.unitsPerEm)
     
     // MARK: - Initialization
     
-    public init?(name: String, size: Double) {
+    public init?(name: String, size: CGFloat) {
         
         guard let cgFont = CGFont(name: name)
             else { return nil }

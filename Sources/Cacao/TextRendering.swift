@@ -6,13 +6,17 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
+import struct Foundation.CGFloat
+import struct Foundation.CGPoint
+import struct Foundation.CGSize
+import struct Foundation.CGRect
 import Silica
 
 // MARK: - Methods
 
 public extension String {
     
-    func draw(in rect: Rect, context: Silica.Context, attributes: TextAttributes = TextAttributes()) {
+    func draw(in rect: CGRect, context: CGContext, attributes: TextAttributes = TextAttributes()) {
         
         // set context values
         context.setTextAttributes(attributes)
@@ -25,7 +29,7 @@ public extension String {
         context.show(text: self)
     }
     
-    func contentFrame(for bounds: Rect, textMatrix: Silica.AffineTransform = AffineTransform.identity, attributes: TextAttributes = TextAttributes()) -> Rect {
+    func contentFrame(for bounds: CGRect, textMatrix: CGAffineTransform = .identity, attributes: TextAttributes = TextAttributes()) -> CGRect {
         
         // assume horizontal layout (not rendering non-latin languages)
         
@@ -33,19 +37,22 @@ public extension String {
         
         let textWidth = attributes.font.cgFont.singleLineWidth(text: self, fontSize: attributes.font.pointSize, textMatrix: textMatrix)
         
-        let lines = 1
+        let lines: CGFloat = 1.0
         
-        let textHeight = attributes.font.pointSize * Double(lines)
+        let textHeight = attributes.font.pointSize * lines
         
-        var textRect = Rect(x: bounds.x, y: bounds.y, width: textWidth, height: textHeight) // height == font.size
+        var textRect = CGRect(x: bounds.origin.x,
+                              y: bounds.origin.y,
+                              width: textWidth,
+                              height: textHeight) // height == font.size
         
         switch attributes.paragraphStyle.alignment {
             
         case .left: break // always left by default
             
-        case .center: textRect.x = (bounds.width - textRect.width) / 2
+        case .center: textRect.origin.x = (bounds.width - textRect.width) / 2
             
-        case .right: textRect.x = bounds.width - textRect.width
+        case .right: textRect.origin.x = bounds.width - textRect.width
         }
         
         return textRect
@@ -83,7 +90,7 @@ public enum TextAlignment {
 
 // MARK: - Extensions
 
-public extension Silica.Context {
+public extension Silica.CGContext {
     
     func setTextAttributes(_ attributes: TextAttributes) {
         

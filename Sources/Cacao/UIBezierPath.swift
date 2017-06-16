@@ -6,6 +6,10 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
+import struct Foundation.CGFloat
+import struct Foundation.CGPoint
+import struct Foundation.CGSize
+import struct Foundation.CGRect
 import Silica
 
 /// The `UIBezierPath` class lets you define a path consisting of straight and curved line segments
@@ -25,21 +29,21 @@ public final class UIBezierPath {
     
     // MARK: - Properties
     
-    public var cgPath: Path
+    public var cgPath: CGPath
     
-    public var lineWidth: Double = 1.0
+    public var lineWidth: CGFloat = 1.0
     
-    public var lineCapStyle: LineCap = .butt
+    public var lineCapStyle: CGLineCap = .butt
     
-    public var lineJoinStyle: LineJoin = .miter
+    public var lineJoinStyle: CGLineJoin = .miter
     
-    public var miterLimit: Double = 10
+    public var miterLimit: CGFloat = 10
     
-    public var flatness: Double = 0.6
+    public var flatness: CGFloat = 0.6
     
     public var usesEvenOddFillRule: Bool = false
     
-    public var lineDash: (phase: Double, lengths: [Double]) = (0.0, [])
+    public var lineDash: (phase: CGFloat, lengths: [CGFloat]) = (0.0, [])
     
     // MARK: - Initialization
     
@@ -127,7 +131,7 @@ public final class UIBezierPath {
     
     // MARK: - Accessors
     
-    public var currentPoint: Point {
+    public var currentPoint: CGPoint {
         
         fatalError("Not implemented")
     }
@@ -137,7 +141,7 @@ public final class UIBezierPath {
         return cgPath.elements.isEmpty
     }
     
-    public var bounds: Rect {
+    public var bounds: CGRect {
         
         fatalError("Not implemented")
     }
@@ -148,23 +152,34 @@ public final class UIBezierPath {
     
     public func fill() {
         
-        guard let context = UIGraphicsGetCurrentContext()?.silicaContext
+        guard let context = UIGraphicsGetCurrentContext()
             else { return }
         
-        try! context.save()
-        
+        context.saveGState()
         setContextPath()
-        
-        try! context.fill(evenOdd: usesEvenOddFillRule)
+        let fillRule: CGPathFillRule = usesEvenOddFillRule ? .evenOdd : .winding
+        context.fillPath(using: fillRule)
         context.beginPath()
-        try! context.restore()
+        context.restoreGState()
+    }
+    
+    public func stroke() {
+        
+        guard let context = UIGraphicsGetCurrentContext()
+            else { return }
+        
+        context.saveGState()
+        setContextPath()
+        context.strokePath()
+        context.beginPath()
+        context.restoreGState()
     }
     
     // MARK: Clipping Paths
     
     public func addClip() {
         
-        guard let context = UIGraphicsGetCurrentContext()?.silicaContext
+        guard let context = UIGraphicsGetCurrentContext()
             else { return }
         
         setContextPath()
@@ -174,22 +189,22 @@ public final class UIBezierPath {
     
     // MARK: - Constructing a Path
     
-    public func move(to point: Point) {
+    public func move(to point: CGPoint) {
         
         cgPath.elements.append(.moveToPoint(point))
     }
     
-    public func addLine(to point: Point) {
+    public func addLine(to point: CGPoint) {
         
         cgPath.elements.append(.addLineToPoint(point))
     }
     
-    public func addCurve(to endPoint: Point, controlPoint1: Point, controlPoint2: Point) {
+    public func addCurve(to endPoint: CGPoint, controlPoint1: CGPoint, controlPoint2: CGPoint) {
         
         cgPath.elements.append(.addCurveToPoint(controlPoint1, controlPoint2, endPoint))
     }
     
-    public func addQuadCurve(to endPoint: Point, controlPoint: Point) {
+    public func addQuadCurve(to endPoint: CGPoint, controlPoint: CGPoint) {
         
         cgPath.elements.append(.addQuadCurveToPoint(controlPoint, endPoint))
     }
@@ -199,7 +214,7 @@ public final class UIBezierPath {
         cgPath.elements.append(.closeSubpath)
     }
     
-    public func addArc(with center: Point, radius: Double, startAngle: Double, endAngle: Double, clockwise: Bool) {
+    public func addArc(with center: CGPoint, radius: CGFloat, startAngle: CGFloat, endAngle: CGFloat, clockwise: Bool) {
         
         fatalError("Not implemented")
     }
@@ -208,11 +223,11 @@ public final class UIBezierPath {
     
     private func setContextPath() {
         
-        guard let context = UIGraphicsGetCurrentContext()?.silicaContext
+        guard let context = UIGraphicsGetCurrentContext()
             else { return }
         
         context.beginPath()
-        context.add(path: cgPath)
+        context.addPath(cgPath)
         context.lineWidth = lineWidth
         context.lineCap = lineCapStyle
         context.lineJoin = lineJoinStyle

@@ -5,6 +5,10 @@
 //  Created by Alsey Coleman Miller on 6/15/17.
 //
 
+import struct Foundation.CGFloat
+import struct Foundation.CGPoint
+import struct Foundation.CGSize
+import struct Foundation.CGRect
 import Silica
 
 /// A control that offers a binary choice, such as On/Off.

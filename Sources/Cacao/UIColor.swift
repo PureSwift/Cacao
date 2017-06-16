@@ -6,6 +6,10 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
+import struct Foundation.CGFloat
+import struct Foundation.CGPoint
+import struct Foundation.CGSize
+import struct Foundation.CGRect
 import Silica
 
 public struct UIColor {
@@ -22,22 +26,22 @@ public struct UIColor {
     }
     
     /// An initialized color object. The color information represented by this object is in the device RGB colorspace.
-    public init(red: Double,
-                green: Double,
-                blue: Double,
-                alpha: Double = 1.0) {
+    public init(red: CGFloat,
+                green: CGFloat,
+                blue: CGFloat,
+                alpha: CGFloat = 1.0) {
         
-        self.cgColor = Color(red: red, green: green, blue: blue, alpha: alpha)
+        self.cgColor = CGColor(red: red, green: green, blue: blue, alpha: alpha)
     }
     
     // MARK: - Methods
     
     // MARK: Retrieving Color Information
     
-    public func getRed(_ red: inout Double,
-                       green: inout Double,
-                       blue: inout Double,
-                       alpha: inout Double) -> Bool {
+    public func getRed(_ red: inout CGFloat,
+                       green: inout CGFloat,
+                       blue: inout CGFloat,
+                       alpha: inout CGFloat) -> Bool {
         
         red = cgColor.red
         green = cgColor.green
@@ -59,24 +63,24 @@ public struct UIColor {
     /// Sets the color of subsequent fill operations to the color that the receiver represents.
     public func setFill() {
         
-        UIGraphicsGetCurrentContext()?.silicaContext.fillColor = cgColor
+        UIGraphicsGetCurrentContext()?.fillColor = cgColor
     }
     
     /// Sets the color of subsequent stroke operations to the color that the receiver represents.
     public func setStroke() {
         
-        UIGraphicsGetCurrentContext()?.silicaContext.strokeColor = cgColor
+        UIGraphicsGetCurrentContext()?.strokeColor = cgColor
     }
     
     // MARK: - Singletons
     
-    public static let red = UIColor(cgColor: Color.red)
+    public static let red = UIColor(cgColor: CGColor.red)
     
-    public static var green = UIColor(cgColor: Color.green)
+    public static var green = UIColor(cgColor: CGColor.green)
     
-    public static var blue = UIColor(cgColor: Color.blue)
+    public static var blue = UIColor(cgColor: CGColor.blue)
     
-    public static var white = UIColor(cgColor: Color.white)
+    public static var white = UIColor(cgColor: CGColor.white)
     
-    public static var black = UIColor(cgColor: Color.black)
+    public static var black = UIColor(cgColor: CGColor.black)
 }

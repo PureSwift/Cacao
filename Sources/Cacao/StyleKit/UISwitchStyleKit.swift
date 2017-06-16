@@ -9,8 +9,10 @@
 //  http://www.paintcodeapp.com
 //
 
-
-
+import struct Foundation.CGFloat
+import struct Foundation.CGPoint
+import struct Foundation.CGSize
+import struct Foundation.CGRect
 import Silica
 
 class UISwitchStyleKit {
@@ -70,7 +72,7 @@ class UISwitchStyleKit {
         context.clip(to: backgroundViewRect)
         context.translateBy(x: backgroundViewRect.minX, y: backgroundViewRect.minY)
 
-        UISwitchStyleKit.drawSwitchBackgroundView(frame: CGRect(origin: .zero, size: backgroundViewRect.size), resizing: .stretch, fillColor: fillColor, switchOn: switchOn, tapped: tapped)
+        UISwitchStyleKit.drawSwitchBackgroundView(frame: CGRect(origin: CGPoint(), size: backgroundViewRect.size), resizing: .stretch, fillColor: fillColor, switchOn: switchOn, tapped: tapped)
         context.restoreGState()
 
 
@@ -123,9 +125,6 @@ class UISwitchStyleKit {
 
     }
 
-
-
-
     enum ResizingBehavior: Int {
         case aspectFit /// The content is proportionally resized to fit into the target rectangle.
         case aspectFill /// The content is proportionally resized to completely fill the target rectangle.
@@ -137,7 +136,7 @@ class UISwitchStyleKit {
                 return rect
             }
 
-            var scales = CGSize.zero
+            var scales = CGSize()
             scales.width = abs(target.width / rect.width)
             scales.height = abs(target.height / rect.height)
 

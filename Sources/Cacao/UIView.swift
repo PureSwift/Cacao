@@ -6,6 +6,10 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
+import struct Foundation.CGFloat
+import struct Foundation.CGPoint
+import struct Foundation.CGSize
+import struct Foundation.CGRect
 import CSDL2
 import SDL
 import Silica
@@ -632,8 +636,8 @@ open class UIView: UIResponder {
             // reset memory
             memset($0, 0, surface.stride * surface.height)
             
-            let context = try! Silica.Context(surface: surface, size: bounds.size)
-            context.scale(x: scale, y: scale)
+            let context = try! CGContext(surface: surface, size: bounds.size)
+            context.scaleBy(x: scale, y: scale)
             
             // CoreGraphics drawing
             draw(in: context)
@@ -655,14 +659,14 @@ open class UIView: UIResponder {
         screen.renderer.copy(texture, destination: rect)
     }
     
-    internal func draw(in context: Silica.Context) {
+    internal func draw(in context: CGContext) {
         
-        UIGraphicsPushContext(CGContext(context))
+        UIGraphicsPushContext(context)
         
         // draw background color
         context.fillColor = backgroundColor?.cgColor ?? CGColor.clear
-        context.add(rect: bounds)
-        try! context.fill()
+        context.addRect(bounds)
+        context.fillPath()
         
         // apply alpha
         
@@ -786,7 +790,7 @@ open class UIView: UIResponder {
     }
     
     /// Returns a Boolean value indicating whether the receiver contains the specified point.
-    public final func point(inside point: Point, with event: UIEvent?) -> Bool {
+    public final func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
         
         let rect = CGRect(origin: CGPoint(), size: frame.size)
         

@@ -6,6 +6,10 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
+import struct Foundation.CGFloat
+import struct Foundation.CGPoint
+import struct Foundation.CGSize
+import struct Foundation.CGRect
 import CSDL2
 import SDL
 import Silica
@@ -24,13 +28,13 @@ public final class UIScreen {
     
     //var fixedCoordinateSpace: UICoordinateSpace
     
-    public var bounds: CGRect { return CGRect(size: size.window) }
+    public var bounds: CGRect { return CGRect(origin: .zero, size: size.window) }
     
-    public var nativeBounds: CGRect { return CGRect(size: size.native) }
+    public var nativeBounds: CGRect { return CGRect(origin: .zero, size: size.native) }
     
-    public var scale: Double { return size.native.width / size.window.width }
+    public var scale: CGFloat { return size.native.width / size.window.width }
     
-    public var nativeScale: Double { return scale }
+    public var nativeScale: CGFloat { return scale }
     
     public var maximumFramesPerSecond: Int {
         
@@ -39,7 +43,7 @@ public final class UIScreen {
     
     internal let window: Window
     
-    private var size: (window: Size, native: Size) { didSet { sizeChanged() } }
+    private var size: (window: CGSize, native: CGSize) { didSet { sizeChanged() } }
     
     internal let renderer: Renderer
     
@@ -55,7 +59,7 @@ public final class UIScreen {
     
     // MARK: - Intialization
     
-    internal init(window: Window, size: Size) {
+    internal init(window: Window, size: CGSize) {
         
         self.renderer = Renderer(window: window).sdlAssert()
         self.window = window
@@ -71,10 +75,12 @@ public final class UIScreen {
     internal func updateSize() {
         
         let windowSize = window.size
-        let size = Size(width: Double(windowSize.width), height: Double(windowSize.height))
+        let size = CGSize(width: CGFloat(windowSize.width),
+                          height: CGFloat(windowSize.height))
         
         let rendererSize = window.drawableSize
-        let nativeSize = Size(width: Double(rendererSize.width), height: Double(rendererSize.height))
+        let nativeSize = CGSize(width: CGFloat(rendererSize.width),
+                                height: CGFloat(rendererSize.height))
         
         self.size = (size, nativeSize)
         self.needsLayout = true
@@ -115,13 +121,13 @@ public final class UIScreen {
     private func sizeChanged() {
         
         // update windows
-        windows.forEach { $0.frame = Rect(size: size.window) }
+        windows.forEach { $0.frame = CGRect(origin: .zero, size: size.window) }
         
         needsDisplay = true
         needsLayout = true
     }
     
-    private func render(view: UIView, origin: Point = Point()) {
+    private func render(view: UIView, origin: CGPoint = CGPoint()) {
         
         guard view.shouldRender
             else { return }

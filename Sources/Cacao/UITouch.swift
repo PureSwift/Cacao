@@ -8,16 +8,20 @@
 import class Foundation.NSObject
 import typealias Foundation.TimeInterval
 import class Foundation.ProcessInfo
+import struct Foundation.CGFloat
+import struct Foundation.CGPoint
+import struct Foundation.CGSize
+import struct Foundation.CGRect
 import Silica
 
 /// An object representing the location, size, movement, and force of a touch occurring on the screen.
 public final class UITouch: NSObject {
     
     /// The absolute location, relative to screen.
-    internal let location: Point
+    internal let location: CGPoint
     
     internal init(timestamp: TimeInterval = ProcessInfo.processInfo.systemUptime,
-                  location: Point,
+                  location: CGPoint,
                   phase: UITouchPhase,
                   view: UIView?,
                   window: UIWindow?) {

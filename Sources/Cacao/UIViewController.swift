@@ -7,6 +7,10 @@
 
 import class Foundation.NSCoder
 import class Foundation.Bundle
+import struct Foundation.CGFloat
+import struct Foundation.CGPoint
+import struct Foundation.CGSize
+import struct Foundation.CGRect
 import Silica
 
 open class UIViewController: UIResponder {

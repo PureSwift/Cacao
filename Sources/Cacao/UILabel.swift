@@ -6,6 +6,10 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
+import struct Foundation.CGFloat
+import struct Foundation.CGPoint
+import struct Foundation.CGSize
+import struct Foundation.CGRect
 import Silica
 
 open class UILabel: UIView {
@@ -27,14 +31,12 @@ open class UILabel: UIView {
         guard let context = UIGraphicsGetCurrentContext()
             else { return }
         
-        let bounds = Rect(size: frame.size)
-        
         var attributes = TextAttributes()
         attributes.font = font
         attributes.color = color
         attributes.paragraphStyle.alignment = textAlignment
         
-        text.draw(in: bounds, context: context.silicaContext, attributes: attributes)
+        text.draw(in: self.bounds, context: context, attributes: attributes)
     }
 }
 

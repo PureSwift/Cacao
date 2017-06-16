@@ -12,6 +12,7 @@
     import Darwin.C
 #endif
 
+import Foundation
 import Silica
 import Cacao
 
@@ -41,9 +42,9 @@ public final class SwiftLogoView: UIView {
     }
     
     /// The intrinsic content size.
-    public override var intrinsicContentSize: Size  {
+    public override var intrinsicContentSize: CGSize  {
         
-        return Size(width: pointSize, height:  pointSize * aspectRatio)
+        return CGSize(width: pointSize, height: pointSize * aspectRatio)
     }
     
     // MARK: - Drawing
