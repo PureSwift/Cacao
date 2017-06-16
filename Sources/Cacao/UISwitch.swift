@@ -116,7 +116,8 @@ open class UISwitch: UIControl {
                                         thumbColor: UIColor(cgColor: _internalState.thumbColor),
                                         fillColor: UIColor(cgColor: _internalState.fillColor),
                                         switchOn: _internalState.on,
-                                        tapped: _internalState.tapped)
+                                        tapped: _internalState.tapped,
+                                        showFilled: _internalState.fillAlpha)
     }
     
     // MARK: - Events
@@ -161,6 +162,13 @@ open class UISwitch: UIControl {
                                                    duration: animationDuration,
                                                    value: (start: oldValue.tapped, end: newValue.tapped),
                                                    keyPath: \UISwitch.internalState.tapped))
+                
+                // Fill Alpha
+                
+                UIView.animations.append(Animation(view: self,
+                                                   duration: animationDuration,
+                                                   value: (start: oldValue.fillAlpha, end: newValue.fillAlpha),
+                                                   keyPath: \UISwitch.internalState.fillAlpha))
                 
                 // Fill color
                 
@@ -239,6 +247,7 @@ private extension UISwitch {
         
         var on: CGFloat
         var tapped: CGFloat
+        var fillAlpha: CGFloat
         var fillColor: CGColor
         var thumbColor: CGColor
         
@@ -254,23 +263,26 @@ private extension UISwitch {
             case .off:
                 self.on = 0
                 self.tapped = 0
+                self.fillAlpha = 0
                 self.fillColor = tintColor?.cgColor ?? UISwitchStyleKit.defaultStrokeColor.cgColor
                 
             case .tapped(on: false):
                 self.on = 0
                 self.tapped = 1
+                self.fillAlpha = 1
                 self.fillColor = tintColor?.cgColor ?? UISwitchStyleKit.defaultStrokeColor.cgColor
                 
             case .on:
                 self.on = 1
                 self.tapped = 0
+                self.fillAlpha = 1
                 self.fillColor = onTintColor?.cgColor ?? UISwitchStyleKit.defaultOnColor.cgColor
                 
             case .tapped(on: true):
                 self.on = 1
                 self.tapped = 1
+                self.fillAlpha = 1
                 self.fillColor = onTintColor?.cgColor ?? UISwitchStyleKit.defaultOnColor.cgColor
-                
             }
         }
     }
