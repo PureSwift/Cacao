@@ -10,6 +10,7 @@ import struct Foundation.CGFloat
 import struct Foundation.CGPoint
 import struct Foundation.CGSize
 import struct Foundation.CGRect
+import typealias Foundation.TimeInterval
 import CSDL2
 import SDL
 import Silica
@@ -811,11 +812,75 @@ open class UIView: UIResponder {
         
         return viewController ?? superview
     }
+    
+    // MARK: - Animating Views with Block Objects
+    
+    internal private(set) static var animationDuration: TimeInterval?
+    
+    internal private(set) static var animations = [AnyObject]()
+    
+    /// Animate changes to one or more views using the specified duration.
+    public class func animate(withDuration duration: TimeInterval, animations: @escaping () -> ()) {
+        
+        guard duration > 0 else { animations(); return }
+        
+        UIView.animationDuration = duration
+        
+        animations()
+        
+        UIView.animationDuration = nil
+    }
 }
 
 // MARK: - Supporting Types
 
 public let UIViewNoIntrinsicMetric: CGFloat = -1.0
+
+// MARK: - Internal Animations
+
+internal class AnimationBox {
+    
+    let animation: Animation<AnimableValue, UIView>
+}
+
+internal class Animation<Value: AnimableValue, View: UIView> {
+    
+    let view: View
+    
+    let originalValue: Value
+    
+    let targetValue: Value
+    
+    private(set) var currentValue: Value
+    
+    let duration: TimeInterval
+    
+    let keyPath: ReferenceWritableKeyPath<View, Value>
+    
+    init(view: View, duration: TimeInterval, originalValue: Value, targetValue: Value, keyPath: ReferenceWritableKeyPath<View, Value>) {
+        
+        self.view = view
+        self.duration = duration
+        self.originalValue = originalValue
+        self.targetValue = targetValue
+        self.keyPath = keyPath
+    }
+}
+
+internal protocol AnimableValue {
+    
+    /// Subtracts one value from another and produces their difference.
+    static func - (lhs: Self, rhs: Self) -> Self
+}
+
+extension CGFloat: AnimableValue { }
+
+//extension CGRect: AnimableValue
+
+internal extension UIView {
+    
+    
+}
 
 // MARK: - Xcode Quick Look
 
