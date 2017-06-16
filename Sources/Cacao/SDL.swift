@@ -103,11 +103,7 @@ internal extension SDL {
             // inform responder chain
             window.sendEvent(event)
             
-            if phase == .ended {
-                lastTouch = nil
-            } else {
-                lastTouch = touch
-            }
+            lastTouch = touch
         }
         
         // mouse released
@@ -115,7 +111,8 @@ internal extension SDL {
             
             send(touch: .ended, to: view)
             
-        } else if let previousTouch = lastTouch {
+        } else if let previousTouch = lastTouch,
+            previousTouch.phase != .ended {
             
             if previousTouch.location == screenLocation {
                 
