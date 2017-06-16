@@ -878,8 +878,6 @@ internal class Animation {
             
             view[keyPath: keyPath] = currentValue
             
-            print(progress)
-            
             return progress < 1.0
         }
     }
