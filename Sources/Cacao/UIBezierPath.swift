@@ -131,9 +131,7 @@ public final class UIBezierPath {
         
         self.cgPath = path
     }
-    
-    
-    
+        
     // MARK: - Accessors
     
     public var currentPoint: CGPoint {

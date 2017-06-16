@@ -26,6 +26,8 @@ open class UISwitch: UIControl {
         let frame = CGRect(origin: frame.origin, size: UISwitch.size)
         
         super.init(frame: frame)
+        
+        self.tintColor = UISwitchStyleKit.defaultOnColor
     }
     
     // MARK: - Setting the Off/On State
@@ -45,7 +47,15 @@ open class UISwitch: UIControl {
     /// - Note: Setting the switch to either position does not result in an action message being sent.
     public func setOn(_ on: Bool, animated: Bool) {
         
+        setOn(on, animated: animated)
+    }
+    
+    private func setOn(_ on: Bool, tapped: Bool, animated: Bool) {
+        
         _on = on
+        
+        let phase = Phase(on: on, tapped: tapped)
+        internalState = State(phase, tintColor: tintColor, onTintColor: onTintColor, thumbTintColor: thumbTintColor)
         
         setNeedsDisplay()
     }
@@ -79,6 +89,13 @@ open class UISwitch: UIControl {
                                         tapped: internalState.tapped)
     }
     
+    // MARK: - Events
+    
+    open override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        
+        setOn(self.isOn, tapped: true, animated: true)
+    }
+    
     // MARK: - Private
     
     private var internalState = State(.off)
@@ -92,6 +109,14 @@ private extension UISwitch {
         case off
         case on
         case tapped(on: Bool)
+        
+        init(on: Bool = false, tapped: Bool = false) {
+            if tapped {
+                self = .tapped(on: on)
+            } else {
+                self = on ? .on : .off
+            }
+        }
     }
     
     struct State {
