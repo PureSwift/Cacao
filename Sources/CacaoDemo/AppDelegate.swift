@@ -21,7 +21,7 @@ final class AppDelegate: UIApplicationDelegate {
         
         window = UIWindow(frame: UIScreen.main.bounds)
         
-        window.rootViewController = SwitchViewController()
+        window.rootViewController = ContentModeViewController()
         
         window.makeKeyAndVisible()
         
