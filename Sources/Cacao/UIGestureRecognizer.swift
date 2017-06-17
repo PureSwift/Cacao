@@ -5,6 +5,7 @@
 //  Created by Alsey Coleman Miller on 6/8/17.
 //
 
+import struct Foundation.CGFloat
 import struct Foundation.CGPoint
 
 /// The base class for concrete gesture recognizers.
@@ -15,7 +16,15 @@ import struct Foundation.CGPoint
 /// a change in the gesture, it sends an action message to each designated target object.
 open class UIGestureRecognizer {
     
+    // MARK: - Internal Properties
+    
+    private var targetActions = [TargetAction]()
+    
+    internal var touches = [UITouch]()
+    
     // MARK: - Initializing a Gesture Recognizer
+    
+    public init() { }
     
     // Valid action method signatures:
     //     -(void)handleGesture;
@@ -24,66 +33,87 @@ open class UIGestureRecognizer {
     /// Initializes an allocated gesture-recognizer object with a target and an action selector.
     public init(targetAction: TargetAction) {
         
-        
+        addTarget(targetAction)
     }
     
     // MARK: - Adding and Removing Targets and Actions
     
     // add a target/action pair. you can call this multiple times to specify multiple target/actions
-    open func addTarget(_ target: AnyHashable, action: Selector) {
+    public func addTarget(_ target: TargetAction) {
         
-        
+        targetActions.append(target)
     }
     
     // remove the specified target/action pair. passing nil for target matches all targets, and the same for actions
-    open func removeTarget(_ target: Any?, action: Selector?) {
+    public func removeTarget(_ target: TargetAction) {
         
+        guard let index = targetActions.index(where: { $0.name == target.name })
+            else { return }
         
+        targetActions.remove(at: index)
     }
     
     // MARK: - Getting the Touches and Location of a Gesture
     
     // individual UIGestureRecognizer subclasses may provide subclass-specific location information. see individual subclasses for details
     // a generic single-point location for the gesture. usually the centroid of the touches involved
+    
+    /// Returns the point computed as the location of the gesture.
+    ///
+    /// - Parameter view: The view whose coordinate system you want to use for determining the location of the gesture.
+    /// Specify nil to return the point in the coordinate system of the window.
+    ///
+    /// - Returns: The point at which the gesture occurred.
+    /// The returned point is in the coordinate system of the specified view,
+    /// or in the coordinate system of the window if you specified nil for the view parameter.
     open func location(in view: UIView?) -> CGPoint {
         
+        guard touches.isEmpty == false
+            else { return .zero }
         
+        let combinedPoint = touches
+            .map({ $0.location(in: view) })
+            .reduce(CGPoint(), { CGPoint(x: $0.x + $1.x, y: $0.y + $1.y) })
+        
+        return CGPoint(x: combinedPoint.x / CGFloat(touches.count),
+                       y: combinedPoint.y / CGFloat(touches.count))
     }
     
     // number of touches involved for which locations can be queried
     // the location of a particular touch
     open func location(ofTouch touchIndex: Int, in view: UIView?) -> CGPoint {
         
-        
+        return touches[touchIndex].location(in: view)
     }
     
     // number of touches involved for which locations can be queried
     open var numberOfTouches: Int {
-        return 1
+        
+        return touches.count
     }
     
     // MARK: - Getting the Recognizer’s State and View
     
     // the current state of the gesture recognizer
-    open var state: UIGestureRecognizerState
+    open var state = UIGestureRecognizerState()
     
     // a UIGestureRecognizer receives touches hit-tested to its view and any of that view's subviews
-    // the view the gesture is attached to. set by adding the recognizer to a UIView using the addGestureRecognizer: method
-    open var view: UIView?
+    // the view the gesture is attached to. set by adding the recognizer to a UIView using the `addGestureRecognizer()` method
+    public internal(set) weak var view: UIView?
     
     // default is YES. disabled gesture recognizers will not receive touches. when changed to NO the gesture recognizer will be cancelled if it's currently recognizing a gesture
-    open var isEnabled: Bool
+    open var isEnabled: Bool = true
     
     // MARK: - Canceling and Delaying Touches
     
     // default is YES. causes touchesCancelled:withEvent: or pressesCancelled:withEvent: to be sent to the view for all touches or presses recognized as part of this gesture immediately before the action method is called.
-    open var cancelsTouchesInView: Bool
+    public var cancelsTouchesInView: Bool = true
     
     // default is NO.  causes all touch or press events to be delivered to the target view only after this gesture has failed recognition. set to YES to prevent views from processing any touches or presses that may be recognized as part of this gesture
-    open var delaysTouchesBegan: Bool
+    public var delaysTouchesBegan: Bool = false
     
     // default is YES. causes touchesEnded or pressesEnded events to be delivered to the target view only after this gesture has failed recognition. this ensures that a touch or press that is part of the gesture can be cancelled if the gesture is recognized
-    open var delaysTouchesEnded: Bool
+    public var delaysTouchesEnded: Bool = true
     
     // MARK: - Specifying Dependencies Between Gesture Recognizers
     
@@ -160,7 +190,6 @@ open class UIGestureRecognizer {
     
     /// Sent to the receiver when a system event (such as a low-memory warning) cancels a press event.
     open func pressesCancelled(_ presses: Set<UIPress>, with event: UIPressesEvent) { }
-    
 }
 
 // MARK: - Supporting Types
@@ -173,9 +202,12 @@ public extension UIGestureRecognizer {
         
         public let action: Action
         
-        public init(action: @escaping Action) {
+        public let name: String
+        
+        public init(action: @escaping Action, name: String) {
             
             self.action = action
+            self.name = name
         }
     }
 }
@@ -201,7 +233,6 @@ public protocol UIGestureRecognizerDelegate: class {
     
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool
     
-    
     // called before touchesBegan:withEvent: is called on the gesture recognizer for a new touch. return NO to prevent the gesture recognizer from seeing this touch
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool
     
@@ -210,7 +241,7 @@ public protocol UIGestureRecognizerDelegate: class {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive press: UIPress) -> Bool
 }
 
-public enum UIGestureRecognizerState : Int {
+public enum UIGestureRecognizerState: Int {
     
     public init() { self = .possible }
     
@@ -227,6 +258,6 @@ public enum UIGestureRecognizerState : Int {
     case failed // the recognizer has received a touch sequence that can not be recognized as the gesture. the action method will not be called and the recognizer will be reset to UIGestureRecognizerStatePossible
     
     // Discrete Gestures – gesture recognizers that recognize a discrete event but do not report changes (for example, a tap) do not transition through the Began and Changed states and can not fail or be cancelled
-    case recognized // the recognizer has received touches recognized as the gesture. the action method will be called at the next turn of the run loop and the recognizer will be reset to UIGestureRecognizerStatePossible
+    public static let recognized = UIGestureRecognizerState.ended // the recognizer has received touches recognized as the gesture. the action method will be called at the next turn of the run loop and the recognizer will be reset to UIGestureRecognizerStatePossible
 }
 
