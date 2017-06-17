@@ -8,8 +8,8 @@
 
 import Silica
 
-/*
-public final class ScrollView: InteractiveView {
+
+open class UIScrollView: UIView {
     
     
-}*/
+}

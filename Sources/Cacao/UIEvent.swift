@@ -9,7 +9,7 @@ import typealias Foundation.TimeInterval
 import class Foundation.ProcessInfo
 
 /// An object that describes a single user interaction with your app.
-public final class UIEvent {
+public class UIEvent {
     
     // MARK: - Getting the Touches for an Event
     
