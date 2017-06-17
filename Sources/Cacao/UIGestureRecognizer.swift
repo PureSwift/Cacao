@@ -22,6 +22,8 @@ open class UIGestureRecognizer {
     
     internal var touches = [UITouch]()
     
+    private var failureRequirements = [UIGestureRecognizer]()
+    
     // MARK: - Initializing a Gesture Recognizer
     
     public init() { }
@@ -51,6 +53,11 @@ open class UIGestureRecognizer {
             else { return }
         
         targetActions.remove(at: index)
+    }
+    
+    internal func performActions() {
+        
+        targetActions.forEach { $0.action(self) }
     }
     
     // MARK: - Getting the Touches and Location of a Gesture
