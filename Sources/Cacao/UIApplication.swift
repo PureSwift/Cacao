@@ -56,19 +56,15 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
     
     var frame = 0
     
-    var done = false
+    let eventPoller = SDLEventPoller(screen: screen)
     
-    var sdlEvent = SDL_Event()
-    
-    var lastTouch: UITouch?
-    
-    while !done {
+    while !eventPoller.done {
         
         frame += 1
         
         let startTime = SDL_GetTicks()
         
-        SDL.poll(event: &sdlEvent, screen: screen, lastTouch: &lastTouch, done: &done)
+        eventPoller.poll()
         
         // render to screen
         screen.update()
@@ -78,12 +74,12 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
         
         if frameDuration < (1000 / framesPerSecond) {
             
-            SDL_Delay(Uint32((1000 / framesPerSecond) - frameDuration))
+            SDL_Delay(UInt32((1000 / framesPerSecond) - frameDuration))
         }
     }
 }
 
-/// Cacao-Specific application launch settings
+/// Cacao-specific application launch settings
 public struct CacaoOptions {
     
     public var windowName: String = "App"

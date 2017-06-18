@@ -17,8 +17,23 @@ import Silica
 /// An object representing the location, size, movement, and force of a touch occurring on the screen.
 public final class UITouch: NSObject {
     
+    /// The view to which touches are being delivered, if any.
+    public let view: UIView?
+    
+    /// The window in which the touch initially occurred.
+    public let window: UIWindow?
+    
+    public internal(set) var gestureRecognizers: [UIGestureRecognizer]?
+    
+    /// The phase of the touch.
+    public let phase: UITouchPhase
+    
+    public let timestamp: TimeInterval
+    
     /// The absolute location, relative to screen.
     internal let location: CGPoint
+    
+    internal var delta: CGSize = .zero
     
     internal init(timestamp: TimeInterval = ProcessInfo.processInfo.systemUptime,
                   location: CGPoint,
@@ -54,19 +69,6 @@ public final class UITouch: NSObject {
         
         fatalError()
     }
-    
-    /// The view to which touches are being delivered, if any.
-    public let view: UIView?
-    
-    /// The window in which the touch initially occurred.
-    public let window: UIWindow?
-    
-    public internal(set) var gestureRecognizers: [UIGestureRecognizer]?
-    
-    /// The phase of the touch.
-    public let phase: UITouchPhase
-    
-    public let timestamp: TimeInterval
 }
 
 // MARK: - Supporting Types
@@ -87,4 +89,28 @@ public enum UITouchPhase: Int {
     
     ///  The system canceled tracking for the touch, as when (for example) the user moves the device against his or her face.
     case cancelled
+}
+
+// MARK: - Internal
+
+internal extension Array where Element == CGPoint {
+    
+    var center: CGPoint {
+        
+        guard self.isEmpty == false
+            else { return .zero }
+        
+        let combinedPoint = self.reduce(CGPoint(), { CGPoint(x: $0.x + $1.x, y: $0.y + $1.y) })
+        
+        return CGPoint(x: combinedPoint.x / CGFloat(self.count),
+                       y: combinedPoint.y / CGFloat(self.count))
+    }
+}
+
+internal extension Set where Element == UITouch {
+    
+    var center: CGPoint {
+        
+        return self.map({ $0.location }).center
+    }
 }

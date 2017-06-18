@@ -62,6 +62,8 @@ open class UIWindow: UIView {
     /// Dispatches the specified event to its views.
     public final func sendEvent(_ event: UIEvent) {
         
+        print("Event \(event.allTouches!.first!.phase) \(event.allTouches!.center)")
+        
         // handle gestures
         
         // handle touches

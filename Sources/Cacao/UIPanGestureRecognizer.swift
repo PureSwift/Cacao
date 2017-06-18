@@ -37,6 +37,10 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
     
     private var lastMovement: TimeInterval?
     
+    private var startLocation: CGPoint?
+    
+    private var startTime: TimeInterval?
+    
     private func validate(event: UIEvent) -> Set<UITouch>? {
         
         guard let gestureTouches = event.touches(for: self),
@@ -45,6 +49,11 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
             else { return nil }
         
         return gestureTouches
+    }
+    
+    private func update(delta: CGFloat, event: UIEvent) -> Bool {
+        
+        
     }
     
     // MARK: - Overridden Methods
@@ -63,8 +72,27 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
         guard let gestureTouches = validate(event: event)
             else { return }
         
-        switch state {
+        switch self.state {
             
+        case .possible:
+            
+            self.state = .began
+            self.startLocation = gestureTouches.center
+            self.startTime = event.timestamp
+            
+            fallthrough
+            
+        case .began, .changed:
+            
+            let delta = gestureTouches.delta
+            
+            if update(delta: delta, event: event) {
+                
+                self.state = .changed
+                self.performActions()
+            }
+            
+        default: break
             
         }
     }

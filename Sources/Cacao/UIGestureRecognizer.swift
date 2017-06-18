@@ -75,15 +75,7 @@ open class UIGestureRecognizer {
     /// or in the coordinate system of the window if you specified nil for the view parameter.
     open func location(in view: UIView?) -> CGPoint {
         
-        guard touches.isEmpty == false
-            else { return .zero }
-        
-        let combinedPoint = touches
-            .map({ $0.location(in: view) })
-            .reduce(CGPoint(), { CGPoint(x: $0.x + $1.x, y: $0.y + $1.y) })
-        
-        return CGPoint(x: combinedPoint.x / CGFloat(touches.count),
-                       y: combinedPoint.y / CGFloat(touches.count))
+        return touches.map({ $0.location(in: view) }).center
     }
     
     // number of touches involved for which locations can be queried
@@ -102,7 +94,7 @@ open class UIGestureRecognizer {
     // MARK: - Getting the Recognizer’s State and View
     
     // the current state of the gesture recognizer
-    open var state = UIGestureRecognizerState()
+    open internal(set) var state = UIGestureRecognizerState()
     
     // a UIGestureRecognizer receives touches hit-tested to its view and any of that view's subviews
     // the view the gesture is attached to. set by adding the recognizer to a UIView using the `addGestureRecognizer()` method

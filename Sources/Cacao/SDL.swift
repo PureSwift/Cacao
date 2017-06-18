@@ -14,9 +14,22 @@ import SDL
 
 // MARK: - Events
 
-internal extension SDL {
+internal final class SDLEventPoller {
     
-    static func poll(event sdlEvent: inout SDL_Event, screen: UIScreen, lastTouch: inout UITouch?, done: inout Bool) {
+    let screen: UIScreen
+    
+    private(set) var done: Bool = false
+    
+    private(set) var sdlEvent = SDL_Event()
+    
+    private(set) var mouseEvent: UIEvent?
+    
+    init(screen: UIScreen) {
+        
+        self.screen = screen
+    }
+    
+    func poll() {
         
         // poll event queue
         
@@ -36,7 +49,7 @@ internal extension SDL {
                 
             case SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP, SDL_MOUSEMOTION:
                 
-                mouse(event: &sdlEvent, lastTouch: &lastTouch)
+                mouse()
                 
             case SDL_WINDOWEVENT:
                 
@@ -65,23 +78,37 @@ internal extension SDL {
         } while pollEventStatus != 0
     }
     
-    static func mouse(event sdlEvent: inout SDL_Event, lastTouch: inout UITouch?) {
+    private func mouse() {
         
         let eventType = SDL_EventType(rawValue: sdlEvent.type)
         
         guard sdlEvent.button.which != -1
             else { return }
         
-        let screenLocation = CGPoint(x: CGFloat(sdlEvent.button.x), y: CGFloat(sdlEvent.button.y))
+        let screenLocation = CGPoint(x: CGFloat(sdlEvent.button.x),
+                                     y: CGFloat(sdlEvent.button.y))
         
         let timestamp = Double(sdlEvent.button.timestamp) / 1000
         
-        let event = UIEvent(timestamp: timestamp)
+        let event: UIEvent
+        
+        if let event = mouseEvent {
+            
+            event = event
+            
+        } else {
+            
+            event = UIEvent(timestamp: timestamp)
+            
+            mouseEvent = event
+        }
         
         /// Only the key window can recieve touch input
         guard let window = UIApplication.shared.keyWindow,
             let view = window.hitTest(screenLocation, with: event)
             else { return }
+        
+        let touch = event.allTouches?.
         
         func send(touch phase: UITouchPhase, to view: UIView) {
             
@@ -96,14 +123,14 @@ internal extension SDL {
             // inform responder chain
             window.sendEvent(event)
             
-            lastTouch = touch
+            lastMouseTouch = touch
         }
         
         // mouse released
         if eventType == SDL_MOUSEBUTTONUP {
             
             // prevent duplicate events
-            if let lastTouch = lastTouch {
+            if let lastTouch = lastMouseTouch {
                 
                 guard lastTouch.phase != .ended
                     else { return }
@@ -111,7 +138,7 @@ internal extension SDL {
             
             send(touch: .ended, to: view)
             
-        } else if let previousTouch = lastTouch,
+        } else if let previousTouch = lastMouseTouch,
             previousTouch.phase != .ended {
             
             if previousTouch.location == screenLocation {
