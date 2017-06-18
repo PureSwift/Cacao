@@ -7,6 +7,7 @@
 
 import struct Foundation.CGFloat
 import struct Foundation.CGPoint
+import struct Foundation.CGSize
 import typealias Foundation.TimeInterval
 
 /// A concrete subclass of `UIGestureRecognizer that looks for panning (dragging) gestures.
@@ -30,7 +31,7 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
     /// is first recognized—do not concatenate the value each time the handler is called.
     public func translation(in view: UIView?) -> CGPoint {
         
-        fatalError()
+        return translation
     }
     
     // MARK: - Internal
@@ -40,6 +41,10 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
     private var startLocation: CGPoint?
     
     private var startTime: TimeInterval?
+    
+    private var translation: CGPoint = .zero
+    
+    private var velocity: CGPoint = .zero
     
     private func validate(event: UIEvent) -> Set<UITouch>? {
         
@@ -51,9 +56,20 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
         return gestureTouches
     }
     
-    private func update(delta: CGFloat, event: UIEvent) -> Bool {
+    private func update(delta: CGPoint, event: UIEvent) -> Bool {
+        
+        let time = event.timestamp - (lastMovement ?? 0)
+        
+        guard time > 0
+            else { return false }
+        
+        translation = delta
         
         
+        
+        lastMovement = event.timestamp
+        
+        return true
     }
     
     // MARK: - Overridden Methods

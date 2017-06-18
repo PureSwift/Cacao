@@ -17,38 +17,58 @@ import Silica
 /// An object representing the location, size, movement, and force of a touch occurring on the screen.
 public final class UITouch: NSObject {
     
+    internal private(set) var touches: [Touch]
+        
+    internal var previousTouch: Touch? {
+        
+        guard touches.count >= 2
+            else { return nil }
+        
+        return touches[touches.count - 2]
+    }
+    
+    /// The absolute location, relative to screen.
+    internal var location: CGPoint {
+        
+        return touches.last!.location
+    }
+    
+    internal var delta: CGPoint {
+        
+        guard let previousLocation = self.previousTouch?.location
+            else { return .zero }
+        
+        let location = self.location
+        
+        return CGPoint(x: location.x - previousLocation.x,
+                       y: location.y - previousLocation.y)
+    }
+    
+    internal init(_ touch: Touch) {
+        
+        self.touches = [touch]
+    }
+    
+    internal func update(_ touch: Touch) {
+        
+        touches.append(touch)
+    }
+    
+    // MARK: - Getting the Location of a Touch
+    
     /// The view to which touches are being delivered, if any.
-    public let view: UIView?
+    public var view: UIView? { return touches.last!.view }
     
     /// The window in which the touch initially occurred.
-    public let window: UIWindow?
+    public var window: UIWindow? { return touches.last!.window }
     
     public internal(set) var gestureRecognizers: [UIGestureRecognizer]?
     
     /// The phase of the touch.
-    public let phase: UITouchPhase
+    public var phase: UITouchPhase { return touches.last!.phase }
     
-    public let timestamp: TimeInterval
-    
-    /// The absolute location, relative to screen.
-    internal let location: CGPoint
-    
-    internal var delta: CGSize = .zero
-    
-    internal init(timestamp: TimeInterval = ProcessInfo.processInfo.systemUptime,
-                  location: CGPoint,
-                  phase: UITouchPhase,
-                  view: UIView?,
-                  window: UIWindow?) {
-        
-        self.timestamp = timestamp
-        self.location = location
-        self.phase = phase
-        self.view = view
-        self.window = window
-    }
-    
-    // MARK: - Getting the Location of a Touch
+    /// The time when the touch occurred.
+    public var timestamp: TimeInterval { return touches.last!.timestamp }
     
     /// Returns the current location of the receiver in the coordinate system of the given view.
     ///
@@ -61,13 +81,20 @@ public final class UITouch: NSObject {
     /// this method performs any necessary conversion of the touch location to the coordinate system of the specified view.
     public func location(in view: UIView? = nil) -> CGPoint {
         
-        fatalError()
+        let view = view ?? touches.last!.window
+        
+        return view.convert(location, to: view)
     }
     
     /// Returns the previous location of the receiver in the coordinate system of the given view.
     public func previousLocation(in view: UIView? = nil) -> CGPoint {
         
-        fatalError()
+        let view = view ?? touches.last!.window // should always be same window
+        
+        guard let previousLocation = self.previousTouch?.location
+            else { return .zero }
+        
+        return view.convert(previousLocation, to: view)
     }
 }
 
@@ -93,6 +120,27 @@ public enum UITouchPhase: Int {
 
 // MARK: - Internal
 
+internal extension UITouch {
+    
+    struct Touch {
+        
+        /// The absolute location, relative to screen.
+        let location: CGPoint
+        
+        /// The view to which touches are being delivered, if any.
+        let view: UIView
+        
+        /// The window in which the touch initially occurred.
+        let window: UIWindow
+        
+        /// The phase of the touch.
+        let phase: UITouchPhase
+        
+        /// The time when the touch occurred.
+        let timestamp: TimeInterval
+    }
+}
+
 internal extension Array where Element == CGPoint {
     
     var center: CGPoint {
@@ -112,5 +160,10 @@ internal extension Set where Element == UITouch {
     var center: CGPoint {
         
         return self.map({ $0.location }).center
+    }
+    
+    var delta: CGPoint {
+                
+        return self.map({ $0.delta }).center
     }
 }

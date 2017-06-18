@@ -92,15 +92,13 @@ internal final class SDLEventPoller {
         
         let event: UIEvent
         
-        if let event = mouseEvent {
+        if let currentEvent = mouseEvent {
             
-            event = event
+            event = currentEvent
             
         } else {
             
             event = UIEvent(timestamp: timestamp)
-            
-            mouseEvent = event
         }
         
         /// Only the key window can recieve touch input
@@ -108,61 +106,73 @@ internal final class SDLEventPoller {
             let view = window.hitTest(screenLocation, with: event)
             else { return }
         
-        let touch = event.allTouches?.
+        let touch: UITouch
         
-        func send(touch phase: UITouchPhase, to view: UIView) {
+        if let previousTouch = event.allTouches?.first {
             
-            let touch = UITouch(timestamp: timestamp,
-                                location: screenLocation,
-                                phase: phase,
-                                view: view,
-                                window: window)
+            touch = previousTouch
             
-            event.allTouches?.insert(touch)
+            let newPhase: UITouchPhase
             
-            // inform responder chain
-            window.sendEvent(event)
+            assert(previousTouch.phase != .ended, "Did not create new event after touches ended")
             
-            lastMouseTouch = touch
-        }
-        
-        // mouse released
-        if eventType == SDL_MOUSEBUTTONUP {
-            
-            // prevent duplicate events
-            if let lastTouch = lastMouseTouch {
+            // touches ended
+            if eventType == SDL_MOUSEBUTTONUP {
                 
-                guard lastTouch.phase != .ended
-                    else { return }
-            }
-            
-            send(touch: .ended, to: view)
-            
-        } else if let previousTouch = lastMouseTouch,
-            previousTouch.phase != .ended {
-            
-            if previousTouch.location == screenLocation {
-                
-                send(touch: .stationary, to: view)
+                newPhase = .ended
                 
             } else {
                 
-                if let previousView = previousTouch.view,
-                    previousView != view {
+                if touch.location == screenLocation {
                     
-                    send(touch: .ended, to: previousView)
-                    send(touch: .began, to: view)
+                    newPhase = .stationary
                     
                 } else {
                     
-                    send(touch: .moved, to: view)
+                    newPhase = .moved
                 }
             }
             
-        } else if eventType == SDL_MOUSEBUTTONDOWN {
+            let internalTouch = UITouch.Touch(location: screenLocation,
+                                              view: view,
+                                              window: window,
+                                              phase: newPhase,
+                                              timestamp: timestamp)
             
-            send(touch: .began, to: view)
+            touch.update(internalTouch)
+            
+        } else {
+            
+            // new touch sequence
+            
+            let internalTouch = UITouch.Touch(location: screenLocation,
+                                              view: view,
+                                              window: window,
+                                              phase: .began,
+                                              timestamp: timestamp)
+            
+            touch = UITouch(internalTouch)
+            
+            event.allTouches = [touch]
         }
+        
+        switch touch.phase {
+            
+        case .began:
+            
+            mouseEvent = event
+            
+        case .moved, .stationary:
+            
+            break
+            
+        case .ended, .cancelled:
+            
+            mouseEvent = nil
+        }
+        
+        // inform responder chain
+        window.sendEvent(event)
     }
 }
 
