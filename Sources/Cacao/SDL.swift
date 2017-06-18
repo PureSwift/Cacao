@@ -143,6 +143,9 @@ internal final class SDLEventPoller {
             
         } else {
             
+            guard eventType == SDL_MOUSEBUTTONDOWN
+                else { return }
+            
             // new touch sequence
             
             let internalTouch = UITouch.Touch(location: screenLocation,
