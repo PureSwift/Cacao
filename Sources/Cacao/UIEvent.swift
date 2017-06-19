@@ -64,15 +64,17 @@ public class UIEvent {
     }
 }
 
-// MARK: - Supporting Types
+// MARK: - CustomStringConvertible
 
-extension UIEvent {
+extension UIEvent: CustomStringConvertible {
     
-    var description: String {
+    public var description: String {
         
-        return "<\(Swift.type(of: self)): \(Unmanaged.passUnretained(self).toOpaque()); touches: <\(touches)>; timestamp = \(timestamp)>"
+        return "\(Swift.type(of: self))(timestamp:\(timestamp), touches: \(touches))"
     }
 }
+
+// MARK: - Supporting Types
 
 public enum UIEventType: Int {
     
@@ -82,7 +84,10 @@ public enum UIEventType: Int {
     /// The event is related to motion of the device, such as when the user shakes it.
     case motion
     
-    /// The event is a remote-control event. Remote-control events originate as commands received from a headset or external accessory for the purposes of controlling multimedia on the device.
+    /// The event is a remote-control event.
+    ///
+    /// Remote-control events originate as commands received from a headset
+    /// or external accessory for the purposes of controlling multimedia on the device.
     case remoteControl
     
     /// The event is related to the press of a physical button.

@@ -47,6 +47,15 @@ public final class SwiftLogoView: UIView {
         return CGSize(width: pointSize, height: pointSize * aspectRatio)
     }
     
+    // MARK: - Initialization
+    
+    public override init(frame: CGRect) {
+        super.init(frame: frame)
+        
+        // disable user interaction
+        self.isUserInteractionEnabled = false
+    }
+    
     // MARK: - Drawing
     
     public override func draw(_ rect: CGRect) {

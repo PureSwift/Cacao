@@ -78,6 +78,8 @@ final class ContentModeViewController: UIViewController {
                               y: frame.minY + floor(frame.height * 0.00000 + 0.5),
                               width: floor(frame.width * 1.00000 + 0.5) - floor(frame.width * 0.00000 + 0.5),
                               height: floor(frame.height * 0.82812 + 0.5) - floor(frame.height * 0.00000 + 0.5))
+        
+        logoView.frame = button.frame
     }
     
     // MARK: - Actions

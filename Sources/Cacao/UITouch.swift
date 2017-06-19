@@ -97,6 +97,18 @@ public final class UITouch: NSObject {
         
         return view.convert(previousTouch.location, to: view)
     }
+    
+    public override var description: String {
+        
+        return "\(Swift.type(of: self))(timestamp: \(timestamp), location: \(location), phase: \(phase))"
+    }
+}
+
+// MARK: - CustomStringConvertible
+
+extension UITouch {
+    
+    
 }
 
 // MARK: - Supporting Types

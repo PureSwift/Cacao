@@ -106,9 +106,9 @@ open class UIGestureRecognizer {
     internal var shouldRecognize: Bool {
         
         return isEnabled
-            && state == .failed
-            && state == .cancelled
-            && state == .ended
+            && state != .failed
+            && state != .cancelled
+            && state != .ended
     }
     
     // MARK: - Canceling and Delaying Touches
