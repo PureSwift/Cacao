@@ -169,7 +169,7 @@ internal final class SDLEventPoller {
             
         case .moved, .stationary:
             
-            break
+            mouseEvent?.timestamp = timestamp
             
         case .ended, .cancelled:
             

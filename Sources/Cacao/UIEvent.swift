@@ -40,7 +40,7 @@ public class UIEvent {
     ///
     /// This property contains the number of seconds that have elapsed since system startup.
     /// For a description of this time value, see the description of the `systemUptime` method of the `ProcessInfo` class.
-    public let timestamp: TimeInterval
+    public internal(set) var timestamp: TimeInterval
     
     // MARK: - Getting the Event Type
     
