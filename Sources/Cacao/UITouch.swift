@@ -62,7 +62,8 @@ public final class UITouch: NSObject {
     /// The window in which the touch initially occurred.
     public var window: UIWindow? { return touches.last!.window }
     
-    public internal(set) var gestureRecognizers: [UIGestureRecognizer]?
+    /// The gesture recognizers that are receiving the touch object.
+    public var gestureRecognizers: [UIGestureRecognizer]? { return touches.last!.gestureRecognizers }
     
     /// The phase of the touch.
     public var phase: UITouchPhase { return touches.last!.phase }
@@ -89,12 +90,12 @@ public final class UITouch: NSObject {
     /// Returns the previous location of the receiver in the coordinate system of the given view.
     public func previousLocation(in view: UIView? = nil) -> CGPoint {
         
-        let view = view ?? touches.last!.window // should always be same window
-        
-        guard let previousLocation = self.previousTouch?.location
+        guard let previousTouch = self.previousTouch
             else { return .zero }
         
-        return view.convert(previousLocation, to: view)
+        let view = view ?? previousTouch.window // should always be same window
+        
+        return view.convert(previousTouch.location, to: view)
     }
 }
 
@@ -122,10 +123,16 @@ public enum UITouchPhase: Int {
 
 internal extension UITouch {
     
-    struct Touch {
+    final class Touch {
         
         /// The absolute location, relative to screen.
         let location: CGPoint
+        
+        /// The time when the touch occurred.
+        let timestamp: TimeInterval
+        
+        /// The phase of the touch.
+        let phase: UITouchPhase
         
         /// The view to which touches are being delivered, if any.
         let view: UIView
@@ -133,11 +140,18 @@ internal extension UITouch {
         /// The window in which the touch initially occurred.
         let window: UIWindow
         
-        /// The phase of the touch.
-        let phase: UITouchPhase
+        /// The gesture recognizers that are receiving the touch object.
+        let gestureRecognizers: [UIGestureRecognizer]
         
-        /// The time when the touch occurred.
-        let timestamp: TimeInterval
+        init(location: CGPoint, timestamp: TimeInterval, phase: UITouchPhase, view: UIView, window: UIWindow, gestureRecognizers: [UIGestureRecognizer]) {
+            
+            self.location = location
+            self.timestamp = timestamp
+            self.phase = phase
+            self.view = view
+            self.window = window
+            self.gestureRecognizers = gestureRecognizers
+        }
     }
 }
 

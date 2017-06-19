@@ -6,7 +6,6 @@
 //
 
 import typealias Foundation.TimeInterval
-import class Foundation.ProcessInfo
 
 /// An object that describes a single user interaction with your app.
 public class UIEvent {
@@ -16,21 +15,23 @@ public class UIEvent {
     /// Returns all touches associated with the event.
     ///
     /// - Returns: A set of `UITouch` objects representing all touches associated with the event.
-    public internal(set) var allTouches: Set<UITouch>? = []
+    public var allTouches: Set<UITouch>? { return touches }
+    
+    internal var touches = Set<UITouch>()
     
     public func touches(for view: UIView) -> Set<UITouch>? {
         
-        return allTouches?.filter({ $0.view === view })
+        return touches.filter({ $0.view === view })
     }
     
     public func touches(for window: UIWindow) -> Set<UITouch>? {
         
-        return allTouches?.filter({ $0.window === window })
+        return touches.filter({ $0.window === window })
     }
     
     public func touches(for gestureRecognizer: UIGestureRecognizer) -> Set<UITouch>? {
         
-        return allTouches?.filter({ $0.gestureRecognizers?.contains(where: { $0 === gestureRecognizer }) ?? false })
+        return touches.filter({ $0.gestureRecognizers?.contains(where: { $0 === gestureRecognizer }) ?? false })
     }
     
     // MARK: - Getting Event Attributes
@@ -57,9 +58,19 @@ public class UIEvent {
     
     // MARK: - Initialization
     
-    internal init(timestamp: TimeInterval = ProcessInfo.processInfo.systemUptime) {
+    internal init(timestamp: TimeInterval) {
         
         self.timestamp = timestamp
+    }
+}
+
+// MARK: - Supporting Types
+
+extension UIEvent {
+    
+    var description: String {
+        
+        return "<\(Swift.type(of: self)): \(Unmanaged.passUnretained(self).toOpaque()); touches: <\(touches)>; timestamp = \(timestamp)>"
     }
 }
 

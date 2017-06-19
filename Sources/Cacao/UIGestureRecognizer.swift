@@ -101,7 +101,15 @@ open class UIGestureRecognizer {
     public internal(set) weak var view: UIView?
     
     // default is YES. disabled gesture recognizers will not receive touches. when changed to NO the gesture recognizer will be cancelled if it's currently recognizing a gesture
-    open var isEnabled: Bool = true
+    public var isEnabled: Bool = true
+    
+    internal var shouldRecognize: Bool {
+        
+        return isEnabled
+            && state == .failed
+            && state == .cancelled
+            && state == .ended
+    }
     
     // MARK: - Canceling and Delaying Touches
     

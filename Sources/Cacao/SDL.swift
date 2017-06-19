@@ -134,10 +134,11 @@ internal final class SDLEventPoller {
             }
             
             let internalTouch = UITouch.Touch(location: screenLocation,
+                                              timestamp: timestamp,
+                                              phase: newPhase,
                                               view: view,
                                               window: window,
-                                              phase: newPhase,
-                                              timestamp: timestamp)
+                                              gestureRecognizers: view.gestureRecognizers ?? [])
             
             touch.update(internalTouch)
             
@@ -149,14 +150,15 @@ internal final class SDLEventPoller {
             // new touch sequence
             
             let internalTouch = UITouch.Touch(location: screenLocation,
+                                              timestamp: timestamp,
+                                              phase: .began,
                                               view: view,
                                               window: window,
-                                              phase: .began,
-                                              timestamp: timestamp)
+                                              gestureRecognizers: view.gestureRecognizers ?? [])
             
             touch = UITouch(internalTouch)
             
-            event.allTouches = [touch]
+            event.touches = [touch]
         }
         
         switch touch.phase {
