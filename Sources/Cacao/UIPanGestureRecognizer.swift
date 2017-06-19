@@ -34,6 +34,11 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
         return translation
     }
     
+    public func velocity(in view: UIView?) -> CGPoint {
+        
+        return velocity
+    }
+    
     // MARK: - Internal
     
     private var lastMovement: TimeInterval?
@@ -42,9 +47,16 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
     
     private var startTime: TimeInterval?
     
-    private var translation: CGPoint = .zero
+    private var translation: CGPoint = .zero {
+        
+        didSet { velocity = .zero }
+    }
     
     private var velocity: CGPoint = .zero
+    
+    private var displacement: CGPoint = .zero
+    
+    private var movementDuration: TimeInterval = 0
     
     private func validate(event: UIEvent) -> Set<UITouch>? {
         
@@ -65,7 +77,27 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
         
         translation = delta
         
+        if delta.x * displacement.x >= 0 {
+            
+            displacement.x += delta.x
+            movementDuration += time
+            
+        } else {
+            
+            displacement.x = delta.x;
+            movementDuration = time
+        }
         
+        if delta.y * displacement.y >= 0 {
+            
+            displacement.y += delta.y
+            movementDuration += time
+            
+        } else {
+            
+            displacement.y = delta.y
+            movementDuration = time
+        }
         
         lastMovement = event.timestamp
         
@@ -110,6 +142,32 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
             
         default: break
             
+        }
+    }
+    
+    public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
+        
+        switch self.state {
+            
+        case .changed:
+            
+            let time = event.timestamp - (lastMovement ?? 0)
+            
+            if time > 0.2 {
+                
+                self.velocity = .zero
+                
+            } else {
+                
+                self.velocity.x = displacement.x / CGFloat(movementDuration > 0 ? movementDuration : 0.001)
+                self.velocity.y = displacement.y / CGFloat(movementDuration > 0 ? movementDuration : 0.001)
+            }
+            
+            self.state = .ended
+            
+        default:
+            
+            self.state = .failed
         }
     }
 }
