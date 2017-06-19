@@ -41,11 +41,9 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
     
     // MARK: - Private
     
-    private var lastMovement: TimeInterval?
+    private var lastMovement: TimeInterval? = nil
     
-    private var startLocation: CGPoint?
-    
-    private var startTime: TimeInterval?
+    private var start: (location: CGPoint, time: TimeInterval)? = nil
     
     private var translation: CGPoint = .zero {
         
@@ -106,12 +104,23 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
     
     // MARK: - Overridden Methods
     
+    public override func reset() {
+        super.reset()
+        
+        translation = .zero
+        velocity = .zero
+        displacement = .zero
+        movementDuration = 0
+        lastMovement = nil
+        start = nil
+    }
+    
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
         
         guard let _ = validate(event: event)
             else { return }
         
-        self.state = .possible
+        self.transition(to: .possible)
         self.lastMovement = event.timestamp
     }
     
@@ -124,9 +133,8 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
             
         case .possible:
             
-            self.state = .began
-            self.startLocation = gestureTouches.center
-            self.startTime = event.timestamp
+            self.transition(to: .began)
+            self.start = (gestureTouches.center, event.timestamp)
             
             fallthrough
             
@@ -136,8 +144,7 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
             
             if update(delta: delta, event: event) {
                 
-                self.state = .changed
-                self.performActions()
+                self.transition(to: .changed)
             }
             
         default: break
@@ -163,11 +170,11 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
                 self.velocity.y = displacement.y / CGFloat(movementDuration > 0 ? movementDuration : 0.001)
             }
             
-            self.state = .ended
+            self.transition(to: .ended)
             
         default:
             
-            self.state = .failed
+            self.transition(to: .failed)
         }
     }
 }
