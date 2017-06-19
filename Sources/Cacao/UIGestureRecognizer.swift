@@ -119,6 +119,9 @@ open class UIGestureRecognizer {
         guard let transition = states.first(where: { $0.from == oldValue && $0.to == newValue })
             else { fatalError("Invalid transition \(oldValue) -> \(state)") }
         
+        
+        self.state = newValue
+        
         if transition.notify {
             
             performActions()
@@ -303,6 +306,6 @@ public enum UIGestureRecognizerState: Int {
     case failed // the recognizer has received a touch sequence that can falset be recognized as the gesture. the action method will falset be called and the recognizer will be reset to `.possible`
     
     // Discrete Gestures – gesture recognizers that recognize a discrete event but do falset report changes (for example, a tap) do falset transition through the Began and Changed states and can falset fail or be cancelled
-    public static let recognized = UIGestureRecognizerState.ended // the recognizer has received touches recognized as the gesture. the action method will be called at the next turn of the run loop and the recognizer will be reset to `.possible`
+    public static let recognized: UIGestureRecognizerState = .ended // the recognizer has received touches recognized as the gesture. the action method will be called at the next turn of the run loop and the recognizer will be reset to `.possible`
 }
 
