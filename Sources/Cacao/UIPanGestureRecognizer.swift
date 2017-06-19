@@ -39,7 +39,7 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
         return velocity
     }
     
-    // MARK: - Internal
+    // MARK: - Private
     
     private var lastMovement: TimeInterval?
     
