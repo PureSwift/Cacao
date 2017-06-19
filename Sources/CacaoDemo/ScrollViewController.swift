@@ -25,15 +25,24 @@ final class ScrollViewController: UIViewController {
     
     override func loadView() {
         
-        scrollView = UIScrollView(frame: CGRect())
-        
-        view = scrollView
+        view = UIView(frame: CGRect())
         
         view.backgroundColor = UIColor.white
         
-        let logoView = SwiftLogoView(frame: CGRect(origin: .zero, size: CGSize(width: 100, height: 100)))
+        scrollView = UIScrollView(frame: CGRect())
         
-        view.addSubview(logoView)
+        view.addSubview(scrollView)
+        
+        let logoView = SwiftLogoView(frame: CGRect(origin: .zero, size: CGSize(width: 100, height: 100)))
+        logoView.pointSize = 100
+        logoView.contentMode = .scaleAspectFill
+        
+        scrollView.addSubview(logoView)
+    }
+    
+    override func viewWillLayoutSubviews() {
+        
+        scrollView.frame = view.bounds
     }
     
     override func viewDidLoad() {
