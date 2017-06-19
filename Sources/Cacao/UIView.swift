@@ -809,6 +809,37 @@ open class UIView: UIResponder {
         self.window?.screen.needsDisplay = true
     }
     
+    // MARK: - Managing Gesture Recognizers
+    
+    /// Attaches a gesture recognizer to the view.
+    public func addGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer) {
+        
+        // remove from old view
+        gestureRecognizer.view?.removeGestureRecognizer(gestureRecognizer)
+        
+        // add to view
+        gestureRecognizer.view = self
+        gestureRecognizers?.append(gestureRecognizer)
+    }
+    
+    /// Detaches a gesture recognizer from the receiving view.
+    public func removeGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer) {
+        
+        guard let index = gestureRecognizers?.index(where: { $0 === gestureRecognizer })
+            else { return }
+        
+        gestureRecognizers?.remove(at: index)
+        gestureRecognizer.view = nil
+    }
+    
+    /// The gesture-recognizer objects currently attached to the view.
+    public var gestureRecognizers: [UIGestureRecognizer]? = []
+    
+    /// Asks the view if the gesture recognizer should be allowed to continue tracking touch events.
+    open func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
+    }
+    
     // MARK: - Event Handling
     
     // MARK: - UIResponder

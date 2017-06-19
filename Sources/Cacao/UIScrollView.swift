@@ -34,12 +34,15 @@ open class UIScrollView: UIView {
     // MARK: - Managing the Display of Content
     
     /// The point at which the origin of the content view is offset from the origin of the scroll view.
-    public var contentOffset: CGPoint = .zero
+    public var contentOffset: CGPoint {
+        get { return bounds.origin }
+        set { setContentOffset(newValue, animated: false) }
+    }
     
     /// Sets the offset from the content view’s origin that corresponds to the receiver’s origin.
     public func setContentOffset(_ contentOffset: CGPoint, animated: Bool) {
         
-        
+        self.bounds.origin = contentOffset
     }
     
     /// The size of the content view.
@@ -70,7 +73,7 @@ open class UIScrollView: UIView {
     ///
     /// Your application accesses this property when it wants to more precisely control
     /// which pan gestures are recognized by the scroll view.
-    public let panGestureRecognizer: UIPanGestureRecognizer
+    public private(set) var panGestureRecognizer: UIPanGestureRecognizer!
     
     // MARK: - Private
     
