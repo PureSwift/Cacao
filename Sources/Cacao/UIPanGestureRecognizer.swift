@@ -144,7 +144,11 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
             
             if update(delta: delta, event: event) {
                 
-                self.transition(to: .changed)
+                /// state not changed
+                if self.transition(to: .changed) == false {
+                    
+                    performActions()
+                }
             }
             
         default: break

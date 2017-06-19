@@ -43,6 +43,7 @@ open class UIScrollView: UIView {
     public func setContentOffset(_ contentOffset: CGPoint, animated: Bool) {
         
         self.bounds.origin = contentOffset
+        self.setNeedsDisplay()
     }
     
     /// The size of the content view.
@@ -79,7 +80,40 @@ open class UIScrollView: UIView {
     
     private func panGesture(_ gesture: UIGestureRecognizer) {
         
+        if gesture === panGestureRecognizer {
+            
+            switch panGestureRecognizer.state {
+                
+            case .began:
+                
+                break
+                
+            case .changed:
+                
+                let delta = panGestureRecognizer.translation(in: self)
+                
+                drag(by: delta)
+                
+            case .ended:
+                
+                break
+                
+            case .possible, .failed, .cancelled:
+                
+                break
+            }
+        }
+    }
+    
+    private func drag(by delta: CGPoint) {
         
+        var contentOffset = self.contentOffset
+        
+        contentOffset.x += delta.x
+        
+        contentOffset.y += delta.y
+        
+        setContentOffset(contentOffset, animated: true)
     }
 }
 
