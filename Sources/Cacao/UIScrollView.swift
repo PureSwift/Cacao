@@ -78,6 +78,8 @@ open class UIScrollView: UIView {
     
     // MARK: - Private
     
+    private var dragging = false
+    
     private func panGesture(_ gesture: UIGestureRecognizer) {
         
         if gesture === panGestureRecognizer {
@@ -86,7 +88,7 @@ open class UIScrollView: UIView {
                 
             case .began:
                 
-                break
+                beginDragging()
                 
             case .changed:
                 
@@ -105,15 +107,34 @@ open class UIScrollView: UIView {
         }
     }
     
+    private func beginDragging() {
+        
+        if dragging == false {
+            
+            
+        }
+    }
+    
     private func drag(by delta: CGPoint) {
         
-        var contentOffset = self.contentOffset
+        let confinedDelta = confined(delta: delta, animated: false)
         
-        contentOffset.x += delta.x
+        scrollContent(confinedDelta, animated: false)
+    }
+    
+    private func endDragging(velocity: CGPoint) {
         
-        contentOffset.y += delta.y
         
-        setContentOffset(contentOffset, animated: true)
+    }
+    
+    private func confined(delta: CGPoint, animated: Bool) -> CGPoint {
+        
+        
+    }
+    
+    private func scrollContent(_ delta: CGPoint, animated: Bool) {
+        
+        
     }
 }
 
