@@ -6,6 +6,12 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
+#if os(macOS)
+    import Darwin.C.math
+#elseif os(Linux)
+    import Glibc
+#endif
+
 import struct Foundation.CGFloat
 import struct Foundation.CGPoint
 import struct Foundation.CGSize
@@ -42,12 +48,29 @@ open class UIScrollView: UIView {
     /// Sets the offset from the content view’s origin that corresponds to the receiver’s origin.
     public func setContentOffset(_ contentOffset: CGPoint, animated: Bool) {
         
-        self.bounds.origin = contentOffset
-        self.setNeedsDisplay()
+        if animated {
+            var animation: UIScrollViewAnimationScroll? = nil
+            if (scrollAnimation? is UIScrollViewAnimationScroll) {
+                animation = (scrollAnimation as? UIScrollViewAnimationScroll)
+            }
+            if !animation || !theOffset.equalTo(animation?.endContentOffset) {
+                _setScrollAnimation(UIScrollViewAnimationScroll(self, fromContentOffset: contentOffset, toContentOffset: theOffset, duration: UIScrollViewAnimationDuration, curve: UIScrollViewAnimationScrollCurveLinear))
+            }
+        }
+        else {
+            contentOffset.x = roundf(contentOffset.x)
+            contentOffset.y = roundf(contentOffset.y)
+            updateBounds()
+            
+            delegate?.scrollViewDidScroll(self)
+        }
     }
     
     /// The size of the content view.
-    public var contentSize: CGSize = .zero
+    public var contentSize: CGSize = .zero {
+        
+        didSet {  }
+    }
     
     /// The distance that the content view is inset from the enclosing scroll view.
     ///
@@ -145,5 +168,25 @@ open class UIScrollView: UIView {
 /// and in some affect, operations such as scrolling, zooming, deceleration of scrolled content, and scrolling animations.
 public protocol UIScrollViewDelegate: class {
     
+    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView)
     
+    func scrollViewDidScroll(_ scrollView: UIScrollView)
+    
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView)
+    
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool)
+    
+    func scrollViewWillBeginDecelerating(_ scrollView: UIScrollView)
+    
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView)
+    
+    func viewForZooming(in scrollView: UIScrollView) -> UIView
+    
+    func scrollViewWillBeginZooming(_ scrollView: UIScrollView, withView view: UIView)
+    
+    func scrollViewDidEndZooming(_ scrollView: UIScrollView, with view: UIView, atScale scale: Float)
+    
+    func scrollViewDidZoom(_ scrollView: UIScrollView)
+    
+    func scrollViewShouldScrollToTop(_ scrollView: UIScrollView) -> Bool
 }
