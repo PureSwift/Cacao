@@ -97,11 +97,86 @@ open class UIScrollView: UIView {
     /// If the value of this property is `true`, scrolling is enabled, and if it is `false`,
     /// scrolling is disabled. The default is `true`. When scrolling is disabled,
     /// the scroll view does not accept touch events; it forwards them up the responder chain.
-    public var isScrollEnabled: Bool = true
+    public var isScrollEnabled: Bool = true {
+        
+        didSet {
+            panGestureRecognizer.isEnabled = isScrollEnabled
+            updateScrollers()
+            setNeedsLayout()
+        }
+    }
+    
+    /// A Boolean value that determines whether scrolling is disabled in a particular direction.
+    ///
+    /// If this property is false, scrolling is permitted in both horizontal and vertical directions.
+    /// If this property is true and the user begins dragging in one general direction (horizontally or vertically),
+    /// the scroll view disables scrolling in the other direction. If the drag direction is diagonal,
+    /// then scrolling will not be locked and the user can drag in any direction until the drag completes.
+    ///
+    /// The default value is false
+    public var isDirectionalLockEnabled: Bool = false
+    
+    /// A Boolean value that controls whether the scroll-to-top gesture is enabled.
+    /// The scroll-to-top gesture is a tap on the status bar.
+    public var scrollsToTop: Bool = true
     
     public var scrollHorizontal: Bool = true
     
     public var scrollVertical: Bool = true
+    
+    /// Scrolls a specific area of the content so that it is visible in the receiver.
+    public func scrollRectToVisible(_ rect: CGRect, animated: Bool) {
+        
+        let contentRect = CGRect(x: 0,
+                                 y: 0,
+                                 width: CGFloat(contentSize.width),
+                                 height: CGFloat(contentSize.height))
+        
+        let visibleRect = bounds
+        var goalRect = rect.intersection(contentRect)
+        
+        if goalRect.isNull == false,
+            visibleRect.contains(goalRect) == false {
+            
+            goalRect.size.width = min(goalRect.size.width, visibleRect.size.width)
+            goalRect.size.height = min(goalRect.size.height, visibleRect.size.height)
+            
+            var offset = contentOffset
+            
+            if goalRect.maxY > visibleRect.maxY {
+                offset.y += goalRect.maxY - visibleRect.maxY
+            }
+            else if goalRect.minY < visibleRect.minY {
+                offset.y += goalRect.minY - visibleRect.minY
+            }
+            
+            if goalRect.maxX > visibleRect.maxX {
+                offset.x += goalRect.maxX - visibleRect.maxX
+            }
+            else if goalRect.minX < visibleRect.minX {
+                offset.x += goalRect.minX - visibleRect.minX
+            }
+            
+            setContentOffset(offset, animated: animated)
+        }
+    }
+    
+    /// A Boolean value that determines whether paging is enabled for the scroll view.
+    ///
+    /// If the value of this property is true,
+    /// the scroll view stops on multiples of the scroll view’s bounds when the user scrolls.
+    ///
+    /// The default value is false.
+    public var isPagingEnabled: Bool = false
+    
+    /// A Boolean value that controls whether the scroll view bounces past the edge of content and back again.
+    ///
+    /// If the value of this property is true, the scroll view bounces when it encounters a boundary of the content.
+    /// Bouncing visually indicates that scrolling has reached an edge of the content.
+    /// If the value is false, scrolling stops immediately at the content boundary without bouncing.
+    ///
+    /// The default value is true.
+    public var bounces: Bool = true
     
     // MARK: - Zooming and Panning
     
