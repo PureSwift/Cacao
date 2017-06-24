@@ -178,6 +178,28 @@ open class UIScrollView: UIView {
     /// The default value is true.
     public var bounces: Bool = true
     
+    /// A Boolean value that determines whether bouncing always occurs when vertical scrolling reaches the end of the content.
+    public var isAlwaysBounceVertical: Bool = false
+    
+    /// A Boolean value that determines whether bouncing always occurs when horizontal scrolling reaches the end of the content.
+    public var isAlwaysBounceHorizontal: Bool = false
+    
+    /// Returns whether to cancel touches related to the content subview and start dragging.
+    public func touchesShouldCancel(in view: UIView) -> Bool {
+        
+        return false
+    }
+    
+    /// Overridden by subclasses to customize the default behavior when a finger touches down in displayed content.
+    public func touchesShouldBegin(_ touches: Set<UITouch>,
+                                   with event: UIEvent?,
+                                   in view: UIView) -> Bool {
+        
+        return true
+    }
+    
+    
+    
     // MARK: - Zooming and Panning
     
     /// The underlying gesture recognizer for pan gestures.
