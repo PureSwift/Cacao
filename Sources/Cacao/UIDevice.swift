@@ -190,6 +190,7 @@ public enum UIDeviceBatteryState: Int {
 #if os(macOS)
     
     import SystemConfiguration
+    import IOKit.ps
     
     private extension UIDevice {
         
@@ -222,7 +223,22 @@ public enum UIDeviceBatteryState: Int {
                 return family?.description ?? hardwareModel
             }
             
+            static func powerSources() -> [PowerSource] {
+                
+                let sourcesInfo = IOPSCopyPowerSourcesInfo().takeRetainedValue()
+                
+                if let list = IOPSCopyPowerSourcesList(sourcesInfo).takeRetainedValue() as? [[String: Any]] {
+                    
+                    return list.flatMap({ PowerSource(info: $0)})
+                }
+                
+                return []
+            }
             
+            static var batteryLevel: Float {
+                
+                return -1
+            }
         }
     }
     
@@ -251,6 +267,61 @@ public enum UIDeviceBatteryState: Int {
                 case .Macmini: return "Mac Mini"
                 case .MacPro: return "Mac Pro"
                 }
+            }
+        }
+        
+        struct PowerSource {
+            
+            enum State: String {
+                
+                case offLine = "Off Line"
+                case ac = "AC Power"
+                case battery = "Battery Power"
+            }
+            
+            enum Category: String {
+                
+                case battery = "InternalBattery"
+                case ups = "UPS"
+            }
+            
+            let identifier: Int
+            let serialNumber: String
+            let name: String
+            let maximumCapacity: Int
+            let currentCapacity: Int
+            let charging: Bool
+            let present: Bool
+            let state: State?
+            let category: Category?
+            
+            var chargedPercentage: Float {
+                
+                return floor((Float(currentCapacity) / Float(maximumCapacity)))
+            }
+            
+            init?(info: [String: Any]) {
+                
+                guard let id = info[kIOPSPowerSourceIDKey] as? Int,
+                    let serialNumber = info[kIOPSHardwareSerialNumberKey] as? String,
+                    let name = info[kIOPSNameKey] as? String,
+                    let maximumCapacity = info[kIOPSMaxCapacityKey] as? Int,
+                    let currentCapacity = info[kIOPSCurrentCapacityKey] as? Int,
+                    let charging = info[kIOPSIsChargingKey] as? Bool,
+                    let present = info[kIOPSIsPresentKey] as? Bool,
+                    let state = info[kIOPSPowerSourceStateKey] as? String,
+                    let type = info[kIOPSTypeKey] as? String
+                    else { return nil }
+                
+                self.identifier = id
+                self.serialNumber = serialNumber
+                self.name = name
+                self.maximumCapacity = maximumCapacity
+                self.currentCapacity = currentCapacity
+                self.charging = charging
+                self.present = present
+                self.state = State(rawValue: state)
+                self.category = Category(rawValue: type)
             }
         }
     }
