@@ -184,12 +184,6 @@ open class UIScrollView: UIView {
     /// A Boolean value that determines whether bouncing always occurs when horizontal scrolling reaches the end of the content.
     public var isAlwaysBounceHorizontal: Bool = false
     
-    /// Returns whether to cancel touches related to the content subview and start dragging.
-    public func touchesShouldCancel(in view: UIView) -> Bool {
-        
-        return false
-    }
-    
     /// Overridden by subclasses to customize the default behavior when a finger touches down in displayed content.
     public func touchesShouldBegin(_ touches: Set<UITouch>,
                                    with event: UIEvent?,
@@ -199,6 +193,17 @@ open class UIScrollView: UIView {
     }
     
     
+    /// Returns whether to cancel touches related to the content subview and start dragging.
+    public func touchesShouldCancel(in view: UIView) -> Bool {
+        
+        return false
+    }
+    
+    /// A Boolean value that controls whether touches in the content view always lead to tracking.
+    public var canCancelContentTouches: Bool = true
+    
+    /// A Boolean value that determines whether the scroll view delays the handling of touch-down gestures.
+    public var delaysContentTouches: Bool = true
     
     // MARK: - Zooming and Panning
     
@@ -214,8 +219,54 @@ open class UIScrollView: UIView {
         
         if gesture === panGestureRecognizer {
             
-            
+            switch panGestureRecognizer.state {
+                
+            case .began:
+                
+                beginDragging()
+                
+            case .changed:
+                
+                let delta = panGestureRecognizer.translation(in: self)
+                
+                drag(by: delta)
+                
+            case .ended:
+                
+                break
+                
+            case .possible, .failed, .cancelled:
+                
+                break
+            }
         }
+    }
+    
+    private func beginDragging() {
+        
+        
+    }
+    
+    private func drag(by delta: CGPoint) {
+        
+        let confinedDelta = confined(delta: delta, animated: false)
+        
+        scrollContent(confinedDelta, animated: false)
+    }
+    
+    private func endDragging(velocity: CGPoint) {
+        
+        
+    }
+    
+    private func confined(delta: CGPoint, animated: Bool) -> CGPoint {
+        
+        
+    }
+    
+    private func scrollContent(_ delta: CGPoint, animated: Bool) {
+        
+        
     }
     
     private func updateBounds() {
@@ -264,20 +315,25 @@ open class UIScrollView: UIView {
         return contentOffset
     }
     
-    private func setRestrainedContentOffset(_ offset: CGPoint) {
+    private func setRestrainedContentOffset(_ contentOffset: CGPoint) {
         
-        let confinedOffset = confinedContentOffset(offset)
+        var contentOffset = self.contentOffset
+        let confinedOffset = confinedContentOffset(contentOffset)
         let scrollerBounds = UIEdgeInsetsInsetRect(bounds, contentInset)
-        /*
-        if !isAlwaysBounceHorizontal && contentSize.width <= scrollerBounds.size.width {
-            offset.x = confinedOffset.x
+        
+        if isAlwaysBounceHorizontal == false,
+            contentSize.width <= scrollerBounds.size.width {
+            
+            contentOffset.x = confinedOffset.x
         }
         
-        if !isAlwaysBounceVertical && contentSize.height <= scrollerBounds.size.height {
-            offset.y = confinedOffset.y
+        if isAlwaysBounceVertical == false,
+            contentSize.height <= scrollerBounds.size.height {
+            
+            contentOffset.y = confinedOffset.y
         }
-        */
-        self.contentOffset = offset
+        
+        self.contentOffset = confinedOffset
     }
 }
 
