@@ -205,6 +205,57 @@ open class UIScrollView: UIView {
     /// A Boolean value that determines whether the scroll view delays the handling of touch-down gestures.
     public var delaysContentTouches: Bool = true
     
+    /// A floating-point value that determines the rate of deceleration after the user lifts their finger.
+    public var decelerationRate: CGFloat = UIScrollViewDecelerationRateNormal
+    
+    /// A Boolean value that indicates whether the user has begun scrolling the content.
+    public private(set) var isDragging: Bool = false
+    
+    /// Returns whether the user has touched the content to initiate scrolling.
+    public private(set) var isTracking: Bool = false
+    
+    /// Returns whether the content is moving in the scroll view after the user lifted their finger.
+    public private(set) var isDecelerating: Bool = false
+    
+    /// The underlying gesture recognizer for directional button presses.
+    //var directionalPressGestureRecognizer: UIGestureRecognizer
+    
+    // MARK: - Managing the Scroll Indicator and Refresh Control
+    
+    /// The style of the scroll indicators.
+    public var indicatorStyle: UIScrollViewIndicatorStyle = .default {
+        
+        didSet {
+            //horizontalScroller.indicatorStyle = style
+            //verticalScroller.indicatorStyle = style
+        }
+    }
+    
+    /// The distance the scroll indicators are inset from the edge of the scroll view.
+    public var scrollIndicatorInsets: UIEdgeInsets = .zero
+    
+    /// A Boolean value that controls whether the horizontal scroll indicator is visible.
+    public var showsHorizontalScrollIndicator: Bool = true
+    
+    /// A Boolean value that controls whether the vertical scroll indicator is visible.
+    public var showsVerticalScrollIndicator: Bool = true
+    
+    /// Displays the scroll indicators momentarily.
+    public func flashScrollIndicators() {
+        
+        //horizontalScroller?.flash()
+        //verticalScroller?.flash()
+    }
+    
+    /// The refresh control associated with the scroll view.
+    public var refreshControl: UIRefreshControl? = nil {
+        
+        didSet {
+            
+            
+        }
+    }
+    
     // MARK: - Zooming and Panning
     
     /// The underlying gesture recognizer for pan gestures.
@@ -212,6 +263,32 @@ open class UIScrollView: UIView {
     /// Your application accesses this property when it wants to more precisely control
     /// which pan gestures are recognized by the scroll view.
     public private(set) var panGestureRecognizer: UIPanGestureRecognizer!
+    
+    // MARK: - Managing the Keyboard
+    
+    /// The manner in which the keyboard is dismissed when a drag begins in the scroll view.
+    public var keyboardDismissMode: UIScrollViewKeyboardDismissMode = .none
+    
+    // MARK: - Overriden Methods
+    
+    open override func didAddSubview(_ subview: UIView) {
+        bringScrollersToFront()
+    }
+    
+    public override func addSubview(_ subview: UIView) {
+        super.addSubview(subview)
+        bringScrollersToFront()
+    }
+    
+    public override func bringSubview(toFront subview: UIView) {
+        super.bringSubview(toFront: subview)
+        bringScrollersToFront()
+    }
+    
+    public override func insertSubview(_ subview: UIView, at index: Int) {
+        super.insertSubview(subview, at: index)
+        bringScrollersToFront()
+    }
     
     // MARK: - Private
     
@@ -233,7 +310,9 @@ open class UIScrollView: UIView {
                 
             case .ended:
                 
-                break
+                let velocity = panGestureRecognizer.velocity(in: self)
+                
+                endDragging(velocity: velocity)
                 
             case .possible, .failed, .cancelled:
                 
@@ -256,7 +335,26 @@ open class UIScrollView: UIView {
     
     private func endDragging(velocity: CGPoint) {
         
-        
+        if isDragging {
+            
+            isDragging = false
+            //let decelerationAnimation: UIScrollViewAnimation? = isPagingEnabled ? _pageSnapAnimation() : _decelerationAnimation(withVelocity: velocity)
+            //delegate?.scrollViewDidEndDragging(self, willDecelerate: (decelerationAnimation != nil))
+            if /* decelerationAnimation != nil */ false {
+                
+                //_setScroll(decelerationAnimation)
+                //horizontalScroller?.alwaysVisible = true
+                //verticalScroller?.alwaysVisible = true
+                isDecelerating = true
+                
+                delegate?.scrollViewWillBeginDecelerating(self)
+            }
+            else {
+                //horizontalScroller?.alwaysVisible = false
+                //verticalScroller?.alwaysVisible = false
+                confineContent()
+            }
+        }
     }
     
     private func confined(delta: CGPoint, animated: Bool) -> CGPoint {
@@ -271,7 +369,8 @@ open class UIScrollView: UIView {
     
     private func updateBounds() {
         
-        self.bounds.origin = CGPoint(x: contentOffset.x - contentInset.left, y: contentOffset.y - contentInset.top)
+        self.bounds.origin = CGPoint(x: contentOffset.x - contentInset.left,
+                                     y: contentOffset.y - contentInset.top)
         updateScrollers()
         setNeedsLayout()
     }
@@ -285,6 +384,11 @@ open class UIScrollView: UIView {
         verticalScroller?.isHidden = !canScrollVertical
         horizontalScroller?.isHidden = !canScrollHorizontal
          */
+    }
+    
+    func bringScrollersToFront() {
+        //super.bringSubview(toFront: horizontalScroller)
+        //super.bringSubview(toFront: verticalScroller)
     }
     
     @inline(__always)
@@ -338,6 +442,32 @@ open class UIScrollView: UIView {
 }
 
 // MARK: - Supporting Types
+
+public let UIScrollViewDecelerationRateNormal: CGFloat = 0.998
+public let UIScrollViewDecelerationRateFast: CGFloat = 0.99
+
+public enum UIScrollViewIndicatorStyle: Int {
+    
+    public init() { self = .default }
+    
+    case `default`
+    case black
+    case white
+}
+
+public enum UIScrollViewKeyboardDismissMode {
+    
+    public init() { self = .none }
+    
+    /// The keyboard does not get dismissed with a drag.
+    case none
+    
+    /// The keyboard is dismissed when a drag begins.
+    case onDrag
+    
+    /// The keyboard follows the dragging touch offscreen, and can be pulled upward again to cancel the dismiss.
+    case interactive
+}
 
 /// The methods declared by the UIScrollViewDelegate protocol allow the adopting delegate
 /// to respond to messages from the `UIScrollView` class and thus respond to,
