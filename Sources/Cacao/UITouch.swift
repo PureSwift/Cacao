@@ -17,23 +17,59 @@ import Silica
 /// An object representing the location, size, movement, and force of a touch occurring on the screen.
 public final class UITouch: NSObject {
     
-    /// The absolute location, relative to screen.
-    internal let location: CGPoint
-    
-    internal init(timestamp: TimeInterval = ProcessInfo.processInfo.systemUptime,
-                  location: CGPoint,
-                  phase: UITouchPhase,
-                  view: UIView?,
-                  window: UIWindow?) {
+    internal private(set) var touches: [Touch]
         
-        self.timestamp = timestamp
-        self.location = location
-        self.phase = phase
-        self.view = view
-        self.window = window
+    internal var previousTouch: Touch? {
+        
+        guard touches.count >= 2
+            else { return nil }
+        
+        return touches[touches.count - 2]
+    }
+    
+    /// The absolute location, relative to screen.
+    internal var location: CGPoint {
+        
+        return touches.last!.location
+    }
+    
+    internal var delta: CGPoint {
+        
+        guard let previousLocation = self.previousTouch?.location
+            else { return .zero }
+        
+        let location = self.location
+        
+        return CGPoint(x: location.x - previousLocation.x,
+                       y: location.y - previousLocation.y)
+    }
+    
+    internal init(_ touch: Touch) {
+        
+        self.touches = [touch]
+    }
+    
+    internal func update(_ touch: Touch) {
+        
+        touches.append(touch)
     }
     
     // MARK: - Getting the Location of a Touch
+    
+    /// The view to which touches are being delivered, if any.
+    public var view: UIView? { return touches.last!.view }
+    
+    /// The window in which the touch initially occurred.
+    public var window: UIWindow? { return touches.last!.window }
+    
+    /// The gesture recognizers that are receiving the touch object.
+    public var gestureRecognizers: [UIGestureRecognizer]? { return touches.last!.gestureRecognizers }
+    
+    /// The phase of the touch.
+    public var phase: UITouchPhase { return touches.last!.phase }
+    
+    /// The time when the touch occurred.
+    public var timestamp: TimeInterval { return touches.last!.timestamp }
     
     /// Returns the current location of the receiver in the coordinate system of the given view.
     ///
@@ -46,27 +82,33 @@ public final class UITouch: NSObject {
     /// this method performs any necessary conversion of the touch location to the coordinate system of the specified view.
     public func location(in view: UIView? = nil) -> CGPoint {
         
-        fatalError()
+        let view = view ?? touches.last!.window
+        
+        return view.convert(location, to: view)
     }
     
     /// Returns the previous location of the receiver in the coordinate system of the given view.
     public func previousLocation(in view: UIView? = nil) -> CGPoint {
         
-        fatalError()
+        guard let previousTouch = self.previousTouch
+            else { return .zero }
+        
+        let view = view ?? previousTouch.window // should always be same window
+        
+        return view.convert(previousTouch.location, to: view)
     }
     
-    /// The view to which touches are being delivered, if any.
-    public let view: UIView?
+    public override var description: String {
+        
+        return "\(Swift.type(of: self))(timestamp: \(timestamp), location: \(location), phase: \(phase))"
+    }
+}
+
+// MARK: - CustomStringConvertible
+
+extension UITouch {
     
-    /// The window in which the touch initially occurred.
-    public let window: UIWindow?
     
-    public internal(set) var gestureRecognizers: [UIGestureRecognizer]?
-    
-    /// The phase of the touch.
-    public let phase: UITouchPhase
-    
-    public let timestamp: TimeInterval
 }
 
 // MARK: - Supporting Types
@@ -87,4 +129,67 @@ public enum UITouchPhase: Int {
     
     ///  The system canceled tracking for the touch, as when (for example) the user moves the device against his or her face.
     case cancelled
+}
+
+// MARK: - Internal
+
+internal extension UITouch {
+    
+    final class Touch {
+        
+        /// The absolute location, relative to screen.
+        let location: CGPoint
+        
+        /// The time when the touch occurred.
+        let timestamp: TimeInterval
+        
+        /// The phase of the touch.
+        let phase: UITouchPhase
+        
+        /// The view to which touches are being delivered, if any.
+        let view: UIView
+        
+        /// The window in which the touch initially occurred.
+        let window: UIWindow
+        
+        /// The gesture recognizers that are receiving the touch object.
+        let gestureRecognizers: [UIGestureRecognizer]
+        
+        init(location: CGPoint, timestamp: TimeInterval, phase: UITouchPhase, view: UIView, window: UIWindow, gestureRecognizers: [UIGestureRecognizer]) {
+            
+            self.location = location
+            self.timestamp = timestamp
+            self.phase = phase
+            self.view = view
+            self.window = window
+            self.gestureRecognizers = gestureRecognizers
+        }
+    }
+}
+
+internal extension Array where Element == CGPoint {
+    
+    var center: CGPoint {
+        
+        guard self.isEmpty == false
+            else { return .zero }
+        
+        let combinedPoint = self.reduce(CGPoint(), { CGPoint(x: $0.x + $1.x, y: $0.y + $1.y) })
+        
+        return CGPoint(x: combinedPoint.x / CGFloat(self.count),
+                       y: combinedPoint.y / CGFloat(self.count))
+    }
+}
+
+internal extension Set where Element == UITouch {
+    
+    var center: CGPoint {
+        
+        return self.map({ $0.location }).center
+    }
+    
+    var delta: CGPoint {
+                
+        return self.map({ $0.delta }).center
+    }
 }

@@ -144,14 +144,14 @@ public final class UIScreen {
         // add translation
         //context.translate(x: view.frame.x, y: view.frame.y)
         var relativeOrigin = origin
-        relativeOrigin.x += view.frame.origin.x * scale
-        relativeOrigin.y += view.frame.origin.y * scale
+        relativeOrigin.x += (view.frame.origin.x + (view.superview?.bounds.origin.x ?? 0.0)) * scale
+        relativeOrigin.y += (view.frame.origin.y + (view.superview?.bounds.origin.y ?? 0.0)) * scale
         
         // frame of view relative to SDL window
         let rect = SDL_Rect(x: Int32(relativeOrigin.x),
                             y: Int32(relativeOrigin.y),
-                            w: Int32(view.frame.size.width * scale),
-                            h: Int32(view.frame.size.height * scale))
+                            w: Int32(view.bounds.size.width * scale),
+                            h: Int32(view.bounds.size.height * scale))
         
         // render view
         view.render(on: self, in: rect)

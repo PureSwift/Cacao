@@ -6,31 +6,32 @@
 //
 
 import typealias Foundation.TimeInterval
-import class Foundation.ProcessInfo
 
 /// An object that describes a single user interaction with your app.
-public final class UIEvent {
+public class UIEvent {
     
     // MARK: - Getting the Touches for an Event
     
     /// Returns all touches associated with the event.
     ///
     /// - Returns: A set of `UITouch` objects representing all touches associated with the event.
-    public internal(set) var allTouches: Set<UITouch>? = []
+    public var allTouches: Set<UITouch>? { return touches }
+    
+    internal var touches = Set<UITouch>()
     
     public func touches(for view: UIView) -> Set<UITouch>? {
         
-        return allTouches?.filter({ $0.view === view })
+        return touches.filter({ $0.view === view })
     }
     
     public func touches(for window: UIWindow) -> Set<UITouch>? {
         
-        return allTouches?.filter({ $0.window === window })
+        return touches.filter({ $0.window === window })
     }
     
     public func touches(for gestureRecognizer: UIGestureRecognizer) -> Set<UITouch>? {
         
-        return allTouches?.filter({ $0.gestureRecognizers?.contains(where: { $0 === gestureRecognizer }) ?? false })
+        return touches.filter({ $0.gestureRecognizers?.contains(where: { $0 === gestureRecognizer }) ?? false })
     }
     
     // MARK: - Getting Event Attributes
@@ -39,7 +40,7 @@ public final class UIEvent {
     ///
     /// This property contains the number of seconds that have elapsed since system startup.
     /// For a description of this time value, see the description of the `systemUptime` method of the `ProcessInfo` class.
-    public let timestamp: TimeInterval
+    public internal(set) var timestamp: TimeInterval
     
     // MARK: - Getting the Event Type
     
@@ -57,11 +58,23 @@ public final class UIEvent {
     
     // MARK: - Initialization
     
-    internal init(timestamp: TimeInterval = ProcessInfo.processInfo.systemUptime) {
+    internal init(timestamp: TimeInterval) {
         
         self.timestamp = timestamp
     }
 }
+
+// MARK: - CustomStringConvertible
+
+extension UIEvent: CustomStringConvertible {
+    
+    public var description: String {
+        
+        return "\(Swift.type(of: self))(timestamp:\(timestamp), touches: \(touches))"
+    }
+}
+
+// MARK: - Supporting Types
 
 public enum UIEventType: Int {
     
@@ -71,7 +84,10 @@ public enum UIEventType: Int {
     /// The event is related to motion of the device, such as when the user shakes it.
     case motion
     
-    /// The event is a remote-control event. Remote-control events originate as commands received from a headset or external accessory for the purposes of controlling multimedia on the device.
+    /// The event is a remote-control event.
+    ///
+    /// Remote-control events originate as commands received from a headset
+    /// or external accessory for the purposes of controlling multimedia on the device.
     case remoteControl
     
     /// The event is related to the press of a physical button.

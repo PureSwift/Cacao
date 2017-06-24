@@ -62,18 +62,39 @@ open class UIWindow: UIView {
     /// Dispatches the specified event to its views.
     public final func sendEvent(_ event: UIEvent) {
         
-        // handle gestures
-        
-        // handle touches
-        
         switch event.type {
             
         case .touches:
             
-            let touches = event.allTouches ?? []
+            let touches = event.touches(for: self) ?? []
+            
+            let gestureRecognizers = touches.reduce([UIGestureRecognizer](), { $0 + ($1.gestureRecognizers ?? []) })
+            
+            // handle gestures
+            
+            for gesture in gestureRecognizers {
+                
+                guard gesture.shouldRecognize
+                    else { continue }
+                
+                gesture.touches = touches.sorted(by: { $0.timestamp < $1.timestamp })
+                
+                for touch in touches {
+                    
+                    switch touch.phase {
+                    case .began: gesture.touchesBegan(touches, with: event)
+                    case .moved: gesture.touchesMoved(touches, with: event)
+                    case .stationary: break
+                    case .ended: gesture.touchesEnded(touches, with: event)
+                    case .cancelled: gesture.touchesCancelled(touches, with: event)
+                    }
+                }
+            }
+            
+            // handle touches
             
             for touch in touches {
-                                
+                
                 switch touch.phase {
                 case .began: touch.view?.touchesBegan(touches, with: event)
                 case .moved: touch.view?.touchesMoved(touches, with: event)
@@ -83,7 +104,9 @@ open class UIWindow: UIView {
                 }
             }
             
-        default: break
+        default:
+            
+            fatalError("\(event.type) events not implemented")
         }
     }
     

@@ -313,7 +313,7 @@ open class UIView: UIResponder {
     /// this method removes the previous superview before making the receiver its new superview.
     ///
     /// - Parameter view: The view to be added. After being added, this view appears on top of any other subviews.
-    public final func addSubview(_ view: UIView) {
+    public func addSubview(_ view: UIView) {
         
         addSubview(view, { $0.append($1) })
     }
@@ -339,7 +339,7 @@ open class UIView: UIResponder {
     /// This method moves the specified view to the end of the array of views in the subviews property.
     ///
     /// - Parameter view: The subview to move to the front.
-    public final func bringSubview(toFront view: UIView) {
+    public func bringSubview(toFront view: UIView) {
         
         assert(subviews.contains(where: { $0 === view }), "\(view) is not a subview of \(self)")
         
@@ -396,7 +396,7 @@ open class UIView: UIResponder {
     /// Views can have only one superview.
     /// If view already has a superview and that view is not the receiver,
     /// this method removes the previous superview before making the receiver its new superview.
-    public final func insertSubview(_ view: UIView, at index: Int) {
+    public func insertSubview(_ view: UIView, at index: Int) {
         
         addSubview(view, { $0.insert($1, at: index) })
     }
@@ -807,6 +807,37 @@ open class UIView: UIResponder {
     public final func setNeedsDisplay(_ rect: CGRect? = nil) {
         
         self.window?.screen.needsDisplay = true
+    }
+    
+    // MARK: - Managing Gesture Recognizers
+    
+    /// Attaches a gesture recognizer to the view.
+    public func addGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer) {
+        
+        // remove from old view
+        gestureRecognizer.view?.removeGestureRecognizer(gestureRecognizer)
+        
+        // add to view
+        gestureRecognizer.view = self
+        gestureRecognizers?.append(gestureRecognizer)
+    }
+    
+    /// Detaches a gesture recognizer from the receiving view.
+    public func removeGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer) {
+        
+        guard let index = gestureRecognizers?.index(where: { $0 === gestureRecognizer })
+            else { return }
+        
+        gestureRecognizers?.remove(at: index)
+        gestureRecognizer.view = nil
+    }
+    
+    /// The gesture-recognizer objects currently attached to the view.
+    public var gestureRecognizers: [UIGestureRecognizer]? = []
+    
+    /// Asks the view if the gesture recognizer should be allowed to continue tracking touch events.
+    open func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
     }
     
     // MARK: - Event Handling
