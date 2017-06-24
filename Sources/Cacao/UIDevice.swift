@@ -5,6 +5,12 @@
 //  Created by Alsey Coleman Miller on 6/24/17.
 //
 
+#if os(macOS)
+    import Darwin
+#elseif os(Linux)
+    import Glibc
+#endif
+
 import Foundation
 
 /// Use a `UIDevice` object to get information about the device such as assigned name, device model,
@@ -144,25 +150,6 @@ public final class UIDevice {
             return .unknown
         #endif
     }
-    
-    // MARK: - Private
-    
-    private static func systemInformation(for name: String) -> String? {
-        
-        var size = 0
-        
-        sysctlbyname(name, nil, &size, nil, 0)
-        
-        guard size > 0 else { return nil }
-        
-        let cString = UnsafeMutablePointer<CChar>.allocate(capacity: size)
-        
-        defer { cString.deallocate(capacity: size) }
-        
-        sysctlbyname(name, cString, &size, nil, 0)
-        
-        return String(cString: cString)
-    }
 }
 
 // MARK: - Supporting Types
@@ -211,6 +198,23 @@ public enum UIDeviceBatteryState: Int {
         /// Macintosh Device information
         struct Mac {
             
+            static func systemInformation(for name: String) -> String? {
+                
+                var size = 0
+                
+                sysctlbyname(name, nil, &size, nil, 0)
+                
+                guard size > 0 else { return nil }
+                
+                let cString = UnsafeMutablePointer<CChar>.allocate(capacity: size)
+                
+                defer { cString.deallocate(capacity: size) }
+                
+                sysctlbyname(name, cString, &size, nil, 0)
+                
+                return String(cString: cString)
+            }
+            
             /// Get the computer name on a Macintosh.
             static var name: String {
                 
@@ -220,7 +224,7 @@ public enum UIDeviceBatteryState: Int {
             /// Get the model name on a Macintosh.
             static var model: String {
                 
-                guard let hardwareModel = UIDevice.systemInformation(for: "hw.model")
+                guard let hardwareModel = systemInformation(for: "hw.model")
                     else { return "" }
                 
                 var family: Family?
