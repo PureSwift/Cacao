@@ -55,3 +55,21 @@ extension UIEdgeInsets: Equatable {
             && lhs.top == rhs.top
     }
 }
+
+// MARK: - Functions
+
+/// Adjusts a rectangle by the given edge insets.
+///
+/// This inline function increments the origin of rect and decrements the size of rect
+/// by applying the appropriate member values of the `UIEdgeInsets` structure.
+public func UIEdgeInsetsInsetRect(_ rect: CGRect, _ insets: UIEdgeInsets) -> CGRect {
+    
+    var rect = rect
+    
+    rect.origin.x += insets.left
+    rect.origin.y += insets.top
+    rect.size.width -= (insets.left + insets.right)
+    rect.size.height -= (insets.top + insets.bottom)
+    
+    return rect
+}

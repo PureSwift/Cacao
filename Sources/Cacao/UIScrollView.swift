@@ -44,22 +44,23 @@ open class UIScrollView: UIView {
         get { return bounds.origin }
         set { setContentOffset(newValue, animated: false) }
     }
+    private var _contentOffset: CGPoint = .zero
     
     /// Sets the offset from the content view’s origin that corresponds to the receiver’s origin.
     public func setContentOffset(_ contentOffset: CGPoint, animated: Bool) {
         
-        if animated {
+        if animated {/*
             var animation: UIScrollViewAnimationScroll? = nil
             if (scrollAnimation? is UIScrollViewAnimationScroll) {
                 animation = (scrollAnimation as? UIScrollViewAnimationScroll)
             }
             if !animation || !theOffset.equalTo(animation?.endContentOffset) {
                 _setScrollAnimation(UIScrollViewAnimationScroll(self, fromContentOffset: contentOffset, toContentOffset: theOffset, duration: UIScrollViewAnimationDuration, curve: UIScrollViewAnimationScrollCurveLinear))
-            }
+            }*/
         }
         else {
-            contentOffset.x = roundf(contentOffset.x)
-            contentOffset.y = roundf(contentOffset.y)
+            _contentOffset.x = round(contentOffset.x)
+            _contentOffset.y = round(contentOffset.y)
             updateBounds()
             
             delegate?.scrollViewDidScroll(self)
@@ -69,14 +70,25 @@ open class UIScrollView: UIView {
     /// The size of the content view.
     public var contentSize: CGSize = .zero {
         
-        didSet {  }
+        didSet { confineContent() }
     }
     
     /// The distance that the content view is inset from the enclosing scroll view.
     ///
     /// Use this property to add to the scrolling area around the content.
     /// The unit of size is points. The default value is `.zero`.
-    public var contentInset: UIEdgeInsets = .zero
+    public var contentInset: UIEdgeInsets = .zero {
+        
+        didSet {
+            
+            guard oldValue != contentInset else { return }
+            
+            contentOffset.x -= contentInset.left - oldValue.left
+            contentOffset.y -= contentInset.top - oldValue.top
+            
+            updateBounds()
+        }
+    }
     
     // MARK: - Managing Scrolling
     
@@ -101,63 +113,74 @@ open class UIScrollView: UIView {
     
     // MARK: - Private
     
-    private var dragging = false
-    
     private func panGesture(_ gesture: UIGestureRecognizer) {
         
         if gesture === panGestureRecognizer {
             
-            switch panGestureRecognizer.state {
-                
-            case .began:
-                
-                beginDragging()
-                
-            case .changed:
-                
-                let delta = panGestureRecognizer.translation(in: self)
-                
-                drag(by: delta)
-                
-            case .ended:
-                
-                break
-                
-            case .possible, .failed, .cancelled:
-                
-                break
-            }
-        }
-    }
-    
-    private func beginDragging() {
-        
-        if dragging == false {
-            
             
         }
     }
     
-    private func drag(by delta: CGPoint) {
+    private func updateBounds() {
         
-        let confinedDelta = confined(delta: delta, animated: false)
-        
-        scrollContent(confinedDelta, animated: false)
+        self.bounds.origin = CGPoint(x: contentOffset.x - contentInset.left, y: contentOffset.y - contentInset.top)
+        updateScrollers()
+        setNeedsLayout()
     }
     
-    private func endDragging(velocity: CGPoint) {
-        
-        
+    private func updateScrollers() {
+        /*
+        verticalScroller?.contentSize = contentSize.height
+        verticalScroller?.contentOffset = contentOffset.y
+        horizontalScroller?.contentSize = contentSize.width
+        horizontalScroller?.contentOffset = contentOffset.x
+        verticalScroller?.isHidden = !canScrollVertical
+        horizontalScroller?.isHidden = !canScrollHorizontal
+         */
     }
     
-    private func confined(delta: CGPoint, animated: Bool) -> CGPoint {
+    @inline(__always)
+    private func confineContent() {
         
-        
+        self.contentOffset = confinedContentOffset(self.contentOffset)
     }
     
-    private func scrollContent(_ delta: CGPoint, animated: Bool) {
+    private func confinedContentOffset(_ contentOffset: CGPoint) -> CGPoint {
         
+        var contentOffset = contentOffset
         
+        let scrollerBounds = UIEdgeInsetsInsetRect(bounds, contentInset)
+        if (contentSize.width - contentOffset.x) < scrollerBounds.size.width {
+            contentOffset.x = (contentSize.width - scrollerBounds.size.width)
+        }
+        if (contentSize.height - contentOffset.y) < scrollerBounds.size.height {
+            contentOffset.y = (contentSize.height - scrollerBounds.size.height)
+        }
+        contentOffset.x = max(contentOffset.x, 0)
+        contentOffset.y = max(contentOffset.y, 0)
+        if contentSize.width <= scrollerBounds.size.width {
+            contentOffset.x = 0
+        }
+        if contentSize.height <= scrollerBounds.size.height {
+            contentOffset.y = 0
+        }
+        return contentOffset
+    }
+    
+    private func setRestrainedContentOffset(_ offset: CGPoint) {
+        
+        let confinedOffset = confinedContentOffset(offset)
+        let scrollerBounds = UIEdgeInsetsInsetRect(bounds, contentInset)
+        /*
+        if !isAlwaysBounceHorizontal && contentSize.width <= scrollerBounds.size.width {
+            offset.x = confinedOffset.x
+        }
+        
+        if !isAlwaysBounceVertical && contentSize.height <= scrollerBounds.size.height {
+            offset.y = confinedOffset.y
+        }
+        */
+        self.contentOffset = offset
     }
 }
 
