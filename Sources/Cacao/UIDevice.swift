@@ -123,13 +123,27 @@ public final class UIDevice {
     /// Before accessing this property, ensure that battery monitoring is enabled.
     /// If battery monitoring is not enabled, battery state is `unknown`
     /// and the value of this property is –1.0.
-    public private(set) var batteryLevel: Float = -1.0
+    public var batteryLevel: Float {
+        
+        #if os(macOS)
+            return Mac.batteryLevel
+        #elseif os(Linux)
+            return -1
+        #endif
+    }
     
     /// A Boolean value indicating whether battery monitoring is enabled (true) or not (false).
     public var isBatteryMonitoringEnabled: Bool = false
     
     /// The battery state for the device.
-    public private(set) var batteryState: UIDeviceBatteryState = .unknown
+    public var batteryState: UIDeviceBatteryState {
+        
+        #if os(macOS)
+            return Mac.batteryState
+        #elseif os(Linux)
+            return .unknown
+        #endif
+    }
     
     // MARK: - Private
     
@@ -223,7 +237,7 @@ public enum UIDeviceBatteryState: Int {
                 return family?.description ?? hardwareModel
             }
             
-            static func powerSources() -> [PowerSource] {
+            static var powerSources: [PowerSource] {
                 
                 let sourcesInfo = IOPSCopyPowerSourcesInfo().takeRetainedValue()
                 
@@ -235,9 +249,39 @@ public enum UIDeviceBatteryState: Int {
                 return []
             }
             
+            static var batteryState: UIDeviceBatteryState {
+                
+                guard let powerSource = powerSources.first
+                    else { return .unknown }
+                
+                switch powerSource.state {
+                    
+                case kIOPSACPowerValue:
+                    
+                    // determine charging
+                    if powerSource.currentCapacity == powerSource.maximumCapacity {
+                        
+                        return .full
+                        
+                    } else {
+                        
+                        return .charging
+                    }
+                    
+                case kIOPSBatteryPowerValue:
+                    
+                    return .unplugged
+                    
+                default: return .unknown
+                }
+            }
+            
             static var batteryLevel: Float {
                 
-                return -1
+                guard let powerSource = powerSources.first
+                    else { return -1 }
+                
+                return powerSource.chargedPercentage
             }
         }
     }
@@ -272,19 +316,6 @@ public enum UIDeviceBatteryState: Int {
         
         struct PowerSource {
             
-            enum State: String {
-                
-                case offLine = "Off Line"
-                case ac = "AC Power"
-                case battery = "Battery Power"
-            }
-            
-            enum Category: String {
-                
-                case battery = "InternalBattery"
-                case ups = "UPS"
-            }
-            
             let identifier: Int
             let serialNumber: String
             let name: String
@@ -292,8 +323,8 @@ public enum UIDeviceBatteryState: Int {
             let currentCapacity: Int
             let charging: Bool
             let present: Bool
-            let state: State?
-            let category: Category?
+            let state: String
+            let category: String
             
             var chargedPercentage: Float {
                 
@@ -320,8 +351,8 @@ public enum UIDeviceBatteryState: Int {
                 self.currentCapacity = currentCapacity
                 self.charging = charging
                 self.present = present
-                self.state = State(rawValue: state)
-                self.category = Category(rawValue: type)
+                self.state = state
+                self.category = type
             }
         }
     }

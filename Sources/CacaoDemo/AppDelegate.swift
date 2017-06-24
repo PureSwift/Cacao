@@ -20,7 +20,8 @@ final class AppDelegate: UIApplicationDelegate {
         print("Device: \(UIDevice.current.name)")
         print("Model: \(UIDevice.current.model)")
         print("System: \(UIDevice.current.systemName) \(UIDevice.current.systemVersion)")
-        print("Running at \(UIScreen.main.maximumFramesPerSecond) FPS")
+        print("Battery: \(UIDevice.current.batteryLevel) (\(UIDevice.current.batteryState))")
+        print("FPS: \(UIScreen.main.maximumFramesPerSecond)")
         
         window = UIWindow(frame: UIScreen.main.bounds)
         
