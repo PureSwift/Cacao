@@ -271,6 +271,18 @@ open class UIScrollView: UIView {
     
     // MARK: - Overriden Methods
     
+    open override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        //let scrollerSize = UIScrollerWidthForBoundsSize(bounds.size)
+        
+        //verticalScroller?.frame = CGRect(x: CGFloat(bounds.origin.x + bounds.size.width - scrollerSize - scrollIndicatorInsets.right), y: CGFloat(bounds.origin.y + scrollIndicatorInsets.top), width: scrollerSize, height: CGFloat(bounds.size.height - scrollIndicatorInsets.top - scrollIndicatorInsets.bottom))
+        
+        //horizontalScroller?.frame = CGRect(x: CGFloat(bounds.origin.x + scrollIndicatorInsets.left), y: CGFloat(bounds.origin.y + bounds.size.height - scrollerSize - scrollIndicatorInsets.bottom), width: CGFloat(bounds.size.width - scrollIndicatorInsets.left - scrollIndicatorInsets.right), height: scrollerSize)
+        
+        confineContent()
+    }
+    
     open override func didAddSubview(_ subview: UIView) {
         bringScrollersToFront()
     }
@@ -323,14 +335,45 @@ open class UIScrollView: UIView {
     
     private func beginDragging() {
         
+        guard isDragging == false
+            else { return }
         
+        isDragging = true
+        
+        //horizontalScroller?.alwaysVisible = true
+        //verticalScroller?.alwaysVisible = true
+        //cancelScrollAnimation()
+        
+        delegate?.scrollViewWillBeginDragging(self)
     }
     
     private func drag(by delta: CGPoint) {
         
-        let confinedDelta = confined(delta: delta, animated: false)
+        guard isDragging
+            else { return }
         
-        scrollContent(confinedDelta, animated: false)
+        //horizontalScroller?.alwaysVisible = true
+        //verticalScroller?.alwaysVisible = true
+        let originalOffset = contentOffset
+        var proposedOffset = originalOffset
+        proposedOffset.x += delta.x
+        proposedOffset.y += delta.y
+        let confinedOffset = confined(contentOffset: proposedOffset)
+        
+        if bounces {
+            let shouldHorizontalBounce = (fabs(proposedOffset.x - confinedOffset.x) > 0)
+            let shouldVerticalBounce = (fabs(proposedOffset.y - confinedOffset.y) > 0)
+            if shouldHorizontalBounce {
+                proposedOffset.x = originalOffset.x + (0.055 * delta.x)
+            }
+            if shouldVerticalBounce {
+                proposedOffset.y = originalOffset.y + (0.055 * delta.y)
+            }
+            setRestrained(contentOffset: proposedOffset)
+        }
+        else {
+            contentOffset = confinedOffset
+        }
     }
     
     private func endDragging(velocity: CGPoint) {
@@ -355,16 +398,6 @@ open class UIScrollView: UIView {
                 confineContent()
             }
         }
-    }
-    
-    private func confined(delta: CGPoint, animated: Bool) -> CGPoint {
-        
-        
-    }
-    
-    private func scrollContent(_ delta: CGPoint, animated: Bool) {
-        
-        
     }
     
     private func updateBounds() {
@@ -394,10 +427,10 @@ open class UIScrollView: UIView {
     @inline(__always)
     private func confineContent() {
         
-        self.contentOffset = confinedContentOffset(self.contentOffset)
+        self.contentOffset = confined(contentOffset: self.contentOffset)
     }
     
-    private func confinedContentOffset(_ contentOffset: CGPoint) -> CGPoint {
+    private func confined(contentOffset: CGPoint) -> CGPoint {
         
         var contentOffset = contentOffset
         
@@ -419,10 +452,10 @@ open class UIScrollView: UIView {
         return contentOffset
     }
     
-    private func setRestrainedContentOffset(_ contentOffset: CGPoint) {
+    private func setRestrained(contentOffset: CGPoint) {
         
         var contentOffset = self.contentOffset
-        let confinedOffset = confinedContentOffset(contentOffset)
+        let confinedOffset = confined(contentOffset: contentOffset)
         let scrollerBounds = UIEdgeInsetsInsetRect(bounds, contentInset)
         
         if isAlwaysBounceHorizontal == false,
