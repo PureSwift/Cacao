@@ -316,7 +316,21 @@ open class UIScrollView: UIView {
                 
             case .changed:
                 
-                let delta = panGestureRecognizer.translation(in: self)
+                let translation = panGestureRecognizer.translation(in: self)
+                
+                let delta: CGPoint
+                
+                if let previousTranslation = self.previousTranslation {
+                    
+                    delta = CGPoint(x: translation.x - previousTranslation.x,
+                                    y: translation.y - previousTranslation.y)
+                    
+                } else {
+                    
+                    delta = translation
+                }
+                
+                self.previousTranslation = translation
                 
                 drag(by: delta)
                 
@@ -333,12 +347,17 @@ open class UIScrollView: UIView {
         }
     }
     
+    // Used for calculating delta
+    private var previousTranslation: CGPoint?
+    
     private func beginDragging() {
         
         guard isDragging == false
             else { return }
         
         isDragging = true
+        
+        assert(previousTranslation == nil)
         
         //horizontalScroller?.alwaysVisible = true
         //verticalScroller?.alwaysVisible = true
@@ -397,6 +416,8 @@ open class UIScrollView: UIView {
                 //verticalScroller?.alwaysVisible = false
                 confineContent()
             }
+            
+            previousTranslation = nil
         }
     }
     
