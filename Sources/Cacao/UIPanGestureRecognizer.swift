@@ -66,36 +66,18 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
         return gestureTouches
     }
     
-    private func update(delta: CGPoint, event: UIEvent) -> Bool {
+    private func translate(_ delta: CGPoint, with event: UIEvent) -> Bool {
         
-        let time = event.timestamp - (lastMovement ?? 0)
+        let time = CGFloat(event.timestamp - (lastMovement ?? 0))
         
-        guard time > 0
+        guard time > 0, delta != .zero
             else { return false }
         
-        translation = delta
+        translation.x += delta.x
+        translation.y += delta.y
         
-        if delta.x * displacement.x >= 0 {
-            
-            displacement.x += delta.x
-            movementDuration += time
-            
-        } else {
-            
-            displacement.x = delta.x;
-            movementDuration = time
-        }
-        
-        if delta.y * displacement.y >= 0 {
-            
-            displacement.y += delta.y
-            movementDuration += time
-            
-        } else {
-            
-            displacement.y = delta.y
-            movementDuration = time
-        }
+        velocity.x = delta.x / time
+        velocity.y = delta.y / time
         
         lastMovement = event.timestamp
         
@@ -142,10 +124,10 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
             
             let delta = gestureTouches.delta
             
-            if update(delta: delta, event: event) {
+            if translate(delta, with: event) {
                 
-                /// state not changed
-                if self.transition(to: .changed) == false {
+                // make sure to notify
+                if self.transition(to: .changed).notify == false {
                     
                     performActions()
                 }

@@ -93,28 +93,29 @@ open class UIGestureRecognizer {
     
     // MARK: - Getting the Recognizer’s State and View
     
-    // the current state of the gesture recognizer
+    /// The current state of the gesture recognizer.
     open private(set) var state = UIGestureRecognizerState()
     
-    internal func transition(to state: UIGestureRecognizerState) -> Bool {
+    @discardableResult
+    internal func transition(to state: UIGestureRecognizerState) -> (notify: Bool, reset: Bool) {
         
         let newValue = state
         
         let oldValue = self.state
         
         guard oldValue != newValue
-            else { return false }
+            else { return (false, false) }
         
         let states: [(from: UIGestureRecognizerState, to: UIGestureRecognizerState, notify: Bool, reset: Bool)] =
             [(.possible, .recognized, true, true),
              (.possible, .failed, false, true),
-             (.possible, .began, false, false),
-             (.began, .changed, false, false),
-             (.began, .cancelled, false, true),
-             (.began, .failed, false, true),
+             (.possible, .began, true, false),
+             (.began, .changed, true, false),
+             (.began, .cancelled, true, true),
+             (.began, .failed, true, true),
              (.began, .ended, true, true),
-             (.changed, .changed, false, false),
-             (.changed, .cancelled, false, true),
+             (.changed, .changed, true, false),
+             (.changed, .cancelled, true, true),
              (.changed, .ended, true, true)]
         
         guard let transition = states.first(where: { $0.from == oldValue && $0.to == newValue })
@@ -132,7 +133,7 @@ open class UIGestureRecognizer {
             reset()
         }
         
-        return true
+        return (transition.notify, transition.reset)
     }
     
     // a UIGestureRecognizer receives touches hit-tested to its view and any of that view's subviews
