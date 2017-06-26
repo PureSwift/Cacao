@@ -472,13 +472,23 @@ open class UIScrollView: UIView {
         
         let scrollerBounds = UIEdgeInsetsInsetRect(bounds, contentInset)
         
-        if (contentSize.width - contentOffset.x) < scrollerBounds.size.width {
-            contentOffset.x = (contentSize.width - scrollerBounds.size.width)
-        }
-        if (contentSize.height - contentOffset.y) < scrollerBounds.size.height {
-            contentOffset.y = (contentSize.height - scrollerBounds.size.height)
+        // dont allow content offset lower than end of content
+        let contentOffsetMin = CGPoint(x: scrollerBounds.size.width - contentSize.width,
+                                       y: scrollerBounds.size.height - contentSize.height)
+        
+        if contentOffset.x < contentOffsetMin.x {
+            contentOffset.x = contentOffsetMin.x
         }
         
+        if contentOffset.y < contentOffsetMin.y {
+            contentOffset.y = contentOffsetMin.y
+        }
+        
+        // non-bouncing content offset should always be zero or or smaller
+        contentOffset.x = min(contentOffset.x, 0)
+        contentOffset.y = min(contentOffset.y, 0)
+        
+        // no scrolling if content size is smaller or exactly the size of the scroll view
         if contentSize.width <= scrollerBounds.size.width {
             contentOffset.x = 0
         }
