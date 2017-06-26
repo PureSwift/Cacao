@@ -431,7 +431,7 @@ open class UIScrollView: UIView {
         self.bounds.origin = CGPoint(x: contentOffset.x - contentInset.left,
                                      y: contentOffset.y - contentInset.top)
         updateScrollers()
-        setNeedsLayout()
+        setNeedsDisplay()
     }
     
     private func updateScrollers() {
@@ -479,9 +479,6 @@ open class UIScrollView: UIView {
             contentOffset.y = (contentSize.height - scrollerBounds.size.height)
         }
         
-        contentOffset.x = max(contentOffset.x, 0)
-        contentOffset.y = max(contentOffset.y, 0)
-        
         if contentSize.width <= scrollerBounds.size.width {
             contentOffset.x = 0
         }
@@ -512,7 +509,7 @@ open class UIScrollView: UIView {
             contentOffset.y = confinedOffset.y
         }
         
-        self.contentOffset = confinedOffset
+        self.contentOffset = contentOffset
     }
     
     private func confined(delta: CGPoint, animated: Bool = false) -> CGPoint {
