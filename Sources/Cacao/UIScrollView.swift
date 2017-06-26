@@ -41,7 +41,7 @@ open class UIScrollView: UIView {
     
     /// The point at which the origin of the content view is offset from the origin of the scroll view.
     public var contentOffset: CGPoint {
-        get { return bounds.origin }
+        get { return _contentOffset }
         set { setContentOffset(newValue, animated: false) }
     }
     private var _contentOffset: CGPoint = .zero
@@ -303,6 +303,8 @@ open class UIScrollView: UIView {
     }
     
     // MARK: - Private
+    
+    private static let bounceRatio: CGFloat = 0.30
     
     private func panGesture(_ gesture: UIGestureRecognizer) {
         
