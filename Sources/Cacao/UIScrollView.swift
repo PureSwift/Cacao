@@ -378,9 +378,26 @@ open class UIScrollView: UIView {
         
         self.previousTranslation = translation
         
-        let confinedDelta = confined(delta: delta, animated: false)
+        let originalOffset = contentOffset
+        var proposedOffset = originalOffset
+        proposedOffset.x += delta.x
+        proposedOffset.y += delta.y
+        let confinedOffset = confined(contentOffset: proposedOffset)
         
-        scrollContent(confinedDelta, animated: false)
+        if bounces {
+            let shouldHorizontalBounce = (fabs(proposedOffset.x - confinedOffset.x) > 0)
+            let shouldVerticalBounce = (fabs(proposedOffset.y - confinedOffset.y) > 0)
+            if shouldHorizontalBounce {
+                proposedOffset.x = originalOffset.x + (0.055 * delta.x)
+            }
+            if shouldVerticalBounce {
+                proposedOffset.y = originalOffset.y + (0.055 * delta.y)
+            }
+            setRestrained(contentOffset: proposedOffset)
+        }
+        else {
+            contentOffset = confinedOffset
+        }
     }
     
     private func endDragging(velocity: CGPoint) {
@@ -436,7 +453,7 @@ open class UIScrollView: UIView {
     @inline(__always)
     private func confineContent() {
         
-        //self.contentOffset = confined(contentOffset: self.contentOffset)
+        self.contentOffset = confined(contentOffset: self.contentOffset)
     }
     
     private var canScrollHorizontal: Bool {
@@ -447,6 +464,55 @@ open class UIScrollView: UIView {
     private var canScrollVertical: Bool {
         
         return isScrollEnabled && (contentSize.height > bounds.size.height)
+    }
+    
+    private func confined(contentOffset: CGPoint) -> CGPoint {
+        
+        var contentOffset = contentOffset
+        
+        let scrollerBounds = UIEdgeInsetsInsetRect(bounds, contentInset)
+        
+        if (contentSize.width - contentOffset.x) < scrollerBounds.size.width {
+            contentOffset.x = (contentSize.width - scrollerBounds.size.width)
+        }
+        if (contentSize.height - contentOffset.y) < scrollerBounds.size.height {
+            contentOffset.y = (contentSize.height - scrollerBounds.size.height)
+        }
+        
+        contentOffset.x = max(contentOffset.x, 0)
+        contentOffset.y = max(contentOffset.y, 0)
+        
+        if contentSize.width <= scrollerBounds.size.width {
+            contentOffset.x = 0
+        }
+        
+        if contentSize.height <= scrollerBounds.size.height {
+            contentOffset.y = 0
+        }
+        
+        return contentOffset
+    }
+    
+    private func setRestrained(contentOffset: CGPoint) {
+        
+        var contentOffset = contentOffset
+        
+        let confinedOffset = confined(contentOffset: contentOffset)
+        let scrollerBounds = UIEdgeInsetsInsetRect(bounds, contentInset)
+        
+        if isAlwaysBounceHorizontal == false,
+            contentSize.width <= scrollerBounds.size.width {
+            
+            contentOffset.x = confinedOffset.x
+        }
+        
+        if isAlwaysBounceVertical == false,
+            contentSize.height <= scrollerBounds.size.height {
+            
+            contentOffset.y = confinedOffset.y
+        }
+        
+        self.contentOffset = confinedOffset
     }
     
     private func confined(delta: CGPoint, animated: Bool = false) -> CGPoint {

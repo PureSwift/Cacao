@@ -21,22 +21,28 @@ final class ScrollViewController: UIViewController {
     
     private(set) var scrollView: UIScrollView!
     
+    private(set) var logoView: SwiftLogoView!
+    
+    private(set) var contentView: UIView!
+    
     // MARK: - Loading
     
     override func loadView() {
         
         view = UIView(frame: CGRect())
-        
         view.backgroundColor = UIColor.white
         
         scrollView = UIScrollView(frame: CGRect())
-        
         view.addSubview(scrollView)
         
-        let logoView = SwiftLogoView(frame: CGRect(origin: .zero, size: CGSize(width: 100, height: 100)))
+        contentView = UIView(frame: CGRect())
+        contentView.backgroundColor = UIColor.blue
+        contentView.isUserInteractionEnabled = false
+        scrollView.addSubview(contentView)
+        
+        logoView = SwiftLogoView(frame: CGRect(origin: .zero, size: CGSize(width: 100, height: 100)))
         logoView.pointSize = 100
         logoView.contentMode = .scaleAspectFill
-        
         scrollView.addSubview(logoView)
     }
     
@@ -47,13 +53,15 @@ final class ScrollViewController: UIViewController {
         var contentSize = scrollView.bounds.size
         contentSize.width += 100
         contentSize.height += 100
+        
         scrollView.contentSize = contentSize
+        contentView.bounds.size = contentSize
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        scrollView.contentOffset = CGPoint(x: 30, y: 30)
+        //scrollView.contentOffset = CGPoint(x: 30, y: 30)
     }
 }
 
