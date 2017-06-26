@@ -1,5 +1,5 @@
 //
-//  ScrollView.swift
+//  UIScrollView.swift
 //  Cacao
 //
 //  Created by Alsey Coleman Miller on 5/28/16.
@@ -306,6 +306,9 @@ open class UIScrollView: UIView {
     
     private static let bounceRatio: CGFloat = 0.30
     
+    // Used for calculating delta
+    private var previousTranslation: CGPoint?
+    
     private func panGesture(_ gesture: UIGestureRecognizer) {
         
         if gesture === panGestureRecognizer {
@@ -320,21 +323,7 @@ open class UIScrollView: UIView {
                 
                 let translation = panGestureRecognizer.translation(in: self)
                 
-                let delta: CGPoint
-                
-                if let previousTranslation = self.previousTranslation {
-                    
-                    delta = CGPoint(x: translation.x - previousTranslation.x,
-                                    y: translation.y - previousTranslation.y)
-                    
-                } else {
-                    
-                    delta = translation
-                }
-                
-                self.previousTranslation = translation
-                
-                drag(by: delta)
+                drag(with: translation)
                 
             case .ended:
                 
@@ -349,9 +338,6 @@ open class UIScrollView: UIView {
         }
     }
     
-    // Used for calculating delta
-    private var previousTranslation: CGPoint?
-    
     private func beginDragging() {
         
         guard isDragging == false
@@ -363,38 +349,38 @@ open class UIScrollView: UIView {
         
         //horizontalScroller?.alwaysVisible = true
         //verticalScroller?.alwaysVisible = true
+        
         //cancelScrollAnimation()
         
         delegate?.scrollViewWillBeginDragging(self)
     }
     
-    private func drag(by delta: CGPoint) {
+    private func drag(with translation: CGPoint) {
         
         guard isDragging
             else { return }
         
+        // Update scrollers
         //horizontalScroller?.alwaysVisible = true
         //verticalScroller?.alwaysVisible = true
-        let originalOffset = contentOffset
-        var proposedOffset = originalOffset
-        proposedOffset.x += delta.x
-        proposedOffset.y += delta.y
-        let confinedOffset = confined(contentOffset: proposedOffset)
         
-        if bounces {
-            let shouldHorizontalBounce = (fabs(proposedOffset.x - confinedOffset.x) > 0)
-            let shouldVerticalBounce = (fabs(proposedOffset.y - confinedOffset.y) > 0)
-            if shouldHorizontalBounce {
-                proposedOffset.x = originalOffset.x + (0.055 * delta.x)
-            }
-            if shouldVerticalBounce {
-                proposedOffset.y = originalOffset.y + (0.055 * delta.y)
-            }
-            setRestrained(contentOffset: proposedOffset)
+        let delta: CGPoint
+        
+        if let previousTranslation = self.previousTranslation {
+            
+            delta = CGPoint(x: translation.x - previousTranslation.x,
+                            y: translation.y - previousTranslation.y)
+            
+        } else {
+            
+            delta = translation
         }
-        else {
-            contentOffset = confinedOffset
-        }
+        
+        self.previousTranslation = translation
+        
+        let confinedDelta = confined(delta: delta, animated: false)
+        
+        scrollContent(confinedDelta, animated: false)
     }
     
     private func endDragging(velocity: CGPoint) {
@@ -450,50 +436,123 @@ open class UIScrollView: UIView {
     @inline(__always)
     private func confineContent() {
         
-        self.contentOffset = confined(contentOffset: self.contentOffset)
+        //self.contentOffset = confined(contentOffset: self.contentOffset)
     }
     
-    private func confined(contentOffset: CGPoint) -> CGPoint {
+    private var canScrollHorizontal: Bool {
         
-        var contentOffset = contentOffset
-        
-        let scrollerBounds = UIEdgeInsetsInsetRect(bounds, contentInset)
-        if (contentSize.width - contentOffset.x) < scrollerBounds.size.width {
-            contentOffset.x = (contentSize.width - scrollerBounds.size.width)
-        }
-        if (contentSize.height - contentOffset.y) < scrollerBounds.size.height {
-            contentOffset.y = (contentSize.height - scrollerBounds.size.height)
-        }
-        contentOffset.x = max(contentOffset.x, 0)
-        contentOffset.y = max(contentOffset.y, 0)
-        if contentSize.width <= scrollerBounds.size.width {
-            contentOffset.x = 0
-        }
-        if contentSize.height <= scrollerBounds.size.height {
-            contentOffset.y = 0
-        }
-        return contentOffset
+        return isScrollEnabled && (contentSize.width > bounds.size.width)
     }
     
-    private func setRestrained(contentOffset: CGPoint) {
+    private var canScrollVertical: Bool {
         
-        var contentOffset = self.contentOffset
-        let confinedOffset = confined(contentOffset: contentOffset)
-        let scrollerBounds = UIEdgeInsetsInsetRect(bounds, contentInset)
+        return isScrollEnabled && (contentSize.height > bounds.size.height)
+    }
+    
+    private func confined(delta: CGPoint, animated: Bool = false) -> CGPoint {
         
-        if isAlwaysBounceHorizontal == false,
-            contentSize.width <= scrollerBounds.size.width {
+        let bounds = self.bounds
+        
+        let proposedOffset = CGPoint(x: CGFloat(self.contentOffset.x - delta.x), y: CGFloat(self.contentOffset.y - delta.y))
+        let visibleBottomCorner = CGPoint(x: CGFloat(self.contentOffset.x + bounds.size.width), y: CGFloat(self.contentOffset.y + bounds.size.height))
+        let proposedBottomCorner = CGPoint(x: CGFloat(proposedOffset.x + bounds.size.width), y: CGFloat(proposedOffset.y + bounds.size.height))
+        let contentBounds = CGRect(x: CGFloat(0), y: CGFloat(0), width: CGFloat(self.contentSize.width), height: CGFloat(self.contentSize.height))
+        if contentBounds.contains(proposedOffset) && contentBounds.contains(proposedBottomCorner) && !self.isPagingEnabled {
+            return delta
+        }
+        var resultOrigin: CGPoint = proposedOffset
+        let canScrollHorizontal = self.canScrollHorizontal
+        let canScrollVertical = self.canScrollVertical
+        if resultOrigin.x < 0 {
             
-            contentOffset.x = confinedOffset.x
+            if self.bounces && canScrollHorizontal && !animated {
+                if fabs(resultOrigin.x) < bounds.size.width * UIScrollView.bounceRatio {
+                    resultOrigin.x = self.contentOffset.x - (delta.x * UIScrollView.bounceRatio)
+                }
+                else {
+                    resultOrigin.x = -bounds.size.width * UIScrollView.bounceRatio
+                }
+            }
+            else {
+                resultOrigin.x = 0
+            }
+        }
+        else if resultOrigin.x > 0 && !canScrollHorizontal {
+            resultOrigin.x = 0
         }
         
-        if isAlwaysBounceVertical == false,
-            contentSize.height <= scrollerBounds.size.height {
-            
-            contentOffset.y = confinedOffset.y
+        if resultOrigin.y < 0 {
+            if self.bounces && canScrollVertical && !animated {
+                if fabs(resultOrigin.y) < bounds.size.height * UIScrollView.bounceRatio {
+                    resultOrigin.y = self.contentOffset.y - (delta.y * UIScrollView.bounceRatio)
+                    //resultOrigin.y = resultOrigin.y * UIScrollView.bounceRatio
+                }
+                else {
+                    //resultOrigin.y = -bounds.size.height * UIScrollView.bounceRatio
+                    resultOrigin.y = -bounds.size.height * UIScrollView.bounceRatio
+                }
+            }
+            else {
+                resultOrigin.y = 0
+            }
+        }
+        else if resultOrigin.y > 0 && !canScrollVertical {
+            resultOrigin.y = 0
         }
         
-        self.contentOffset = confinedOffset
+        var resultBottomCorner = proposedBottomCorner
+        
+        if proposedBottomCorner.x > self.contentSize.width {
+            if self.bounces && canScrollHorizontal && !animated {
+                if resultBottomCorner.x - self.contentSize.width < bounds.size.width * UIScrollView.bounceRatio {
+                    resultBottomCorner.x = visibleBottomCorner.x - (delta.x * UIScrollView.bounceRatio)
+                }
+                else {
+                    resultBottomCorner.x = self.contentSize.width + bounds.size.width * UIScrollView.bounceRatio
+                }
+            }
+            else {
+                resultBottomCorner.x = self.contentSize.width
+            }
+            resultOrigin = CGPoint(x: CGFloat(resultBottomCorner.x - bounds.size.width), y: CGFloat(resultOrigin.y))
+        }
+        if proposedBottomCorner.y > self.contentSize.height {
+            
+            if self.bounces && canScrollVertical && !animated {
+                if resultBottomCorner.y - self.contentSize.height < bounds.size.height * UIScrollView.bounceRatio {
+                    resultBottomCorner.y = visibleBottomCorner.y - (delta.y * UIScrollView.bounceRatio)
+                }
+                else {
+                    resultBottomCorner.y = self.contentSize.height + bounds.size.height * UIScrollView.bounceRatio
+                }
+            }
+            else {
+                resultBottomCorner.y = self.contentSize.height
+            }
+            resultOrigin = CGPoint(x: CGFloat(resultOrigin.x), y: CGFloat(resultBottomCorner.y - bounds.size.height))
+        }
+        
+        if self.isPagingEnabled && animated {
+            if canScrollHorizontal {
+                resultOrigin.x = round(resultOrigin.x / bounds.size.width) * bounds.size.width
+            }
+            if canScrollVertical {
+                resultOrigin.y = round(resultOrigin.y / bounds.size.height) * bounds.size.height
+            }
+            
+        }
+        
+        let result = CGPoint(x: CGFloat(self.contentOffset.x - resultOrigin.x), y: CGFloat(self.contentOffset.y - resultOrigin.y))
+        
+        return result
+    }
+    
+    private func scrollContent(_ delta: CGPoint, animated: Bool = false) {
+        
+        let contentOffset = CGPoint(x: self.contentOffset.x + delta.x,
+                                    y: self.contentOffset.y + delta.y)
+        
+        setContentOffset(contentOffset, animated: animated)
     }
 }
 
