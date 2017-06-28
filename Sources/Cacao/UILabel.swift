@@ -20,7 +20,7 @@ open class UILabel: UIView {
     
     public final var font: UIFont = UIFont(name: "Helvetica", size: 17)! { didSet { setNeedsDisplay() } }
     
-    public final var color: UIColor = UIColor.black { didSet { setNeedsDisplay() } }
+    public final var textColor: UIColor = .black { didSet { setNeedsDisplay() } }
     
     public final var textAlignment: TextAlignment = .left { didSet { setNeedsDisplay() } }
     
@@ -33,7 +33,7 @@ open class UILabel: UIView {
         
         var attributes = TextAttributes()
         attributes.font = font
-        attributes.color = color
+        attributes.color = textColor
         attributes.paragraphStyle.alignment = textAlignment
         
         text.draw(in: self.bounds, context: context, attributes: attributes)

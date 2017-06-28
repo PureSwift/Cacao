@@ -41,6 +41,21 @@ public final class UIFont: Equatable {
     }
 }
 
+// MARK: - Extensions
+
+public extension UIFont {
+    
+    static func systemFontOfSize(_ size: CGFloat) -> UIFont {
+        
+        return UIFont(name: "HelveticaNeu", size: size)!
+    }
+    
+    static func boldSystemFontOfSize(_ size: CGFloat) -> UIFont {
+        
+        return UIFont(name: "HelveticaNeu-Bold", size: size)!
+    }
+}
+
 // MARK: - Equatable
 
 public func == (lhs: UIFont, rhs: UIFont) -> Bool {
