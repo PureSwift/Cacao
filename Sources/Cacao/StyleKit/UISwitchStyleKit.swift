@@ -128,13 +128,12 @@ class UISwitchStyleKit {
         case center /// The content is centered in the target rectangle, but it is NOT resized.
 
         public func apply(rect: CGRect, target: CGRect) -> CGRect {
-            if rect == target || target == CGRect.zero {
+            if rect == target || target == .zero {
                 return rect
             }
 
-            var scales = CGSize.zero
-            scales.width = abs(target.width / rect.width)
-            scales.height = abs(target.height / rect.height)
+            var scales = CGSize(width: abs(target.width / rect.width),
+                                height: abs(target.height / rect.height))
 
             switch self {
                 case .aspectFit:
