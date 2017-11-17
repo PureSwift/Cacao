@@ -7,7 +7,7 @@
 
 /// The navigation bar style that specifies its appearance.
 public enum UIBarStyle: Int {
-    
+
     case `default`
     case black
     case blackOpaque

@@ -13,58 +13,58 @@ import SDL
 @testable import Cacao
 
 final class RenderingTests: XCTestCase {
-    
+
     static let allTests = [("testViewSurface", testViewSurface)]
 
     func testViewSurface() {
-        
+
         let imageSize = CGSize(width: 240, height: 120)
-        
+
         let window = Window(title: "\(#function)", frame: (x: .undefined, y: .undefined, width: Int(imageSize.width), height: Int(imageSize.height)))!
-        
+
         let screen = UIScreen(window: window, size: imageSize)
         UIScreen.main = screen
         defer { UIScreen.main = nil }
-        
+
         let view = TestView(frame: CGRect(origin: .zero, size: imageSize))
-        
+
         view.drawMethod = TestStyleKit.drawAdvancedShapes
-        
+
         view.backgroundColor = UIColor.white
-        
+
         let expectedData = Data(base64Encoded: testViewSurfaceExpectedDataBase64)!
-        
+
         for frame in 1 ... 10 {
-            
+
             let filePath = TestPath.testData + "testViewSurface\(frame).txt"
-            
+
             // render
             screen.update()
-            
+
             // get surface data
             guard let texture = view.texture,
                 let surfaceData = texture.withUnsafeMutableBytes({ Data.init(bytesNoCopy: $0, count: texture.height * $1, deallocator: .none) })
                 else { XCTFail("Could not get surface data"); return }
-            
+
             let base64 = surfaceData.base64EncodedString(options: Data.Base64EncodingOptions())
-            
+
             try! base64.write(toFile: filePath, atomically: true, encoding: String.Encoding.utf8)
-            
+
             print("Wrote to \(filePath)")
-            
+
             XCTAssert(expectedData == surfaceData, "Invalid data for frame \(frame)")
         }
     }
 }
 
 private extension RenderingTests {
-    
+
     final class TestView: UIWindow {
-        
+
         var drawMethod: () -> () = { }
-        
+
         override func draw(_ rect: CGRect) {
-            
+
             drawMethod()
         }
     }

@@ -14,27 +14,27 @@ import struct Foundation.CGRect
 import Silica
 
 open class UIViewController: UIResponder {
-    
+
     // MARK: - Configuring a View Controller Using Nib Files
-    
+
     public init?(coder: NSCoder) {
-        
+
         return nil
     }
-    
+
     /// Returns a newly initialized view controller with the nib file in the specified bundle.
     public init(nibName: String? = nil, bundle: Bundle? = nil) {
-        
+
         self.nibName = nibName
         self.nibBundle = bundle
     }
-    
+
     public final var nibName: String?
-    
+
     public final var nibBundle: Bundle?
-    
+
     // MARK: - Managing the View
-    
+
     /// The view that the controller manages.
     ///
     /// The view stored in this property represents the root view for the view controller's view hierarchy.
@@ -65,7 +65,7 @@ open class UIViewController: UIResponder {
     }
     private var _view: UIView?
     public final var isViewLoaded: Bool { return _view != nil }
-    
+
     /// You should never call this method directly.
     /// The view controller calls this method when its view property is requested but is currently nil.
     /// This method loads or creates a view and assigns it to the view property.
@@ -86,97 +86,97 @@ open class UIViewController: UIResponder {
     ///
     /// If you want to perform any additional initialization of your views, do so in the `viewDidLoad()` method.
     open func loadView() {
-        
-        self.view = UIView(frame: CGRect())
+
+        self.view = UIView(frame: .zero)
     }
-    
+
     /// Called after the controller's view is loaded into memory.
     open func viewDidLoad() { /* Subclasses should override */ }
-    
+
     /// Loads the view controller’s view if it has not yet been loaded.
     public final func loadViewIfNeeded() {
-        
+
         if isViewLoaded == false {
             loadView()
             viewDidLoad()
         }
     }
-    
+
     /// The view controller’s view, or nil if the view is not yet loaded.
     public final var viewIfLoaded: UIView? { return _view }
-    
+
     /// A localized string that represents the view this controller manages.
     public final var title: String?
-    
+
     /// The preferred size for the view controller’s view.
     ///
     /// The value in this property is used primarily when displaying the view controller’s
     /// content in a popover but may also be used in other situations.
     public final var preferredContentSize: CGSize = CGSize()
-    
+
     // MARK: - Presenting View Controllers
-    
+
     // MARK: - Responding to View Events
-    
+
     open func viewWillAppear(animated: Bool) {
-        
-        
+
+
     }
-    
+
     // MARK: - Configuring the View’s Layout Behavior
-    
+
     /// Called to notify the view controller that its view is about to layout its subviews.
     ///
     /// When a view's bounds change, the view adjusts the position of its subviews.
     /// Your view controller can override this method to make changes before the view lays out its subviews.
     /// The default implementation of this method does nothing.
     open func viewWillLayoutSubviews() { }
-    
+
     open func viewDidLayoutSubviews() { }
-    
+
     // MARK: - Configuring the View Rotation Settings
-    
+
     // MARK: - Managing Child View Controllers in a Custom Container
-    
+
     public final private(set) var childViewControllers = [UIViewController]()
-    
+
     public final func addChildViewController(_ viewController: UIViewController) {
-        
+
         childViewControllers.append(viewController)
-        
+
         viewController.parent = self
     }
-    
+
     public final func removeFromParentViewController() {
-        
+
         guard let index = parent?.childViewControllers.index(where: { $0 === self })
             else { return }
-        
+
         parent?.childViewControllers.remove(at: index)
     }
-    
+
     // MARK: - Responding to Containment Events
-    
+
     // MARK: - Getting Other Related View Controllers
-    
+
     /// The view controller that presented this view controller.
     public private(set) weak var presentingViewController: UIViewController?
-    
+
     /// The view controller that is presented by this view controller, or one of its ancestors in the view controller hierarchy.
     public var presentedViewController: UIViewController? {
-        
+
         return nil
     }
-    
+
     public final private(set) weak var parent: UIViewController?
-    
+
     //public final var navigationController: UINavigationController?
-    
+
     //var splitViewController: UISplitViewController?
     //var tabBarController: UITabBarController?
-    
+
     // MARK: - Handling Memory Warnings
-    
+
     /// Sent to the view controller when the app receives a memory warning.
     ///
     /// Your app never calls this method directly.
@@ -185,14 +185,14 @@ open class UIViewController: UIResponder {
     /// You can override this method to release any additional memory used by your view controller.
     /// If you do, your implementation of this method must call the super implementation at some point.
     open func didReceiveMemoryWarning() {
-        
+
         childViewControllers.forEach { $0.didReceiveMemoryWarning() }
     }
-    
+
     // MARK: - UIResponder
-    
+
     open override var next: UIResponder? {
-        
+
         return view?.superview
     }
 }

@@ -8,6 +8,6 @@
 import Silica
 
 public final class UIImage {
-    
-    
+
+
 }
