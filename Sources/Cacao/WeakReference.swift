@@ -43,7 +43,7 @@ internal struct WeakArray<Element: AnyObject> {
     /// purge released objects
     private mutating func purgedReleased() {
 
-        storage = storage.filter({ $0.value != nil })
+        storage = storage.flatMap { $0.value }
     }
 
     public init(elements: [Element] = []) {

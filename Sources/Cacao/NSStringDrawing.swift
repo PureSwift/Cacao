@@ -26,14 +26,14 @@ public extension String {
         self.draw(in: rect, context: context, attributes: textAttributes)
     }
 
-    func boundingRect(with size: CGSize, options: NSStringDrawingOptions = NSStringDrawingOptions(), attributes: [String: Any], context: NSStringDrawingContext? = nil) -> CGRect {
+    func boundingRect(with size: CGSize, options: NSStringDrawingOptions = [], attributes: [String: Any], context: NSStringDrawingContext? = nil) -> CGRect {
 
         guard let context = UIGraphicsGetCurrentContext()
             else { return CGRect.zero }
 
         let textAttributes = TextAttributes(UIKit: attributes)
 
-        var textFrame = self.contentFrame(for: CGRect(origin: CGPoint(), size: size), textMatrix: context.textMatrix, attributes: textAttributes)
+        var textFrame = self.contentFrame(for: CGRect(origin: .zero, size: size), textMatrix: context.textMatrix, attributes: textAttributes)
 
         let font = textAttributes.font
 

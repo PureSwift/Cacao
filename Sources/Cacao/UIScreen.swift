@@ -136,7 +136,7 @@ public final class UIScreen {
         needsLayout = true
     }
 
-    private func render(view: UIView, origin: CGPoint = CGPoint()) {
+    private func render(view: UIView, origin: CGPoint = .zero) {
 
         guard view.shouldRender
             else { return }

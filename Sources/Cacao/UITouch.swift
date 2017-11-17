@@ -174,7 +174,7 @@ internal extension Array where Element == CGPoint {
         guard self.isEmpty == false
             else { return .zero }
 
-        let combinedPoint = self.reduce(CGPoint(), { CGPoint(x: $0.x + $1.x, y: $0.y + $1.y) })
+        let combinedPoint = self.reduce(.zero, { CGPoint(x: $0.x + $1.x, y: $0.y + $1.y) })
 
         return CGPoint(x: combinedPoint.x / CGFloat(self.count),
                        y: combinedPoint.y / CGFloat(self.count))
