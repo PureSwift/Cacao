@@ -8,6 +8,6 @@
 
 /// Allows a view to be configured globally for a default appearance.
 public protocol UIAppearance: class {
-    
+
     static func appearance() -> Self
 }

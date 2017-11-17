@@ -16,26 +16,26 @@ import Cacao
 import Silica
 
 final class SwitchViewController: UIViewController {
-    
+
     // MARK: - Views
-    
+
     private(set) var switchView: UISwitch!
-    
+
     // MARK: - Loading
-    
+
     override func loadView() {
-        
+
         view = UIView(frame: .zero)
-        
+
         switchView = UISwitch(frame: .zero)
-        
+
         view.backgroundColor = .white
-        
+
         view.addSubview(switchView)
     }
-    
+
     override func viewWillLayoutSubviews() {
-        
+
         switchView.center = view.center
     }
 }

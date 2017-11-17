@@ -9,9 +9,9 @@ import class Foundation.NSObject
 
 /// An abstract interface for responding to and handling events.
 open class UIResponder: NSObject {
-    
+
     // MARK: - Managing the Responder Chain
-    
+
     /// Returns the next responder in the responder chain, or `nil` if there is no next responder.
     ///
     /// - Returns: The next object in the responder chain or nil if this is the last object in the chain.
@@ -25,9 +25,9 @@ open class UIResponder: NSObject {
     open var next: UIResponder? {
         return nil
     }
-    
+
     // MARK: - Responding to Touch Events
-    
+
     /// Tells this object that one or more new touches occurred in a view or window.
     ///
     /// - Parameter touches: A set of UITouch instances that represent the touches for the starting phase of the event,
@@ -40,10 +40,10 @@ open class UIResponder: NSObject {
     /// The default implementation of this method forwards the message up the responder chain.
     /// When creating your own subclasses, call super to forward any events that you do not handle yourself.
     open func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) { }
-    
+
     open func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) { }
-    
+
     open func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) { }
-    
+
     open func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) { }
 }

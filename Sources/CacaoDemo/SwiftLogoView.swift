@@ -20,73 +20,73 @@ import Cacao
 ///
 /// Drawing code generated with [PaintCode](https://www.paintcodeapp.com)
 public final class SwiftLogoView: UIView {
-    
+
     // MARK: - Properties
-    
+
     /// Whether the view also draws "Swift" text next to the logo.
     ///
     /// Note: The logo alone has a `1:1` ratio and the logo with text has a `41:12` ratio.
     public var includesText: Bool = false { didSet { setNeedsDisplay() } }
-    
+
     /// The multiplier for drawing.
     /// This value is multiplied by the aspect ratio to get the intrinsic content size.
     ///
     /// For example, if this value is is 10, then the logo is drawn at 10x10
     /// and the logo including text is drawn at 10x36
     public var pointSize: CGFloat = 32
-    
+
     /// The aspect ratio for the content.
     public var aspectRatio: CGFloat {
-        
+
         return includesText ? 41 / 12 : 1
     }
-    
+
     /// The intrinsic content size.
     public override var intrinsicContentSize: CGSize  {
-        
+
         return CGSize(width: pointSize, height: pointSize * aspectRatio)
     }
-    
+
     // MARK: - Initialization
-    
+
     public override init(frame: CGRect) {
         super.init(frame: frame)
-        
+
         // disable user interaction
         self.isUserInteractionEnabled = false
     }
-    
+
     // MARK: - Drawing
-    
+
     public override func draw(_ rect: CGRect) {
-        
+
         let frame = contentMode.rect(for: bounds, size: intrinsicContentSize)
-        
+
         if includesText {
-            
+
             drawSwiftLogoWithText(frame: frame)
-            
+
         } else {
-            
+
             drawSwiftLogo(frame: frame)
         }
     }
-    
+
     private func drawSwiftLogoWithText(frame: CGRect = CGRect(x: 0, y: 0, width: 164, height: 48)) {
         //// General Declarations
         // This non-generic function dramatically improves compilation times of complex expressions.
         func fastFloor(_ x: CGFloat) -> CGFloat { return floor(x) }
-        
+
         //// Color Declarations
         let fillColor = UIColor(red: 0.915, green: 0.224, blue: 0.170, alpha: 1.000)
         let fillColor2 = UIColor(red: 0.995, green: 0.995, blue: 0.995, alpha: 1.000)
         let fillColor3 = UIColor(red: 0.100, green: 0.092, blue: 0.095, alpha: 1.000)
-        
-        
+
+
         //// Subframes
         let group: CGRect = CGRect(x: frame.minX + fastFloor(frame.width * 0.00061 + 0.4) + 0.1, y: frame.minY + fastFloor(frame.height * 0.01250 - 0.1) + 0.6, width: fastFloor(frame.width * 0.28780 + 0.3) - fastFloor(frame.width * 0.00061 + 0.4) + 0.1, height: fastFloor(frame.height * 0.99375 - 0.2) - fastFloor(frame.height * 0.01250 - 0.1) + 0.1)
-        
-        
+
+
         //// Group
         //// Bezier Drawing
         let bezierPath = UIBezierPath()
@@ -143,8 +143,8 @@ public final class SwiftLogoView: UIView {
         bezierPath.close()
         fillColor.setFill()
         bezierPath.fill()
-        
-        
+
+
         //// Bezier 2 Drawing
         let bezier2Path = UIBezierPath()
         bezier2Path.move(to: CGPoint(x: group.minX + 0.66820 * group.width, y: group.minY + 0.77312 * group.height))
@@ -169,10 +169,10 @@ public final class SwiftLogoView: UIView {
         bezier2Path.close()
         fillColor2.setFill()
         bezier2Path.fill()
-        
-        
-        
-        
+
+
+
+
         //// Bezier 3 Drawing
         let bezier3Path = UIBezierPath()
         bezier3Path.move(to: CGPoint(x: frame.minX + 0.93598 * frame.width, y: frame.minY + 0.43750 * frame.height))
@@ -314,21 +314,21 @@ public final class SwiftLogoView: UIView {
         fillColor3.setFill()
         bezier3Path.fill()
     }
-    
+
     private func drawSwiftLogo(frame: CGRect = CGRect(x: 0, y: 0, width: 100, height: 100)) {
         //// General Declarations
         // This non-generic function dramatically improves compilation times of complex expressions.
         func fastFloor(_ x: CGFloat) -> CGFloat { return floor(x) }
-        
+
         //// Color Declarations
         let fillColor = UIColor(red: 0.915, green: 0.224, blue: 0.170, alpha: 1.000)
         let fillColor2 = UIColor(red: 0.995, green: 0.995, blue: 0.995, alpha: 1.000)
-        
-        
+
+
         //// Subframes
         let group: CGRect = CGRect(x: frame.minX + fastFloor(frame.width * 0.00000 + 0.5), y: frame.minY + fastFloor(frame.height * 0.00000 + 0.5), width: fastFloor(frame.width * 1.00100 + 0.4) - fastFloor(frame.width * 0.00000 + 0.5) + 0.1, height: fastFloor(frame.height * 1.00100 + 0.4) - fastFloor(frame.height * 0.00000 + 0.5) + 0.1)
-        
-        
+
+
         //// Group
         //// Bezier Drawing
         let bezierPath = UIBezierPath()
@@ -385,8 +385,8 @@ public final class SwiftLogoView: UIView {
         bezierPath.close()
         fillColor.setFill()
         bezierPath.fill()
-        
-        
+
+
         //// Bezier 2 Drawing
         let bezier2Path = UIBezierPath()
         bezier2Path.move(to: CGPoint(x: group.minX + 0.66820 * group.width, y: group.minY + 0.77312 * group.height))

@@ -7,13 +7,13 @@
 
 ///
 public struct UIRectCorner: OptionSet {
-    
+
     public let rawValue: Int
-    
+
     public init(rawValue: Int) {
         self.rawValue = rawValue
     }
-    
+
     public static let topLeft        = UIRectCorner(rawValue: 1 << 0)
     public static let topRight       = UIRectCorner(rawValue: 1 << 1)
     public static let bottomLeft     = UIRectCorner(rawValue: 1 << 2)

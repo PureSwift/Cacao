@@ -24,26 +24,26 @@ import Cairo
 /// with a background color. More sophisticated content can be presented by subclassing `UIView`
 /// and implementing the necessary drawing and event-handling code yourself.
 open class UIView: UIResponder {
-    
+
     // MARK: - Initializing a View Object
-    
+
     /// Initializes and returns a newly allocated view object with the specified frame rectangle.
     public init(frame: CGRect) {
-        
+
         super.init()
-        
+
         self.frame = frame
     }
-    
+
     // MARK: - Properties
-    
+
     // MARK: - Configuring a View’s Visual Appearance
-    
+
     /// The view’s background color.
     ///
     /// The default value is `nil`, which results in a transparent background color.
     public final var backgroundColor: UIColor? { didSet { setNeedsDisplay() } }
-    
+
     /// A Boolean value that determines whether the view is hidden.
     ///
     /// Setting the value of this property to true hides the receiver
@@ -61,14 +61,14 @@ open class UIView: UIResponder {
     /// and does not account for the state of the receiver’s ancestors in the view hierarchy.
     /// Thus this property can be false but the receiver may still be hidden if an ancestor is hidden.
     public final var isHidden: Bool = false { didSet { setNeedsDisplay() } }
-    
+
     /// The view’s alpha value.
     ///
     /// The value of this property is a floating-point number in the range 0.0 to 1.0,
     /// where 0.0 represents totally transparent and 1.0 represents totally opaque.
     /// This value affects only the current view and does not affect any of its embedded subviews.
     public final var alpha: CGFloat = 1.0 { didSet { setNeedsDisplay() } }
-    
+
     /// A Boolean value that determines whether the view is opaque.
     ///
     /// This property provides a hint to the drawing system as to how it should treat the view.
@@ -87,7 +87,7 @@ open class UIView: UIResponder {
     /// that draw their own content using the `draw(_:)` method.
     /// The opaque property has no effect in system-provided classes such as `UIButton`, `UILabel`, `UITableViewCell`, and so on.
     public final var isOpaque: Bool = true { didSet { setNeedsDisplay() } }
-    
+
     /// The first nondefault tint color value in the view’s hierarchy, ascending from and starting with the view itself.
     ///
     /// If the system cannot find a nondefault color in the hierarchy, this property’s value is a system-defined color instead.
@@ -96,24 +96,24 @@ open class UIView: UIResponder {
     ///
     /// To refresh subview rendering when this property changes, override the tintColorDidChange() method.
     public final var tintColor: UIColor! {
-        
+
         get {
             if let tintColor = _tintColor {
                 return tintColor
             }
-            
+
             // TODO
             return UIColor.blue
         }
-        
+
         set {
-            
+
             _tintColor = newValue
         }
-        
+
     }
     private var _tintColor: UIColor?
-    
+
     /// Called by the system when the `tintColor` property changes.
     ///
     /// The system calls this method on a view when your code changes the value of the `tintColor` property on that view.
@@ -121,12 +121,12 @@ open class UIView: UIResponder {
     ///
     /// In your implementation, refresh the view rendering as needed.
     open func tintColorDidChange() {
-        
+
         setNeedsDisplay()
     }
-    
+
     //var tintAdjustmentMode: UIViewTintAdjustmentMode
-    
+
     /// A Boolean value that determines whether subviews are confined to the bounds of the view.
     ///
     /// Setting this value to `true` causes subviews to be clipped to the bounds of the receiver.
@@ -134,7 +134,7 @@ open class UIView: UIResponder {
     ///
     /// The default value is false.
     public final var clipsToBounds: Bool = false { didSet { setNeedsDisplay() } }
-    
+
     /// A Boolean value that determines whether the view’s bounds should be automatically cleared before drawing.
     ///
     /// When set to true, the drawing buffer is automatically cleared to transparent black
@@ -149,22 +149,22 @@ open class UIView: UIResponder {
     /// If your drawing code is already heavily optimized, setting this property is false can improve performance,
     /// especially during scrolling when only a portion of the view might need to be redrawn.
     public final var clearsContextBeforeDrawing: Bool = true
-    
+
     /// An optional view whose alpha channel is used to mask a view’s content.
     ///
     /// The view’s alpha channel determines how much of the view’s content and background shows through.
     /// Fully or partially opaque pixels allow the underlying content to show through
     /// but fully transparent pixels block that content.
     public final var mask: UIView?
-    
+
     /// Returns the class used to create the layer for instances of this class.
     //class var layerClass: AnyClass
-    
+
     /// The view’s Core Animation layer used for rendering.
     //var layer: CALayer
-    
+
     // MARK: - Configuring the Event-Related Behavior
-    
+
     /// A Boolean value that determines whether user events are ignored and removed from the event queue.
     ///
     /// When set to false, touch, press, keyboard, and focus events intended for the view
@@ -172,7 +172,7 @@ open class UIView: UIResponder {
     ///
     /// The default value of this property is `true`.
     public final var isUserInteractionEnabled: Bool = true
-    
+
     /// When set to `true`, the receiver receives all touches associated with a multi-touch sequence.
     /// When set to `false`, the receiver receives only the first touch event in a multi-touch sequence.
     /// The default value of this property is `false`.
@@ -181,7 +181,7 @@ open class UIView: UIResponder {
     /// If you want this view to handle multi-touch events exclusively,
     /// set the values of both this property and the `isExclusiveTouch property` to `true`.
     public final var isMultipleTouchEnabled: Bool = false
-    
+
     /// A Boolean value that indicates whether the receiver handles touch events exclusively.
     ///
     /// Setting this property to true causes the receiver to block the delivery
@@ -189,9 +189,9 @@ open class UIView: UIResponder {
     ///
     /// The default value of this property is false.
     public final var isExclusiveTouch: Bool = false
-    
+
     // MARK: - Configuring the Bounds and Frame Rectangles
-    
+
     /// The frame rectangle, which describes the view’s location and size in its superview’s coordinate system.
     ///
     /// This rectangle defines the size and position of the view in its superview’s coordinate system.
@@ -210,7 +210,7 @@ open class UIView: UIResponder {
         }
     }
     private var _frame: CGRect = .zero
-    
+
     /// The bounds rectangle, which describes the view’s location and size in its own coordinate system.
     ///
     /// On the screen, the bounds rectangle represents the same visible portion of the view as its frame rectangle.
@@ -234,7 +234,7 @@ open class UIView: UIResponder {
         }
     }
     private var _bounds: CGRect = .zero
-    
+
     /// The center of the frame.
     ///
     /// The center is specified within the coordinate system of its superview and is measured in points.
@@ -251,7 +251,7 @@ open class UIView: UIResponder {
             _frame.origin.y += newValue.y - oldValue.y
         }
     }
-    
+
     /// Specifies the transform applied to the receiver, relative to the center of its bounds.
     ///
     /// The origin of the transform is the value of the `center` property,
@@ -260,49 +260,49 @@ open class UIView: UIResponder {
     public final var transform: CGAffineTransform = .identity {
         didSet { /* TODO */ }
     }
-    
+
     // MARK: - Managing the View Hierarchy
-    
+
     /// The receiver’s superview, or nil if it has none.
     public final private(set) weak var superview: UIView?
-    
+
     /// The receiver’s immediate subviews.
     ///
     /// You can use this property to retrieve the subviews associated with your custom view hierarchies.
     /// The order of the subviews in the array reflects their visible order on the screen,
     /// with the view at index 0 being the back-most view.
     public final private(set) var subviews: [UIView] = []
-    
+
     /// The receiver’s window object, or nil if it has none.
     ///
     /// This property is nil if the view has not yet been added to a window.
     public final var window: UIWindow? {
-        
+
         return rootSuperview as? UIWindow
     }
-    
+
     /// The root view in the hierarchy.
     private var rootSuperview: UIView {
-        
+
         var superview: UIView = self
         var superViewFound = true
-        
+
         repeat {
-            
+
             if let newValue = superview.superview {
-                
+
                 superview = newValue
-                
+
             } else {
-                
+
                 superViewFound = false
             }
-            
+
         } while superViewFound
-        
+
         return superview
     }
-    
+
     /// Adds a view to the end of the receiver’s list of subviews.
     ///
     /// This method establishes a strong reference to view and sets its next responder to the receiver,
@@ -314,60 +314,60 @@ open class UIView: UIResponder {
     ///
     /// - Parameter view: The view to be added. After being added, this view appears on top of any other subviews.
     public func addSubview(_ view: UIView) {
-        
+
         addSubview(view, { $0.append($1) })
     }
-    
+
     @inline(__always)
     private func addSubview(_ view: UIView, _ body: (inout [UIView], UIView) -> ()) {
-        
+
         if view.superview !== self {
             view.removeFromSuperview()
         }
-        
+
         body(&subviews, view)
-        
+
         view.superview = self
-        
+
         didAddSubview(view)
-        
+
         setNeedsDisplay()
     }
-    
+
     /// Moves the specified subview so that it appears on top of its siblings.
     ///
     /// This method moves the specified view to the end of the array of views in the subviews property.
     ///
     /// - Parameter view: The subview to move to the front.
     public func bringSubview(toFront view: UIView) {
-        
+
         assert(subviews.contains(where: { $0 === view }), "\(view) is not a subview of \(self)")
-        
+
         guard let index = subviews.index(where: { $0 === view })
             else { return }
-        
+
         subviews.remove(at: index)
-        
+
         subviews.append(view)
     }
-    
+
     /// Moves the specified subview so that it appears behind its siblings.
     ///
     /// This method moves the specified view to the beginning of the array of views in the subviews property.
     ///
     /// - Parameter view: The subview to move to the back.
     public final func sendSubview(toBack view: UIView) {
-        
+
         assert(subviews.contains(where: { $0 === view }), "\(view) is not a subview of \(self)")
-        
+
         guard let index = subviews.index(where: { $0 === view })
             else { return }
-        
+
         subviews.remove(at: index)
-        
+
         subviews.insert(view, at: 0)
     }
-    
+
     /// Unlinks the view from its superview and its window, and removes it from the responder chain.
     ///
     /// If the view’s superview is not `nil`, the superview releases the view.
@@ -375,15 +375,15 @@ open class UIView: UIResponder {
     /// - Note: Calling this method removes any constraints that refer to the view you are removing,
     /// or that refer to any view in the subtree of the view you are removing.
     public final func removeFromSuperview() {
-        
+
         guard let index = superview?.subviews.index(where: { $0 === self })
             else { return }
-        
+
         superview?.willRemoveSubview(self)
-        
+
         superview?.subviews.remove(at: index)
     }
-    
+
     /// Inserts a subview at the specified index.
     ///
     /// - Parameter view: The view to insert. This value cannot be nil.
@@ -397,55 +397,55 @@ open class UIView: UIResponder {
     /// If view already has a superview and that view is not the receiver,
     /// this method removes the previous superview before making the receiver its new superview.
     public func insertSubview(_ view: UIView, at index: Int) {
-        
+
         addSubview(view, { $0.insert($1, at: index) })
     }
-    
+
     /// Inserts a view above another view in the view hierarchy.
     public final func insertSubview(_ view: UIView, aboveSubview siblingSubview: UIView) {
-        
+
         guard let _ = subviews.index(where: { $0 === siblingSubview })
             else { return }
-        
+
         addSubview(view, { $0 = $0 + [$1] })
     }
-    
+
     /// Inserts a view below another view in the view hierarchy.
     public final func insertSubview(_ view: UIView, belowSubview siblingSubview: UIView) {
-        
+
         guard let _ = subviews.index(where: { $0 === siblingSubview })
             else { return }
-        
+
         addSubview(view, { $0 = [$1] + $0 })
     }
-    
+
     /// Exchanges the subviews at the specified indices.
     public final func exchangeSubview(at index1: Int, withSubviewAt index2: Int) {
-        
+
         subviews.swapAt(index1, index2)
     }
-    
+
     /// Returns a Boolean value indicating whether the receiver is a subview of a given view or identical to that view.
     public final func isDescendant(of view: UIView) -> Bool {
-        
+
         var superview: UIView?
-        
+
         repeat {
-            
+
             superview = self.superview
-            
+
             if superview === view { return true }
-            
+
         } while superview != nil
-        
+
         return false
     }
-    
+
     // MARK: - Configuring the Resizing Behavior
-    
+
     /// A flag used to determine how a view lays out its content when its bounds change
     public final var contentMode: UIViewContentMode = .scaleAspectFill { didSet { setNeedsDisplay() } }
-    
+
     /// Asks the view to calculate and return the size that best fits the specified size.
     ///
     /// The default implementation of this method returns the existing size of the view.
@@ -455,10 +455,10 @@ open class UIView: UIResponder {
     ///
     /// - Note: This method does not resize the receiver.
     open func sizeThatFits(_ size: CGSize) -> CGSize {
-        
+
         return bounds.size
     }
-    
+
     /// Resizes and moves the receiver view so it just encloses its subviews.
     ///
     /// Call this method when you want to resize the current view so that it uses the most appropriate amount of space.
@@ -471,10 +471,10 @@ open class UIView: UIResponder {
     /// If you want to change the default sizing information for your view, override the `sizeThatFits(_:)` instead.
     /// That method performs any needed calculations and returns them to this method, which then makes the change.
     public final func sizeToFit() {
-        
+
         // TODO
     }
-    
+
     /// The natural size for the receiving view, considering only properties of the view itself.
     ///
     /// Custom views typically have content that they display of which the layout system is unaware.
@@ -487,100 +487,100 @@ open class UIView: UIResponder {
     /// If a custom view has no intrinsic size for a given dimension,
     /// it can use `UIViewNoIntrinsicMetric` for that dimension.
     open var intrinsicContentSize: CGSize {
-        
+
         return CGSize(width: UIViewNoIntrinsicMetric, height: UIViewNoIntrinsicMetric)
     }
-    
+
     // MARK: - Identifying the View at Runtime
-    
+
     /// An integer that you can use to identify view objects in your application.
     public final var tag: Int = 0
-    
+
     /// Returns the view whose tag matches the specified value.
     ///
     /// This method searches the current view and all of its subviews for the specified view.
     ///
     /// - Returns: The view in the receiver’s hierarchy whose tag property matches the value in the tag parameter.
     public final func viewWithTag(_ tag: Int) -> UIView? {
-        
+
         if self.tag == tag {
-            
+
             return self
-            
+
         } else {
-            
+
             for view in subviews {
-                
+
                 if let tagView = view.viewWithTag(tag) {
-                    
+
                     return tagView
                 }
             }
         }
-        
+
         return nil
     }
-    
+
     // MARK: - Converting Between View Coordinate Systems
-    
+
     /// Converts a point from the receiver’s coordinate system to that of the specified view.
     public final func convert(_ point: CGPoint, to view: UIView?) -> CGPoint {
-        
+
         let rootSuperview = self.rootSuperview
-        
+
         let view = view ?? rootSuperview
-        
+
         assert(view.rootSuperview === rootSuperview, "Both views must descend from same root super view or window")
-        
+
         // get origin offset for both views
         let offset = rootSuperview.offset(for: self)!
         let viewOffset = rootSuperview.offset(for: view)!
         let delta = CGSize(width: offset.width - viewOffset.width, height: offset.height - viewOffset.height)
-        
+
         return CGPoint(x: point.x + delta.width, y: point.y + delta.height)
     }
-    
+
     private func offset(for subview: UIView, offset: CGSize = CGSize()) -> CGSize? {
-        
+
         var offset = offset
-        
+
         // add delta
         offset.width += frame.origin.x
         offset.height += frame.origin.y
-        
+
         guard subview !== self
             else { return offset }
-        
+
         for view in subviews {
-            
+
             guard let foundOffset = view.offset(for: subview, offset: offset)
                 else { continue }
-            
+
             return foundOffset
         }
-        
+
         return nil
     }
-    
+
     public final func convert(_ point: CGPoint, from view: UIView?) -> CGPoint {
-        
+
         fatalError()
     }
-    
+
     public final func convert(_ rect: CGRect, to view: UIView?) -> CGPoint {
-        
+
         fatalError()
     }
-    
+
     public final func convert(_ rect: CGRect, from view: UIView?) -> CGPoint {
-        
+
         fatalError()
     }
-    
+
     // MARK: - Drawing
-    
+
     open func draw(_ rect: CGRect) { /* implemented by subclasses */ }
-    
+
     /// The backing rendering node / texture.
     ///
     /// Cacao's equivalent of `UIView.layer` / `CALayer`.
@@ -591,63 +591,63 @@ open class UIView: UIResponder {
     ///
     /// - Warning: Do not hold a reference to this object as it can be recreated as needed for rendering.
     public private(set) var texture: Texture?
-    
+
     internal var shouldRender: Bool {
         return isHidden == false
             && alpha > 0
             && (bounds.size.width >= 1.0 || bounds.size.height >= 1.0)
     }
-    
+
     internal final func render(on screen: UIScreen, in rect: SDL_Rect) {
-        
+
         guard shouldRender
             else { return }
-        
+
         let scale = screen.scale
         let nativeSize = (width: Int(bounds.size.width * scale),
                           height: Int(bounds.size.height * scale))
-        
+
         let texture: Texture
-        
+
         // reuse cached texture if view hasn't been resized.
         if let cachedTexture = self.texture,
             cachedTexture.width == nativeSize.width,
             cachedTexture.height == nativeSize.height {
-            
+
             texture = cachedTexture
-            
+
         } else {
-            
+
             texture = Texture(renderer: screen.renderer,
                               format: PixelFormat.RawValue(SDL_PIXELFORMAT_ARGB8888),
                               access: .streaming,
                               width: nativeSize.width,
                               height: nativeSize.height).sdlAssert()
-            
+
             texture.blendMode = .alpha
-            
+
             // cache for reuse if view size isn't changed
             self.texture = texture
         }
-        
+
         // unlock and modify texture
         texture.withUnsafeMutableBytes {
-            
+
             let surface = try! Cairo.Surface.Image(mutableBytes: $0.assumingMemoryBound(to: UInt8.self),
                                                    format: .argb32,
                                                    width: nativeSize.width,
                                                    height: nativeSize.height,
                                                    stride: $1)
-            
+
             // reset memory
             memset($0, 0, surface.stride * surface.height)
-            
+
             let context = try! CGContext(surface: surface, size: bounds.size)
             context.scaleBy(x: scale, y: scale)
-            
+
             // CoreGraphics drawing
             draw(in: context)
-            
+
             /// FIXME: temporary workaround for Linux
             /// We have to convert the surface to PNG, even though we discard it.
             /// For some reason this changes something internally in Cairo,
@@ -656,38 +656,38 @@ open class UIView: UIResponder {
             let pngData = try! surface.writePNG()
             assert(pngData.isEmpty == false)
             #endif
-            
+
             /// flush surface
             surface.flush()
             surface.finish()
         }
-        
+
         screen.renderer.copy(texture, destination: rect)
     }
-    
+
     internal func draw(in context: CGContext) {
-        
+
         UIGraphicsPushContext(context)
-        
+
         // draw background color
         context.fillColor = backgroundColor?.cgColor ?? CGColor.clear
         context.addRect(bounds)
         context.fillPath()
-        
+
         // apply alpha
         context.setAlpha(alpha)
-        
+
         // draw rect
         draw(bounds)
-        
+
         UIGraphicsPopContext()
     }
-    
+
     // MARK: - Layout
-    
+
     /// This view is the main view of the specified view controller.
     internal weak var viewController: UIViewController?
-    
+
     /// Lays out subviews.
     ///
     /// The default implementation of this method does nothing.
@@ -703,7 +703,7 @@ open class UIView: UIResponder {
     /// If you want to update the layout of your views immediately, call the `layoutIfNeeded()` method.
     @inline(__always)
     open func layoutSubviews() { }
-    
+
     /// Tells the view that a subview was added.
     ///
     /// The default implementation of this method does nothing.
@@ -711,7 +711,7 @@ open class UIView: UIResponder {
     /// This method is called in response to adding a subview using any of the relevant view methods.
     @inline(__always)
     open func didAddSubview(_ subview: UIView) { }
-    
+
     /// Tells the view that a subview is about to be removed.
     ///
     /// The default implementation of this method does nothing.
@@ -720,28 +720,28 @@ open class UIView: UIResponder {
     /// or when the subview is removed from the view hierarchy completely.
     @inline(__always)
     open func willRemoveSubview(_ subview: UIView) { }
-    
+
     /// Tells the view that its superview is about to change to the specified superview.
      @inline(__always)
     open func willMove(toSuperview newSuperview: UIView?) { }
-    
+
     /// Tells the view that its superview changed.
     ///
     /// The default implementation of this method does nothing.
      @inline(__always)
     open func didMoveToSuperview() { }
-    
+
     /// Tells the view that its window object is about to change.
     ///
     /// The default implementation of this method does nothing.
     /// Subclasses can override it to perform additional actions whenever the window changes.
      @inline(__always)
     open func willMove(toWindow newWindow: UIWindow?) { }
-    
+
     /// Tells the view that its window object changed.
     @inline(__always)
     open func didMoveToWindow() { }
-    
+
     /// Invalidates the current layout of the receiver and triggers a layout update during the next update cycle.
     ///
     /// Call this method on your application’s main thread when you want to adjust the layout of a view’s subviews.
@@ -751,119 +751,119 @@ open class UIView: UIResponder {
     /// This behavior allows you to consolidate all of your layout updates to one update cycle,
     /// which is usually better for performance.
     public final func setNeedsLayout() {
-        
+
         self.window?.screen.needsLayout = true
     }
-    
+
     /// Lays out the subviews immediately.
     ///
     /// Use this method to force the layout of subviews before drawing.
     /// Using the view that receives the message as the root view,
     /// this method lays out the view subtree starting at the root.
     public final func layoutIfNeeded() {
-        
+
         viewController?.viewWillLayoutSubviews()
         layoutSubviews()
         subviews.forEach { $0.layoutIfNeeded() }
         viewController?.viewDidLayoutSubviews()
     }
-    
+
     /// Returns the farthest descendant of the receiver in the view hierarchy (including itself) that contains a specified point.
     ///
     /// - Note: This method ignores view objects that are hidden or have user interaction disabled.
     /// This method does not take the view’s content into account when determining a hit.
     /// Thus, a view can still be returned even if the specified point is in a transparent portion of that view’s content.
     open func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-        
+
         guard isHidden == false,
             alpha > 0,
             isUserInteractionEnabled,
             self.point(inside: point, with: event)
             else { return nil }
-        
+
         for subview in subviews.reversed() {
-            
+
             // convert point for subviews
             let subviewPoint = self.convert(point, to: subview)
-            
+
             guard let descendant = subview.hitTest(subviewPoint, with: event)
                 else { continue }
-            
+
             return descendant
         }
-        
+
         return self
     }
-    
+
     /// Returns a Boolean value indicating whether the receiver contains the specified point.
     public final func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
-        
+
         let rect = CGRect(origin: CGPoint(), size: frame.size)
-        
+
         return (point.x >= rect.minX && point.x <= rect.maxX)
             && (point.y >= rect.minY && point.y <= rect.maxY)
     }
-    
+
     public final func setNeedsDisplay(_ rect: CGRect? = nil) {
-        
+
         self.window?.screen.needsDisplay = true
     }
-    
+
     // MARK: - Managing Gesture Recognizers
-    
+
     /// Attaches a gesture recognizer to the view.
     public func addGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer) {
-        
+
         // remove from old view
         gestureRecognizer.view?.removeGestureRecognizer(gestureRecognizer)
-        
+
         // add to view
         gestureRecognizer.view = self
         gestureRecognizers?.append(gestureRecognizer)
     }
-    
+
     /// Detaches a gesture recognizer from the receiving view.
     public func removeGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer) {
-        
+
         guard let index = gestureRecognizers?.index(where: { $0 === gestureRecognizer })
             else { return }
-        
+
         gestureRecognizers?.remove(at: index)
         gestureRecognizer.view = nil
     }
-    
+
     /// The gesture-recognizer objects currently attached to the view.
     public var gestureRecognizers: [UIGestureRecognizer]? = []
-    
+
     /// Asks the view if the gesture recognizer should be allowed to continue tracking touch events.
     open func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
         return true
     }
-    
+
     // MARK: - Event Handling
-    
+
     // MARK: - UIResponder
-    
+
     open override var next: UIResponder? {
-        
+
         return viewController ?? superview
     }
-    
+
     // MARK: - Animating Views with Block Objects
-    
+
     internal private(set) static var animationDuration: TimeInterval?
-    
+
     internal static var animations = [Animation]()
-    
+
     /// Animate changes to one or more views using the specified duration.
     public class func animate(withDuration duration: TimeInterval, animations: @escaping () -> ()) {
-        
+
         guard duration > 0 else { animations(); return }
-        
+
         UIView.animationDuration = duration
-        
+
         animations()
-        
+
         UIView.animationDuration = nil
     }
 }
@@ -875,40 +875,40 @@ public let UIViewNoIntrinsicMetric: CGFloat = -1.0
 // MARK: - Internal Animations
 
 internal class Animation {
-    
+
     let frameChange: () -> Bool
-    
+
     init<View: UIView>(view: View,
                        duration: TimeInterval,
                        value: (start: CGFloat, end: CGFloat),
                        keyPath: ReferenceWritableKeyPath<View, CGFloat>) {
-        
+
         let startDate = Date()
-        
+
         let delta = value.end - value.start
-        
+
         let weakView = WeakReference(view)
-        
+
         self.frameChange = {
-            
+
             guard let view = weakView.value
                 else { return false }
-            
+
             let now = Date()
-            
+
             var secondsLeft = duration - now.timeIntervalSince(startDate)
-            
+
             if secondsLeft < 0 {
-                
+
                 secondsLeft = 0
             }
-            
+
             let progress = 1 - CGFloat(secondsLeft / duration)
-            
+
             let currentValue = value.start + (progress * delta)
-            
+
             view[keyPath: keyPath] = currentValue
-            
+
             return progress < 1.0
         }
     }
@@ -917,40 +917,40 @@ internal class Animation {
 // MARK: - Xcode Quick Look
 
 #if os(macOS) && Xcode
-    
+
     import class AppKit.NSImage
     import class Foundation.NSString
-    
+
     public extension UIView {
-        
+
         @objc(debugQuickLookObject)
         public var debugQuickLookObject: AnyObject {
-            
+
             if let cachedTexture = self.texture,
                 let screen = self.window?.screen {
-                
+
                 let scale = screen.scale
                 let nativeSize = (width: Int(bounds.size.width * scale),
                                   height: Int(bounds.size.height * scale))
-                
+
                 let surface = cachedTexture.withUnsafeMutableBytes {
-                    
+
                     try! Cairo.Surface.Image(mutableBytes: $0.assumingMemoryBound(to: UInt8.self), format: .argb32, width: nativeSize.width, height: nativeSize.height, stride: $1)
                 }
-                
+
                 let data = try! surface!.writePNG()
-                
+
                 let image = NSImage(data: data)!
-                
+
                 return image
-                
+
             } else {
-                
+
                 return "\(self)" as NSString
             }
         }
     }
-    
+
 #endif
 
 

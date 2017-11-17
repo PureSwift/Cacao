@@ -6,14 +6,14 @@
 //
 
 public final class UIViewAnimation {
-    
-    
+
+
 }
 
 // MARK: - Supporting Types
 
 public enum UIViewAnimationCurve: Int {
-    
+
     case easeInOut
     case easeIn
     case easeOut
@@ -21,7 +21,7 @@ public enum UIViewAnimationCurve: Int {
 }
 
 public enum UIViewAnimationTransition: Int {
-    
+
     case none
     case flipFromLeft
     case flipFromRight
@@ -31,14 +31,14 @@ public enum UIViewAnimationTransition: Int {
 
 ///
 public struct UIViewAnimationOptions: OptionSet {
-    
+
     public let rawValue: Int
-    
+
     public init(rawValue: Int) {
-        
+
         self.rawValue = rawValue
     }
-    
+
     public static let layoutSubviews = UIViewAnimationOptions(rawValue: 1 << 0)
     public static let allowUserInteraction = UIViewAnimationOptions(rawValue: 1 << 1)
     public static let beginFromCurrentState = UIViewAnimationOptions(rawValue: 1 << 2)

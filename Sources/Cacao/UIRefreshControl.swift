@@ -6,6 +6,6 @@
 //
 
 open class UIRefreshControl: UIControl {
-    
-    
+
+
 }

@@ -53,7 +53,7 @@ class UISwitchStyleKit {
     class func drawSwitchView(frame targetFrame: CGRect = CGRect(x: 0, y: 0, width: 51, height: 31), resizing: ResizingBehavior = .aspectFit, thumbColor: UIColor = UIColor(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000), fillColor: UIColor = UIColor(red: 0.687, green: 0.677, blue: 0.675, alpha: 1.000), switchOn: CGFloat = 0, tapped: CGFloat = 0, showFilled: CGFloat = 0) {
         //// General Declarations
         let context = UIGraphicsGetCurrentContext()!
-        
+
         //// Resize to Target Frame
         context.saveGState()
         let resizedFrame: CGRect = resizing.apply(rect: CGRect(x: 0, y: 0, width: 51, height: 31), target: targetFrame)
@@ -84,7 +84,7 @@ class UISwitchStyleKit {
 
         UISwitchStyleKit.drawSwitchThumb(frame: CGRect(x: 0, y: 0, width: thumbRect.width, height: thumbRect.height), thumbColor: thumbColor)
         context.restoreGState()
-        
+
         context.restoreGState()
 
     }
@@ -92,7 +92,7 @@ class UISwitchStyleKit {
     class func drawSwitchBackgroundView(frame targetFrame: CGRect = CGRect(x: 0, y: 0, width: 51, height: 31), resizing: ResizingBehavior = .aspectFit, fillColor: UIColor = UIColor(red: 0.687, green: 0.677, blue: 0.675, alpha: 1.000), showFilled: CGFloat = 0) {
         //// General Declarations
         let context = UIGraphicsGetCurrentContext()!
-        
+
         //// Resize to Target Frame
         context.saveGState()
         let resizedFrame: CGRect = resizing.apply(rect: CGRect(x: 0, y: 0, width: 51, height: 31), target: targetFrame)
@@ -116,11 +116,11 @@ class UISwitchStyleKit {
         fillColor.setStroke()
         switchStrokePath.lineWidth = 1.5
         switchStrokePath.stroke()
-        
+
         context.restoreGState()
 
     }
-    
+
     public enum ResizingBehavior: Int {
         case aspectFit /// The content is proportionally resized to fit into the target rectangle.
         case aspectFill /// The content is proportionally resized to completely fill the target rectangle.

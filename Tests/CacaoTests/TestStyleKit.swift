@@ -467,13 +467,13 @@ public final class TestStyleKit {
     public class func drawMultiLineText() {
         //// General Declarations
         let context = UIGraphicsGetCurrentContext()!
-        
+
         //// Color Declarations
         let red = UIColor(red: 1.000, green: 0.000, blue: 0.000, alpha: 1.000)
         let white = UIColor(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000)
         let blue = UIColor(red: 0.151, green: 0.277, blue: 0.801, alpha: 1.000)
         let green = UIColor(red: 0.320, green: 0.800, blue: 0.350, alpha: 1.000)
-        
+
         //// Text 5 Drawing
         let text5Rect = CGRect(x: 0, y: 60, width: 240, height: 60)
         let text5Path = UIBezierPath(rect: text5Rect)
@@ -483,14 +483,14 @@ public final class TestStyleKit {
         let text5Style = NSMutableParagraphStyle()
         text5Style.alignment = .center
         let text5FontAttributes = [NSFontAttributeName: UIFont(name: "TimesNewRoman", size: 17)!, NSForegroundColorAttributeName: white, NSParagraphStyleAttributeName: text5Style] as [String : Any]
-        
+
         let text5TextHeight: CGFloat = text5TextContent.boundingRect(with: CGSize(width: text5Rect.width, height: CGFloat.infinity), options: .usesLineFragmentOrigin, attributes: text5FontAttributes, context: nil).height
         context.saveGState()
         context.clip(to: text5Rect)
         text5TextContent.draw(in: CGRect(x: text5Rect.minX, y: text5Rect.minY + (text5Rect.height - text5TextHeight) / 2, width: text5Rect.width, height: text5TextHeight), withAttributes: text5FontAttributes)
         context.restoreGState()
-        
-        
+
+
         //// Text Drawing
         let textRect = CGRect(x: 0, y: 0, width: 240, height: 60)
         let textPath = UIBezierPath(rect: textRect)
@@ -500,14 +500,14 @@ public final class TestStyleKit {
         let textStyle = NSMutableParagraphStyle()
         textStyle.alignment = .left
         let textFontAttributes = [NSFontAttributeName: UIFont(name: "TimesNewRoman", size: 17)!, NSForegroundColorAttributeName: white, NSParagraphStyleAttributeName: textStyle] as [String : Any]
-        
+
         let textTextHeight: CGFloat = textTextContent.boundingRect(with: CGSize(width: textRect.width, height: CGFloat.infinity), options: .usesLineFragmentOrigin, attributes: textFontAttributes, context: nil).height
         context.saveGState()
         context.clip(to: textRect)
         textTextContent.draw(in: CGRect(x: textRect.minX, y: textRect.minY + (textRect.height - textTextHeight) / 2, width: textRect.width, height: textTextHeight), withAttributes: textFontAttributes)
         context.restoreGState()
-        
-        
+
+
         //// Text 2 Drawing
         let text2Rect = CGRect(x: 0, y: 120, width: 240, height: 60)
         let text2Path = UIBezierPath(rect: text2Rect)
@@ -517,7 +517,7 @@ public final class TestStyleKit {
         let text2Style = NSMutableParagraphStyle()
         text2Style.alignment = .right
         let text2FontAttributes = [NSFontAttributeName: UIFont(name: "TimesNewRoman", size: 17)!, NSForegroundColorAttributeName: white, NSParagraphStyleAttributeName: text2Style] as [String : Any]
-        
+
         let text2TextHeight: CGFloat = text2TextContent.boundingRect(with: CGSize(width: text2Rect.width, height: CGFloat.infinity), options: .usesLineFragmentOrigin, attributes: text2FontAttributes, context: nil).height
         context.saveGState()
         context.clip(to: text2Rect)
