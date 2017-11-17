@@ -57,9 +57,8 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
     private var movementDuration: TimeInterval = 0
 
     private func validate(event: UIEvent) -> Set<UITouch>? {
-        guard let gestureTouches = event.touches(for: self),
-            gestureTouches.count >= minimumNumberOfTouches,
-            gestureTouches.count <= maximumNumberOfTouches
+        guard let touches = event.touches(for: self),
+            (minimumNumberOfTouches...maximumNumberOfTouches).contains(touches.count)
             else { return nil }
 
         return gestureTouches
@@ -140,8 +139,9 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
             if time > 0.2 {
                 self.velocity = .zero
             } else {
-                self.velocity.x = displacement.x / CGFloat(max(movementDuration, 0.001))
-                self.velocity.y = displacement.y / CGFloat(max(movementDuration, 0.001))
+                let duration = CGFloat(max(movementDuration, 0.001))
+                self.velocity.x = displacement.x / duration
+                self.velocity.y = displacement.y / duration
             }
 
             self.transition(to: .ended)
