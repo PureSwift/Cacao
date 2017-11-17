@@ -67,10 +67,7 @@ open class UIControl: UIView {
     ///
     /// - Returns: A bitmask of constants indicating the events for which this control has associated actions.
     public var allControlEvents: UIControlEvents {
-
-        return targetActions
-            .reduce([UIControlEvents](), { $0 + Array($1.value.keys) })
-            .reduce(UIControlEvents(), { $0.union($1) })
+        return targetActions.map { $0.value.keys }
     }
 
     /// Returns all target objects associated with the control.
@@ -78,10 +75,7 @@ open class UIControl: UIView {
     /// - Returns: A set of all target objects associated with the control.
     /// The returned set may include one or more `NSNull` objects to indicate actions that are dispatched to the responder chain.
     public var allTargets: Set<AnyHashable> {
-
-        let targets = targetActions.keys.map { $0.value ?? NSNull() as AnyHashable }
-
-        return Set(targets)
+        return targetActions.keys.map { $0.value ?? NSNull() as AnyHashable }
     }
 
     // MARK: - Triggering Actions
