@@ -123,42 +123,29 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
 
             let delta = gestureTouches.delta
 
-            if translate(delta, with: event) {
+            // make sure to notify
+            guard translate(delta, with: event) && !self.transition(to: .changed).notify else {
+                break }
 
-                // make sure to notify
-                if self.transition(to: .changed).notify == false {
-
-                    performActions()
-                }
-            }
+            performActions()
 
         default: break
-
         }
     }
 
     public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
-
         switch self.state {
-
         case .changed:
-
             let time = event.timestamp - (lastMovement ?? 0)
-
             if time > 0.2 {
-
                 self.velocity = .zero
-
             } else {
-
                 self.velocity.x = displacement.x / CGFloat(max(movementDuration, 0.001))
                 self.velocity.y = displacement.y / CGFloat(max(movementDuration, 0.001))
             }
 
             self.transition(to: .ended)
-
         default:
-
             self.transition(to: .failed)
         }
     }
