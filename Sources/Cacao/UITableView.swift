@@ -247,6 +247,13 @@ open class UITableView: UIScrollView {
         return cache.cells.cached[indexPath]
     }
     
+    private func _cellForRow(at indexPath: IndexPath?) -> UITableViewCell? {
+        
+        guard let indexPath = indexPath else { return nil }
+        
+        return cellForRow(at: indexPath)
+    }
+    
     /// Returns an index path representing the row and section of a given table-view cell.
     ///
     /// - Returns: An index path representing the row and section of the cell, or nil if the index path is invalid.
@@ -356,16 +363,22 @@ open class UITableView: UIScrollView {
                             at scrollPosition: UITableViewScrollPosition,
                             animated: Bool) {
         
-        scrollRectToVisible(rectForRow(at: indexPath), at: scrollPosition, animated: animated)
+        _scrollToRow(at: indexPath, at: scrollPosition, animated: animated)
+    }
+    
+    // optional variant
+    private func _scrollToRow(at indexPath: IndexPath?,
+                            at scrollPosition: UITableViewScrollPosition,
+                            animated: Bool) {
+        
+        scrollRectToVisible(_rectForRow(at: indexPath), at: scrollPosition, animated: animated)
     }
     
     /// Scrolls the table view so that the selected row nearest to a specified position in the table view is at that position.
     public func scrollToNearestSelectedRow(at scrollPosition: UITableViewScrollPosition,
                                            animated: Bool) {
         
-        let indexPath = indexPathForSelectedRow ?? IndexPath(row: 0, in: 0)
-        
-        scrollRectToVisible(rectForRow(at: indexPath), at: scrollPosition, animated: animated)
+        scrollRectToVisible(_rectForRow(at: indexPathForSelectedRow), at: scrollPosition, animated: animated)
     }
     
     // MARK: - Managing Selections
@@ -373,7 +386,38 @@ open class UITableView: UIScrollView {
     /// An index path identifying the row and section of the selected row.
     public private(set) var indexPathForSelectedRow: IndexPath?
     
+    /// The index paths representing the selected rows.
+    public var indexPathsForSelectedRows: [IndexPath]? {
+        
+        if let indexPath = indexPathForSelectedRow {
+            
+            return [indexPath]
+            
+        } else {
+            
+            return nil
+        }
+    }
     
+    /// Selects a row in the table view identified by index path, optionally scrolling the row to a location in the table view.
+    public func selectRow(at indexPath: IndexPath?,
+                          animated: Bool,
+                          scrollPosition: UITableViewScrollPosition) {
+        
+        reloadDataIfNeeded()
+        
+        
+        
+        // deselect previous row, and select new one
+        if indexPathForSelectedRow != indexPath {
+            
+            deselectRow(at: indexPath, animated: animated)
+            indexPathForSelectedRow = indexPath
+            _cellForRow(at: indexPath)?.selected = true
+        }
+        
+        _scrollToRow(at: indexPath, at: scrollPosition, animated: animated)
+    }
     
     // MARK: - Accessing Drawing Areas of the Table View
     
@@ -382,7 +426,30 @@ open class UITableView: UIScrollView {
     /// - Returns: A rectangle defining the area in which the table view draws the row or `.zero` if `indexPath` is invalid.
     public func rectForRow(at indexPath: IndexPath) -> CGRect {
         
+        return _rectForRow(at: indexPath)
+    }
+    
+    private func _rectForRow(at indexPath: IndexPath?) -> CGRect {
         
+        updateSectionsCacheIfNeeded()
+        
+        // validate
+        guard let indexPath = indexPath, // non-nil
+            indexPath.section < cache.sections.count, // valid section
+            indexPath.row < cache.sections[indexPath.section].numberOfRows // valid row
+            else { return .zero }
+        
+        let sectionIndex = indexPath.section
+        
+        let section = cache.sections[sectionIndex]
+        
+        let row = indexPath.row
+        
+        let offset = self.offset(forSection: sectionIndex)
+            + section.headerHeight
+            + (0 ..< row).reduce(0) { $0 + section.rowHeights[$1] }
+        
+        return self.rect(fromVerticalOffset: offset, height: section.rowHeights[row])
     }
     
     // MARK: - Overridden Methods
@@ -563,6 +630,26 @@ open class UITableView: UIScrollView {
             
             self.scrollRectToVisible(rect, animated: animated)
         }
+    }
+    
+    @inline(__always)
+    private func rect(fromVerticalOffset verticalOffset: CGFloat, height: CGFloat) -> CGRect {
+        
+        return CGRect(x: 0, y: verticalOffset, width: self.bounds.size.width, height: height)
+    }
+    
+    private func offset(forSection section: Int) -> CGFloat {
+        
+        updateSectionsCacheIfNeeded()
+        
+        var offset = self.tableHeaderView?.frame.size.height ?? 0
+        
+        for index in 0 ..< section {
+            
+            offset += cache.sections[index].sectionHeight
+        }
+        
+        return offset
     }
 }
 

@@ -9,9 +9,19 @@ import struct Foundation.IndexPath
 
 public extension IndexPath {
     
-    var section: Int { return self[0] }
-    var row: Int { return self[1] }
+    var section: Int {
+        
+        @inline(__always)
+        get { return self[0] }
+    }
+    
+    var row: Int {
+        
+        @inline(__always)
+        get { return self[1] }
+    }
 
+    @inline(__always)
     init(row: Int, in section: Int) {
         
         self.init(indexes: [section, row])

@@ -20,6 +20,8 @@ open class UITableViewCell: UIView {
     
     private let style: UITableViewCellStyle
     
+    public var selected: Bool = false
+    
     public required init(style: UITableViewCellStyle, reuseIdentifier: String?) {
         
         self.style = style
