@@ -125,19 +125,7 @@ open class UITableView: UIScrollView {
     /// or nil if no such object exists in the reusable-cell queue.
     public func dequeueReusableCell(withIdentifier identifier: String) -> UITableViewCell? {
         
-        guard let existingCellIndex = cache.cells.index(where: { $0.reuseIdentifier == identifier })
-            else { return nil }
-        
-        // get cell
-        let cell = cache.cells[existingCellIndex]
-        
-        // prepare UI
-        cell.prepareForReuse()
-        
-        // remove from cache
-        cache.cells.remove(at: existingCellIndex)
-        
-        return cell
+        return dequeue(with: identifier, cache: &cache.cells)
     }
     
     /// Returns a reusable table-view cell object for the specified reuse identifier and adds it to the table.
@@ -184,7 +172,7 @@ open class UITableView: UIScrollView {
     /// Returns a reusable header or footer view located by its identifier.
     public func dequeueReusableHeaderFooterView(withIdentifier identifier: String) -> UITableViewHeaderFooterView? {
         
-        if let existingView = _dequeueReusableCell(withIdentifier: identifier) {
+        if let existingView = dequeue(with: identifier, cache: &cache.headerFooters) {
             
             return existingView
             
@@ -201,26 +189,38 @@ open class UITableView: UIScrollView {
             
         } else {
             
+            // not cached and not registered
             return nil
         }
     }
     
-    private func _dequeueReusableCell(withIdentifier identifier: String) -> UITableViewHeaderFooterView? {
+    /// Returns an accessory view that is displayed above the table.
+    public var tableHeaderView: UIView? {
         
-        guard let existingViewIndex = cache.headerFooters.index(where: { $0.reuseIdentifier == identifier })
-            else { return nil }
-        
-        // get cell
-        let view = cache.headerFooters[existingViewIndex]
-        
-        // prepare UI
-        view.prepareForReuse()
-        
-        // remove from cache
-        cache.headerFooters.remove(at: existingViewIndex)
-        
-        return view
+        didSet {
+            
+            let newHeader = tableHeaderView
+            
+            if newHeader !== oldValue {
+                
+                // remove old header from super view
+                oldValue?.removeFromSuperview()
+                
+                // update content size
+                //_setContentSize()
+                
+                // add header as subview
+                if let view = newHeader {
+                    
+                    self.addSubview(view)
+                }
+            }
+        }
     }
+    
+    /// Returns an accessory view that is displayed below the table.
+    public var tableFooterView: UIView?
+
     
     // MARK: - Private
     
