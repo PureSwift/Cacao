@@ -254,7 +254,7 @@ public enum UIDeviceBatteryState: Int {
                 let sourcesInfo = IOPSCopyPowerSourcesInfo().takeRetainedValue()
 
                 let list = IOPSCopyPowerSourcesList(sourcesInfo).takeRetainedValue() as? [[String: Any]]
-                return list?.flatMap(PowerSource.init(info:)) ?? []
+                return list?.flatMap { PowerSource(info: $0) } ?? []
 
             }
 
@@ -286,11 +286,7 @@ public enum UIDeviceBatteryState: Int {
             }
 
             static var batteryLevel: Float {
-
-                guard let powerSource = powerSources.first
-                    else { return -1 }
-
-                return powerSource.chargedPercentage
+                return powerSources.first?.chargedPercentage ?? -1
             }
         }
     }
