@@ -128,10 +128,7 @@ open class UIScrollView: UIView {
     /// Scrolls a specific area of the content so that it is visible in the receiver.
     public func scrollRectToVisible(_ rect: CGRect, animated: Bool) {
 
-        let contentRect = CGRect(x: 0,
-                                 y: 0,
-                                 width: CGFloat(contentSize.width),
-                                 height: CGFloat(contentSize.height))
+        let contentRect = CGRect(origin: .zero, size: contentSize)
 
         let visibleRect = bounds
         var goalRect = rect.intersection(contentRect)

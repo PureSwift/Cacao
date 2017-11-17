@@ -116,17 +116,14 @@ private extension UIControl {
         let value: AnyHashable?
 
         init(_ value: AnyHashable? = nil) {
-
             self.value = value
         }
 
         var hashValue: Int {
-
             return value?.hashValue ?? 0
         }
 
         static func == (lhs: Target, rhs: Target) -> Bool {
-
             return lhs.value == rhs.value
         }
     }
@@ -142,18 +139,15 @@ public struct Selector: Hashable {
     public let name: String
 
     public init(name: String, action: @escaping Action) {
-
         self.name = name
         self.action = action
     }
 
     public var hashValue: Int {
-
         return name.hashValue
     }
 
     public static func == (lhs: Selector, rhs: Selector) -> Bool {
-
         return lhs.name == rhs.name
     }
 }
@@ -192,7 +186,6 @@ public struct UIControlEvents: OptionSet {
     public let rawValue: Int
 
     public init(rawValue: Int = 0) {
-
         self.rawValue = rawValue
     }
 

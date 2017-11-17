@@ -54,13 +54,15 @@ public extension UIFont {
 
         return UIFont(name: "HelveticaNeu-Bold", size: size)!
     }
+
+    // MARK: - Equatable
+
+    static func == (lhs: UIFont, rhs: UIFont) -> Bool {
+
+        return lhs.fontName == rhs.fontName
+            && lhs.pointSize == rhs.pointSize
+    }
 }
 
-// MARK: - Equatable
 
-public func == (lhs: UIFont, rhs: UIFont) -> Bool {
-
-    return lhs.fontName == rhs.fontName
-        && lhs.pointSize == rhs.pointSize
-}
 
