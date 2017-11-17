@@ -225,7 +225,6 @@ public enum UIDeviceBatteryState: Int {
 
             /// Get the computer name on a Macintosh.
             static var name: String {
-
                 return SCDynamicStoreCopyComputerName(nil, nil) as String? ?? ""
             }
 
@@ -249,28 +248,16 @@ public enum UIDeviceBatteryState: Int {
             }
 
             static var batteryState: UIDeviceBatteryState {
-
-                guard let powerSource = powerSources.first
-                    else { return .unknown }
-
-                switch powerSource.state {
-
+                switch powerSources.first?.state {
                 case kIOPSACPowerValue:
-
                     // determine charging
                     if powerSource.currentCapacity == powerSource.maximumCapacity {
-
                         return .full
-
                     } else {
-
                         return .charging
                     }
-
                 case kIOPSBatteryPowerValue:
-
                     return .unplugged
-
                 default: return .unknown
                 }
             }
@@ -296,7 +283,6 @@ public enum UIDeviceBatteryState: Int {
             static var all: [Family] = [iMacPro, iMac, MacBookPro, MacBookAir, MacBook, Macmini, MacPro]
 
             var description: String {
-
                 switch self {
                 case .iMac: return "iMac"
                 case .iMacPro: return "iMac Pro"
