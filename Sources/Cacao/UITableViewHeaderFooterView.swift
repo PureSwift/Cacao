@@ -50,5 +50,7 @@ open class UITableViewHeaderFooterView: UIView {
     open var detailTextLabel: UILabel?
 }
 
+// MARK: - ReusableView Protocol
+
 extension UITableViewHeaderFooterView: ReusableView { }
 

@@ -125,6 +125,8 @@ public enum UITableViewCellEditingStyle: Int {
     case insert
 }
 
+// MARK: - ReusableView Protocol
+
 internal protocol ReusableView {
     
     var reuseIdentifier: String? { get }

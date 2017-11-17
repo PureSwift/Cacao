@@ -125,7 +125,7 @@ open class UITableView: UIScrollView {
     /// or nil if no such object exists in the reusable-cell queue.
     public func dequeueReusableCell(withIdentifier identifier: String) -> UITableViewCell? {
         
-        return dequeue(with: identifier, cache: &cache.cells)
+        return dequeue(with: identifier, cache: &cache.cells.reusable)
     }
     
     /// Returns a reusable table-view cell object for the specified reuse identifier and adds it to the table.
@@ -197,34 +197,61 @@ open class UITableView: UIScrollView {
     /// Returns an accessory view that is displayed above the table.
     public var tableHeaderView: UIView? {
         
-        didSet {
-            
-            let newHeader = tableHeaderView
-            
-            if newHeader !== oldValue {
-                
-                // remove old header from super view
-                oldValue?.removeFromSuperview()
-                
-                // update content size
-                //_setContentSize()
-                
-                // add header as subview
-                if let view = newHeader {
-                    
-                    self.addSubview(view)
-                }
-            }
-        }
+        didSet { didSetTableHeaderFooterView(newValue: tableHeaderView, oldValue: oldValue) }
     }
     
     /// Returns an accessory view that is displayed below the table.
-    public var tableFooterView: UIView?
-
+    public var tableFooterView: UIView? {
+        
+        didSet { didSetTableHeaderFooterView(newValue: tableFooterView, oldValue: oldValue) }
+    }
+    
+    /// The height of section headers in the table view.
+    public var sectionHeaderHeight: CGFloat = UITableView.defaultHeaderFooterHeight
+    
+    /// The height of section footers in the table view.
+    public var sectionFooterHeight: CGFloat = UITableView.defaultHeaderFooterHeight
+    
+    /// Returns the header view associated with the specified section.
+    ///
+    /// - Parameter section: An index number that identifies a section of the table.
+    /// Table views in a plain style have a section index of zero.
+    ///
+    /// - Returns: The header view associated with the section, or nil if the section does not have a header view.
+    public func headerView(forSection section: Int) -> UITableViewHeaderFooterView? {
+        
+        return cache.sections[section].headerView as? UITableViewHeaderFooterView
+    }
+    
+    /// Returns the footer view associated with the specified section.
+    ///
+    /// - Parameter section: An index number that identifies a section of the table.
+    /// Table views in a plain style have a section index of zero.
+    ///
+    /// - Returns: The footer view associated with the section, or nil if the section does not have a footer view.
+    public func footerView(forSection section: Int) -> UITableViewHeaderFooterView? {
+        
+        return cache.sections[section].footerView as? UITableViewHeaderFooterView
+    }
+    
+    // MARK: - Accessing Cells and Sections
+    
+    /// Returns the table cell at the specified index path.
+    ///
+    /// - Parameter indexPath: The index path locating the row in the table view.
+    ///
+    /// - Returns: An object representing a cell of the table,
+    /// or `nil` if the cell is not visible or `indexPath` is out of range.
+    public func cellForRow(at indexPath: IndexPath) -> UITableViewCell? {
+        
+        return cache.cells.cached[indexPath]
+    }
     
     // MARK: - Private
     
     private static let defaultRowHeight: CGFloat = 43
+    
+    private static let defaultHeaderFooterHeight: CGFloat = 22
     
     private var cache = Cache()
     
@@ -247,6 +274,24 @@ open class UITableView: UIScrollView {
         cache.remove(at: existingViewIndex)
         
         return view
+    }
+    
+    private func didSetTableHeaderFooterView(newValue: UIView?, oldValue: UIView?) {
+        
+        guard newValue !== oldValue
+            else { return }
+        
+        // remove old header from super view
+        oldValue?.removeFromSuperview()
+        
+        // update content size
+        //_setContentSize()
+        
+        // add header as subview
+        if let view = newValue {
+            
+            self.addSubview(view)
+        }
     }
     
     private func updateSectionsCache() {
@@ -323,7 +368,7 @@ private extension UITableView {
     struct Cache {
         
         var sections = [Section]()
-        var cells = [UITableViewCell]()
+        var cells = (reusable: [UITableViewCell](), cached: [IndexPath: UITableViewCell]())
         var headerFooters = [UITableViewHeaderFooterView]()
     }
     
