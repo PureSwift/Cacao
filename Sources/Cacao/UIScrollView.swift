@@ -49,16 +49,17 @@ open class UIScrollView: UIView {
     /// Sets the offset from the content view’s origin that corresponds to the receiver’s origin.
     public func setContentOffset(_ contentOffset: CGPoint, animated: Bool) {
         
-        if animated {/*
-            var animation: UIScrollViewAnimationScroll? = nil
-            if (scrollAnimation? is UIScrollViewAnimationScroll) {
-                animation = (scrollAnimation as? UIScrollViewAnimationScroll)
-            }
-            if !animation || !theOffset.equalTo(animation?.endContentOffset) {
-                _setScrollAnimation(UIScrollViewAnimationScroll(self, fromContentOffset: contentOffset, toContentOffset: theOffset, duration: UIScrollViewAnimationDuration, curve: UIScrollViewAnimationScrollCurveLinear))
-            }*/
-        }
-        else {
+        if animated {
+            
+            // FIXME: Animate
+            _contentOffset.x = round(contentOffset.x)
+            _contentOffset.y = round(contentOffset.y)
+            updateBounds()
+            
+            delegate?.scrollViewDidScroll(self)
+            
+        } else {
+            
             _contentOffset.x = round(contentOffset.x)
             _contentOffset.y = round(contentOffset.y)
             updateBounds()

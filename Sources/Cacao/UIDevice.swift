@@ -41,7 +41,7 @@ public final class UIDevice {
         #if os(macOS)
             return Mac.name
         #else
-            return Host.current().name ?? ""
+            return Host.current().name ?? "" // Use NSHost on other platforms
         #endif
     }
     
@@ -50,6 +50,8 @@ public final class UIDevice {
         
         #if os(macOS)
             return "macOS"
+        #elseif os(Android)
+            return "Android"
         #elseif os(Linux)
             return "Linux"
         #endif
@@ -76,7 +78,9 @@ public final class UIDevice {
     /// The model of the device as a localized string.
     public var localizedModel: String {
         
-        return model
+        // just forward model string, no localization
+        @inline(__always)
+        get { return model }
     }
     
     /// The style of interface to use on the current device.
@@ -99,8 +103,12 @@ public final class UIDevice {
     /// Returns the physical orientation of the device.
     public var orientation: UIDeviceOrientation {
         
+        // FIXME: Implement rotation
+        
         #if os(macOS)
             return .portrait
+        #elseif os(Android)
+            return Android.orientation
         #elseif os(Linux)
             return .portrait
         #endif

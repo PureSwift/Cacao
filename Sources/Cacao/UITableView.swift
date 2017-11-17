@@ -247,6 +247,154 @@ open class UITableView: UIScrollView {
         return cache.cells.cached[indexPath]
     }
     
+    /// Returns an index path representing the row and section of a given table-view cell.
+    ///
+    /// - Returns: An index path representing the row and section of the cell, or nil if the index path is invalid.
+    public func indexPath(for cell: UITableViewCell) -> IndexPath? {
+        
+        return cache.cells.cached.first(where: { $0.value === cell })?.key
+    }
+    
+    /// Returns an index path identifying the row and section at the given point.
+    public func indexPathForRow(at point: CGPoint) -> IndexPath? {
+        
+        let paths = indexPathsForRows(in: CGRect(x: point.x, y: point.y, width: 1, height: 1))
+        
+        return paths?.first
+    }
+    
+    /// An array of index paths each representing a row enclosed by a given rectangle.
+    ///
+    /// - Parameter rect: A rectangle defining an area of the table view in local coordinates.
+    ///
+    /// - Returns: An array of `IndexPath` each representing a row and section index
+    /// identifying a row within rect. Returns an empty array if there aren’t any rows to return.
+    public func indexPathsForRows(in rect: CGRect) -> [IndexPath]? {
+        
+        // why is the return value for this an optional array Apple?
+        // the docs state otherwise
+        // bad Swift overlay
+        // https://developer.apple.com/documentation/uikit/uitableview/1614991-indexpathsforrows
+        
+        updateSectionsCacheIfNeeded()
+        
+        var results = [IndexPath]()
+        
+        var offset: CGFloat = self.tableHeaderView?.frame.size.height ?? 0.0
+        
+        for (sectionIndex, section) in cache.sections.enumerated() {
+            
+            let rowHeights = section.rowHeights
+            
+            offset += section.headerHeight
+            
+            if (offset + section.rowsHeight) >= rect.origin.y {
+                
+                for (row, height) in rowHeights.enumerated() {
+                    
+                    let simpleRowRect = CGRect(x: rect.origin.x, y: offset, width: rect.size.width, height: height)
+                    
+                    let pastEnd = simpleRowRect.origin.y > rect.origin.y + rect.size.height
+                    
+                    if rect.intersects(simpleRowRect) {
+                        
+                        results.append(IndexPath(row: row, in: sectionIndex))
+                        
+                    } else if pastEnd {
+                        
+                        // do nothing
+                    }
+                    
+                    offset += height
+                }
+                
+            } else {
+                
+                offset += section.rowsHeight
+            }
+            
+            offset += section.footerHeight
+        }
+        
+        return results
+    }
+    
+    /// The table cells that are visible in the table view.
+    ///
+    /// The value of this property is an array containing `UITableViewCell` objects,
+    /// each representing a visible cell in the table view.
+    public var visibleCells: [UITableViewCell] {
+        
+        return indexPathsForVisibleRows?.flatMap { cellForRow(at: $0) } ?? []
+    }
+    
+    /// An array of index paths each identifying a visible row in the table view.
+    public var indexPathsForVisibleRows: [IndexPath]? {
+        
+        layoutTableView()
+        
+        return cache.cells.cached.keys
+            .filter { bounds.intersects(rectForRow(at: $0)) } // get visible cells
+            .sorted()
+    }
+    
+    // MARK: - Estimating Element Heights
+    
+    /// The estimated height of rows in the table view.
+    public var estimatedRowHeight: CGFloat = 0.0
+    
+    /// The estimated height of section headers in the table view.
+    public var estimatedSectionHeaderHeight: CGFloat = 0.0
+    
+    /// The estimated height of section footers in the table view.
+    public var estimatedSectionFooterHeight: CGFloat = 0.0
+    
+    // MARK: - Scrolling the Table View
+    
+    /// Scrolls through the table view until a row identified by index path is at a particular location on the screen.
+    public func scrollToRow(at indexPath: IndexPath,
+                            at scrollPosition: UITableViewScrollPosition,
+                            animated: Bool) {
+        
+        scrollRectToVisible(rectForRow(at: indexPath), at: scrollPosition, animated: animated)
+    }
+    
+    /// Scrolls the table view so that the selected row nearest to a specified position in the table view is at that position.
+    public func scrollToNearestSelectedRow(at scrollPosition: UITableViewScrollPosition,
+                                           animated: Bool) {
+        
+        let indexPath = indexPathForSelectedRow ?? IndexPath(row: 0, in: 0)
+        
+        scrollRectToVisible(rectForRow(at: indexPath), at: scrollPosition, animated: animated)
+    }
+    
+    // MARK: - Managing Selections
+    
+    /// An index path identifying the row and section of the selected row.
+    public private(set) var indexPathForSelectedRow: IndexPath?
+    
+    
+    
+    // MARK: - Accessing Drawing Areas of the Table View
+    
+    /// Returns the drawing area for a row identified by index path.
+    ///
+    /// - Returns: A rectangle defining the area in which the table view draws the row or `.zero` if `indexPath` is invalid.
+    public func rectForRow(at indexPath: IndexPath) -> CGRect {
+        
+        
+    }
+    
+    // MARK: - Overridden Methods
+    
+    open override func layoutSubviews() {
+        
+        backgroundView?.frame = self.bounds
+        reloadDataIfNeeded()
+        layoutTableView()
+        super.layoutSubviews()
+    }
+    
     // MARK: - Private
     
     private static let defaultRowHeight: CGFloat = 43
@@ -258,6 +406,24 @@ open class UITableView: UIScrollView {
     private var reuseIdentifiers = ReuseIdentifiers()
     
     private var needsReload = true
+    
+    @inline(__always)
+    private func reloadDataIfNeeded() {
+        
+        if needsReload {
+            
+            reloadData()
+        }
+    }
+    
+    @inline(__always)
+    private func updateSectionsCacheIfNeeded() {
+        
+        if cache.sections.count == 0 {
+            
+            updateSectionsCache()
+        }
+    }
     
     private func dequeue<View: UIView & ReusableView>(with identifier: String, cache: inout [View]) -> View? {
         
@@ -285,7 +451,7 @@ open class UITableView: UIScrollView {
         oldValue?.removeFromSuperview()
         
         // update content size
-        //_setContentSize()
+        setContentSize()
         
         // add header as subview
         if let view = newValue {
@@ -357,6 +523,45 @@ open class UITableView: UIScrollView {
             }
             
             cache.sections.append(section)
+        }
+    }
+    
+    private func layoutTableView() {
+        
+        
+    }
+    
+    private func setContentSize() {
+        
+        
+    }
+    
+    private func scrollRectToVisible(_ rect: CGRect, at scrollPosition: UITableViewScrollPosition, animated: Bool) {
+        
+        var rect = rect
+        
+        if rect.isNull == false, rect.size.height > 0 {
+            
+            switch scrollPosition {
+                
+            case .none: break
+                
+            case .top:
+                
+                rect.size.height = self.bounds.size.height
+                
+            case .middle:
+                
+                rect.origin.y -= (self.bounds.size.height / 2.0) - rect.size.height
+                rect.size.height = self.bounds.size.height
+                
+            case .bottom:
+                
+                rect.origin.y -= self.bounds.size.height - rect.size.height
+                rect.size.height = self.bounds.size.height
+            }
+            
+            self.scrollRectToVisible(rect, animated: animated)
         }
     }
 }
