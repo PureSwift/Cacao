@@ -37,8 +37,7 @@ public final class UIScreen {
     public var nativeScale: CGFloat { return scale }
 
     public var maximumFramesPerSecond: Int {
-
-        return Int(window.displayMode?.refresh_rate ?? 60)
+        return Int(window.displayMode?.refresh_rate) ?? 60
     }
 
     internal let window: Window
