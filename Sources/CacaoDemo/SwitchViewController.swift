@@ -25,11 +25,11 @@ final class SwitchViewController: UIViewController {
     
     override func loadView() {
         
-        view = UIView(frame: CGRect())
+        view = UIView(frame: .zero)
         
-        switchView = UISwitch(frame: CGRect())
+        switchView = UISwitch(frame: .zero)
         
-        view.backgroundColor = UIColor.white
+        view.backgroundColor = .white
         
         view.addSubview(switchView)
     }

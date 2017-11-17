@@ -75,13 +75,13 @@ public struct UIColor {
     
     // MARK: - Singletons
     
-    public static let red = UIColor(cgColor: CGColor.red)
+    public static let red = UIColor(cgColor: .red)
     
-    public static var green = UIColor(cgColor: CGColor.green)
+    public static var green = UIColor(cgColor: .green)
     
-    public static var blue = UIColor(cgColor: CGColor.blue)
+    public static var blue = UIColor(cgColor: .blue)
     
-    public static var white = UIColor(cgColor: CGColor.white)
+    public static var white = UIColor(cgColor: .white)
     
-    public static var black = UIColor(cgColor: CGColor.black)
+    public static var black = UIColor(cgColor: .black)
 }

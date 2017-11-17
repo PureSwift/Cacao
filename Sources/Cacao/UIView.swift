@@ -209,7 +209,7 @@ open class UIView: UIResponder {
             _bounds.size = newValue.size
         }
     }
-    private var _frame = CGRect()
+    private var _frame: CGRect = .zero
     
     /// The bounds rectangle, which describes the view’s location and size in its own coordinate system.
     ///
@@ -233,7 +233,7 @@ open class UIView: UIResponder {
             _frame.size = newValue.size
         }
     }
-    private var _bounds = CGRect()
+    private var _bounds: CGRect = .zero
     
     /// The center of the frame.
     ///

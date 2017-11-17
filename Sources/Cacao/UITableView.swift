@@ -707,7 +707,7 @@ private extension UITableView {
     class SectionLabel: UILabel {
         
         init(title: String) {
-            super.init(frame: CGRect())
+            super.init(frame: .zero)
             self.font = UIFont.boldSystemFontOfSize(17)
             self.textColor = .white
             self.backgroundColor = UIColor(red: 0.9, green: 0.9, blue: 0.9, alpha: 0.8)

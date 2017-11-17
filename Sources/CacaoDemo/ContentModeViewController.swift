@@ -34,7 +34,7 @@ final class ContentModeViewController: UIViewController {
     
     override func loadView() {
         
-        logoView = SwiftLogoView(frame: CGRect()) // since we dont use autoresizing, initial size doesnt matter
+        logoView = SwiftLogoView(frame: .zero) // since we dont use autoresizing, initial size doesnt matter
         
         self.view = logoView
         
@@ -42,13 +42,13 @@ final class ContentModeViewController: UIViewController {
         
         logoView.pointSize = 150
         
-        label = UILabel(frame: CGRect()) // layoutSubviews will set size
+        label = UILabel(frame: .zero) // layoutSubviews will set size
         
         label.text = "\(modes[0])"
         
         label.color = UIColor.white
         
-        button = UIButton(frame: CGRect())
+        button = UIButton(frame: .zero)
         
         let selector = Selector(name: "changeMode", action: { (_, sender, _) in self.changeMode(sender: sender as! UIButton) })
         

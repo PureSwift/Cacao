@@ -45,6 +45,6 @@ extension UILabel {
     
     public static func appearance() -> UILabel {
         
-        return UILabel(frame: CGRect())
+        return UILabel(frame: .zero)
     }
 }

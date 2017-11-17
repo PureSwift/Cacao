@@ -87,7 +87,7 @@ open class UIViewController: UIResponder {
     /// If you want to perform any additional initialization of your views, do so in the `viewDidLoad()` method.
     open func loadView() {
         
-        self.view = UIView(frame: CGRect())
+        self.view = UIView(frame: .zero)
     }
     
     /// Called after the controller's view is loaded into memory.
