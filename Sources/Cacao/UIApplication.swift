@@ -42,13 +42,11 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
     let screen = UIScreen(window: window, size: initialWindowSize)
     UIScreen.main = screen
 
-    let launchOptions = [UIApplicationLaunchOptionsKey: Any]()
-
-    guard delegate.application(UIApplication.shared, willFinishLaunchingWithOptions: launchOptions),
-        delegate.application(UIApplication.shared, didFinishLaunchingWithOptions: launchOptions)
+    guard delegate.application(.shared, willFinishLaunchingWithOptions: [:]),
+        delegate.application(.shared, didFinishLaunchingWithOptions: [:])
         else { options.log("Application delegate could not launch app"); return }
 
-    defer { delegate.applicationWillTerminate(UIApplication.shared) }
+    defer { delegate.applicationWillTerminate(.shared) }
 
     // enter main loop
 
