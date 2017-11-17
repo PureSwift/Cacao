@@ -47,9 +47,9 @@ open class UISwitch: UIControl {
     /// Set the state of the switch to On or Off, optionally animating the transition.
     ///
     /// - Note: Setting the switch to either position does not result in an action message being sent.
-    public func setOn(_ on: Bool, animated: Bool) {
+    public func setOn(_ newValue: Bool, animated: Bool) {
         
-        setOn(on, animated: animated)
+        setOn(newValue, tapped: false, animated: animated)
     }
     
     private func setOn(_ on: Bool, tapped: Bool, animated: Bool) {
