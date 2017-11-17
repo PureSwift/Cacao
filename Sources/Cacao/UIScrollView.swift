@@ -54,18 +54,14 @@ open class UIScrollView: UIView {
             // FIXME: Animate
             _contentOffset.x = round(contentOffset.x)
             _contentOffset.y = round(contentOffset.y)
-            updateBounds()
-
-            delegate?.scrollViewDidScroll(self)
-
         } else {
-
             _contentOffset.x = round(contentOffset.x)
             _contentOffset.y = round(contentOffset.y)
-            updateBounds()
-
-            delegate?.scrollViewDidScroll(self)
         }
+        updateBounds()
+
+        delegate?.scrollViewDidScroll(self)
+
     }
 
     /// The size of the content view.
@@ -308,31 +304,21 @@ open class UIScrollView: UIView {
     private var previousTranslation: CGPoint?
 
     private func panGesture(_ gesture: UIGestureRecognizer) {
+        guard gesture === panGestureRecognizer else { return }
+        switch panGestureRecognizer.state {
+        case .began:
+            beginDragging()
 
-        if gesture === panGestureRecognizer {
+        case .changed:
+            let translation = panGestureRecognizer.translation(in: self)
+            drag(with: translation)
 
-            switch panGestureRecognizer.state {
+        case .ended:
+            let velocity = panGestureRecognizer.velocity(in: self)
+            endDragging(velocity: velocity)
 
-            case .began:
-
-                beginDragging()
-
-            case .changed:
-
-                let translation = panGestureRecognizer.translation(in: self)
-
-                drag(with: translation)
-
-            case .ended:
-
-                let velocity = panGestureRecognizer.velocity(in: self)
-
-                endDragging(velocity: velocity)
-
-            case .possible, .failed, .cancelled:
-
-                break
-            }
+        case .possible, .failed, .cancelled:
+            break
         }
     }
 
