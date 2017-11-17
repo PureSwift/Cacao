@@ -7,9 +7,27 @@
 
 import Foundation
 
-public class UITableViewCell: UIView {
+/// A cell in a table view.
+///
+/// This class includes properties and methods for setting and managing cell content
+/// and background (including text, images, and custom views), managing the cell
+/// selection and highlight state, managing accessory views, and initiating the
+/// editing of the cell contents.
+open class UITableViewCell: UIView {
     
+    /// A string used to identify a cell that is reusable.
+    public let reuseIdentifier: String?
     
+    private let style: UITableViewCellStyle
+    
+    public required init(style: UITableViewCellStyle, reuseIdentifier: String?) {
+        
+        self.style = style
+        self.reuseIdentifier = reuseIdentifier
+    }
+    
+    /// Prepares a reusable cell for reuse by the table view's delegate.
+    open func prepareForReuse() { } // override
 }
 
 // MARK: - Supporting Types
@@ -106,4 +124,13 @@ public enum UITableViewCellEditingStyle: Int {
     case delete
     case insert
 }
+
+internal protocol ReusableView {
+    
+    var reuseIdentifier: String? { get }
+    
+    func prepareForReuse()
+}
+
+extension UITableViewCell: ReusableView { }
 

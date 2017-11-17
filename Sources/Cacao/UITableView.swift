@@ -103,7 +103,124 @@ open class UITableView: UIScrollView {
     
     // MARK: - Creating Table View Cells
     
+    /// Registers a class for use in creating new table cells.
+    public func register(_ cellClass: UITableViewCell.Type?,
+                         forCellReuseIdentifier identifier: String) {
+        
+        assert(identifier.isEmpty == false, "Identifier must not be an empty string")
+        
+        if let cellClass = cellClass {
+            
+            self.reuseIdentifiers.cells[identifier] = .class(cellClass)
+            
+        } else {
+            
+            self.reuseIdentifiers.cells[identifier] = nil
+        }
+    }
     
+    /// Returns a reusable table-view cell object located by its identifier.
+    ///
+    /// - Returns: A `UITableViewCell` object with the associated identifier
+    /// or nil if no such object exists in the reusable-cell queue.
+    public func dequeueReusableCell(withIdentifier identifier: String) -> UITableViewCell? {
+        
+        guard let existingCellIndex = cache.cells.index(where: { $0.reuseIdentifier == identifier })
+            else { return nil }
+        
+        // get cell
+        let cell = cache.cells[existingCellIndex]
+        
+        // prepare UI
+        cell.prepareForReuse()
+        
+        // remove from cache
+        cache.cells.remove(at: existingCellIndex)
+        
+        return cell
+    }
+    
+    /// Returns a reusable table-view cell object for the specified reuse identifier and adds it to the table.
+    public func dequeueReusableCell(withIdentifier identifier: String,
+                                    for indexPath: IndexPath) -> UITableViewCell {
+        
+        if let existingCell = self.dequeueReusableCell(withIdentifier: identifier) {
+            
+            return existingCell
+            
+        } else {
+            
+            guard let registeredCell = self.reuseIdentifiers.cells[identifier]
+                else { fatalError("No cell type registered for identifier \(identifier)") }
+            
+            // create new cell
+            switch registeredCell {
+                
+            // initialize from cell class
+            case let .class(tableViewCellClass):
+                
+                return tableViewCellClass.init(style: .default, reuseIdentifier: identifier)
+            }
+        }
+    }
+    
+    // MARK: - Accessing Header and Footer Views
+    
+    public func register(_ viewClass: UITableViewHeaderFooterView.Type?,
+                         forHeaderFooterViewReuseIdentifier identifier: String) {
+        
+        assert(identifier.isEmpty == false, "Identifier must not be an empty string")
+        
+        if let viewClass = viewClass {
+            
+            self.reuseIdentifiers.headerFooters[identifier] = .class(viewClass)
+            
+        } else {
+            
+            self.reuseIdentifiers.headerFooters[identifier] = nil
+        }
+    }
+    
+    /// Returns a reusable header or footer view located by its identifier.
+    public func dequeueReusableHeaderFooterView(withIdentifier identifier: String) -> UITableViewHeaderFooterView? {
+        
+        if let existingView = _dequeueReusableCell(withIdentifier: identifier) {
+            
+            return existingView
+            
+        } else if let registeredView = self.reuseIdentifiers.headerFooters[identifier] {
+            
+            // create new cell
+            switch registeredView {
+                
+            // initialize from cell class
+            case let .class(viewClass):
+                
+                return viewClass.init(reuseIdentifier: identifier)
+            }
+            
+        } else {
+            
+            return nil
+        }
+    }
+    
+    private func _dequeueReusableCell(withIdentifier identifier: String) -> UITableViewHeaderFooterView? {
+        
+        guard let existingViewIndex = cache.headerFooters.index(where: { $0.reuseIdentifier == identifier })
+            else { return nil }
+        
+        // get cell
+        let view = cache.headerFooters[existingViewIndex]
+        
+        // prepare UI
+        view.prepareForReuse()
+        
+        // remove from cache
+        cache.headerFooters.remove(at: existingViewIndex)
+        
+        return view
+    }
     
     // MARK: - Private
     
@@ -111,7 +228,26 @@ open class UITableView: UIScrollView {
     
     private var cache = Cache()
     
+    private var reuseIdentifiers = ReuseIdentifiers()
+    
     private var needsReload = true
+    
+    private func dequeue<View: UIView & ReusableView>(with identifier: String, cache: inout [View]) -> View? {
+        
+        guard let existingViewIndex = cache.index(where: { $0.reuseIdentifier == identifier })
+            else { return nil }
+        
+        // get cell
+        let view = cache[existingViewIndex]
+        
+        // prepare UI
+        view.prepareForReuse()
+        
+        // remove from cache
+        cache.remove(at: existingViewIndex)
+        
+        return view
+    }
     
     private func updateSectionsCache() {
         
@@ -188,7 +324,25 @@ private extension UITableView {
         
         var sections = [Section]()
         var cells = [UITableViewCell]()
-        var reuseIdentifiers = Set<String>()
+        var headerFooters = [UITableViewHeaderFooterView]()
+    }
+    
+    struct ReuseIdentifiers {
+        
+        enum Cell {
+            
+            case `class`(UITableViewCell.Type)
+            //case nib(UINib)
+        }
+        
+        enum HeaderFooter {
+            
+            case `class`(UITableViewHeaderFooterView.Type)
+            //case nib(UINib)
+        }
+        
+        var cells = [String: Cell]()
+        var headerFooters = [String: HeaderFooter]()
     }
     
     struct Section {
