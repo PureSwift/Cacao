@@ -235,18 +235,8 @@ public enum UIDeviceBatteryState: Int {
                 guard let hardwareModel = systemInformation(for: "hw.model")
                     else { return "" }
 
-                var family: Family?
-
-                for model in Family.all {
-
-                    guard hardwareModel.hasPrefix(model.rawValue)
-                        else { continue }
-
-                    family = model
-                    break
-                }
-
-                return family?.description ?? hardwareModel
+                let device = Family.all.first { hardwareModel.hasPrefix($0.rawValue) }
+                return device?.description ?? hardwareModel
             }
 
             static var powerSources: [PowerSource] {
