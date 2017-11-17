@@ -92,39 +92,39 @@ public final class UIBezierPath {
         if corners.contains(.topLeft) {
             path.move(to: CGPoint(x: topLeft.x+cornerRadii.width, y:topLeft.y))
         } else {
-            path.move(to: CGPoint(x: topLeft.x, y:topLeft.y))
+            path.move(to: topLeft)
         }
         if corners.contains(.topRight) {
             path.addLine(to: CGPoint(x: topRight.x-cornerRadii.width, y: topRight.y))
-            addCurve(CGPoint(x: topRight.x, y: topRight.y),
+            addCurve(topRight,
                      CGPoint(x: topRight.x, y: topRight.y+cornerRadii.height),
                      CGPoint(x: topRight.x, y: topRight.y+cornerRadii.height))
         } else {
-            path.addLine(to: CGPoint(x: topRight.x, y: topRight.y))
+            path.addLine(to: topRight)
         }
         if corners.contains(.bottomRight) {
             path.addLine(to: CGPoint(x: bottomRight.x, y: bottomRight.y-cornerRadii.height))
-            addCurve(CGPoint(x: bottomRight.x, y: bottomRight.y),
+            addCurve(bottomRight,
                      CGPoint(x: bottomRight.x-cornerRadii.width, y: bottomRight.y),
                      CGPoint(x: bottomRight.x-cornerRadii.width, y: bottomRight.y))
         } else {
-            path.addLine(to: CGPoint(x: bottomRight.x, y: bottomRight.y))
+            path.addLine(to: bottomRight)
         }
         if corners.contains(.bottomLeft) {
             path.addLine(to: CGPoint(x: bottomLeft.x+cornerRadii.width, y: bottomLeft.y))
-            addCurve(CGPoint(x: bottomLeft.x, y: bottomLeft.y),
+            addCurve(bottomLeft,
                      CGPoint(x: bottomLeft.x, y: bottomLeft.y-cornerRadii.height),
                      CGPoint(x:bottomLeft.x, y: bottomLeft.y-cornerRadii.height))
         } else {
-            path.addLine(to: CGPoint(x: bottomLeft.x, y: bottomLeft.y))
+            path.addLine(to: bottomLeft)
         }
         if corners.contains(.topLeft) {
             path.addLine(to: CGPoint(x: topLeft.x, y: topLeft.y+cornerRadii.height))
-            addCurve(CGPoint(x: topLeft.x, y: topLeft.y),
+            addCurve(topLeft,
                      CGPoint(x: topLeft.x+cornerRadii.width, y: topLeft.y),
                      CGPoint(x: topLeft.x+cornerRadii.width, y: topLeft.y))
         } else {
-            path.addLine(to: CGPoint(x: topLeft.x, y: topLeft.y))
+            path.addLine(to: topLeft)
         }
 
         path.closeSubpath()

@@ -109,7 +109,7 @@ public final class UIApplication: UIResponder {
     public var keyWindow: UIWindow? { return UIScreen.main.keyWindow }
 
     /// The app's visible and hidden windows.
-    public var windows: [UIWindow] { return UIScreen.screens.reduce([UIWindow](), { $0 + $1.windows }) }
+    public var windows: [UIWindow] { return UIScreen.screens.flatMap { $0.windows } }
 
     // MARK: - Controlling and Handling Events
 
