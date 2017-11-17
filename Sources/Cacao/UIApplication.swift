@@ -17,7 +17,7 @@ import Cairo
 // MARK: - UIApplicationMain
 
 @_silgen_name("UIApplicationMain")
-public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOptions = CacaoOptions()) {
+public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOptions = []) {
 
     UIApplication.shared.delegate = delegate
 

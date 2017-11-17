@@ -98,12 +98,8 @@ open class UIView: UIResponder {
     public final var tintColor: UIColor! {
 
         get {
-            if let tintColor = _tintColor {
-                return tintColor
-            }
-
             // TODO
-            return UIColor.blue
+            return _tintColor ?? .blue
         }
 
         set {
@@ -502,23 +498,8 @@ open class UIView: UIResponder {
     ///
     /// - Returns: The view in the receiver’s hierarchy whose tag property matches the value in the tag parameter.
     public final func viewWithTag(_ tag: Int) -> UIView? {
-
-        if self.tag == tag {
-
-            return self
-
-        } else {
-
-            for view in subviews {
-
-                if let tagView = view.viewWithTag(tag) {
-
-                    return tagView
-                }
-            }
-        }
-
-        return nil
+        guard self.tag != tag else { return self }
+        return subviews.first { $0.viewWithTag(tag) != nil }
     }
 
     // MARK: - Converting Between View Coordinate Systems
