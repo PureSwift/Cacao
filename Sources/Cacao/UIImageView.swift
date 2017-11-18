@@ -9,5 +9,5 @@ import Silica
 
 open class UIImageView: UIView {
     
-    
+    public var image: UIImage?
 }

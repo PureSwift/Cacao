@@ -43,13 +43,19 @@ open class UITableViewCell: UIView {
     // MARK: - Managing the Predefined Content
     
     /// Returns the label used for the main textual content of the table cell.
-    public private(set) weak var textLabel: UILabel?
+    public weak lazy var textLabel: UILabel? = self.createTextLabel()
+    
+    private weak var _textLabel: UILabel?
     
     /// Returns the secondary label of the table cell if one exists.
-    public private(set) weak var detailTextLabel: UILabel?
+    public weak lazy var detailTextLabel: UILabel? = self.createDetailLabel()
+    
+    private weak var _detailTextLabel: UILabel?
     
     /// Returns the image view of the table cell.
-    public private(set) weak var imageView: UIImageView?
+    public weak lazy var imageView: UIImageView? = self.createImageView()
+    
+    private weak var _imageView: UIImageView?
     
     // MARK: - Accessing Views of the Cell Object
     
@@ -217,18 +223,43 @@ open class UITableViewCell: UIView {
             contentFrame.size.width = frame.origin.x - 1
         }
         
-        // set frames
-        self.backgroundView?.frame = contentFrame
-        self.selectedBackgroundView?.frame = contentFrame;
-        self.contentView.frame = contentFrame;
+        // set content frames
+        backgroundView?.frame = contentFrame
+        selectedBackgroundView?.frame = contentFrame;
+        contentView.frame = contentFrame;
         
-        if isSeparatorVisible {
-            
-            separatorView.frame = CGRect(x: 0, y: bounds.size.height-1, width: bounds.size.width, height: 1)
-        }
+        // set separator frame
+        separatorView.frame = isSeparatorVisible ? CGRect(x: 0, y: bounds.size.height - 1, width: bounds.size.width, height: 1) : .zero
         
         // layout default subviews
-        
+        switch style {
+            
+        case .default:
+            
+            /*
+            if let imageView = _imageView {
+                
+                let showImage = imageView.image != nil
+                
+                let width: CGFloat = showImage ? 30 : 0
+                
+                let padding: CGFloat = 5
+                
+                imageView.frame = CGRect(x: padding, y: 0, width: width, contentFrame.size.height)
+            }*/
+            
+        case .subtitle:
+            
+            break
+            
+        case .value1:
+            
+            break
+            
+        case .value2:
+            
+            break
+        }
     }
     
     // MARK: - Private
@@ -267,6 +298,94 @@ open class UITableViewCell: UIView {
         }
         
         bringSubview(toFront: separatorView)
+    }
+    
+    private func createTextLabel() -> UILabel {
+        
+        assert(_textLabel == nil, "Already initialized")
+        
+        let textLabel = UILabel()
+        
+        switch style {
+            
+        case .default:
+            
+            break
+            
+        case .subtitle:
+            
+            break
+            
+        case .value1:
+            
+            break
+            
+        case .value2:
+            
+            break
+        }
+        
+        // add subview
+        contentView.addSubview(textLabel)
+        
+        _textLabel = textLabel
+        
+        return textLabel
+    }
+    
+    private func createDetailLabel() -> UILabel {
+        
+        assert(_detailTextLabel == nil, "Already initialized")
+        
+        let textLabel = UILabel()
+        
+        switch style {
+            
+        case .default:
+            
+            break
+            
+        case .subtitle:
+            
+            break
+            
+        case .value1:
+            
+            break
+            
+        case .value2:
+            
+            break
+        }
+        
+        // add subview
+        contentView.addSubview(textLabel)
+        
+        _detailTextLabel = textLabel
+        
+        return textLabel
+    }
+    
+    private func createImageView() -> UIImageView? {
+        
+        assert(_imageView == nil, "Already initialized")
+        
+        switch style {
+            
+        case .default, .subtitle:
+            
+            let imageView = UIImageView()
+            
+            contentView.addSubview(imageView)
+            
+            _imageView = imageView
+            
+        case .value1, .value2:
+            
+            _imageView = nil
+        }
+        
+        return _imageView
     }
     
 }
