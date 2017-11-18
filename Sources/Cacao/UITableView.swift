@@ -180,11 +180,7 @@ open class UITableView: UIScrollView {
     /// Returns a reusable header or footer view located by its identifier.
     public func dequeueReusableHeaderFooterView(withIdentifier identifier: String) -> UITableViewHeaderFooterView? {
         
-        if let existingView = dequeue(with: identifier, cache: &cache.headerFooters) {
-            
-            return existingView
-            
-        } else if let registeredView = self.reuseIdentifiers.headerFooters[identifier] {
+        if let registeredView = self.reuseIdentifiers.headerFooters[identifier] {
             
             // create new cell
             switch registeredView {
@@ -986,7 +982,6 @@ private extension UITableView {
         
         var sections = [Section]()
         var cells = (reusable: Set<UITableViewCell>(), cached: [IndexPath: UITableViewCell]())
-        var headerFooters = [UITableViewHeaderFooterView]()
     }
     
     struct ReuseIdentifiers {
@@ -1073,8 +1068,6 @@ private extension UITableView {
         
         func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
             
-            assert(tableView.dataSource == nil, "Requesting cell for table view with no data source set")
-            
             fatalError("Should never request cell for table view with default data source")
         }
     }
@@ -1082,59 +1075,17 @@ private extension UITableView {
     final class DefaultDelegate: UITableViewDelegate {
         
         fileprivate init() { }
-        
-        func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
-            
-        }
-        
-        func scrollViewDidScroll(_ scrollView: UIScrollView) {
-            
-        }
-        
-        func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-            
-        }
-        
-        func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-            
-        }
-        
-        func scrollViewWillBeginDecelerating(_ scrollView: UIScrollView) {
-            
-        }
-        
-        func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-            
-        }
-        
-        func viewForZooming(in scrollView: UIScrollView) -> UIView {
-            
-        }
-        
-        func scrollViewWillBeginZooming(_ scrollView: UIScrollView, withView view: UIView) {
-            
-        }
-        
-        func scrollViewDidEndZooming(_ scrollView: UIScrollView, with view: UIView, atScale scale: Float) {
-            
-        }
-        
-        func scrollViewDidZoom(_ scrollView: UIScrollView) {
-            
-        }
-        
-        func scrollViewShouldScrollToTop(_ scrollView: UIScrollView) -> Bool {
-            
-        }
     }
 }
 
+/// The style of the table view.
 public enum UITableViewStyle: Int {
     
     case plain
     case grouped
 }
 
+/// The position in the table view (top, middle, bottom) to which a given row is scrolled.
 public enum UITableViewScrollPosition: Int {
     
     case none
@@ -1143,6 +1094,7 @@ public enum UITableViewScrollPosition: Int {
     case bottom
 }
 
+/// The type of animation when rows are inserted or deleted.
 public enum UITableViewRowAnimation: Int {
     
     case fade
@@ -1156,8 +1108,18 @@ public enum UITableViewRowAnimation: Int {
     case automatic = 100
 }
 
+/// Requests icon to be shown in the section index of a table view.
+///
+/// If the data source includes this constant string in the array of strings it returns
+/// in `sectionIndexTitles(for:)`, the section index displays a magnifying glass icon at
+/// the corresponding index location. This location should generally be the first title in the index.
 // http://stackoverflow.com/questions/235120/whats-the-uitableview-index-magnifying-glass-character
 public let UITableViewIndexSearch: String = "{search}"
+
+/// The default value for a given dimension.
+///
+/// Requests that UITableView use the default value for a given dimension.
+public let UITableViewAutomaticDimension: CGFloat = -1.0
 
 open class UITableViewRowAction {
     

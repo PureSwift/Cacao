@@ -28,6 +28,8 @@ open class UITableViewCell: UIView {
         
         self.style = style
         self.reuseIdentifier = reuseIdentifier
+        
+        super.init(frame: .zero)
     }
     
     /// Prepares a reusable cell for reuse by the table view's delegate.

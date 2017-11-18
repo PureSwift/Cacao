@@ -569,7 +569,7 @@ public protocol UIScrollViewDelegate: class {
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView)
     
-    func viewForZooming(in scrollView: UIScrollView) -> UIView
+    func viewForZooming(in scrollView: UIScrollView) -> UIView?
     
     func scrollViewWillBeginZooming(_ scrollView: UIScrollView, withView view: UIView)
     
@@ -578,4 +578,29 @@ public protocol UIScrollViewDelegate: class {
     func scrollViewDidZoom(_ scrollView: UIScrollView)
     
     func scrollViewShouldScrollToTop(_ scrollView: UIScrollView) -> Bool
+}
+
+public extension UIScrollViewDelegate {
+    
+    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) { }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) { }
+    
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) { }
+    
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) { }
+    
+    func scrollViewWillBeginDecelerating(_ scrollView: UIScrollView) { }
+    
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) { }
+    
+    func viewForZooming(in scrollView: UIScrollView) -> UIView? { return nil }
+    
+    func scrollViewWillBeginZooming(_ scrollView: UIScrollView, withView view: UIView) { }
+    
+    func scrollViewDidEndZooming(_ scrollView: UIScrollView, with view: UIView, atScale scale: Float) { }
+    
+    func scrollViewDidZoom(_ scrollView: UIScrollView) { }
+    
+    func scrollViewShouldScrollToTop(_ scrollView: UIScrollView) -> Bool { return true }
 }

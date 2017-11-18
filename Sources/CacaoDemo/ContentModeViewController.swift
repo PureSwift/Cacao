@@ -46,7 +46,7 @@ final class ContentModeViewController: UIViewController {
         
         label.text = "\(modes[0])"
         
-        label.color = UIColor.white
+        label.textColor = UIColor.white
         
         button = UIButton(frame: CGRect())
         
