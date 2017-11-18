@@ -29,7 +29,7 @@ final class ScrollViewController: UIViewController {
     
     override func loadView() {
         
-        view = UIView(frame: CGRect())
+        view = UIView(frame: .zero)
         view.backgroundColor = UIColor.white
         
         scrollView = UIScrollView(frame: CGRect())

@@ -87,7 +87,7 @@ open class UIViewController: UIResponder {
     /// If you want to perform any additional initialization of your views, do so in the `viewDidLoad()` method.
     open func loadView() {
         
-        self.view = UIView(frame: CGRect())
+        self.view = UIView(frame: .zero)
     }
     
     /// Called after the controller's view is loaded into memory.
@@ -97,6 +97,7 @@ open class UIViewController: UIResponder {
     public final func loadViewIfNeeded() {
         
         if isViewLoaded == false {
+            
             loadView()
             viewDidLoad()
         }
@@ -119,6 +120,11 @@ open class UIViewController: UIResponder {
     // MARK: - Responding to View Events
     
     open func viewWillAppear(animated: Bool) {
+        
+        
+    }
+    
+    open func viewDidAppear(animated: Bool) {
         
         
     }

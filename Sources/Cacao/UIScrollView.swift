@@ -249,7 +249,7 @@ open class UIScrollView: UIView {
     }
     
     /// The refresh control associated with the scroll view.
-    public var refreshControl: UIRefreshControl? = nil {
+    public var refreshControl: UIRefreshControl? {
         
         didSet {
             

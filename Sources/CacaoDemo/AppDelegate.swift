@@ -23,11 +23,11 @@ final class AppDelegate: UIApplicationDelegate {
         print("Battery: \(UIDevice.current.batteryLevel) (\(UIDevice.current.batteryState))")
         print("FPS: \(UIScreen.main.maximumFramesPerSecond)")
         
-        window = UIWindow(frame: UIScreen.main.bounds)
+        self.window = UIWindow(frame: UIScreen.main.bounds)
         
-        window.rootViewController = ScrollViewController()
+        self.window.rootViewController = TableViewController()
         
-        window.makeKeyAndVisible()
+        self.window.makeKeyAndVisible()
         
         return true
     }
