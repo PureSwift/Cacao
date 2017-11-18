@@ -113,7 +113,7 @@ open class UIViewController: UIResponder {
     ///
     /// The value in this property is used primarily when displaying the view controller’s
     /// content in a popover but may also be used in other situations.
-    public final var preferredContentSize: CGSize = CGSize()
+    public final var preferredContentSize: CGSize = .zero
     
     // MARK: - Presenting View Controllers
     

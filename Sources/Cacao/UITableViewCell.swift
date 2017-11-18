@@ -307,6 +307,9 @@ open class UITableViewCell: UIView {
     
     private func addPredefinedContentViews() {
         
+        // should only be called once
+        assert(self.textLabel == nil)
+        
         let textLabel = UILabel()
         let detailTextLabel: UILabel?
         let imageView: UIImageView?
@@ -341,6 +344,11 @@ open class UITableViewCell: UIView {
         contentSubviews
             .flatMap { $0 }
             .forEach { contentView.addSubview($0) }
+        
+        // set properties
+        self.textLabel = textLabel
+        self.detailTextLabel = detailTextLabel
+        self.imageView = imageView
     }
 }
 

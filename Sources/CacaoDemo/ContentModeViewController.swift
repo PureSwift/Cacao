@@ -42,13 +42,13 @@ final class ContentModeViewController: UIViewController {
         
         logoView.pointSize = 150
         
-        label = UILabel(frame: CGRect()) // layoutSubviews will set size
+        label = UILabel() // layoutSubviews will set size
         
         label.text = "\(modes[0])"
         
         label.textColor = UIColor.white
         
-        button = UIButton(frame: CGRect())
+        button = UIButton()
         
         let selector = Selector(name: "changeMode", action: { (_, sender, _) in self.changeMode(sender: sender as! UIButton) })
         
