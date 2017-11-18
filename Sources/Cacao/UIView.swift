@@ -637,7 +637,8 @@ open class UIView: UIResponder {
     internal var shouldRender: Bool {
         return isHidden == false
             && alpha > 0
-            && (bounds.size.width >= 1.0 || bounds.size.height >= 1.0)
+            && bounds.size.width >= 1.0
+            && bounds.size.height >= 1.0 // must be at least 1x1
     }
     
     internal final func render(on screen: UIScreen, in rect: SDL_Rect) {
