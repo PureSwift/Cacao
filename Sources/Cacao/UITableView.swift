@@ -596,7 +596,9 @@ open class UITableView: UIScrollView {
     /// Returns the drawing area for a specified section of the table view.
     public func rect(forSection section: Int) -> CGRect {
         
+        updateSectionsCacheIfNeeded()
         
+        return rect(fromVerticalOffset: offset(forSection: section), height: cache.sections[section].sectionHeight)
     }
     
     /// Returns the drawing area for a row identified by index path.
@@ -633,13 +635,17 @@ open class UITableView: UIScrollView {
     /// Returns the drawing area for the footer of the specified section.
     public func rectForFooter(inSection section: Int) -> CGRect {
         
+        updateSectionsCacheIfNeeded()
         
+        return rect(fromVerticalOffset: offset(forSection: section), height: cache.sections[section].footerHeight)
     }
     
     /// Returns the drawing area for the header of the specified section.
     public func rectForHeader(inSection section: Int) -> CGRect {
         
+        updateSectionsCacheIfNeeded()
         
+        return rect(fromVerticalOffset: offset(forSection: section), height: cache.sections[section].headerHeight)
     }
     
     // MARK: - Overridden Methods
@@ -654,13 +660,13 @@ open class UITableView: UIScrollView {
     
     open override var frame: CGRect {
         
-        willSet {
+        didSet {
             
-            let oldValue = frame
+            let newValue = frame
             
             if newValue != oldValue {
                 
-                if oldValue.size.width != frame.size.width {
+                if oldValue.size.width != newValue.size.width {
                     
                     updateSectionsCache()
                 }
