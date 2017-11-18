@@ -288,7 +288,7 @@ open class UITableView: UIScrollView {
         
         var results = [IndexPath]()
         
-        var offset: CGFloat = self.tableHeaderView?.frame.size.height ?? 0.0
+        var offset = tableHeaderView?.frame.size.height ?? 0.0
         
         for (sectionIndex, section) in cache.sections.enumerated() {
             
@@ -702,6 +702,9 @@ open class UITableView: UIScrollView {
     
     private var needsReload = true
     
+    /// An index path identifying the row and section of the highlighted row.
+    private var indexPathForHighlightedRow: IndexPath?
+    
     @inline(__always)
     private func reloadDataIfNeeded() {
         
@@ -714,13 +717,14 @@ open class UITableView: UIScrollView {
     @inline(__always)
     private func updateSectionsCacheIfNeeded() {
         
-        if cache.sections.count == 0 {
+        if cache.sections.isEmpty {
             
             updateSectionsCache()
         }
     }
     
-    private func dequeue<View: UIView & ReusableView>(with identifier: String, cache: inout [View]) -> View? {
+    private func dequeue<View>(with identifier: String, cache: inout Set<View>) -> View?
+        where View: UIView, View: ReusableView {
         
         guard let existingViewIndex = cache.index(where: { $0.reuseIdentifier == identifier })
             else { return nil }
@@ -823,12 +827,105 @@ open class UITableView: UIScrollView {
     
     private func layoutTableView() {
         
+        var tableViewHeight: CGFloat = 0
         
+        let contentOffsetY = contentOffset.y
+        let visibleBounds = CGRect(x: 0, y: contentOffsetY, width: bounds.size.width, height: bounds.size.height)
+        
+        // layout header
+        if let headerView = tableHeaderView {
+            
+            // adjust header frame
+            headerView.frame.origin = .zero
+            headerView.frame.size.width = bounds.size.width
+            
+            // add to table view height
+            tableViewHeight += headerView.frame.size.height
+        }
+        
+        // layout sections
+        
+        // get availible cached cells and clear old cache
+        var oldCells = cache.cells.cached
+        cache.cells.cached.removeAll()
+        
+        for (sectionIndex, section) in cache.sections.enumerated() {
+            
+            // get section rect
+            let sectionRect = rect(forSection: sectionIndex)
+            
+            // add to table view height
+            tableViewHeight += sectionRect.height
+            
+            // layout if section is visible
+            guard sectionRect.intersects(visibleBounds)
+                else { continue }
+            
+            // layout section header and footer
+            section.headerView?.frame = rectForHeader(inSection: sectionIndex)
+            section.footerView?.frame = rectForFooter(inSection: sectionIndex)
+            
+            // layout visible section rows
+            for row in 0 ..< section.numberOfRows {
+                
+                // create index path for row in section
+                let indexPath = IndexPath(row: row, in: sectionIndex)
+                
+                // get layout rect for row
+                let rowRect = rectForRow(at: indexPath)
+                
+                // layout cell if visible
+                guard rowRect.intersects(visibleBounds),
+                    rowRect.size.height > 0
+                    else { continue }
+                
+                // get cell from previous cache or data source
+                let cell = oldCells[indexPath] ?? _dataSource.tableView(self, cellForRowAt: indexPath)
+                
+                // add to cached visible cells
+                cache.cells.cached[indexPath] = cell
+                
+                // remove from old cache
+                oldCells[indexPath] = nil
+                
+                // configure cell
+                cell.frame = rowRect
+                cell.backgroundColor = backgroundColor
+                cell.highlighted = indexPath == indexPathForHighlightedRow
+                //cell.configureSeparator()
+                cell.selected = indexPathsForSelectedRows?.contains(indexPath) ?? false
+                
+                // add cell as subview
+                addSubview(cell)
+            }
+        }
+        
+        // keep non-visible old cells with a reuse identifier in the reusable queue
+        oldCells.values
+            .forEach { $0.removeFromSuperview() }
+        
+        oldCells.values
+            .filter { $0.reuseIdentifier?.isEmpty ?? false }
+            .forEach { cache.cells.reusable.insert($0) }
+        
+        // layout table view footer
+        if let footerView = tableFooterView {
+            
+            footerView.frame.origin = CGPoint(x: 0, y: tableViewHeight)
+            footerView.frame.size.width = bounds.size.width
+        }
     }
     
     private func setContentSize() {
         
+        updateSectionsCacheIfNeeded()
         
+        // calculate content height
+        let height = (tableHeaderView?.frame.size.height ?? 0)
+            + cache.sections.reduce(0) { $0 + $1.sectionHeight }
+            + (tableFooterView?.frame.size.height ?? 0)
+        
+        self.contentSize = CGSize(width: 0, height: height)
     }
     
     private func scrollRectToVisible(_ rect: CGRect, at scrollPosition: UITableViewScrollPosition, animated: Bool) {
@@ -888,7 +985,7 @@ private extension UITableView {
     struct Cache {
         
         var sections = [Section]()
-        var cells = (reusable: [UITableViewCell](), cached: [IndexPath: UITableViewCell]())
+        var cells = (reusable: Set<UITableViewCell>(), cached: [IndexPath: UITableViewCell]())
         var headerFooters = [UITableViewHeaderFooterView]()
     }
     
@@ -923,12 +1020,14 @@ private extension UITableView {
         
         var numberOfRows: Int {
             
-            return rowHeights.count
+            @inline(__always)
+            get { return rowHeights.count }
         }
         
         var sectionHeight: CGFloat {
             
-            return self.rowsHeight + self.headerHeight + self.footerHeight
+            @inline(__always)
+            get { return self.rowsHeight + self.headerHeight + self.footerHeight }
         }
     }
     

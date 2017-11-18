@@ -22,6 +22,8 @@ open class UITableViewCell: UIView {
     
     public var selected: Bool = false
     
+    public var highlighted: Bool = false
+    
     public required init(style: UITableViewCellStyle, reuseIdentifier: String?) {
         
         self.style = style
