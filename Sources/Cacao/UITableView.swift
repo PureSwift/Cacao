@@ -674,11 +674,11 @@ open class UITableView: UIScrollView {
     
     // MARK: - Private
     
-    private static let defaultRowHeight: CGFloat = 43
+    internal static let defaultRowHeight: CGFloat = 44
     
-    private static let defaultHeaderFooterHeight: CGFloat = 22
+    internal static let defaultHeaderFooterHeight: CGFloat = 22
     
-    private static let defaultSeparatorColor = UIColor(red: 0.88, green: 0.88, blue: 0.88)
+    internal static let defaultSeparatorColor = UIColor(red: 0.88, green: 0.88, blue: 0.88)
     
     private static let defaultDataSource = DefaultDataSource()
     

@@ -27,6 +27,11 @@ open class UIView: UIResponder {
     
     // MARK: - Initializing a View Object
     
+    public override convenience init() {
+        
+        self.init(frame: .zero)
+    }
+    
     /// Initializes and returns a newly allocated view object with the specified frame rectangle.
     public init(frame: CGRect) {
         
@@ -251,6 +256,7 @@ open class UIView: UIResponder {
         // bounds changed
         guard oldBounds != newBounds else { return }
         
+        // FIXME: Do the docs state this happens?
         setNeedsLayout()
         
         // Autoresize subviews

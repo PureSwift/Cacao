@@ -17,7 +17,6 @@ public struct UIViewAutoresizing : OptionSet {
     }
     
     /// Options for automatic view resizing.
-    public static let none = UIViewAutoresizing(rawValue: 0)
     public static let flexibleLeftMargin = UIViewAutoresizing(rawValue: 1 << 0)
     public static let flexibleWidth = UIViewAutoresizing(rawValue: 1 << 1)
     public static let flexibleRightMargin = UIViewAutoresizing(rawValue: 1 << 2)
@@ -52,7 +51,7 @@ internal extension CGRect {
             frame.size.height = floor(frame.size.height + (frame.size.height / oldSize.height * delta.height))
         }
         else if autoresizingMask.contains([.flexibleTopMargin, .flexibleHeight]) {
-            let t: CGFloat = frame.origin.y + frame.size.height
+            let t = frame.origin.y + frame.size.height
             frame.origin.y = floor(frame.origin.y + (frame.origin.y / t * delta.height))
             frame.size.height = floor(frame.size.height + (frame.size.height / t * delta.height))
         }

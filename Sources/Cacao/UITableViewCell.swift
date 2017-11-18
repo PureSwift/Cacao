@@ -23,9 +23,11 @@ open class UITableViewCell: UIView {
         self.style = style
         self.reuseIdentifier = reuseIdentifier
         
-        super.init(frame: .zero)
+        // while `UIView.init()` creates a view with an empty frame,
+        // UIKit creates a {0,0, 320, 44} cell with this initializer
+        super.init(frame: CGRect(origin: .zero, size: UITableViewCell.defaultSize))
         
-        // add subviews
+        // add mandatory subviews
         self.addSubview(separatorView)
         self.addSubview(contentView)
     }
@@ -36,7 +38,7 @@ open class UITableViewCell: UIView {
     public let reuseIdentifier: String?
     
     /// Prepares a reusable cell for reuse by the table view's delegate.
-    open func prepareForReuse() { }
+    open func prepareForReuse() { } // default implementation is empty
     
     // MARK: - Managing the Predefined Content
     
@@ -230,6 +232,8 @@ open class UITableViewCell: UIView {
     }
     
     // MARK: - Private
+    
+    internal static let defaultSize = CGSize(width: 320, height: UITableView.defaultRowHeight)
     
     private let style: UITableViewCellStyle
     
