@@ -9,7 +9,7 @@ import Foundation
 import Silica
 
 /// A controller object that manages a table view.
-open class UITableViewController: UIViewController {
+open class UITableViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
     // MARK: - Initializing the UITableViewController Object
     
@@ -108,9 +108,23 @@ open class UITableViewController: UIViewController {
         self.tableView.flashScrollIndicators()
     }
     
+    // MARK: - CustomStringConvertible
+    
     open override var description: String {
         
         return String(format: "<%@: %p; tableView = %@>", self.className, self, self.tableView)
+    }
+    
+    // MARK: - UITableViewDataSource
+    
+    open func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        
+        return 0
+    }
+    
+    open func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
+        fatalError("\(type(of: self)) cannot provide cells for \(#function)")
     }
     
     // MARK: - Private
@@ -119,18 +133,3 @@ open class UITableViewController: UIViewController {
     
     private var didReload = false
 }
-
-extension UITableViewController: UITableViewDataSource {
-    
-    public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        
-        return 0
-    }
-    
-    public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
-        fatalError("\(type(of: self)) cannot provide cells for \(#function)")
-    }
-}
-
-extension UITableViewController: UITableViewDelegate { } // nothing to implement

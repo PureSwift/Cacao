@@ -30,6 +30,12 @@ open class UITableViewCell: UIView {
         // add mandatory subviews
         self.addSubview(separatorView)
         self.addSubview(contentView)
+        
+        // add predefined content
+        self.addPredefinedContentViews()
+        
+        // layout subviews
+        self.layoutIfNeeded()
     }
     
     // MARK: - Reusing Cells
@@ -43,19 +49,13 @@ open class UITableViewCell: UIView {
     // MARK: - Managing the Predefined Content
     
     /// Returns the label used for the main textual content of the table cell.
-    public weak lazy var textLabel: UILabel? = self.createTextLabel()
-    
-    private weak var _textLabel: UILabel?
+    public private(set) weak var textLabel: UILabel?
     
     /// Returns the secondary label of the table cell if one exists.
-    public weak lazy var detailTextLabel: UILabel? = self.createDetailLabel()
-    
-    private weak var _detailTextLabel: UILabel?
+    public private(set) weak var detailTextLabel: UILabel?
     
     /// Returns the image view of the table cell.
-    public weak lazy var imageView: UIImageView? = self.createImageView()
-    
-    private weak var _imageView: UIImageView?
+    public private(set) weak var imageView: UIImageView?
     
     // MARK: - Accessing Views of the Cell Object
     
@@ -236,28 +236,33 @@ open class UITableViewCell: UIView {
             
         case .default:
             
-            /*
-            if let imageView = _imageView {
-                
-                let showImage = imageView.image != nil
-                
-                let width: CGFloat = showImage ? 30 : 0
-                
-                let padding: CGFloat = 5
-                
-                imageView.frame = CGRect(x: padding, y: 0, width: width, contentFrame.size.height)
-            }*/
+            let imageWidth = imageView?.image?.size.width ?? 0.0
+            
+            let imageViewFrame = CGRect(x: 5, y: 0, width: imageWidth, height: contentFrame.size.height)
+            
+            let textLabelX = imageViewFrame.origin.x + 15
+            
+            let textLabelFrame = CGRect(x: textLabelX, y: 0, width: contentFrame.size.width - textLabelX, height: contentFrame.size.height)
+            
+            imageView?.frame = imageViewFrame
+            
+            textLabel?.frame = textLabelFrame
+            
+            assert(detailTextLabel == nil, "No detail text label for \(style)")
             
         case .subtitle:
             
+            // FIXME: subtitle layout
             break
             
         case .value1:
             
+            // FIXME: value1 layout
             break
             
         case .value2:
             
+            // FIXME: value2 layout
             break
         }
     }
@@ -300,94 +305,43 @@ open class UITableViewCell: UIView {
         bringSubview(toFront: separatorView)
     }
     
-    private func createTextLabel() -> UILabel {
-        
-        assert(_textLabel == nil, "Already initialized")
+    private func addPredefinedContentViews() {
         
         let textLabel = UILabel()
+        let detailTextLabel: UILabel?
+        let imageView: UIImageView?
         
         switch style {
             
         case .default:
             
-            break
+            imageView = UIImageView()
+            detailTextLabel = nil
             
         case .subtitle:
             
-            break
+            imageView = UIImageView()
+            detailTextLabel = UILabel()
             
         case .value1:
             
-            break
+            imageView = nil
+            detailTextLabel = UILabel()
             
         case .value2:
             
-            break
+            imageView = nil
+            detailTextLabel = UILabel()
         }
         
-        // add subview
-        contentView.addSubview(textLabel)
+        // add subviews
+        let contentSubviews: [UIView?] = [textLabel, detailTextLabel, imageView]
         
-        _textLabel = textLabel
-        
-        return textLabel
+        // add as subviews to content view
+        contentSubviews
+            .flatMap { $0 }
+            .forEach { contentView.addSubview($0) }
     }
-    
-    private func createDetailLabel() -> UILabel {
-        
-        assert(_detailTextLabel == nil, "Already initialized")
-        
-        let textLabel = UILabel()
-        
-        switch style {
-            
-        case .default:
-            
-            break
-            
-        case .subtitle:
-            
-            break
-            
-        case .value1:
-            
-            break
-            
-        case .value2:
-            
-            break
-        }
-        
-        // add subview
-        contentView.addSubview(textLabel)
-        
-        _detailTextLabel = textLabel
-        
-        return textLabel
-    }
-    
-    private func createImageView() -> UIImageView? {
-        
-        assert(_imageView == nil, "Already initialized")
-        
-        switch style {
-            
-        case .default, .subtitle:
-            
-            let imageView = UIImageView()
-            
-            contentView.addSubview(imageView)
-            
-            _imageView = imageView
-            
-        case .value1, .value2:
-            
-            _imageView = nil
-        }
-        
-        return _imageView
-    }
-    
 }
 
 // MARK: - Supporting Types
