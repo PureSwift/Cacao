@@ -101,7 +101,7 @@ internal final class SDLEventPoller {
             event = UIEvent(timestamp: timestamp)
         }
         
-        /// Only the key window can recieve touch input
+        /// Only the key window can receive touch input
         guard let window = UIApplication.shared.keyWindow,
             let view = window.hitTest(screenLocation, with: event)
             else { return }
