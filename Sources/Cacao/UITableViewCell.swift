@@ -198,15 +198,35 @@ open class UITableViewCell: UIView {
         
         let isSeparatorVisible = separatorView.isHidden == false
         
-        let contentFrame = CGRect(x: 0, y: 0, width: bounds.size.width, height: bounds.size.height - (isSeparatorVisible ? 1 : 0))
-        
+        var contentFrame = CGRect(x: 0, y: 0, width: bounds.size.width, height: bounds.size.height - (isSeparatorVisible ? 1 : 0))
         
         if let accessoryView = self.accessoryView {
             
-            let accessoryRect = CGRect(x: bounds.size.width, y: 0, width: 0, height: 0)
+            /// calculate frame
+            var frame = CGRect(x: bounds.size.width, y: 0, width: 0, height: 0)
+            frame.size = accessoryView.sizeThatFits(bounds.size)
+            frame.origin.x = bounds.size.width - frame.size.width
+            frame.origin.y = round( 0.5 * (bounds.size.height - frame.size.height))
             
+            // set accessory frame
+            accessoryView.frame = frame
             
+            // adjust content frame based on accessory
+            contentFrame.size.width = frame.origin.x - 1
         }
+        
+        // set frames
+        self.backgroundView?.frame = contentFrame
+        self.selectedBackgroundView?.frame = contentFrame;
+        self.contentView.frame = contentFrame;
+        
+        if isSeparatorVisible {
+            
+            separatorView.frame = CGRect(x: 0, y: bounds.size.height-1, width: bounds.size.width, height: 1)
+        }
+        
+        // layout default subviews
+        
     }
     
     // MARK: - Private
@@ -216,10 +236,33 @@ open class UITableViewCell: UIView {
     // added as subview in `init()`
     private lazy var separatorView: SeparatorView = SeparatorView(frame: .zero)
     
-    internal func configureSeparator(style: UITableViewCellSeparatorStyle, color: UIColor) {
+    internal func configureSeparator(style: UITableViewCellSeparatorStyle, color: UIColor?) {
         
         separatorView.style = style
         separatorView.color = color
+    }
+    
+    /// Arranges the subviews in the proper order
+    private func orderSubviews() {
+        
+        if let view = selectedBackgroundView {
+            
+            sendSubview(toBack: view)
+        }
+        
+        if let view = backgroundView {
+            
+            sendSubview(toBack: view)
+        }
+        
+        bringSubview(toFront: contentView)
+        
+        if let view = accessoryView {
+            
+            bringSubview(toFront: view)
+        }
+        
+        bringSubview(toFront: separatorView)
     }
     
 }

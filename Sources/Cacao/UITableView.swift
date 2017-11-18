@@ -84,7 +84,7 @@ open class UITableView: UIScrollView {
     public var separatorStyle: UITableViewCellSeparatorStyle = .singleLine
     
     /// The color of separator rows in the table view.
-    public var separatorColor: UIColor? = UIColor(red: 0.88, green: 0.88, blue: 0.88)
+    public var separatorColor: UIColor? = UITableView.defaultSeparatorColor
     
     /// The effect applied to table separators.
     //public var separatorEffect: UIVisualEffect?
@@ -418,7 +418,7 @@ open class UITableView: UIScrollView {
             // select new row
             if let indexPath = indexPath {
                 
-                cellForRow(at: indexPath)?.selected = true
+                cellForRow(at: indexPath)?.isSelected = true
             }
         }
         
@@ -434,7 +434,7 @@ open class UITableView: UIScrollView {
             else { return }
         
         // FIXME: deselect animated
-        self.cellForRow(at: indexPath)?.selected = false
+        self.cellForRow(at: indexPath)?.isSelected = false
         self.indexPathForSelectedRow = nil
     }
     
@@ -554,7 +554,7 @@ open class UITableView: UIScrollView {
         
         // clear selection
         indexPathForSelectedRow = nil
-        //highlightedRow = nil
+        indexPathForHighlightedRow = nil
         
         // rebuild section cache
         updateSectionsCache()
@@ -677,6 +677,8 @@ open class UITableView: UIScrollView {
     private static let defaultRowHeight: CGFloat = 43
     
     private static let defaultHeaderFooterHeight: CGFloat = 22
+    
+    private static let defaultSeparatorColor = UIColor(red: 0.88, green: 0.88, blue: 0.88)
     
     private static let defaultDataSource = DefaultDataSource()
     
@@ -887,9 +889,9 @@ open class UITableView: UIScrollView {
                 // configure cell
                 cell.frame = rowRect
                 cell.backgroundColor = backgroundColor
-                cell.highlighted = indexPath == indexPathForHighlightedRow
-                //cell.configureSeparator()
-                cell.selected = indexPathsForSelectedRows?.contains(indexPath) ?? false
+                cell.isHighlighted = indexPath == indexPathForHighlightedRow
+                cell.isSelected = indexPathsForSelectedRows?.contains(indexPath) ?? false
+                cell.configureSeparator(style: separatorStyle, color: separatorColor)
                 
                 // add cell as subview
                 addSubview(cell)
