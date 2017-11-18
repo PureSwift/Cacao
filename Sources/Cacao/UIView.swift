@@ -35,6 +35,13 @@ open class UIView: UIResponder {
         self.frame = frame
     }
     
+    // MARK: - CustomStringConvertible
+    
+    open override var description: String {
+        
+        return String(format: "<%@: %p; frame = %@; hidden = %@; layer = %@>", className, self, "\(self.frame)", (self.isHidden ? "YES" : "NO"), "\(self.texture ?? "nil" as Any)")
+    }
+    
     // MARK: - Properties
     
     // MARK: - Configuring a View’s Visual Appearance
@@ -205,8 +212,10 @@ open class UIView: UIResponder {
     open var frame: CGRect {
         get { return _frame }
         set {
+            let oldValue = _bounds
             _frame = newValue
             _bounds.size = newValue.size
+            boundsDidChange(from: oldValue, to: newValue)
         }
     }
     private var _frame = CGRect()
@@ -229,11 +238,27 @@ open class UIView: UIResponder {
     public final var bounds: CGRect {
         get { return _bounds }
         set {
+            let oldValue = _bounds
             _bounds = newValue
             _frame.size = newValue.size
+            boundsDidChange(from: oldValue, to: newValue)
         }
     }
     private var _bounds = CGRect()
+    
+    private func boundsDidChange(from oldBounds: CGRect, to newBounds: CGRect) {
+        
+        // bounds changed
+        guard oldBounds != newBounds else { return }
+        
+        setNeedsLayout()
+        
+        // Autoresize subviews
+        if autoresizesSubviews, oldBounds.size != newBounds.size {
+            
+            subviews.forEach { $0.frame.resize($0.autoresizingMask, containerSize: (oldBounds.size, newBounds.size)) }
+        }
+    }
     
     /// The center of the frame.
     ///
@@ -472,7 +497,7 @@ open class UIView: UIResponder {
     /// That method performs any needed calculations and returns them to this method, which then makes the change.
     public final func sizeToFit() {
         
-        // TODO
+        // TODO: sizeToFit
     }
     
     /// The natural size for the receiving view, considering only properties of the view itself.
@@ -490,6 +515,17 @@ open class UIView: UIResponder {
         
         return CGSize(width: UIViewNoIntrinsicMetric, height: UIViewNoIntrinsicMetric)
     }
+    
+    /// A Boolean value that determines whether the receiver automatically resizes its subviews when its bounds change.
+    ///
+    /// When set to `true`, the receiver adjusts the size of its subviews when its bounds change.
+    /// The default value is `true`.
+    public var autoresizesSubviews: Bool = true
+    
+    /// An integer bit mask that determines how the receiver resizes itself when its superview’s bounds change.
+    ///
+    /// When a view’s bounds change, that view automatically resizes its subviews according to each subview’s autoresizing mask.
+    public var autoresizingMask: UIViewAutoresizing = []
     
     // MARK: - Identifying the View at Runtime
     
@@ -690,7 +726,9 @@ open class UIView: UIResponder {
     
     /// Lays out subviews.
     ///
-    /// The default implementation of this method does nothing.
+    /// If contraints are availible, the default implementation uses any constraints you have set
+    /// to determine the size and position of any subviews.
+    /// Otherwise, the default implementation of this method does nothing.
     ///
     /// Subclasses can override this method as needed to perform more precise layout of their subviews.
     /// You should override this method only if the autoresizing and constraint-based behaviors of

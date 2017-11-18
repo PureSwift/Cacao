@@ -60,7 +60,7 @@ public final class SwiftLogoView: UIView {
     
     public override func draw(_ rect: CGRect) {
         
-        let frame = contentMode.rect(for: bounds, size: intrinsicContentSize)
+        let frame = CacaoRectForContentMode(contentMode, bounds: bounds, size: intrinsicContentSize)
         
         if includesText {
             

@@ -37,10 +37,11 @@ public enum UIViewContentMode: Int {
     case bottomRight
 }
 
-// Cacao extension
-public extension UIViewContentMode {
+// MARK: - Internal Cacao Extension
+
+internal extension UIViewContentMode {
     
-    public func rect(for bounds: CGRect, size: CGSize) -> CGRect {
+    func rect(for bounds: CGRect, size: CGSize) -> CGRect {
         
         switch self {
             
@@ -175,4 +176,12 @@ public extension UIViewContentMode {
             return rect
         }
     }
+}
+
+// MARK: - Public API extension
+
+@_silgen_name("CacaoRectForContentMode")
+public func CacaoRectForContentMode(_ contentMode: UIViewContentMode, bounds: CGRect, size: CGSize) -> CGRect {
+    
+    return contentMode.rect(for: bounds, size: size)
 }

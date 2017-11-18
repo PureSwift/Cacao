@@ -274,6 +274,7 @@ internal extension UITableViewCell {
     final class SeparatorView: UIView {
         
         var style: UITableViewCellSeparatorStyle = .none  {
+            
             didSet {
                 setNeedsDisplay()
                 isHidden = style == .none
@@ -281,6 +282,7 @@ internal extension UITableViewCell {
         }
         
         var color: UIColor? {
+            
             didSet { setNeedsDisplay() }
         }
         
