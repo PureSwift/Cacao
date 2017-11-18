@@ -52,6 +52,14 @@ open class UITableView: UIScrollView {
     /// The object that acts as the delegate of the table view.
     public weak var tableViewDelegate: UITableViewDelegate?
     
+    /// The object that acts as the delegate of the table view.
+    public override weak var delegate: UIScrollViewDelegate? {
+        
+        get { return tableViewDelegate }
+        
+        set { tableViewDelegate = delegate as? UITableViewDelegate }
+    }
+    
     // MARK: - Configuring a Table View
     
     /// the style of the table view.
@@ -60,13 +68,13 @@ open class UITableView: UIScrollView {
     /// Returns the number of rows (table cells) in a specified section.
     public func numberOfRows(inSection section: Int) -> Int {
         
-        return dataSource?.tableView(self, numberOfRowsInSection: section) ?? 0
+        return _dataSource.tableView(self, numberOfRowsInSection: section)
     }
     
     /// The number of sections in the table view.
     public var numberOfSections: Int {
         
-        return dataSource?.numberOfSections(in: self) ?? 1
+        return _dataSource.numberOfSections(in: self)
     }
     
     /// The height of each row (that is, table cell) in the table view.
@@ -247,13 +255,6 @@ open class UITableView: UIScrollView {
         return cache.cells.cached[indexPath]
     }
     
-    private func _cellForRow(at indexPath: IndexPath?) -> UITableViewCell? {
-        
-        guard let indexPath = indexPath else { return nil }
-        
-        return cellForRow(at: indexPath)
-    }
-    
     /// Returns an index path representing the row and section of a given table-view cell.
     ///
     /// - Returns: An index path representing the row and section of the cell, or nil if the index path is invalid.
@@ -406,20 +407,197 @@ open class UITableView: UIScrollView {
         
         reloadDataIfNeeded()
         
-        
-        
         // deselect previous row, and select new one
         if indexPathForSelectedRow != indexPath {
             
-            deselectRow(at: indexPath, animated: animated)
+            // deleselect old row
+            if let indexPath = indexPathForSelectedRow {
+                
+                deselectRow(at: indexPath, animated: animated)
+            }
+            
+            // set new value
             indexPathForSelectedRow = indexPath
-            _cellForRow(at: indexPath)?.selected = true
+            
+            // select new row
+            if let indexPath = indexPath {
+                
+                cellForRow(at: indexPath)?.selected = true
+            }
         }
         
+        // scroll to new row
         _scrollToRow(at: indexPath, at: scrollPosition, animated: animated)
     }
     
+    /// Deselects a given row identified by index path, with an option to animate the deselection.
+    public func deselectRow(at indexPath: IndexPath,
+                            animated: Bool) {
+        
+        guard indexPath == indexPathForSelectedRow
+            else { return }
+        
+        // FIXME: deselect animated
+        self.cellForRow(at: indexPath)?.selected = false
+        self.indexPathForSelectedRow = nil
+    }
+    
+    /// A Boolean value that determines whether users can select a row.
+    public var allowsSelection: Bool = true
+    
+    /// A Boolean value that determines whether users can select more than one row outside of editing mode.
+    public var allowsMultipleSelection: Bool = false
+    
+    /// A Boolean value that determines whether users can select cells while the table view is in editing mode.
+    public var allowsSelectionDuringEditing: Bool = false
+    
+    /// A Boolean value that controls whether users can select more than one cell simultaneously in editing mode.
+    public var allowsMultipleSelectionDuringEditing: Bool = false
+    
+    // MARK: - Inserting, Deleting, and Moving Rows and Sections
+    
+    /// Inserts rows in the table view at the locations identified by an array of index paths, with an option to animate the insertion.
+    public func insertRows(at indexPaths: [IndexPath],
+                           with animation: UITableViewRowAnimation) {
+        
+        // FIXME: Animate
+        reloadData()
+    }
+    
+    /// Deletes the rows specified by an array of index paths, with an option to animate the deletion.
+    public func deleteRows(at indexPaths: [IndexPath],
+                           with animation: UITableViewRowAnimation) {
+        
+        // FIXME: Animate
+        reloadData()
+    }
+    
+    /// Moves the row at a specified location to a destination location.
+    public func moveRow(at indexPath: IndexPath,
+                        to newIndexPath: IndexPath) {
+        
+        // FIXME: Animate
+        reloadData()
+    }
+    
+    /// Inserts one or more sections in the table view, with an option to animate the insertion.
+    public func insertSections(_ sections: IndexSet,
+                               with animation: UITableViewRowAnimation) {
+        
+        // FIXME: Animate
+        reloadData()
+    }
+    
+    /// Deletes one or more sections in the table view, with an option to animate the deletion.
+    public func deleteSections(_ sections: IndexSet,
+                               with animation: UITableViewRowAnimation) {
+        
+        // FIXME: Animate
+        reloadData()
+    }
+    
+    /// Moves a section to a new location in the table view.
+    public func moveSection(_ section: Int,
+                            toSection newSection: Int) {
+        
+        // FIXME: Animate
+        reloadData()
+    }
+    
+    /// Animates multiple insert, delete, reload, and move operations as a group.
+    public func performBatchUpdates(_ updates: (() -> Void)?,
+                                    completion: ((Bool) -> Void)? = nil) {
+        
+        beginUpdates()
+        
+        updates?()
+        
+        endUpdates()
+        
+        completion?(true)
+    }
+    
+    /// Begins a series of method calls that insert, delete, or select rows and sections of the table view.
+    public func beginUpdates() {
+        
+        
+    }
+    
+    /// Concludes a series of method calls that insert, delete, select, or reload rows and sections of the table view.
+    public func endUpdates() {
+        
+        
+    }
+    
+    // MARK: - Managing the Editing of Table Cells
+    
+    /// A Boolean value that determines whether the table view is in editing mode.
+    public var isEditing: Bool = false
+    
+    /// Toggles the table view into and out of editing mode.
+    public func setEditing(_ editing: Bool, 
+                           animated: Bool) {
+        
+        // FIXME: Animate
+        self.isEditing = editing
+    }
+    
+    // MARK: - Reloading the Table View
+    
+    /// Reloads the rows and sections of the table view.
+    public func reloadData() {
+        
+        // clear cache
+        
+        // remove previous cells
+        cache.cells.cached.values.forEach { $0.removeFromSuperview() }
+        cache.cells.cached.removeAll()
+        
+        cache.cells.reusable.forEach { $0.removeFromSuperview() }
+        cache.cells.reusable.removeAll()
+        
+        // clear selection
+        indexPathForSelectedRow = nil
+        //highlightedRow = nil
+        
+        // rebuild section cache
+        updateSectionsCache()
+        setContentSize()
+        
+        // reset reload flag
+        needsReload = false
+    }
+    
+    /// Reloads the specified rows using an animation effect.
+    public func reloadRows(at indexPaths: [IndexPath],
+                           with animation: UITableViewRowAnimation) {
+        
+        reloadData()
+    }
+    
+    /// Reloads the specified sections using a given animation effect.
+    public func reloadSections(_ sections: IndexSet,
+                               with animation: UITableViewRowAnimation) {
+        
+        reloadData()
+    }
+    
+    /// Reloads the items in the index bar along the right side of the table view.
+    ///
+    /// This method gives you a way to update the section index after inserting
+    /// or deleting sections without having to reload the whole table.
+    public func reloadSectionIndexTitles() {
+        
+        
+    }
+    
     // MARK: - Accessing Drawing Areas of the Table View
+    
+    /// Returns the drawing area for a specified section of the table view.
+    public func rect(forSection section: Int) -> CGRect {
+        
+        
+    }
     
     /// Returns the drawing area for a row identified by index path.
     ///
@@ -452,6 +630,18 @@ open class UITableView: UIScrollView {
         return self.rect(fromVerticalOffset: offset, height: section.rowHeights[row])
     }
     
+    /// Returns the drawing area for the footer of the specified section.
+    public func rectForFooter(inSection section: Int) -> CGRect {
+        
+        
+    }
+    
+    /// Returns the drawing area for the header of the specified section.
+    public func rectForHeader(inSection section: Int) -> CGRect {
+        
+        
+    }
+    
     // MARK: - Overridden Methods
     
     open override func layoutSubviews() {
@@ -462,11 +652,43 @@ open class UITableView: UIScrollView {
         super.layoutSubviews()
     }
     
+    open override var frame: CGRect {
+        
+        willSet {
+            
+            let oldValue = frame
+            
+            if newValue != oldValue {
+                
+                if oldValue.size.width != frame.size.width {
+                    
+                    updateSectionsCache()
+                }
+                
+                setContentSize()
+            }
+        }
+    }
+    
     // MARK: - Private
     
     private static let defaultRowHeight: CGFloat = 43
     
     private static let defaultHeaderFooterHeight: CGFloat = 22
+    
+    private static let defaultDataSource = DefaultDataSource()
+    
+    private static let defaultDelegate = DefaultDelegate()
+    
+    private var _dataSource: UITableViewDataSource {
+        
+        get { return self.dataSource ?? UITableView.defaultDataSource }
+    }
+    
+    private var _delegate: UITableViewDelegate {
+        
+        get { return self.tableViewDelegate ?? UITableView.defaultDelegate }
+    }
     
     private var cache = Cache()
     
@@ -541,7 +763,6 @@ open class UITableView: UIScrollView {
         guard let dataSource = self.dataSource else { return }
         
         // compute the heights/offsets of everything
-        let defaultRowHeight = self.rowHeight
         let numberOfSections = self.numberOfSections
         
         for sectionIndex in 0 ..< numberOfSections {
@@ -551,13 +772,13 @@ open class UITableView: UIScrollView {
             var section = Section()
             section.headerTitle = dataSource.tableView(self, titleForHeaderInSection: sectionIndex)
             section.footerTitle = dataSource.tableView(self, titleForFooterInSection: sectionIndex)
-            section.headerHeight = tableViewDelegate?.tableView(self, heightForHeaderInSection: sectionIndex) ?? self.sectionHeaderHeight
-            section.footerHeight = tableViewDelegate?.tableView(self, heightForFooterInSection: sectionIndex) ?? self.sectionFooterHeight
+            section.headerHeight = _delegate.tableView(self, heightForHeaderInSection: sectionIndex)
+            section.footerHeight = _delegate.tableView(self, heightForFooterInSection: sectionIndex)
             
-            if section.headerHeight > 0, let view = tableViewDelegate?.tableView(self, viewForHeaderInSection: sectionIndex) {
+            if section.headerHeight > 0, let view = _delegate.tableView(self, viewForHeaderInSection: sectionIndex) {
                 section.headerView = view
             }
-            if section.footerHeight > 0, let view = tableViewDelegate?.tableView(self, viewForFooterInSection: sectionIndex) {
+            if section.footerHeight > 0, let view = _delegate.tableView(self, viewForFooterInSection: sectionIndex) {
                 section.footerView = view
             }
             
@@ -585,7 +806,8 @@ open class UITableView: UIScrollView {
             section.rowHeights = [CGFloat](repeating: 0, count: numberOfRowsInSection)
             
             for row in 0 ..< numberOfRowsInSection {
-                let rowHeight = tableViewDelegate?.tableView(self, heightForRowAt: IndexPath(row: row, in: sectionIndex)) ?? defaultRowHeight
+                
+                let rowHeight = _delegate.tableView(self, heightForRowAt: IndexPath(row: row, in: sectionIndex))
                 section.rowHeights[row] = rowHeight
             }
             
@@ -733,6 +955,73 @@ private extension UITableView {
             super.draw(rect)
         }
     }
+    
+    /// Default data source
+    final class DefaultDataSource: UITableViewDataSource {
+        
+        fileprivate init() { }
+        
+        func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+            
+            return 0
+        }
+        
+        func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+            
+            assert(tableView.dataSource == nil, "Requesting cell for table view with no data source set")
+            
+            fatalError("Should never request cell for table view with default data source")
+        }
+    }
+    
+    final class DefaultDelegate: UITableViewDelegate {
+        
+        fileprivate init() { }
+        
+        func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+            
+        }
+        
+        func scrollViewDidScroll(_ scrollView: UIScrollView) {
+            
+        }
+        
+        func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+            
+        }
+        
+        func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+            
+        }
+        
+        func scrollViewWillBeginDecelerating(_ scrollView: UIScrollView) {
+            
+        }
+        
+        func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+            
+        }
+        
+        func viewForZooming(in scrollView: UIScrollView) -> UIView {
+            
+        }
+        
+        func scrollViewWillBeginZooming(_ scrollView: UIScrollView, withView view: UIView) {
+            
+        }
+        
+        func scrollViewDidEndZooming(_ scrollView: UIScrollView, with view: UIView, atScale scale: Float) {
+            
+        }
+        
+        func scrollViewDidZoom(_ scrollView: UIScrollView) {
+            
+        }
+        
+        func scrollViewShouldScrollToTop(_ scrollView: UIScrollView) -> Bool {
+            
+        }
+    }
 }
 
 public enum UITableViewStyle: Int {
@@ -774,7 +1063,6 @@ public protocol UITableViewDataSource: class {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int
     
-    
     // Row display. Implementers should *always* try to reuse cells by setting each cell's reuseIdentifier and querying for available reusable cells with dequeueReusableCellWithIdentifier:
     // Cell gets various attributes set automatically based on table (separators) and data source (accessory views, editing controls)
     
@@ -787,7 +1075,6 @@ public protocol UITableViewDataSource: class {
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? // fixed font style. use custom view (UILabel) if you want something different
     
     func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String?
-    
     
     // Editing
     
@@ -905,7 +1192,7 @@ public protocol UITableViewDelegate: UIScrollViewDelegate {
                    toProposedIndexPath proposedDestinationIndexPath: IndexPath) -> IndexPath
 }
 
-public extension UITableViewDataSource {
+public extension UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) { }
     
@@ -921,15 +1208,15 @@ public extension UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat { return tableView.rowHeight }
     
-    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat { return tableView.headerHeight }
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat { return tableView.sectionHeaderHeight }
     
-    func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat { return tableView.footerHeight }
+    func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat { return tableView.sectionFooterHeight }
     
     func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat { return tableView.estimatedRowHeight }
     
-    func tableView(_ tableView: UITableView, estimatedHeightForHeaderInSection section: Int) -> CGFloat { return tableView.estimatedHeaderHeight }
+    func tableView(_ tableView: UITableView, estimatedHeightForHeaderInSection section: Int) -> CGFloat { return tableView.estimatedSectionHeaderHeight }
     
-    func tableView(_ tableView: UITableView, estimatedHeightForFooterInSection section: Int) -> CGFloat { return tableView.estimatedFooterHeight }
+    func tableView(_ tableView: UITableView, estimatedHeightForFooterInSection section: Int) -> CGFloat { return tableView.estimatedSectionFooterHeight }
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? { return nil }
     
@@ -965,5 +1252,8 @@ public extension UITableViewDataSource {
     
     func tableView(_ tableView: UITableView,
                    targetIndexPathForMoveFromRowAt sourceIndexPath: IndexPath,
-                   toProposedIndexPath proposedDestinationIndexPath: IndexPath) -> IndexPath { return proposedDestinationIndexPath }
+                   toProposedIndexPath proposedDestinationIndexPath: IndexPath) -> IndexPath {
+        
+        return proposedDestinationIndexPath
+    }
 }

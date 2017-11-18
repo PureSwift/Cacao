@@ -94,7 +94,7 @@ open class UIView: UIResponder {
     ///
     /// If the view’s tintAdjustmentMode property’s value is dimmed, then the tintColor property value is automatically dimmed.
     ///
-    /// To refresh subview rendering when this property changes, override the tintColorDidChange() method.
+    /// To refresh subview rendering when this property changes, override the `tintColorDidChange()` method.
     public final var tintColor: UIColor! {
         
         get {
@@ -202,7 +202,7 @@ open class UIView: UIResponder {
     ///
     /// - Warning: If the transform property is not the identity transform,
     /// the value of this property is undefined and therefore should be ignored.
-    public final var frame: CGRect {
+    open var frame: CGRect {
         get { return _frame }
         set {
             _frame = newValue
