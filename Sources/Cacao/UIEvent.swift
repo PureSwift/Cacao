@@ -15,23 +15,21 @@ public class UIEvent {
     /// Returns all touches associated with the event.
     ///
     /// - Returns: A set of `UITouch` objects representing all touches associated with the event.
-    public var allTouches: Set<UITouch>? { return touches }
-    
-    internal var touches = Set<UITouch>()
+    public var allTouches: Set<UITouch>? { return nil }
     
     public func touches(for view: UIView) -> Set<UITouch>? {
         
-        return touches.filter({ $0.view === view })
+        return allTouches?.filter({ $0.view === view })
     }
     
     public func touches(for window: UIWindow) -> Set<UITouch>? {
         
-        return touches.filter({ $0.window === window })
+        return allTouches?.filter({ $0.window === window })
     }
     
     public func touches(for gestureRecognizer: UIGestureRecognizer) -> Set<UITouch>? {
         
-        return touches.filter({ $0.gestureRecognizers?.contains(where: { $0 === gestureRecognizer }) ?? false })
+        return allTouches?.filter({ $0.gestureRecognizers?.contains(where: { $0 === gestureRecognizer }) ?? false })
     }
     
     // MARK: - Getting Event Attributes
@@ -48,13 +46,13 @@ public class UIEvent {
     ///
     /// The UIEventType constant returned by this property indicates the general type of this event—for example,
     /// whether it is a touch or motion event.
-    public let type: UIEventType = .touches
+    public var type: UIEventType { return  .touches }
     
     /// Returns the subtype of the event.
     ///
     /// The `UIEventSubtype` constant returned by this property indicates the subtype of the event
     /// in relation to the general type, which is returned from the type property.
-    public let subtype: UIEventSubtype = .none
+    public private(set) var subtype: UIEventSubtype = .none
     
     // MARK: - Initialization
     
@@ -70,7 +68,7 @@ extension UIEvent: CustomStringConvertible {
     
     public var description: String {
         
-        return "\(Swift.type(of: self))(timestamp:\(timestamp), touches: \(touches))"
+        return "\(Swift.type(of: self))(timestamp:\(timestamp), touches: \(allTouches ?? []))"
     }
 }
 

@@ -163,4 +163,9 @@ open class UIPanGestureRecognizer: UIGestureRecognizer {
             self.transition(to: .failed)
         }
     }
+    
+    internal func shouldTryToBegin(with event: UIEvent) {
+        
+        
+    }
 }
