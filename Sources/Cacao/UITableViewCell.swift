@@ -195,7 +195,12 @@ open class UITableViewCell: UIView {
     open override func layoutSubviews() {
         super.layoutSubviews()
         
-        layoutManager.layoutSubviews(of: self)
+        // layoutFloatingContentView()
+        
+        // UIKit`-[UITableViewCellLayoutManager layoutSubviewsOfCell:]:
+        // UIKit`-[UITableViewCell layoutSubviews]:
+        // https://gist.github.com/colemancda/7d39b640cca32849e0d33c17f8761270
+        UITableViewCellLayoutManager.layoutSubviews(of: self)
     }
     
     // MARK: - Private
@@ -205,8 +210,6 @@ open class UITableViewCell: UIView {
     internal weak var tableView: UITableView?
     
     fileprivate let style: UITableViewCellStyle
-    
-    fileprivate lazy var layoutManager: UITableViewCellLayoutManager = .init(style: self.style)
     
     // added as subview in `init()`
     fileprivate lazy var separatorView: UITableViewCellSeparatorView = UITableViewCellSeparatorView()
@@ -313,7 +316,7 @@ internal final class UITableViewCellContentView: UIView {
     
     var isLayoutEngineSuspended: Bool = false
     
-    init(frame: CGRect, cell: UITableViewCell) {
+    required init(frame: CGRect, cell: UITableViewCell) {
         super.init(frame: frame)
         
         self.cell = cell
@@ -330,36 +333,9 @@ internal final class UITableViewCellContentView: UIView {
         guard let cell = self.cell
             else { fatalError("No cell configured") }
         
-        func createLabel() -> UITableViewLabel {
-            return UITableViewLabel(frame: .zero, cell: cell)
-        }
-        
-        let textLabel = createLabel()
-        let detailTextLabel: UITableViewLabel?
-        let imageView: UIImageView?
-        
-        switch self.cell.style {
-            
-        case .default:
-            
-            imageView = UIImageView()
-            detailTextLabel = nil
-            
-        case .subtitle:
-            
-            imageView = UIImageView()
-            detailTextLabel = createLabel()
-            
-        case .value1:
-            
-            imageView = nil
-            detailTextLabel = createLabel()
-            
-        case .value2:
-            
-            imageView = nil
-            detailTextLabel = createLabel()
-        }
+        let textLabel = UITableViewCellLayoutManager.textLabel(for: cell)
+        let detailTextLabel = UITableViewCellLayoutManager.detailTextLabel(for: cell)
+        let imageView = UITableViewCellLayoutManager.imageView(for: cell)
         
         // add subviews
         let contentSubviews: [UIView?] = [textLabel, detailTextLabel, imageView]
@@ -483,14 +459,8 @@ internal final class UITableViewCellSelectedBackground: UIView {
 
 internal struct UITableViewCellLayoutManager {
     
-    let style: UITableViewCellStyle
-    
-    init(style: UITableViewCellStyle) {
-        
-        self.style = style
-    }
-    
-    func layoutSubviews(of cell: UITableViewCell) {
+    @inline(__always)
+    static func layoutSubviews(of cell: UITableViewCell) {
         
         let bounds = cell.bounds
         
@@ -526,6 +496,102 @@ internal struct UITableViewCellLayoutManager {
         
         cell.separatorView.frame = isSeparatorVisible ? separatorFrame : .zero
     }
+    
+    @inline(__always)
+    static private func createLabel(for cell: UITableViewCell) -> UITableViewLabel {
+        
+        return UITableViewLabel(frame: .zero, cell: cell)
+    }
+    
+    @inline(__always)
+    static func textLabel(for cell: UITableViewCell) -> UITableViewLabel {
+        
+        let style = cell.style
+        
+        let label = createLabel(for: cell)
+        
+        switch style {
+            
+        case .default:
+            
+            break
+            
+        case .subtitle:
+            
+            break
+            
+        case .value1:
+            
+            break
+            
+        case .value2:
+            
+            break
+        }
+        
+        return label
+    }
+    
+    @inline(__always)
+    static func detailTextLabel(for cell: UITableViewCell) -> UITableViewLabel? {
+        
+        let style = cell.style
+        
+        switch style {
+            
+        case .default:
+            
+            return nil
+            
+        case .subtitle:
+            
+            let label = createLabel(for: cell)
+            
+            return label
+            
+        case .value1:
+            
+            let label = createLabel(for: cell)
+            
+            return label
+            
+        case .value2:
+            
+            let label = createLabel(for: cell)
+            
+            return label
+        }
+    }
+    
+    @inline(__always)
+    static func imageView(for cell: UITableViewCell) -> UIImageView? {
+        
+        let style = cell.style
+        
+        switch style {
+            
+        case .default:
+            
+            let imageView = UIImageView()
+            
+            return imageView
+            
+        case .subtitle:
+            
+            let imageView = UIImageView()
+            
+            return imageView
+            
+        case .value1, .value2:
+            
+            return nil
+        }
+    }
+    /*
+    static func backgroundEndingRect(for cell: UITableViewCell) -> CGRect {
+        
+        
+    }*/
 }
 
 internal class UITableViewLabel: UILabel {
@@ -543,7 +609,7 @@ internal class UITableViewLabel: UILabel {
         }
     }
     
-    init(frame: CGRect, cell: UITableViewCell) {
+    required init(frame: CGRect, cell: UITableViewCell) {
         super.init(frame: frame)
         
         self.cell = cell
