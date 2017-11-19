@@ -15,5 +15,8 @@ internal final class UITouchesEvent: UIEvent {
     
     internal var touches = Set<UITouch>()
     
-    
+    private func invalidateGestureRecognizerForWindowCache() {
+        
+        
+    }
 }

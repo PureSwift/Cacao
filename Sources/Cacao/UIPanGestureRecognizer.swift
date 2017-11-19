@@ -168,4 +168,9 @@ open class UIPanGestureRecognizer: UIGestureRecognizer {
         
         
     }
+    
+    internal func willScrollY() {
+        
+        
+    }
 }

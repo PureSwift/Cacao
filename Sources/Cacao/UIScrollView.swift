@@ -619,4 +619,12 @@ fileprivate final class UIScrollViewPanGestureRecognizer: UIPanGestureRecognizer
         
         self.scrollview = scrollview
     }
+    
+    internal override func shouldTryToBegin(with event: UIEvent) {
+        
+        guard scrollview.scrollHorizontal
+            else { return }
+        
+        
+    }
 }

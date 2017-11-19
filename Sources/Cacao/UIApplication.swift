@@ -147,6 +147,10 @@ public final class UIApplication: UIResponder {
     // MARK: - Managing Background Execution
     
     public fileprivate(set) var applicationState: UIApplicationState = .active
+    
+    // MARK: - Private
+    
+    internal lazy var gestureEnvironment: UIGestureEnvironment = UIGestureEnvironment()
 }
 
 // MARK: - Supporting Types

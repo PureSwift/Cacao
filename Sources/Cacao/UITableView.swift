@@ -20,20 +20,11 @@ open class UITableView: UIScrollView {
         // UITableView properties
         self.style = style
         
-        // UIScrollView properties
+        // initialize
         super.init(frame: frame)
-        self.showsHorizontalScrollIndicator = false
-        self.showsVerticalScrollIndicator = true
-        //self.alwaysBounceVertical = true
-        self.bounces = true
         
-        // UIView
-        switch style {
-        case .plain:
-            self.backgroundColor = .white
-        case .grouped:
-            break
-        }
+        // setup common
+        self.setupTableViewCommon()
     }
     
     public override convenience init(frame: CGRect) {
@@ -704,6 +695,25 @@ open class UITableView: UIScrollView {
     /// An index path identifying the row and section of the highlighted row.
     private var indexPathForHighlightedRow: IndexPath?
     
+    private func setupTableViewCommon() {
+        
+        // set default values
+        
+        // UIScrollView properties
+        self.showsHorizontalScrollIndicator = false
+        self.showsVerticalScrollIndicator = true
+        //self.alwaysBounceVertical = true
+        self.bounces = true
+        
+        // UIView
+        switch style {
+        case .plain:
+            self.backgroundColor = .white
+        case .grouped:
+            break
+        }
+    }
+    
     @inline(__always)
     private func reloadDataIfNeeded() {
         
@@ -978,7 +988,7 @@ open class UITableView: UIScrollView {
     }
 }
 
-// MARK: - Supporting Types
+// MARK: - Private Supporting Types
 
 private extension UITableView {
     
@@ -1086,6 +1096,20 @@ private extension UITableView {
         fileprivate init() { }
     }
 }
+
+fileprivate final class UITableViewSubviewManager {
+    
+    private(set) weak var tableView: UITableView!
+    
+    fileprivate(set) var reusableCells: Set<UITableViewCell>()
+    
+    fileprivate init(tableView: UITableView) {
+        
+        self.tableView = tableView
+    }
+}
+
+// MARK: - Supporting Types
 
 /// The style of the table view.
 public enum UITableViewStyle: Int {

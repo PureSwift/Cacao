@@ -27,6 +27,11 @@ open class UIView: UIResponder {
     
     // MARK: - Initializing a View Object
     
+    deinit {
+        
+        removeAllGestureRecognizers()
+    }
+    
     public override convenience init() {
         
         self.init(frame: .zero)
@@ -859,12 +864,20 @@ open class UIView: UIResponder {
     /// Attaches a gesture recognizer to the view.
     public func addGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer) {
         
+        addGestureRecognizer(gestureRecognizer, atEnd: true)
+    }
+    
+    private func addGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, atEnd: Bool) {
+        
         // remove from old view
         gestureRecognizer.view?.removeGestureRecognizer(gestureRecognizer)
         
         // add to view
         gestureRecognizer.view = self
-        gestureRecognizers?.append(gestureRecognizer)
+        atEnd ? gestureRecognizers?.append(gestureRecognizer) : gestureRecognizers?.insert(gestureRecognizer, at: 0)
+        
+        // update gesture environment
+        UIApplication.shared.gestureEnvironment.addGestureRecognizer(gestureRecognizer)
     }
     
     /// Detaches a gesture recognizer from the receiving view.
@@ -875,6 +888,11 @@ open class UIView: UIResponder {
         
         gestureRecognizers?.remove(at: index)
         gestureRecognizer.view = nil
+    }
+    
+    private func removeAllGestureRecognizers() {
+        
+        gestureRecognizers?.forEach { removeGestureRecognizer($0) }
     }
     
     /// The gesture-recognizer objects currently attached to the view.
