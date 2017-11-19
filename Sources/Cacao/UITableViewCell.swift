@@ -195,35 +195,7 @@ open class UITableViewCell: UIView {
     open override func layoutSubviews() {
         super.layoutSubviews()
         
-        let bounds = self.bounds
-        
-        let isSeparatorVisible = separatorView.isHidden == false
-        
-        var contentFrame = CGRect(x: 0, y: 0, width: bounds.size.width, height: bounds.size.height - (isSeparatorVisible ? 1 : 0))
-        
-        if let accessoryView = self.accessoryView {
-            
-            /// calculate frame
-            var frame = CGRect(x: bounds.size.width, y: 0, width: 0, height: 0)
-            frame.size = accessoryView.sizeThatFits(bounds.size)
-            frame.origin.x = bounds.size.width - frame.size.width
-            frame.origin.y = round( 0.5 * (bounds.size.height - frame.size.height))
-            
-            // set accessory frame
-            accessoryView.frame = frame
-            
-            // adjust content frame based on accessory
-            contentFrame.size.width = frame.origin.x - 1
-        }
-        
-        // set content frames
-        backgroundView?.frame = contentFrame
-        selectedBackgroundView?.frame = contentFrame;
-        contentView.frame = contentFrame;
-        
-        // set separator frame
-        separatorView.frame = isSeparatorVisible ? CGRect(x: 0, y: bounds.size.height - 1, width: bounds.size.width, height: 1) : .zero
-        
+        layoutManager.layoutSubviews(of: self)
     }
     
     // MARK: - Private
@@ -237,7 +209,7 @@ open class UITableViewCell: UIView {
     fileprivate lazy var layoutManager: UITableViewCellLayoutManager = .init(style: self.style)
     
     // added as subview in `init()`
-    private lazy var separatorView: UITableViewCellSeparatorView = UITableViewCellSeparatorView()
+    fileprivate lazy var separatorView: UITableViewCellSeparatorView = UITableViewCellSeparatorView()
     
     internal func configureSeparator(style: UITableViewCellSeparatorStyle, color: UIColor?) {
         
@@ -509,7 +481,7 @@ fileprivate final class UITableViewCellSelectedBackground: UIView {
     
 }
 
-fileprivate final class UITableViewCellLayoutManager {
+fileprivate struct UITableViewCellLayoutManager {
     
     let style: UITableViewCellStyle
     
@@ -518,6 +490,37 @@ fileprivate final class UITableViewCellLayoutManager {
         self.style = style
     }
     
+    func layoutSubviews(of cell: UITableViewCell) {
+        
+        let bounds = cell.bounds
+        
+        let isSeparatorVisible = cell.separatorView.isHidden == false
+        
+        var contentFrame = CGRect(x: 0, y: 0, width: bounds.size.width, height: bounds.size.height - (isSeparatorVisible ? 1 : 0))
+        
+        if let accessoryView = cell.accessoryView {
+            
+            /// calculate frame
+            var frame = CGRect(x: bounds.size.width, y: 0, width: 0, height: 0)
+            frame.size = accessoryView.sizeThatFits(bounds.size)
+            frame.origin.x = bounds.size.width - frame.size.width
+            frame.origin.y = round( 0.5 * (bounds.size.height - frame.size.height))
+            
+            // set accessory frame
+            accessoryView.frame = frame
+            
+            // adjust content frame based on accessory
+            contentFrame.size.width = frame.origin.x - 1
+        }
+        
+        // set content frames
+        cell.backgroundView?.frame = contentFrame
+        cell.selectedBackgroundView?.frame = contentFrame;
+        cell.contentView.frame = contentFrame;
+        
+        // set separator frame
+        cell.separatorView.frame = isSeparatorVisible ? CGRect(x: 0, y: bounds.size.height - 1, width: bounds.size.width, height: 1) : .zero
+    }
 }
 
 fileprivate class UITableViewLabel: UILabel {
