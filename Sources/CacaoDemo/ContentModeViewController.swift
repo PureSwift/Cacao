@@ -13,8 +13,13 @@
 #endif
 
 import Foundation
-import Cacao
-import Silica
+
+#if os(iOS)
+    import UIKit
+#else
+    import Cacao
+    import Silica
+#endif
 
 final class ContentModeViewController: UIViewController {
     
@@ -50,9 +55,13 @@ final class ContentModeViewController: UIViewController {
         
         button = UIButton()
         
-        let selector = Selector(name: "changeMode", action: { (_, sender, _) in self.changeMode(sender: sender as! UIButton) })
+        #if os(iOS)
+            button.addTarget(self, action: #selector(_changeMode), for: .touchUpInside)
+        #else
+        let selector = Selector(name: "changeMode", action: { (_, sender, _) in self.changeMode(sender as! UIButton) })
         
         button.addTarget(self, action: selector, for: .touchUpInside)
+        #endif
         
         label.textAlignment = .center
         
@@ -84,7 +93,11 @@ final class ContentModeViewController: UIViewController {
     
     // MARK: - Actions
     
-    func changeMode(sender: UIButton) {
+    #if os(iOS)
+    @IBAction func _changeMode(_ sender: UIButton) { changeMode(sender) }
+    #endif
+    
+    func changeMode(_ sender: UIButton) {
         
         let currentMode = logoView.contentMode
         

@@ -12,8 +12,13 @@
 #endif
 
 import Foundation
+
+#if os(iOS)
+import UIKit
+#else
 import Cacao
 import Silica
+#endif
 
 final class SwitchViewController: UIViewController {
     

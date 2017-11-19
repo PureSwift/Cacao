@@ -12,8 +12,13 @@
 #endif
 
 import Foundation
-import Cacao
-import Silica
+
+#if os(iOS)
+    import UIKit
+#else
+    import Cacao
+    import Silica
+#endif
 
 final class ScrollViewController: UIViewController {
     

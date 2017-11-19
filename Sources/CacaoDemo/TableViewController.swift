@@ -6,8 +6,13 @@
 //
 
 import Foundation
-import Cacao
-import Silica
+
+#if os(iOS)
+    import UIKit
+#else
+    import Cacao
+    import Silica
+#endif
 
 final class TableViewController: UITableViewController {
     
@@ -21,7 +26,7 @@ final class TableViewController: UITableViewController {
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: cellReuseIdentifier)
     }
     
-    func numberOfSections(in tableView: UITableView) -> Int {
+    override func numberOfSections(in tableView: UITableView) -> Int {
         
         return 1
     }

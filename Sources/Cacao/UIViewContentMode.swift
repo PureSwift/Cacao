@@ -177,11 +177,3 @@ internal extension UIViewContentMode {
         }
     }
 }
-
-// MARK: - Public API extension
-
-@_silgen_name("CacaoRectForContentMode")
-public func CacaoRectForContentMode(_ contentMode: UIViewContentMode, bounds: CGRect, size: CGSize) -> CGRect {
-    
-    return contentMode.rect(for: bounds, size: size)
-}

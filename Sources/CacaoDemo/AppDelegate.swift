@@ -6,16 +6,22 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
-import Cacao
-import Silica
+import Foundation
 
-final class AppDelegate: UIApplicationDelegate {
+#if os(iOS)
+    import UIKit
+#else
+    import Cacao
+    import Silica
+#endif
+
+final class AppDelegate: NSObject, UIApplicationDelegate {
     
     static let shared = AppDelegate()
     
-    var window: UIWindow!
+    var window: UIWindow?
     
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey : Any]) -> Bool {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey : Any]?) -> Bool {
         
         print("Device: \(UIDevice.current.name)")
         print("Model: \(UIDevice.current.model)")
@@ -25,9 +31,9 @@ final class AppDelegate: UIApplicationDelegate {
         
         self.window = UIWindow(frame: UIScreen.main.bounds)
         
-        self.window.rootViewController = TableViewController()
+        self.window?.rootViewController = TableViewController()
         
-        self.window.makeKeyAndVisible()
+        self.window?.makeKeyAndVisible()
         
         return true
     }
