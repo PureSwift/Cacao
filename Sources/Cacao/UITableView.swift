@@ -27,7 +27,6 @@ open class UITableView: UIScrollView {
         //self.alwaysBounceVertical = true
         self.bounces = true
         
-        
         // UIView
         switch style {
         case .plain:
@@ -1006,7 +1005,6 @@ private extension UITableView {
     
     struct Section {
         
-        var rowsHeight: CGFloat = 0.0
         var headerHeight: CGFloat = 0.0
         var footerHeight: CGFloat = 0.0
         var rowHeights = [CGFloat]()
@@ -1019,6 +1017,12 @@ private extension UITableView {
             
             @inline(__always)
             get { return rowHeights.count }
+        }
+        
+        var rowsHeight: CGFloat {
+            
+            @inline(__always)
+            get { return rowHeights.reduce(0, { $0 + $1 }) }
         }
         
         var sectionHeight: CGFloat {

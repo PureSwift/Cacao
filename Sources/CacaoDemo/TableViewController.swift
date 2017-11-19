@@ -11,7 +11,7 @@ import Silica
 
 final class TableViewController: UITableViewController {
     
-    private let data = ["test1", "test2"]
+    private let data = Array((1...100))
     
     private let cellReuseIdentifier = "Cell"
     
@@ -49,6 +49,8 @@ final class TableViewController: UITableViewController {
     
     private subscript (indexPath: IndexPath) -> String {
         
-        return data[indexPath.row]
+        let number = data[indexPath.row]
+        
+        return "test \(number)"
     }
 }
