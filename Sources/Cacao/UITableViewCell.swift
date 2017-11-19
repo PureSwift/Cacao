@@ -298,7 +298,7 @@ public enum UITableViewCellEditingStyle: Int {
 
 // MARK: - Private Supporting Types
 
-fileprivate final class UITableViewCellContentView: UIView {
+internal final class UITableViewCellContentView: UIView {
     
     private(set) weak var cell: UITableViewCell!
     
@@ -319,7 +319,7 @@ fileprivate final class UITableViewCellContentView: UIView {
         self.cell = cell
         
         // setup predefined views
-        tableViewCellContentViewCommonSetup()
+        self.tableViewCellContentViewCommonSetup()
     }
     
     private func tableViewCellContentViewCommonSetup() {
@@ -419,9 +419,9 @@ fileprivate final class UITableViewCellContentView: UIView {
 }
 
 /// Actual name is `_UITableViewCellSeparatorView`
-fileprivate typealias UITableViewCellSeparatorView = _UITableViewCellSeparatorView
+internal typealias UITableViewCellSeparatorView = _UITableViewCellSeparatorView
 
-fileprivate final class _UITableViewCellSeparatorView: UIView {
+internal final class _UITableViewCellSeparatorView: UIView {
     
     var style: UITableViewCellSeparatorStyle = .none  {
         
@@ -476,12 +476,12 @@ fileprivate final class _UITableViewCellSeparatorView: UIView {
     }
 }
 
-fileprivate final class UITableViewCellSelectedBackground: UIView {
+internal final class UITableViewCellSelectedBackground: UIView {
     
     
 }
 
-fileprivate struct UITableViewCellLayoutManager {
+internal struct UITableViewCellLayoutManager {
     
     let style: UITableViewCellStyle
     
@@ -523,7 +523,7 @@ fileprivate struct UITableViewCellLayoutManager {
     }
 }
 
-fileprivate class UITableViewLabel: UILabel {
+internal class UITableViewLabel: UILabel {
     
     private(set) weak var cell: UITableViewCell!
     

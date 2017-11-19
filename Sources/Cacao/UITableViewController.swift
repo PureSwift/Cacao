@@ -35,7 +35,12 @@ open class UITableViewController: UIViewController, UITableViewDataSource, UITab
         
         get { return self.view as? UITableView }
         
-        set { self.view = newValue }
+        set {
+            
+            newValue.delegate = self
+            newValue.dataSource = self
+            self.view = newValue
+        }
     }
     
     // MARK: - Configuring the Table Behavior
@@ -73,8 +78,6 @@ open class UITableViewController: UIViewController, UITableViewDataSource, UITab
     open override func loadView() {
         
         self.tableView = UITableView(frame: .zero, style: style)
-        self.tableView.delegate = self
-        self.tableView.dataSource = self
     }
     
     open override func viewDidLoad() {
