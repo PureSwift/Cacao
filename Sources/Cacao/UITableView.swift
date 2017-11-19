@@ -106,7 +106,7 @@ open class UITableView: UIScrollView {
     }
     
     /// Specifies the default inset of cell separators.
-    public var separatorInset: UIEdgeInsets = UIEdgeInsets()
+    public var separatorInset: UIEdgeInsets = UITableView.defaultSeparatorInset
     
     // MARK: - Creating Table View Cells
     
@@ -678,6 +678,8 @@ open class UITableView: UIScrollView {
     internal static let defaultHeaderFooterHeight: CGFloat = 22
     
     internal static let defaultSeparatorColor = UIColor(red: 0.88, green: 0.88, blue: 0.88)
+    
+    internal static let defaultSeparatorInset = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 0)
     
     private static let defaultDataSource = DefaultDataSource()
     

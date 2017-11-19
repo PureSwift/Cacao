@@ -57,7 +57,7 @@ open class UITableViewCell: UIView {
     /// If you want to customize cells by simply adding additional views, you should add them to the content view
     /// so they will be positioned appropriately as the cell transitions into and out of editing mode.
     public var contentView: UIView { return _contentView }
-    private lazy var _contentView: UITableViewCellContentView = UITableViewCellContentView(frame: .zero, cell: self)
+    private lazy var _contentView: UITableViewCellContentView = UITableViewCellContentView(frame: CGRect(origin: .zero, size: self.bounds.size), cell: self)
     
     /// The view used as the background of the cell.
     ///
@@ -188,7 +188,7 @@ open class UITableViewCell: UIView {
     ///
     /// Only the left and right inset values are respected; the top and bottom inset values are ignored.
     /// The value assigned to this property takes precedence over any default separator insets set on the table view.
-    public var separatorInset: UIEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 0)
+    public var separatorInset: UIEdgeInsets = UITableView.defaultSeparatorInset
     
     // MARK: - Overriden Methods
     
@@ -519,7 +519,12 @@ internal struct UITableViewCellLayoutManager {
         cell.contentView.frame = contentFrame;
         
         // set separator frame
-        cell.separatorView.frame = isSeparatorVisible ? CGRect(x: 0, y: bounds.size.height - 1, width: bounds.size.width, height: 1) : .zero
+        let separatorFrame = CGRect(x: cell.separatorInset.left,
+                                    y: bounds.size.height - 1,
+                                    width: bounds.size.width - (cell.separatorInset.right + cell.separatorInset.left),
+                                    height: 1)
+        
+        cell.separatorView.frame = isSeparatorVisible ? separatorFrame : .zero
     }
 }
 
