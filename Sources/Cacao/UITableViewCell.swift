@@ -27,12 +27,7 @@ open class UITableViewCell: UIView {
         // UIKit creates a {0,0, 320, 44} cell with this initializer
         super.init(frame: CGRect(origin: .zero, size: UITableViewCell.defaultSize))
         
-        // add mandatory subviews
-        self.addSubview(separatorView)
-        self.addSubview(contentView)
-        
-        // layout subviews
-        self.layoutIfNeeded()
+        self.setupTableViewCellCommon()
     }
     
     // MARK: - Reusing Cells
@@ -49,10 +44,10 @@ open class UITableViewCell: UIView {
     public var textLabel: UILabel? { return _contentView.textLabel }
     
     /// Returns the secondary label of the table cell if one exists.
-    public var detailTextLabel: UILabel?
+    public var detailTextLabel: UILabel? { return _contentView.detailTextLabel }
     
     /// Returns the image view of the table cell.
-    public var imageView: UIImageView?
+    public var imageView: UIImageView? { return _contentView.imageView }
     
     // MARK: - Accessing Views of the Cell Object
     
@@ -235,7 +230,11 @@ open class UITableViewCell: UIView {
     
     internal static let defaultSize = CGSize(width: 320, height: UITableView.defaultRowHeight)
     
+    internal weak var tableView: UITableView?
+    
     fileprivate let style: UITableViewCellStyle
+    
+    fileprivate lazy var layoutManager: UITableViewCellLayoutManager = .init(style: self.style)
     
     // added as subview in `init()`
     private lazy var separatorView: UITableViewCellSeparatorView = UITableViewCellSeparatorView()
@@ -244,6 +243,16 @@ open class UITableViewCell: UIView {
         
         separatorView.style = style
         separatorView.color = color
+    }
+    
+    private func setupTableViewCellCommon() {
+        
+        // add mandatory subviews
+        self.addSubview(separatorView)
+        self.addSubview(contentView)
+        
+        // layout subviews
+        self.layoutIfNeeded()
     }
     
     /// Arranges the subviews in the proper order
@@ -269,6 +278,11 @@ open class UITableViewCell: UIView {
         bringSubview(toFront: separatorView)
     }
     
+    /// Called after default text label's text is changed
+    fileprivate func contentViewLabelTextDidChange(_ label: UITableViewLabel) {
+        
+        setNeedsLayout()
+    }
 }
 
 // MARK: - Supporting Types
@@ -314,6 +328,19 @@ public enum UITableViewCellEditingStyle: Int {
 
 fileprivate final class UITableViewCellContentView: UIView {
     
+    private(set) weak var cell: UITableViewCell!
+    
+    /// Returns the label used for the main textual content of the table cell.
+    private(set) weak var textLabel: UITableViewLabel?
+    
+    /// Returns the secondary label of the table cell if one exists.
+    private(set) weak var detailTextLabel: UITableViewLabel?
+    
+    /// Returns the image view of the table cell.
+    private(set) weak var imageView: UIImageView?
+    
+    var isLayoutEngineSuspended: Bool = false
+    
     init(frame: CGRect, cell: UITableViewCell) {
         super.init(frame: frame)
         
@@ -323,26 +350,20 @@ fileprivate final class UITableViewCellContentView: UIView {
         tableViewCellContentViewCommonSetup()
     }
     
-    private(set) weak var cell: UITableViewCell!
-    
-    /// Returns the label used for the main textual content of the table cell.
-    private(set) weak var textLabel: UILabel?
-    
-    /// Returns the secondary label of the table cell if one exists.
-    private(set) weak var detailTextLabel: UILabel?
-    
-    /// Returns the image view of the table cell.
-    private(set) weak var imageView: UIImageView?
-    
-    var isLayoutEngineSuspended: Bool = false
-    
     private func tableViewCellContentViewCommonSetup() {
         
         // should only be called once
-        assert(self.cell.textLabel == nil)
+        assert(self.textLabel == nil)
         
-        let textLabel = UILabel()
-        let detailTextLabel: UILabel?
+        guard let cell = self.cell
+            else { fatalError("No cell configured") }
+        
+        func createLabel() -> UITableViewLabel {
+            return UITableViewLabel(frame: .zero, cell: cell)
+        }
+        
+        let textLabel = createLabel()
+        let detailTextLabel: UITableViewLabel?
         let imageView: UIImageView?
         
         switch self.cell.style {
@@ -355,17 +376,17 @@ fileprivate final class UITableViewCellContentView: UIView {
         case .subtitle:
             
             imageView = UIImageView()
-            detailTextLabel = UILabel()
+            detailTextLabel = createLabel()
             
         case .value1:
             
             imageView = nil
-            detailTextLabel = UILabel()
+            detailTextLabel = createLabel()
             
         case .value2:
             
             imageView = nil
-            detailTextLabel = UILabel()
+            detailTextLabel = createLabel()
         }
         
         // add subviews
@@ -483,9 +504,42 @@ fileprivate final class _UITableViewCellSeparatorView: UIView {
     }
 }
 
-fileprivate class UITableViewCellSelectedBackground: UIView {
+fileprivate final class UITableViewCellSelectedBackground: UIView {
     
     
+}
+
+fileprivate final class UITableViewCellLayoutManager {
+    
+    let style: UITableViewCellStyle
+    
+    init(style: UITableViewCellStyle) {
+        
+        self.style = style
+    }
+    
+}
+
+fileprivate class UITableViewLabel: UILabel {
+    
+    private(set) weak var cell: UITableViewCell!
+    
+    override var text: String {
+        
+        didSet {
+            
+            guard text != oldValue else { return }
+            
+            // inform cell of text change
+            cell?.contentViewLabelTextDidChange(self)
+        }
+    }
+    
+    init(frame: CGRect, cell: UITableViewCell) {
+        super.init(frame: frame)
+        
+        self.cell = cell
+    }
 }
 
 // MARK: - ReusableView Protocol

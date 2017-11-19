@@ -887,6 +887,7 @@ open class UITableView: UIScrollView {
                 
                 // configure cell
                 cell.frame = rowRect
+                cell.tableView = self
                 cell.backgroundColor = backgroundColor
                 cell.isHighlighted = indexPath == indexPathForHighlightedRow
                 cell.isSelected = indexPathsForSelectedRows?.contains(indexPath) ?? false

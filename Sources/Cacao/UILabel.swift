@@ -14,15 +14,24 @@ import Silica
 
 open class UILabel: UIView {
     
+    // MARK: - Initialization
+    
+    public override init(frame: CGRect) {
+        super.init(frame: frame)
+        
+        // disable user interaction
+        self.isUserInteractionEnabled = false
+    }
+    
     // MARK: - Properties
     
-    public final var text: String = "" { didSet { setNeedsDisplay() } }
+    open var text: String = "" { didSet { setNeedsDisplay() } }
     
-    public final var font: UIFont = UIFont(name: "Helvetica", size: 17)! { didSet { setNeedsDisplay() } }
+    open var font: UIFont = UIFont(name: "Helvetica", size: 17)! { didSet { setNeedsDisplay() } }
     
-    public final var textColor: UIColor = .black { didSet { setNeedsDisplay() } }
+    open var textColor: UIColor = .black { didSet { setNeedsDisplay() } }
     
-    public final var textAlignment: TextAlignment = .left { didSet { setNeedsDisplay() } }
+    open var textAlignment: TextAlignment = .left { didSet { setNeedsDisplay() } }
     
     // MARK: - Draw
     
