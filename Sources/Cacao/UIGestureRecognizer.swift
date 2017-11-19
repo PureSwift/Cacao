@@ -94,7 +94,10 @@ open class UIGestureRecognizer {
     // MARK: - Getting the Recognizer’s State and View
     
     /// The current state of the gesture recognizer.
-    open private(set) var state = UIGestureRecognizerState()
+    ///
+    /// - Warning: Readonly for users of a gesture recognizer.
+    /// May only be changed by direct subclasses of `UIGestureRecognizer`.
+    open var state = UIGestureRecognizerState()
     
     @discardableResult
     internal func transition(to state: UIGestureRecognizerState) -> (notify: Bool, reset: Bool) {
@@ -138,6 +141,8 @@ open class UIGestureRecognizer {
     
     // a UIGestureRecognizer receives touches hit-tested to its view and any of that view's subviews
     // the view the gesture is attached to. set by adding the recognizer to a UIView using the `addGestureRecognizer()` method
+    
+    /// The view the gesture recognizer is attached to.
     public internal(set) weak var view: UIView?
     
     // default is true. disabled gesture recognizers will falset receive touches. when changed to false the gesture recognizer will be cancelled if it's currently recognizing a gesture
@@ -184,7 +189,7 @@ open class UIGestureRecognizer {
     
     // Indicates whether the gesture recognizer will consider touches of different touch types simultaneously.
     // If false, it receives all touches that match its allowedTouchTypes.
-    // If true, once it receives a touch of a certain type, it will igfalsere new touches of other types, until it is reset to .Possible.
+    // If true, once it receives a touch of a certain type, it will ignore new touches of other types, until it is reset to .Possible.
      // defaults to true
     public var requiresExclusiveTouchType: Bool = true
     
@@ -206,14 +211,16 @@ open class UIGestureRecognizer {
     open func touchesCancelled(_ touches:Set<UITouch>, with event: UIEvent) { }
     
     /// Overridden to reset internal state when a gesture recognition attempt completes.
+    ///
+    /// - Warning: Should never be called directly.
     open func reset() {
         
         self.state = .possible
         self.touches.removeAll()
     }
     
-    /// Tells the gesture recognizer to igfalsere a specific touch of the given event.
-    open func igfalsere(_ touch: UITouch, for event: UIEvent) { }
+    /// Tells the gesture recognizer to ignore a specific touch of the given event.
+    open func ignore(_ touch: UITouch, for event: UIEvent) { }
     
     /// Overridden to indicate that the specified gesture recognizer can prevent the receiver from recognizing a gesture.
     open func canBePrevented(by gestureRecognizer: UIGestureRecognizer) { }
@@ -227,8 +234,8 @@ open class UIGestureRecognizer {
     /// Overridden to indicate that the receiver should be required to fail by the specified gesture recognizer.
     open func shouldBeRequiredToFail(by gestureRecognizer: UIGestureRecognizer) { }
     
-    /// Tells the gesture recognizer to igfalsere a specific press of the given event.
-    open func igfalsere(_ press: UIPress, for event: UIPressesEvent) { }
+    /// Tells the gesture recognizer to ignore a specific press of the given event.
+    open func ignore(_ press: UIPress, for event: UIPressesEvent) { }
     
     /// Sent to the receiver when a physical button is pressed in the associated view.
     open func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent) { }

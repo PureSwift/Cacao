@@ -31,9 +31,6 @@ open class UITableViewCell: UIView {
         self.addSubview(separatorView)
         self.addSubview(contentView)
         
-        // add predefined content
-        self.addPredefinedContentViews()
-        
         // layout subviews
         self.layoutIfNeeded()
     }
@@ -49,13 +46,13 @@ open class UITableViewCell: UIView {
     // MARK: - Managing the Predefined Content
     
     /// Returns the label used for the main textual content of the table cell.
-    public private(set) weak var textLabel: UILabel?
+    public var textLabel: UILabel? { return _contentView.textLabel }
     
     /// Returns the secondary label of the table cell if one exists.
-    public private(set) weak var detailTextLabel: UILabel?
+    public var detailTextLabel: UILabel?
     
     /// Returns the image view of the table cell.
-    public private(set) weak var imageView: UIImageView?
+    public var imageView: UIImageView?
     
     // MARK: - Accessing Views of the Cell Object
     
@@ -64,7 +61,8 @@ open class UITableViewCell: UIView {
     /// The content view of a `UITableViewCell` object is the default superview for content displayed by the cell.
     /// If you want to customize cells by simply adding additional views, you should add them to the content view
     /// so they will be positioned appropriately as the cell transitions into and out of editing mode.
-    public lazy var contentView: UIView = UIView(frame: .zero)
+    public var contentView: UIView { return _contentView }
+    private lazy var _contentView: UITableViewCellContentView = UITableViewCellContentView(frame: .zero, cell: self)
     
     /// The view used as the background of the cell.
     ///
@@ -231,50 +229,16 @@ open class UITableViewCell: UIView {
         // set separator frame
         separatorView.frame = isSeparatorVisible ? CGRect(x: 0, y: bounds.size.height - 1, width: bounds.size.width, height: 1) : .zero
         
-        // layout default subviews
-        switch style {
-            
-        case .default:
-            
-            let imageWidth = imageView?.image?.size.width ?? 0.0
-            
-            let imageViewFrame = CGRect(x: 5, y: 0, width: imageWidth, height: contentFrame.size.height)
-            
-            let textLabelX = imageViewFrame.origin.x + 15
-            
-            let textLabelFrame = CGRect(x: textLabelX, y: 0, width: contentFrame.size.width - textLabelX, height: contentFrame.size.height)
-            
-            imageView?.frame = imageViewFrame
-            
-            textLabel?.frame = textLabelFrame
-            
-            assert(detailTextLabel == nil, "No detail text label for \(style)")
-            
-        case .subtitle:
-            
-            // FIXME: subtitle layout
-            break
-            
-        case .value1:
-            
-            // FIXME: value1 layout
-            break
-            
-        case .value2:
-            
-            // FIXME: value2 layout
-            break
-        }
     }
     
     // MARK: - Private
     
     internal static let defaultSize = CGSize(width: 320, height: UITableView.defaultRowHeight)
     
-    private let style: UITableViewCellStyle
+    fileprivate let style: UITableViewCellStyle
     
     // added as subview in `init()`
-    private lazy var separatorView: SeparatorView = SeparatorView(frame: .zero)
+    private lazy var separatorView: UITableViewCellSeparatorView = UITableViewCellSeparatorView()
     
     internal func configureSeparator(style: UITableViewCellSeparatorStyle, color: UIColor?) {
         
@@ -305,112 +269,9 @@ open class UITableViewCell: UIView {
         bringSubview(toFront: separatorView)
     }
     
-    private func addPredefinedContentViews() {
-        
-        // should only be called once
-        assert(self.textLabel == nil)
-        
-        let textLabel = UILabel()
-        let detailTextLabel: UILabel?
-        let imageView: UIImageView?
-        
-        switch style {
-            
-        case .default:
-            
-            imageView = UIImageView()
-            detailTextLabel = nil
-            
-        case .subtitle:
-            
-            imageView = UIImageView()
-            detailTextLabel = UILabel()
-            
-        case .value1:
-            
-            imageView = nil
-            detailTextLabel = UILabel()
-            
-        case .value2:
-            
-            imageView = nil
-            detailTextLabel = UILabel()
-        }
-        
-        // add subviews
-        let contentSubviews: [UIView?] = [textLabel, detailTextLabel, imageView]
-        
-        // add as subviews to content view
-        contentSubviews
-            .flatMap { $0 }
-            .forEach { contentView.addSubview($0) }
-        
-        // set properties
-        self.textLabel = textLabel
-        self.detailTextLabel = detailTextLabel
-        self.imageView = imageView
-    }
 }
 
 // MARK: - Supporting Types
-
-internal extension UITableViewCell {
-    
-    final class SeparatorView: UIView {
-        
-        var style: UITableViewCellSeparatorStyle = .none  {
-            
-            didSet {
-                setNeedsDisplay()
-                isHidden = style == .none
-            }
-        }
-        
-        var color: UIColor? {
-            
-            didSet { setNeedsDisplay() }
-        }
-        
-        override init(frame: CGRect) {
-            super.init(frame: frame)
-            
-            self.isHidden = true
-        }
-        
-        override func draw(_ rect: CGRect) {
-            
-            guard let context = UIGraphicsGetCurrentContext(),
-                let color = self.color,
-                style != .none
-                else { return }
-            
-            color.setStroke()
-            
-            let line = UIBezierPath()
-            line.move(to: .zero)
-            line.addLine(to: CGPoint(x: bounds.size.width, y: 0))
-            line.lineWidth = 1
-            
-            switch style {
-                
-            case .none:
-                
-                break
-                
-            case .singleLine:
-                
-                line.stroke()
-                
-            case .singleLineEtched:
-                
-                context.saveGState()
-                context.setLineDash(phase: 0, lengths: [2, 2])
-                line.stroke()
-                context.restoreGState()
-            }
-        }
-    }
-}
 
 public enum UITableViewCellAccessoryType: Int {
     
@@ -447,6 +308,184 @@ public enum UITableViewCellEditingStyle: Int {
     case none
     case delete
     case insert
+}
+
+// MARK: - Private Supporting Types
+
+fileprivate final class UITableViewCellContentView: UIView {
+    
+    init(frame: CGRect, cell: UITableViewCell) {
+        super.init(frame: frame)
+        
+        self.cell = cell
+        
+        // setup predefined views
+        tableViewCellContentViewCommonSetup()
+    }
+    
+    private(set) weak var cell: UITableViewCell!
+    
+    /// Returns the label used for the main textual content of the table cell.
+    private(set) weak var textLabel: UILabel?
+    
+    /// Returns the secondary label of the table cell if one exists.
+    private(set) weak var detailTextLabel: UILabel?
+    
+    /// Returns the image view of the table cell.
+    private(set) weak var imageView: UIImageView?
+    
+    var isLayoutEngineSuspended: Bool = false
+    
+    private func tableViewCellContentViewCommonSetup() {
+        
+        // should only be called once
+        assert(self.cell.textLabel == nil)
+        
+        let textLabel = UILabel()
+        let detailTextLabel: UILabel?
+        let imageView: UIImageView?
+        
+        switch self.cell.style {
+            
+        case .default:
+            
+            imageView = UIImageView()
+            detailTextLabel = nil
+            
+        case .subtitle:
+            
+            imageView = UIImageView()
+            detailTextLabel = UILabel()
+            
+        case .value1:
+            
+            imageView = nil
+            detailTextLabel = UILabel()
+            
+        case .value2:
+            
+            imageView = nil
+            detailTextLabel = UILabel()
+        }
+        
+        // add subviews
+        let contentSubviews: [UIView?] = [textLabel, detailTextLabel, imageView]
+        
+        // add as subviews to content view
+        contentSubviews
+            .flatMap { $0 }
+            .forEach { self.addSubview($0) }
+        
+        // set properties
+        self.textLabel = textLabel
+        self.detailTextLabel = detailTextLabel
+        self.imageView = imageView
+    }
+    
+    override func layoutSubviews() {
+        
+        let contentFrame = self.frame
+        
+        let style = self.cell.style
+        
+        // layout default subviews
+        switch style {
+            
+        case .default:
+            
+            let imageWidth = imageView?.image?.size.width ?? 0.0
+            
+            let imageViewFrame = CGRect(x: 5, y: 0, width: imageWidth, height: contentFrame.size.height)
+            
+            let textLabelX = imageViewFrame.origin.x + 15
+            
+            let textLabelFrame = CGRect(x: textLabelX, y: 0, width: contentFrame.size.width - textLabelX, height: contentFrame.size.height)
+            
+            imageView?.frame = imageViewFrame
+            
+            textLabel?.frame = textLabelFrame
+            
+            assert(detailTextLabel == nil, "No detail text label for \(style)")
+            
+        case .subtitle:
+            
+            // FIXME: subtitle layout
+            break
+            
+        case .value1:
+            
+            // FIXME: value1 layout
+            break
+            
+        case .value2:
+            
+            // FIXME: value2 layout
+            break
+        }
+    }
+}
+
+/// Actual name is `_UITableViewCellSeparatorView`
+fileprivate typealias UITableViewCellSeparatorView = _UITableViewCellSeparatorView
+
+fileprivate final class _UITableViewCellSeparatorView: UIView {
+    
+    var style: UITableViewCellSeparatorStyle = .none  {
+        
+        didSet {
+            setNeedsDisplay()
+            isHidden = style == .none
+        }
+    }
+    
+    var color: UIColor? {
+        
+        didSet { setNeedsDisplay() }
+    }
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        
+        self.isHidden = true
+    }
+    
+    override func draw(_ rect: CGRect) {
+        
+        guard let context = UIGraphicsGetCurrentContext(),
+            let color = self.color,
+            style != .none
+            else { return }
+        
+        color.setStroke()
+        
+        let line = UIBezierPath()
+        line.move(to: .zero)
+        line.addLine(to: CGPoint(x: bounds.size.width, y: 0))
+        line.lineWidth = 1
+        
+        switch style {
+            
+        case .none:
+            
+            break
+            
+        case .singleLine:
+            
+            line.stroke()
+            
+        case .singleLineEtched:
+            
+            context.saveGState()
+            context.setLineDash(phase: 0, lengths: [2, 2])
+            line.stroke()
+            context.restoreGState()
+        }
+    }
+}
+
+fileprivate class UITableViewCellSelectedBackground: UIView {
+    
+    
 }
 
 // MARK: - ReusableView Protocol
