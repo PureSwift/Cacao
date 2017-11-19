@@ -106,7 +106,7 @@ public final class UIApplication: UIResponder {
     // MARK: - Getting App Windows
     
     /// The app's key window.
-    public var keyWindow: UIWindow? { return UIScreen.main.keyWindow }
+    public var keyWindow: UIWindow? { return keyWindow(for: UIScreen.main) }
     
     /// The app's visible and hidden windows.
     public var windows: [UIWindow] { return UIScreen.screens.reduce([UIWindow](), { $0 + $1.windows }) }
@@ -151,6 +151,35 @@ public final class UIApplication: UIResponder {
     // MARK: - Private
     
     internal lazy var gestureEnvironment: UIGestureEnvironment = UIGestureEnvironment()
+    
+    private var touchesEvent: UITouchesEvent?
+    
+    internal private(set) var alwaysHitTestsForMainScreen: Bool = false
+    
+    private func keyWindow(for screen: UIScreen) -> UIWindow? {
+        
+        return screen.keyWindow
+    }
+    
+    private func sendHeadsetOriginatedMediaRemoteCommand() {
+        
+        
+    }
+    
+    private func sendWillEnterForegroundCallbacks() {
+        
+        
+    }
+    
+    // Scroll to top
+    private func scrollsToTopInitiatorView() {
+        
+        
+    }
+    
+    private func shouldAttemptOpenURL() {  }
+    
+    private var isRunningInTaskSwitcher: Bool = false
 }
 
 // MARK: - Supporting Types

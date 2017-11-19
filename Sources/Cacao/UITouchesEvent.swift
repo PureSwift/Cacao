@@ -13,10 +13,26 @@ internal final class UITouchesEvent: UIEvent {
     
     public override var allTouches: Set<UITouch>? { return touches }
     
-    internal var touches = Set<UITouch>()
+    internal private(set) var touches = Set<UITouch>()
+    
+    internal func addTouch(_ touch: UITouch) {
+        
+        touches.insert(touch)
+        
+        if let view = touch.view {
+            
+            addGestureRecognizers(for: view, to: touch)
+        }
+        
+    }
     
     private func invalidateGestureRecognizerForWindowCache() {
         
         
+    }
+    
+    private func addGestureRecognizers(for view: UIView, to touch: UITouch) {
+        
+        touch.gestureRecognizers
     }
 }

@@ -17,7 +17,7 @@ import Silica
 /// An object representing the location, size, movement, and force of a touch occurring on the screen.
 public final class UITouch: NSObject {
     
-    internal private(set) var touches: [Touch]
+    internal private(set) var touches = [Touch]()
         
     internal var previousTouch: Touch? {
         
@@ -44,11 +44,6 @@ public final class UITouch: NSObject {
                        y: location.y - previousLocation.y)
     }
     
-    internal init(_ touch: Touch) {
-        
-        self.touches = [touch]
-    }
-    
     internal func update(_ touch: Touch) {
         
         touches.append(touch)
@@ -57,13 +52,13 @@ public final class UITouch: NSObject {
     // MARK: - Getting the Location of a Touch
     
     /// The view to which touches are being delivered, if any.
-    public var view: UIView? { return touches.last!.view }
+    public var view: UIView? { return touches.last?.view }
     
     /// The window in which the touch initially occurred.
-    public var window: UIWindow? { return touches.last!.window }
+    public var window: UIWindow? { return touches.last?.window }
     
     /// The gesture recognizers that are receiving the touch object.
-    public var gestureRecognizers: [UIGestureRecognizer]? { return touches.last!.gestureRecognizers }
+    public var gestureRecognizers: [UIGestureRecognizer]? { return touches.last?.gestureRecognizers }
     
     /// The phase of the touch.
     public var phase: UITouchPhase { return touches.last!.phase }

@@ -1101,11 +1101,22 @@ fileprivate final class UITableViewSubviewManager {
     
     private(set) weak var tableView: UITableView!
     
-    fileprivate(set) var reusableCells: Set<UITableViewCell>()
+    private(set) var cellsReadyForReuse = [IndexPath: UITableViewCell]()
+    
+    private(set) var reusableCells = Set<UITableViewCell>()
+    
+    private(set)var dropAnimationCells = Set<UITableViewCell>()
+    
+    private(set) var reusePreventedCells = Set<UITableViewCell>()
     
     fileprivate init(tableView: UITableView) {
         
         self.tableView = tableView
+    }
+    
+    func beginDropAnimation(for cell: UITableViewCell) {
+        
+        
     }
 }
 
