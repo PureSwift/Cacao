@@ -29,13 +29,13 @@ final class ScrollViewController: UIViewController {
     
     override func loadView() {
         
-        view = UIView(frame: .zero)
+        view = UIView()
         view.backgroundColor = UIColor.white
         
-        scrollView = UIScrollView(frame: CGRect())
+        scrollView = UIScrollView()
         view.addSubview(scrollView)
         
-        contentView = UIView(frame: CGRect())
+        contentView = UIView()
         contentView.backgroundColor = UIColor.blue
         contentView.isUserInteractionEnabled = false
         scrollView.addSubview(contentView)
