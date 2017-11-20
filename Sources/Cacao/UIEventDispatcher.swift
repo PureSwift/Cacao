@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreFoundation
 
 internal final class UIEventDispatcher {
     
@@ -14,11 +15,34 @@ internal final class UIEventDispatcher {
     // mainEnvironment
     let environment: UIEventEnvironment
     
+    private var runLoop: RunLoop?
+    
+    private weak var handleEventQueueRunLoopSource: CFRunLoopSource?
+    
+    private weak var collectHIDEventsRunLoopSource: CFRunLoopSource?
+    
+    private weak var eventFetcher: UIEventFetcher?
+    
     init(application: UIApplication) {
         
         self.application = application
         
         self.environment = UIEventEnvironment(application: application)
+    }
+    
+    internal func installEventRunLoopSources(_ runLoop: RunLoop) {
+        
+        assert(self.runLoop == nil, "RunLoop already installed")
+        
+        self.runLoop = runLoop
+        self.eventFetcher = self.environment.application.eventFetcher
+        
+        var sourceContext = CFRunLoopSourceContext()
+        sourceContext.info = Unmanaged.passUnretained(environment).toOpaque()
+        sourceContext.perform = handleEventQueue
+        
+        CFRunLoopSourceCreate(nil, 0xffffffffffffffff, &sourceContext)
+        
     }
 }
 
@@ -33,4 +57,10 @@ extension UIEventDispatcher: UIEventFetcherSink {
         
         
     }
+}
+
+@_silgen_name("___handleEventQueue")
+private func handleEventQueue(_ :U nsafeMutableRawPointer?) {
+    
+    
 }

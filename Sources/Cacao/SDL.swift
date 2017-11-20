@@ -22,7 +22,7 @@ internal final class SDLEventPoller {
     
     private(set) var sdlEvent = SDL_Event()
     
-    private(set) var mouseEvent: UIEvent?
+    private(set) var mouseEvent: UITouchesEvent?
     
     init(screen: UIScreen) {
         
@@ -90,7 +90,7 @@ internal final class SDLEventPoller {
         
         let timestamp = Double(sdlEvent.button.timestamp) / 1000
         
-        let event: UIEvent
+        let event: UITouchesEvent
         
         if let currentEvent = mouseEvent {
             
@@ -98,7 +98,7 @@ internal final class SDLEventPoller {
             
         } else {
             
-            event = UIEvent(timestamp: timestamp)
+            event = UITouchesEvent(timestamp: timestamp)
         }
         
         /// Only the key window can recieve touch input
@@ -158,7 +158,7 @@ internal final class SDLEventPoller {
             
             touch = UITouch(internalTouch)
             
-            event.touches = [touch]
+            event.addTouch(touch)
         }
         
         switch touch.phase {
@@ -177,8 +177,15 @@ internal final class SDLEventPoller {
         }
         
         // inform responder chain
+        print(event, view)
         window.sendEvent(event)
     }
+}
+
+@_silgen_name("_CacaoSDLEventRun")
+internal func SDLEventRun() {
+    
+    
 }
 
 // MARK: - Assertions

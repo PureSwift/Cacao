@@ -28,9 +28,11 @@ internal final class UIEventFetcher {
     
     private var runLoop: RunLoop?
     
+    private var triggerHandOffEventsRunLoopSource: CFRunLoopSource?
+    
     private var eventFilters = [() -> ()]()
     
-    private var incomingHIDEvents = [SDL_Event]()
+    private var incomingHIDEvents = SynchronizedArray<SDL_Event>()
     
     private var countOfDigitizerEventsReceivedSinceLastDisplayLinkCallback = 0
     
@@ -66,7 +68,7 @@ internal final class UIEventFetcher {
         
         thread.qualityOfService = .userInteractive
         
-        thread.name = "com.apple.uikit.eventfetch-thread"
+        thread.name = "org.pureswift.cacao.eventfetch-thread"
         
         thread.start()
         
@@ -87,7 +89,7 @@ internal final class UIEventFetcher {
         
         self.setup(for: runLoop)
         
-        runLoop.run(until: .distantFuture)
+        runLoop.run()
     }
     
     #if os(macOS)
@@ -126,15 +128,24 @@ internal final class UIEventFetcher {
         guard let runLoop = self.runLoop?.getCFRunLoop()
             else { return }
         
-        CFRunLoopPerformBlock(runLoop, CFRunLoopMode.commonModes.rawValue) {
-            
-            
-        }
+        CFRunLoopPerformBlock(runLoop, CFRunLoopMode.commonModes.rawValue) { [weak self] in self?._receiveHIDEvent(event) }
         
         CFRunLoopWakeUp(runLoop)
+    }
+    
+    private func _receiveHIDEvent(_ event: SDL_Event) {
         
-        incomingHIDEvents.append(event)
+        assert(RunLoop.current === self.runLoop, "Should only be called from \(self) run loop")
         
+        // access safely and add to queue of incoming events
+        self.incomingHIDEvents.append(event)
+        
+        // signal
+        if let source = self.triggerHandOffEventsRunLoopSource {
+            CFRunLoopSourceSignal(source)
+        }
+        
+        // determine if digitizer event
         let isDigitizerEvent: Bool
         
         let eventType = SDL_EventType(event.type)
@@ -150,6 +161,7 @@ internal final class UIEventFetcher {
             isDigitizerEvent = false
         }
         
+        // increment digitizer event count
         if isDigitizerEvent, self.displayLink != nil {
             
             self.countOfDigitizerEventsReceivedSinceLastDisplayLinkCallback += 1

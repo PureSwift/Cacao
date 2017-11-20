@@ -5,10 +5,7 @@
 //  Created by Alsey Coleman Miller on 6/7/17.
 //
 
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import struct Foundation.CGRect
+import Foundation
 import CSDL2
 import SDL
 import Silica
@@ -46,7 +43,7 @@ public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOpt
     
     guard delegate.application(UIApplication.shared, willFinishLaunchingWithOptions: launchOptions),
         delegate.application(UIApplication.shared, didFinishLaunchingWithOptions: launchOptions)
-        else { options.log("Application delegate could not launch app"); return }
+        else { options.log?("Application delegate could not launch app"); return }
     
     defer { delegate.applicationWillTerminate(UIApplication.shared) }
     
@@ -201,12 +198,27 @@ public final class UIApplication: UIResponder {
     private var isRunningInTaskSwitcher: Bool = false
 }
 
-private extension UIApplication {
+fileprivate extension UIApplication {
     
     func run() {
         
+        // register for changes, if possible
         
+        // get main run loop
+        let mainRunLoop = RunLoop.main
+        
+        // install the run loop source for the event dispatcher
+        self.eventDispatcher.installEventRunLoopSources(mainRunLoop)
+        
+        // start polling for SDL events
+        SDLEventRun()
     }
+}
+
+@_silgen_name("UIApplicationHandleEvent")
+private func UIApplicationHandleEvent() {
+    
+    
 }
 
 // MARK: - Supporting Types
