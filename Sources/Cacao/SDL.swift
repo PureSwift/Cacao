@@ -191,8 +191,6 @@ internal func SDLEventRun() {
     
     let delegate = UIApplication.shared.delegate!
     
-    let eventFetcher = UIApplication.shared.eventFetcher
-    
     var windowOptions: Set<Window.Option> = [.allowRetina, .opengl]
     
     if options.canResizeWindow {
@@ -221,47 +219,22 @@ internal func SDLEventRun() {
     assert(screen.keyWindow?.rootViewController != nil, "Application windows are expected to have a root view controller at the end of application launch")
     
     defer { delegate.applicationWillTerminate(UIApplication.shared) }
-    
-    let runloop = RunLoop.current
+        
+    let eventFetcher = UIApplication.shared.eventFetcher
     
     // enter main loop
-    
-    let framesPerSecond = screen.maximumFramesPerSecond
-    
-    var frame = 0
-    
-    let eventPoller = SDLEventPoller(screen: screen)
-    
-    while _UIApp.isDone == false {
-        
-        frame += 1
-        
-        let startTime = SDL_GetTicks()
-        
-        eventPoller.poll()
-        
-        // render to screen
-        screen.update()
-        
-        // sleep to save energy
-        let frameDuration = Int(SDL_GetTicks() - startTime)
-        
-        if frameDuration < (1000 / framesPerSecond) {
-            
-            SDL_Delay(UInt32((1000 / framesPerSecond) - frameDuration))
-        }
-    }
+    let runloop = RunLoop.current
     
     // run until app is finished
-    while {
-        
-        // draw on main thread
+    while _UIApp.isDone == false {
         
         let startTime = SDL_GetTicks()
         
-        // event polling will be done on background thread
-        while SDL_PollEvent(nil) != 0 { }
-        //runloop.run(mode: .commonModes, before: <#T##Date#>)
+        // poll events (should never block)
+        eventFetcher.pollEvents()
+        
+        // run loop
+        //runloop.run(mode: <#T##RunLoopMode#>, before: <#T##Date#>)
         
         // render to screen
         screen.update()

@@ -170,18 +170,8 @@ fileprivate extension UIApplication {
         
         // install the run loop source for the event dispatcher
         self.eventDispatcher.installEventRunLoopSources(mainRunLoop)
-        
-        // initialize event fetcher
-        let _ = self.eventFetcher
     }
 }
-
-@_silgen_name("UIApplicationHandleEvent")
-private func UIApplicationHandleEvent() {
-    
-    
-}
-
 // MARK: - Supporting Types
 
 public protocol UIApplicationDelegate: class {
