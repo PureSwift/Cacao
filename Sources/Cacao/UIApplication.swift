@@ -19,7 +19,7 @@ import Cairo
 @_silgen_name("UIApplicationMain")
 public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOptions = CacaoOptions()) {
     
-    UIApplication.shared.delegate = delegate
+    _UIApp = UIApplication(delegate: delegate, options: options)
     
     SDL.initialize(subSystems: [.video]).sdlAssert()
     
@@ -88,16 +88,29 @@ public struct CacaoOptions {
         
     public var canResizeWindow: Bool = true
     
-    public var log: (String) -> () = { print($0) }
+    public var log: ((String) -> ())?
     
     public init() { }
 }
+
+internal private(set) var _UIApp: UIApplication!
 
 public final class UIApplication: UIResponder {
     
     // MARK: - Getting the App Instance
     
-    public static var shared = UIApplication()
+    public static var shared: UIApplication { return _UIApp }
+    
+    private override init() { fatalError() }
+    
+    fileprivate init(delegate: UIApplicationDelegate, options: CacaoOptions) {
+        super.init()
+        
+        assert(_UIApp == nil, "\(type(of: self)) is a singleton and should only be initialized once.")
+        
+        self.delegate = delegate
+        self.options = options
+    }
         
     // MARK: - Getting the App Delegate
     
@@ -150,6 +163,12 @@ public final class UIApplication: UIResponder {
     
     // MARK: - Private
     
+    internal let options: CacaoOptions
+    
+    internal lazy var eventFetcher: UIEventFetcher = UIEventFetcher(eventFetcherSink: self.eventDispatcher)
+    
+    internal lazy var eventDispatcher: UIEventDispatcher = UIEventDispatcher(application: self)
+    
     internal lazy var gestureEnvironment: UIGestureEnvironment = UIGestureEnvironment()
     
     private var touchesEvent: UITouchesEvent?
@@ -180,6 +199,14 @@ public final class UIApplication: UIResponder {
     private func shouldAttemptOpenURL() {  }
     
     private var isRunningInTaskSwitcher: Bool = false
+}
+
+private extension UIApplication {
+    
+    func run() {
+        
+        
+    }
 }
 
 // MARK: - Supporting Types

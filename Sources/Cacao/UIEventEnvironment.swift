@@ -7,9 +7,11 @@
 
 import Foundation
 
-internal UIEventEnvironment {
+internal final class UIEventEnvironment {
     
-    let application: UIApplication
+    private(set) weak var application: UIApplication!
+    
+    private(set) var eventQueue = [UIEvent]()
     
     init(application: UIApplication) {
         

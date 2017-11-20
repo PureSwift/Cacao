@@ -7,9 +7,9 @@
 
 import Foundation
 
-internal UIEventDispatcher {
+internal final class UIEventDispatcher {
     
-    let application: UIApplication
+    private(set) weak var application: UIApplication!
     
     // mainEnvironment
     let environment: UIEventEnvironment
@@ -20,6 +20,14 @@ internal UIEventDispatcher {
         
         self.environment = UIEventEnvironment(application: application)
     }
+}
+
+internal protocol UIEventFetcherSink: class {
+    
+    func eventFetcherDidReceiveEvents(_ fetcher: UIEventFetcher)
+}
+
+extension UIEventDispatcher: UIEventFetcherSink {
     
     func eventFetcherDidReceiveEvents(_ fetcher: UIEventFetcher) {
         

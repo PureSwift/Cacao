@@ -33,6 +33,6 @@ internal final class UITouchesEvent: UIEvent {
     
     private func addGestureRecognizers(for view: UIView, to touch: UITouch) {
         
-        touch.gestureRecognizers
+        
     }
 }
