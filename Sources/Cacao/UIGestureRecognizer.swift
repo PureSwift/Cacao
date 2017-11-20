@@ -24,6 +24,8 @@ open class UIGestureRecognizer {
     
     private var failureRequirements = [UIGestureRecognizer]()
     
+    internal weak var gestureEnvironment: UIGestureEnvironment?
+    
     // MARK: - Initializing a Gesture Recognizer
     
     public init() { }

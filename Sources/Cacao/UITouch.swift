@@ -17,7 +17,14 @@ import Silica
 /// An object representing the location, size, movement, and force of a touch occurring on the screen.
 public final class UITouch: NSObject {
     
-    internal private(set) var touches = [Touch]()
+    internal init(_ touch: Touch) {
+        
+        self.touches = [touch]
+        
+        super.init()
+    }
+    
+    internal private(set) var touches: [Touch]
         
     internal var previousTouch: Touch? {
         
@@ -93,17 +100,12 @@ public final class UITouch: NSObject {
         return view.convert(previousTouch.location, to: view)
     }
     
+    // MARK: - CustomStringConvertible
+    
     public override var description: String {
         
         return "\(Swift.type(of: self))(timestamp: \(timestamp), location: \(location), phase: \(phase))"
     }
-}
-
-// MARK: - CustomStringConvertible
-
-extension UITouch {
-    
-    
 }
 
 // MARK: - Supporting Types

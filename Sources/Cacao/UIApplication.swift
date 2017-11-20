@@ -16,64 +16,14 @@ import Cairo
 @_silgen_name("UIApplicationMain")
 public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOptions = CacaoOptions()) {
     
+    // initialize singleton application
     _UIApp = UIApplication(delegate: delegate, options: options)
     
-    SDL.initialize(subSystems: [.video]).sdlAssert()
-    
-    defer { SDL.quit() }
-    
-    var windowOptions: Set<Window.Option> = [.allowRetina, .opengl]
-    
-    if options.canResizeWindow {
-        
-        windowOptions.insert(.resizable)
-    }
-    
-    let preferredSize = options.windowSize
-    
-    let initialWindowSize = preferredSize // can we query for screen resolution?
-    
-    let window = Window(title: options.windowName, frame: (x: .centered, y: .centered, width: Int(initialWindowSize.width), height:  Int(initialWindowSize.height)), options: windowOptions).sdlAssert()
-    
-    // create UIScreen
-    let screen = UIScreen(window: window, size: initialWindowSize)
-    UIScreen.main = screen
-    
-    let launchOptions = [UIApplicationLaunchOptionsKey: Any]()
-    
-    guard delegate.application(UIApplication.shared, willFinishLaunchingWithOptions: launchOptions),
-        delegate.application(UIApplication.shared, didFinishLaunchingWithOptions: launchOptions)
-        else { options.log?("Application delegate could not launch app"); return }
-    
-    defer { delegate.applicationWillTerminate(UIApplication.shared) }
-    
     // enter main loop
+    _UIApp.run()
     
-    let framesPerSecond = screen.maximumFramesPerSecond
-    
-    var frame = 0
-    
-    let eventPoller = SDLEventPoller(screen: screen)
-    
-    while !eventPoller.done {
-        
-        frame += 1
-        
-        let startTime = SDL_GetTicks()
-        
-        eventPoller.poll()
-        
-        // render to screen
-        screen.update()
-        
-        // sleep to save energy
-        let frameDuration = Int(SDL_GetTicks() - startTime)
-        
-        if frameDuration < (1000 / framesPerSecond) {
-            
-            SDL_Delay(UInt32((1000 / framesPerSecond) - frameDuration))
-        }
-    }
+    // start polling for SDL events
+    SDLEventRun()
 }
 
 /// Cacao-specific application launch settings
@@ -102,12 +52,12 @@ public final class UIApplication: UIResponder {
     
     fileprivate init(delegate: UIApplicationDelegate, options: CacaoOptions) {
         
+        assert(_UIApp == nil, "\(UIApplication.self) is a singleton and should only be initialized once.")
+        
         self.options = options
         self.delegate = delegate
         
         super.init()
-        
-        assert(_UIApp == nil, "\(type(of: self)) is a singleton and should only be initialized once.")
     }
         
     // MARK: - Getting the App Delegate
@@ -163,13 +113,17 @@ public final class UIApplication: UIResponder {
     
     internal let options: CacaoOptions
     
+    internal var isDone: Bool = false
+    
     internal lazy var eventFetcher: UIEventFetcher = UIEventFetcher(eventFetcherSink: self.eventDispatcher)
     
     internal lazy var eventDispatcher: UIEventDispatcher = UIEventDispatcher(application: self)
     
     internal lazy var gestureEnvironment: UIGestureEnvironment = UIGestureEnvironment()
     
-    private var touchesEvent: UITouchesEvent?
+    internal var touchesEvent: UITouchesEvent? { return eventDispatcher.environment.touchesEvent }
+    
+    internal var physicalKeyboardEvent: UIPhysicalKeyboardEvent? { return eventDispatcher.environment.physicalKeyboardEvent }
     
     internal private(set) var alwaysHitTestsForMainScreen: Bool = false
     
@@ -205,14 +159,15 @@ fileprivate extension UIApplication {
         
         // register for changes, if possible
         
+        
         // get main run loop
         let mainRunLoop = RunLoop.main
         
         // install the run loop source for the event dispatcher
         self.eventDispatcher.installEventRunLoopSources(mainRunLoop)
         
-        // start polling for SDL events
-        SDLEventRun()
+        // initialize event fetcher
+        let _ = self.eventFetcher
     }
 }
 

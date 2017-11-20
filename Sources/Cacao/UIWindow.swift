@@ -62,10 +62,15 @@ open class UIWindow: UIView {
     /// Dispatches the specified event to its views.
     public final func sendEvent(_ event: UIEvent) {
         
+        let gestureEnvironment = UIApplication.shared.gestureEnvironment
+        
         switch event.type {
             
         case .touches:
             
+            gestureEnvironment.updateGestures(for: event, window: self)
+            
+            /*
             let touches = event.touches(for: self) ?? []
             
             let gestureRecognizers = touches.reduce([UIGestureRecognizer](), { $0 + ($1.gestureRecognizers ?? []) })
@@ -102,7 +107,7 @@ open class UIWindow: UIView {
                 case .ended: touch.view?.touchesEnded(touches, with: event)
                 case .cancelled: touch.view?.touchesCancelled(touches, with: event)
                 }
-            }
+            }*/
             
         default:
             
@@ -136,6 +141,11 @@ open class UIWindow: UIView {
         addSubview(viewController.view)
         
         layoutIfNeeded()
+    }
+    
+    private func sendTouches(for event: UIEvent) {
+        
+        
     }
 }
 

@@ -13,7 +13,12 @@ internal final class UIGestureEnvironment {
         
     }
     
-    public func addGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer) {
+    internal func addGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer) {
+        
+        
+    }
+    
+    internal func updateGestures(for event: UIEvent, window: UIWindow) {
         
         
     }

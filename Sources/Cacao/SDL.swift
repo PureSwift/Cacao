@@ -5,10 +5,7 @@
 //  Created by Alsey Coleman Miller on 6/7/17.
 //
 
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import struct Foundation.CGRect
+import Foundation
 import CSDL2
 import SDL
 
@@ -177,7 +174,6 @@ internal final class SDLEventPoller {
         }
         
         // inform responder chain
-        print(event, view)
         window.sendEvent(event)
     }
 }
@@ -185,7 +181,70 @@ internal final class SDLEventPoller {
 @_silgen_name("_CacaoSDLEventRun")
 internal func SDLEventRun() {
     
+    assert(Thread.current.isMainThread, "Should only be called from main thread")
     
+    SDL.initialize(subSystems: [.video]).sdlAssert()
+    
+    defer { SDL.quit() }
+    
+    let options = UIApplication.shared.options
+    
+    let delegate = UIApplication.shared.delegate!
+    
+    var windowOptions: Set<Window.Option> = [.allowRetina, .opengl]
+    
+    if options.canResizeWindow {
+        
+        windowOptions.insert(.resizable)
+    }
+    
+    let preferredSize = options.windowSize
+    
+    let initialWindowSize = preferredSize // can we query for screen resolution?
+    
+    let window = Window(title: options.windowName, frame: (x: .centered, y: .centered, width: Int(initialWindowSize.width), height:  Int(initialWindowSize.height)), options: windowOptions).sdlAssert()
+    
+    // create main UIScreen
+    let screen = UIScreen(window: window, size: initialWindowSize)
+    UIScreen._main = screen
+    
+    let launchOptions = [UIApplicationLaunchOptionsKey: Any]()
+    
+    guard delegate.application(UIApplication.shared, willFinishLaunchingWithOptions: launchOptions),
+        delegate.application(UIApplication.shared, didFinishLaunchingWithOptions: launchOptions)
+        else { options.log?("Application delegate could not launch app"); return }
+    
+    assert(screen.keyWindow?.rootViewController != nil, "Application windows are expected to have a root view controller at the end of application launch")
+    
+    defer { delegate.applicationWillTerminate(UIApplication.shared) }
+    
+    let runloop = RunLoop.main
+    
+    runloop.run(mode: <#T##RunLoopMode#>, before: <#T##Date#>)
+    
+    let framesPerSecond = screen.maximumFramesPerSecond
+    
+    var frame = 0
+    
+    while _UIApp.isDone == false {
+        
+        frame += 1
+        
+        let startTime = SDL_GetTicks()
+        
+        eventPoller.poll()
+        
+        // render to screen
+        screen.update()
+        
+        // sleep to save energy
+        let frameDuration = Int(SDL_GetTicks() - startTime)
+        
+        if frameDuration < (1000 / framesPerSecond) {
+            
+            SDL_Delay(UInt32((1000 / framesPerSecond) - frameDuration))
+        }
+    }
 }
 
 // MARK: - Assertions

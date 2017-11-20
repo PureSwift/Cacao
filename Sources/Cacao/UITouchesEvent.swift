@@ -35,4 +35,11 @@ internal final class UITouchesEvent: UIEvent {
         
         
     }
+    
+    internal func views(for window: UIWindow) -> Set<UIView> {
+        
+        let views = self.touches(for: window)?.flatMap { $0.view } ?? []
+        
+        return Set(view)
+    }
 }

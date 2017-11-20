@@ -23,7 +23,7 @@ internal final class UIEventDispatcher {
     
     private weak var collectHIDEventsRunLoopSource: CFRunLoopSource?
     
-    private weak var eventFetcher: UIEventFetcher?
+    private var eventFetcher: UIEventFetcher?
     
     // MARK: - Initialization
     
@@ -58,6 +58,12 @@ internal final class UIEventDispatcher {
         CFRunLoopAddSource(runLoop.getCFRunLoop(), source, CFRunLoopMode.commonModes)
         self.collectHIDEventsRunLoopSource = source
     }
+    
+    fileprivate func handleHIDEventFetcherDrain() {
+        
+        eventFetcher?.drainEvents(into: environment)
+        environment.handleEventQueue()
+    }
 }
 
 // MARK: - UIEventFetcherSink
@@ -73,21 +79,12 @@ extension UIEventDispatcher: UIEventFetcherSink {
     }
 }
 
-// MARK: - Private
-
-fileprivate extension UIEventDispatcher {
-    
-    func handleHIDEventFetcherDrain() {
-        
-        eventFetcher?.drainEvents(into: environment)
-        environment.handleEventQueue()
-    }
-}
+// MARK: - Private Functions
 
 @_silgen_name("___handleEventQueue")
 private func _handleEventQueue(_ objectPointer: UnsafeMutableRawPointer?) {
     
-    let environment = Unmanaged<UIEventEnvironment>.fromOpaque(objectPointer)
+    let environment = Unmanaged<UIEventEnvironment>.fromOpaque(objectPointer!).takeUnretainedValue()
     
     environment.handleEventQueue()
 }
@@ -95,7 +92,7 @@ private func _handleEventQueue(_ objectPointer: UnsafeMutableRawPointer?) {
 @_silgen_name("___handleHIDEventFetcherDrain")
 private func _handleHIDEventFetcherDrain(_ objectPointer: UnsafeMutableRawPointer?) {
     
-    let eventDispatcher = Unmanaged<UIEventDispatcher>.fromOpaque(objectPointer)
+    let eventDispatcher = Unmanaged<UIEventDispatcher>.fromOpaque(objectPointer!).takeUnretainedValue()
     
     eventDispatcher.handleHIDEventFetcherDrain()
 }

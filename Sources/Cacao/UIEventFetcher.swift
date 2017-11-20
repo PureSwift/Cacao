@@ -15,13 +15,10 @@ internal final class UIEventFetcher {
     
     var shouldSignalOnDisplayLink: Bool = false
     
+    // delegate
     private(set) weak var eventFetcherSink: UIEventFetcherSink! {
         
-        didSet {
-            
-            // call delegate
-            eventFetcherSink?.eventFetcherDidReceiveEvents(self)
-        }
+        didSet { signalEventsAvailable(with: .sinkChanged) }
     }
     
     private var displayLink: CADisplayLink?
@@ -39,6 +36,10 @@ internal final class UIEventFetcher {
     private var countOfDigitizerEventsReceivedSinceLastDisplayLinkCallback = 0
     
     private var didDispatchOneMoveEventSinceLastDisplayLinkCallback: Bool = false
+    
+    private var lastImportantEventTimestamp: Double = 0
+    
+    private var commitTimeForTouchEvents: TimeInterval = 0
     
     // MARK: - Initialization
     
@@ -81,6 +82,14 @@ internal final class UIEventFetcher {
     
     private func filterEvents() {
         
+        // pause display link
+        if let displayLink = self.displayLink,
+            displayLink.isPaused == false,
+            incomingHIDEvents.isEmpty == false {
+            
+            displayLink.isPaused = true
+        }
+        
         // call delegate
         eventFetcherSink?.eventFetcherDidReceiveEvents(self)
     }
@@ -95,6 +104,7 @@ internal final class UIEventFetcher {
         
         self.setup(for: runLoop)
         
+        // run forever
         runLoop.run()
     }
     
@@ -132,19 +142,26 @@ internal final class UIEventFetcher {
             
             if self.shouldSignalOnDisplayLink {
                 
-                
-                signaleven
-                
+                self.signalEventsAvailable(with: .displayLinkDidFire, filteredEventCount: filteredEventCount)
             }
             
         } else {
             
-            
+            if filteredEventCount > 0 {
+                
+                self.signalEventsAvailable(with: .displayLinkDidFire, filteredEventCount: filteredEventCount)
+                
+            } else {
+                
+                if let displayLink = self.displayLink, displayLink.isPaused == false {
+                    
+                    displayLink.isPaused = true
+                }
+            }
         }
         
-        
-        
         // reset counter
+        self.didDispatchOneMoveEventSinceLastDisplayLinkCallback = false
         self.countOfDigitizerEventsReceivedSinceLastDisplayLinkCallback = 0
     }
     
@@ -193,14 +210,37 @@ internal final class UIEventFetcher {
         }
     }
     
-    private func signalEventsAvailable(with reason: UInt = 0, filteredEventCount: Int) {
+    private func signalEventsAvailable(with reason: EventsAvailableReason = .none, filteredEventCount: Int = 0) {
         
+        // log signaling reason
+        UIApplication.shared.options.log?("\(#function) with reason \(reason) and \(filteredEventCount) filtered events.")
+        
+        // signal
         self.shouldSignalOnDisplayLink = false
         self.eventFetcherSink?.eventFetcherDidReceiveEvents(self)
+    }
+    
+    internal func drainEvents(into environment: UIEventEnvironment) {
+        
+        incomingHIDEventsFiltered.forEach { environment.enqueueHIDEvent($0)  }
+        
+        incomingHIDEventsFiltered.removeAll()
+        
+        environment.commitTimeForTouchEvents = self.commitTimeForTouchEvents
     }
 }
 
 // MARK: - Supporting Types
+
+private extension UIEventFetcher {
+    
+    enum EventsAvailableReason {
+        
+        case none
+        case sinkChanged // 0x1
+        case displayLinkDidFire // 0x2
+    }
+}
 
 internal protocol UIEventFetcherSink: class {
     
