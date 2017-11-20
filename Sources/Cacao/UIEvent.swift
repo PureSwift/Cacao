@@ -52,7 +52,7 @@ public class UIEvent {
     ///
     /// The `UIEventSubtype` constant returned by this property indicates the subtype of the event
     /// in relation to the general type, which is returned from the type property.
-    public private(set) var subtype: UIEventSubtype = .none
+    public internal(set) var subtype: UIEventSubtype = .none
     
     // MARK: - Initialization
     
@@ -77,19 +77,28 @@ extension UIEvent: CustomStringConvertible {
 public enum UIEventType: Int {
     
     /// The event is related to touches on the screen.
-    case touches
+    case touches // 0x0
     
     /// The event is related to motion of the device, such as when the user shakes it.
-    case motion
+    case motion // 0x1
     
     /// The event is a remote-control event.
     ///
     /// Remote-control events originate as commands received from a headset
     /// or external accessory for the purposes of controlling multimedia on the device.
-    case remoteControl
+    case remoteControl // 0x2
     
     /// The event is related to the press of a physical button.
-    case presses
+    case presses // 0x3
+    
+    // Private
+    
+    case physicalKeyboard = 0x4
+    case move = 0x5
+    
+    case scrollWheel = 0x7
+    case gameController = 0x8
+    case drag = 0x9
 }
 
 public enum UIEventSubtype: Int {
