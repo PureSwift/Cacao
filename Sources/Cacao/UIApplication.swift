@@ -101,12 +101,13 @@ public final class UIApplication: UIResponder {
     private override init() { fatalError() }
     
     fileprivate init(delegate: UIApplicationDelegate, options: CacaoOptions) {
+        
+        self.options = options
+        self.delegate = delegate
+        
         super.init()
         
         assert(_UIApp == nil, "\(type(of: self)) is a singleton and should only be initialized once.")
-        
-        self.delegate = delegate
-        self.options = options
     }
         
     // MARK: - Getting the App Delegate

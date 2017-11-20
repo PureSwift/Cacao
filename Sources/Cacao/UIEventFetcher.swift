@@ -34,7 +34,11 @@ internal final class UIEventFetcher {
     
     private var incomingHIDEvents = SynchronizedArray<SDL_Event>()
     
+    private var incomingHIDEventsFiltered = SynchronizedArray<SDL_Event>()
+    
     private var countOfDigitizerEventsReceivedSinceLastDisplayLinkCallback = 0
+    
+    private var didDispatchOneMoveEventSinceLastDisplayLinkCallback: Bool = false
     
     // MARK: - Initialization
     
@@ -85,6 +89,8 @@ internal final class UIEventFetcher {
     // com.apple.uikit.eventfetch-thread
     internal func threadMain() {
         
+        assert(Thread.current.isMainThread == false, "Should only be called from background thread")
+        
         let runLoop = RunLoop.current
         
         self.setup(for: runLoop)
@@ -120,7 +126,26 @@ internal final class UIEventFetcher {
     
     private func displayLinkDidFire(_ sender: CADisplayLink) {
         
+        let filteredEventCount = incomingHIDEventsFiltered.count
         
+        if self.countOfDigitizerEventsReceivedSinceLastDisplayLinkCallback > 0 {
+            
+            if self.shouldSignalOnDisplayLink {
+                
+                
+                signaleven
+                
+            }
+            
+        } else {
+            
+            
+        }
+        
+        
+        
+        // reset counter
+        self.countOfDigitizerEventsReceivedSinceLastDisplayLinkCallback = 0
     }
     
     private func receiveHIDEvent(_ event: SDL_Event) {
@@ -167,4 +192,17 @@ internal final class UIEventFetcher {
             self.countOfDigitizerEventsReceivedSinceLastDisplayLinkCallback += 1
         }
     }
+    
+    private func signalEventsAvailable(with reason: UInt = 0, filteredEventCount: Int) {
+        
+        self.shouldSignalOnDisplayLink = false
+        self.eventFetcherSink?.eventFetcherDidReceiveEvents(self)
+    }
+}
+
+// MARK: - Supporting Types
+
+internal protocol UIEventFetcherSink: class {
+    
+    func eventFetcherDidReceiveEvents(_ fetcher: UIEventFetcher)
 }

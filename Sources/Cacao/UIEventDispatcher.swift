@@ -10,6 +10,8 @@ import CoreFoundation
 
 internal final class UIEventDispatcher {
     
+    // MARK: - Properties
+    
     private(set) weak var application: UIApplication!
     
     // mainEnvironment
@@ -23,12 +25,16 @@ internal final class UIEventDispatcher {
     
     private weak var eventFetcher: UIEventFetcher?
     
+    // MARK: - Initialization
+    
     init(application: UIApplication) {
         
         self.application = application
         
         self.environment = UIEventEnvironment(application: application)
     }
+    
+    // MARK: - Methods
     
     internal func installEventRunLoopSources(_ runLoop: RunLoop) {
         
@@ -41,40 +47,55 @@ internal final class UIEventDispatcher {
         var sourceContext = CFRunLoopSourceContext()
         
         sourceContext.info = Unmanaged.passUnretained(environment).toOpaque()
-        sourceContext.perform = handleEventQueue
+        sourceContext.perform = _handleEventQueue
         source = CFRunLoopSourceCreate(nil, .max, &sourceContext)
         CFRunLoopAddSource(runLoop.getCFRunLoop(), source, CFRunLoopMode.commonModes)
         self.handleEventQueueRunLoopSource = source
         
         sourceContext.info = Unmanaged.passUnretained(self).toOpaque()
-        sourceContext.perform = handleHIDEventFetcherDrain
+        sourceContext.perform = _handleHIDEventFetcherDrain
         source = CFRunLoopSourceCreate(nil, .max, &sourceContext)
         CFRunLoopAddSource(runLoop.getCFRunLoop(), source, CFRunLoopMode.commonModes)
         self.collectHIDEventsRunLoopSource = source
     }
 }
 
-internal protocol UIEventFetcherSink: class {
-    
-    func eventFetcherDidReceiveEvents(_ fetcher: UIEventFetcher)
-}
+// MARK: - UIEventFetcherSink
 
 extension UIEventDispatcher: UIEventFetcherSink {
     
-    func eventFetcherDidReceiveEvents(_ fetcher: UIEventFetcher) {
+    func eventFetcherDidReceiveEvents(_ eventFetcher: UIEventFetcher) {
         
+        assert(self.eventFetcher === eventFetcher)
         
+        CFRunLoopSourceSignal(collectHIDEventsRunLoopSource)
+        CFRunLoopWakeUp(runLoop?.getCFRunLoop())
+    }
+}
+
+// MARK: - Private
+
+fileprivate extension UIEventDispatcher {
+    
+    func handleHIDEventFetcherDrain() {
+        
+        eventFetcher?.drainEvents(into: environment)
+        environment.handleEventQueue()
     }
 }
 
 @_silgen_name("___handleEventQueue")
-private func handleEventQueue(_ : UnsafeMutableRawPointer?) {
+private func _handleEventQueue(_ objectPointer: UnsafeMutableRawPointer?) {
     
+    let environment = Unmanaged<UIEventEnvironment>.fromOpaque(objectPointer)
     
+    environment.handleEventQueue()
 }
 
 @_silgen_name("___handleHIDEventFetcherDrain")
-private func handleHIDEventFetcherDrain(_ : UnsafeMutableRawPointer?) {
+private func _handleHIDEventFetcherDrain(_ objectPointer: UnsafeMutableRawPointer?) {
     
+    let eventDispatcher = Unmanaged<UIEventDispatcher>.fromOpaque(objectPointer)
     
+    eventDispatcher.handleHIDEventFetcherDrain()
 }
