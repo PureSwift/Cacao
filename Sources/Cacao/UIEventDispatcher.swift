@@ -37,12 +37,20 @@ internal final class UIEventDispatcher {
         self.runLoop = runLoop
         self.eventFetcher = self.environment.application.eventFetcher
         
+        var source: CFRunLoopSource
         var sourceContext = CFRunLoopSourceContext()
+        
         sourceContext.info = Unmanaged.passUnretained(environment).toOpaque()
         sourceContext.perform = handleEventQueue
+        source = CFRunLoopSourceCreate(nil, .max, &sourceContext)
+        CFRunLoopAddSource(runLoop.getCFRunLoop(), source, CFRunLoopMode.commonModes)
+        self.handleEventQueueRunLoopSource = source
         
-        CFRunLoopSourceCreate(nil, 0xffffffffffffffff, &sourceContext)
-        
+        sourceContext.info = Unmanaged.passUnretained(self).toOpaque()
+        sourceContext.perform = handleHIDEventFetcherDrain
+        source = CFRunLoopSourceCreate(nil, .max, &sourceContext)
+        CFRunLoopAddSource(runLoop.getCFRunLoop(), source, CFRunLoopMode.commonModes)
+        self.collectHIDEventsRunLoopSource = source
     }
 }
 
@@ -60,7 +68,13 @@ extension UIEventDispatcher: UIEventFetcherSink {
 }
 
 @_silgen_name("___handleEventQueue")
-private func handleEventQueue(_ :U nsafeMutableRawPointer?) {
+private func handleEventQueue(_ : UnsafeMutableRawPointer?) {
+    
+    
+}
+
+@_silgen_name("___handleHIDEventFetcherDrain")
+private func handleHIDEventFetcherDrain(_ : UnsafeMutableRawPointer?) {
     
     
 }
