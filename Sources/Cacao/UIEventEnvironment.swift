@@ -166,7 +166,8 @@ internal final class UIEventEnvironment {
     
     private func handleNonUIEvent(_ sdlEvent: SDL_Event) {
         
-        let app = self.application
+        guard let app = self.application
+            else { fatalError("\(UIApplication.self) released") }
         
         let eventType = SDL_EventType(rawValue: sdlEvent.type)
         
@@ -174,7 +175,7 @@ internal final class UIEventEnvironment {
             
         case SDL_QUIT, SDL_APP_TERMINATING:
             
-            done = true
+            app.quit()
             
         case SDL_WINDOWEVENT:
             
@@ -184,12 +185,12 @@ internal final class UIEventEnvironment {
                 
             case SDL_WINDOWEVENT_SIZE_CHANGED:
                 
-                screen.updateSize()
+                UIScreen.main.updateSize()
                 
             case SDL_WINDOWEVENT_FOCUS_GAINED, SDL_WINDOWEVENT_FOCUS_LOST:
                 
                 #if os(Linux)
-                    screen.needsDisplay = true
+                    UIScreen.main.needsDisplay = true
                 #else
                     break
                 #endif

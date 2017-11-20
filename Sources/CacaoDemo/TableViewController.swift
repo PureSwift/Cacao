@@ -9,6 +9,7 @@ import Foundation
 
 #if os(iOS)
     import UIKit
+    import CoreGraphics
 #else
     import Cacao
     import Silica
@@ -24,6 +25,11 @@ final class TableViewController: UITableViewController {
         super.viewDidLoad()
         
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: cellReuseIdentifier)
+        
+        #if os(iOS)
+        tableView.estimatedRowHeight = 44
+        tableView.rowHeight = UITableViewAutomaticDimension
+        #endif
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {

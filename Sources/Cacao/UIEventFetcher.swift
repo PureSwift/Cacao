@@ -29,9 +29,9 @@ internal final class UIEventFetcher {
     
     private var eventFilters = [() -> ()]()
     
-    private var incomingHIDEvents = SynchronizedArray<SDL_Event>()
+    private var incomingHIDEvents = [SDL_Event]()
     
-    private var incomingHIDEventsFiltered = SynchronizedArray<SDL_Event>()
+    private var incomingHIDEventsFiltered = [SDL_Event]()
     
     private var countOfDigitizerEventsReceivedSinceLastDisplayLinkCallback = 0
     
@@ -50,45 +50,21 @@ internal final class UIEventFetcher {
     
     init(eventFetcherSink: UIEventFetcherSink) {
         
-        self.setupThreadAndRun()
         self.eventFetcherSink = eventFetcherSink
     }
     
     // MARK: - Methods
     
-    private func setupThreadAndRun() {
-        
-        assert(Thread.current.isMainThread, "Should only be called from main thread")
-        
-        let thread: Thread
-        
-        if #available(OSX 10.12, *) {
-            
-            thread = Thread { [weak self] in self?.threadMain() }
-            
-        } else {
-            
-            thread = Thread(target: self, selector: #selector(threadMainSelector), object: nil)
-        }
-        
-        thread.qualityOfService = .userInteractive
-        
-        thread.name = "org.pureswift.cacao.eventfetch-thread"
-        
-        thread.start()
-        
-        // release thread via ARC
-    }
-    
     private func filterEvents() {
         
         // pause display link
+        /*
         if let displayLink = self.displayLink,
             displayLink.isPaused == false,
             incomingHIDEvents.isEmpty == false {
             
             displayLink.isPaused = true
-        }
+        }*/
         
         // call delegate
         eventFetcherSink?.eventFetcherDidReceiveEvents(self)
@@ -227,6 +203,22 @@ internal final class UIEventFetcher {
         incomingHIDEventsFiltered.removeAll()
         
         environment.commitTimeForTouchEvents = self.commitTimeForTouchEvents
+    }
+    
+    /// Poll SDL events on the main run loop
+    internal func pollEvents() {
+        
+        assert(Thread.current.isMainThread)
+        
+        // poll event queue
+        
+        var sdlEvent = SDL_Event()
+        
+        // get all events in SDL event queue
+        while SDL_PollEvent(&sdlEvent) != 0 {
+            
+            incomingHIDEvents.append(sdlEvent)
+        }
     }
 }
 

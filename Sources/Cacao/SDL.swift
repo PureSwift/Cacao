@@ -178,7 +178,7 @@ internal final class SDLEventPoller {
     }
 }
 
-@_silgen_name("_CacaoSDLEventRun")
+@_silgen_name("SDLEventRun")
 internal func SDLEventRun() {
     
     assert(Thread.current.isMainThread, "Should only be called from main thread")
@@ -190,6 +190,8 @@ internal func SDLEventRun() {
     let options = UIApplication.shared.options
     
     let delegate = UIApplication.shared.delegate!
+    
+    let eventFetcher = UIApplication.shared.eventFetcher
     
     var windowOptions: Set<Window.Option> = [.allowRetina, .opengl]
     
@@ -208,6 +210,8 @@ internal func SDLEventRun() {
     let screen = UIScreen(window: window, size: initialWindowSize)
     UIScreen._main = screen
     
+    let framesPerSecond = screen.maximumFramesPerSecond
+    
     let launchOptions = [UIApplicationLaunchOptionsKey: Any]()
     
     guard delegate.application(UIApplication.shared, willFinishLaunchingWithOptions: launchOptions),
@@ -218,13 +222,15 @@ internal func SDLEventRun() {
     
     defer { delegate.applicationWillTerminate(UIApplication.shared) }
     
-    let runloop = RunLoop.main
+    let runloop = RunLoop.current
     
-    runloop.run(mode: <#T##RunLoopMode#>, before: <#T##Date#>)
+    // enter main loop
     
     let framesPerSecond = screen.maximumFramesPerSecond
     
     var frame = 0
+    
+    let eventPoller = SDLEventPoller(screen: screen)
     
     while _UIApp.isDone == false {
         
@@ -233,6 +239,29 @@ internal func SDLEventRun() {
         let startTime = SDL_GetTicks()
         
         eventPoller.poll()
+        
+        // render to screen
+        screen.update()
+        
+        // sleep to save energy
+        let frameDuration = Int(SDL_GetTicks() - startTime)
+        
+        if frameDuration < (1000 / framesPerSecond) {
+            
+            SDL_Delay(UInt32((1000 / framesPerSecond) - frameDuration))
+        }
+    }
+    
+    // run until app is finished
+    while {
+        
+        // draw on main thread
+        
+        let startTime = SDL_GetTicks()
+        
+        // event polling will be done on background thread
+        while SDL_PollEvent(nil) != 0 { }
+        //runloop.run(mode: .commonModes, before: <#T##Date#>)
         
         // render to screen
         screen.update()

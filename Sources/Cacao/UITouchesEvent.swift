@@ -40,6 +40,6 @@ internal final class UITouchesEvent: UIEvent {
         
         let views = self.touches(for: window)?.flatMap { $0.view } ?? []
         
-        return Set(view)
+        return Set(views)
     }
 }

@@ -113,7 +113,7 @@ public final class UIApplication: UIResponder {
     
     internal let options: CacaoOptions
     
-    internal var isDone: Bool = false
+    internal private(set) var isDone: Bool = false
     
     internal lazy var eventFetcher: UIEventFetcher = UIEventFetcher(eventFetcherSink: self.eventDispatcher)
     
@@ -126,6 +126,11 @@ public final class UIApplication: UIResponder {
     internal var physicalKeyboardEvent: UIPhysicalKeyboardEvent? { return eventDispatcher.environment.physicalKeyboardEvent }
     
     internal private(set) var alwaysHitTestsForMainScreen: Bool = false
+    
+    internal func quit() {
+        
+        self.isDone = true
+    }
     
     private func keyWindow(for screen: UIScreen) -> UIWindow? {
         
