@@ -59,6 +59,7 @@ public final class SwiftLogoView: UIView {
         
         // disable user interaction
         self.isUserInteractionEnabled = false
+        self.backgroundColor = .clear
     }
     
     @available(iOS, unavailable)

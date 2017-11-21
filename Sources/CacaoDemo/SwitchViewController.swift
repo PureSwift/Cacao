@@ -24,15 +24,16 @@ final class SwitchViewController: UIViewController {
     
     // MARK: - Views
     
-    private(set) var switchView: UISwitch!
+    private(set) weak var switchView: UISwitch!
     
     // MARK: - Loading
     
     override func loadView() {
         
-        view = UIView(frame: CGRect())
+        view = UIView()
         
-        switchView = UISwitch(frame: CGRect())
+        let switchView = UISwitch()
+        self.switchView = switchView
         
         view.backgroundColor = UIColor.white
         

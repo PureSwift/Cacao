@@ -50,11 +50,13 @@ internal final class UIEventFetcher {
             
             self.receiveHIDEvent(sdlEvent)
         }
+        
+        self.eventFetcherSink?.eventFetcherDidReceiveEvents(self)
     }
     
     private func receiveHIDEvent(_ event: SDL_Event) {
         
-        // access safely and add to queue of incoming events
+        // add to queue of incoming events
         self.incomingHIDEvents.append(event)
         
         /*

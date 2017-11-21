@@ -25,11 +25,11 @@ final class ContentModeViewController: UIViewController {
     
     // MARK: - Views
     
-    private(set) var label: UILabel!
+    private(set) weak var label: UILabel!
     
-    private(set) var logoView: SwiftLogoView!
+    private(set) weak var logoView: SwiftLogoView!
     
-    private(set) var button: UIButton!
+    private(set) weak var button: UIButton!
     
     // MARK: - Properties
     
@@ -39,7 +39,7 @@ final class ContentModeViewController: UIViewController {
     
     override func loadView() {
         
-        logoView = SwiftLogoView(frame: CGRect()) // since we dont use autoresizing, initial size doesnt matter
+        let logoView = SwiftLogoView(frame: CGRect()) // since we dont use autoresizing, initial size doesnt matter
         
         self.view = logoView
         
@@ -47,19 +47,20 @@ final class ContentModeViewController: UIViewController {
         
         logoView.pointSize = 150
         
-        label = UILabel() // layoutSubviews will set size
+        let label = UILabel() // layoutSubviews will set size
         
         label.text = "\(modes[0])"
         
         label.textColor = UIColor.white
         
-        button = UIButton()
+        let button = UIButton()
+        
+        button.isOpaque = true
         
         #if os(iOS)
-            button.addTarget(self, action: #selector(_changeMode), for: .touchUpInside)
+        button.addTarget(self, action: #selector(_changeMode), for: .touchUpInside)
         #else
         let selector = Selector(name: "changeMode", action: { (_, sender, _) in self.changeMode(sender as! UIButton) })
-        
         button.addTarget(self, action: selector, for: .touchUpInside)
         #endif
         
@@ -70,6 +71,10 @@ final class ContentModeViewController: UIViewController {
         view.addSubview(label)
         
         view.backgroundColor = UIColor.blue
+        
+        self.button = button
+        self.label = label
+        self.logoView = logoView
     }
     
     override func viewWillLayoutSubviews() {
