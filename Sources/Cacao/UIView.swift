@@ -6,12 +6,7 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import struct Foundation.CGRect
-import typealias Foundation.TimeInterval
-import struct Foundation.Date
+import Foundation
 import CSDL2
 import SDL
 import Silica
@@ -46,11 +41,11 @@ open class UIView: UIResponder {
     }
     
     // MARK: - CustomStringConvertible
-    
+    /*
     open override var description: String {
         
-        return String(format: "<%@: %p; frame = %@; hidden = %@; layer = %@>", className, self, "\(self.frame)", (self.isHidden ? "YES" : "NO"), "\(self.texture ?? "nil" as Any)")
-    }
+        return String(format: "<%@: %p; frame = %@; hidden = %@; layer = %@>", NSStringFromClass(type(of: self)) as! NSString, self, "\(self.frame)", (self.isHidden ? "YES" : "NO"), "\(self.texture ?? "nil" as Any)")
+    }*/
     
     // MARK: - Properties
     
@@ -713,7 +708,7 @@ open class UIView: UIResponder {
         screen.renderer.copy(texture, destination: rect)
     }
     
-    internal func draw(in context: CGContext) {
+    internal func draw(in context: Silica.CGContext) {
         
         UIGraphicsPushContext(context)
         

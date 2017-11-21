@@ -46,16 +46,22 @@ internal final class UIEventDispatcher {
         var source: CFRunLoopSource
         var sourceContext = CFRunLoopSourceContext()
         
+        #if os(macOS)
+        let runLoopMode = CFRunLoopMode.defaultMode
+        #else
+        let runLoopMode = kCFRunLoopDefaultMode
+        #endif
+        
         sourceContext.info = Unmanaged.passUnretained(environment).toOpaque()
         sourceContext.perform = _handleEventQueue
         source = CFRunLoopSourceCreate(nil, .max, &sourceContext)
-        CFRunLoopAddSource(runLoop.getCFRunLoop(), source, CFRunLoopMode.commonModes)
+        CFRunLoopAddSource(runLoop.getCFRunLoop(), source, runLoopMode)
         self.handleEventQueueRunLoopSource = source
         
         sourceContext.info = Unmanaged.passUnretained(self).toOpaque()
         sourceContext.perform = _handleHIDEventFetcherDrain
         source = CFRunLoopSourceCreate(nil, .max, &sourceContext)
-        CFRunLoopAddSource(runLoop.getCFRunLoop(), source, CFRunLoopMode.commonModes)
+        CFRunLoopAddSource(runLoop.getCFRunLoop(), source, runLoopMode)
         self.collectHIDEventsRunLoopSource = source
     }
     

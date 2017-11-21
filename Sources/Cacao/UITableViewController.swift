@@ -112,11 +112,11 @@ open class UITableViewController: UIViewController, UITableViewDataSource, UITab
     }
     
     // MARK: - CustomStringConvertible
-    
+    /*
     open override var description: String {
         
-        return String(format: "<%@: %p; tableView = %@>", self.className, self, self.tableView)
-    }
+        return String(format: "<%@: %p; tableView = %@>", NSStringFromClass(type(of: self)) as! NSString, self, self.tableView)
+    }*/
     
     // MARK: - UITableViewDataSource
     
