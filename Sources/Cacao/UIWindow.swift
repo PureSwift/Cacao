@@ -5,10 +5,7 @@
 //  Created by Alsey Coleman Miller on 6/7/17.
 //
 
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import struct Foundation.CGRect
+import Foundation
 import Silica
 
 /// An object that provides the backdrop for your app’s user interface and provides important event-handling behaviors.

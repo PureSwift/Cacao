@@ -164,7 +164,6 @@ fileprivate extension UIApplication {
         
         // register for changes, if possible
         
-        
         // get main run loop
         let mainRunLoop = RunLoop.main
         
