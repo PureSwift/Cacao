@@ -22,7 +22,6 @@ internal extension MutableCollection {
     /// - Parameters:
     ///   - i: The index of the first value to swap.
     ///   - j: The index of the second value to swap.
-    @_inlineable
     mutating func swapAt(_ i: Index, _ j: Index) {
         guard i != j else { return }
         let tmp = self[i]
