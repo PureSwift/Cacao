@@ -35,6 +35,7 @@ open class UILabel: UIView {
     
     // MARK: - Draw
     
+    @nonobjc
     open override func draw(_ rect: CGRect?) {
         
         guard let context = UIGraphicsGetCurrentContext()

@@ -12,10 +12,7 @@
     import Glibc
 #endif
 
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import struct Foundation.CGRect
+import Foundation
 import Silica
 
 public enum UIViewContentMode: Int {

@@ -604,16 +604,19 @@ open class UIView: UIResponder {
         return nil
     }
     
+    @nonobjc
     public final func convert(_ point: CGPoint, from view: UIView?) -> CGPoint {
         
         fatalError()
     }
     
+    @nonobjc
     public final func convert(_ rect: CGRect, to view: UIView?) -> CGPoint {
         
         fatalError()
     }
     
+    @nonobjc
     public final func convert(_ rect: CGRect, from view: UIView?) -> CGPoint {
         
         fatalError()
@@ -965,10 +968,25 @@ internal class Animation {
             
             let currentValue = value.start + (progress * delta)
             
-            view[keyPath: keyPath] = currentValue
+            //view[keyPath: keyPath] = currentValue
+            keyPath.set(view, currentValue)
             
             return progress < 1.0
         }
+    }
+}
+
+final class ReferenceWritableKeyPath<Value, Property> {
+    
+    let get: (Value) -> (Property)
+    
+    let set: (Value, Property) -> ()
+    
+    init(get: @escaping (Value) -> (Property),
+         set: @escaping (Value, Property) -> ()) {
+        
+        self.get = get
+        self.set = set
     }
 }
 

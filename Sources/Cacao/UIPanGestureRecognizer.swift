@@ -5,10 +5,8 @@
 //  Created by Alsey Coleman Miller on 6/17/17.
 //
 
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import typealias Foundation.TimeInterval
+import Foundation
+import Silica
 
 /// A concrete subclass of `UIGestureRecognizer that looks for panning (dragging) gestures.
 open class UIPanGestureRecognizer: UIGestureRecognizer {

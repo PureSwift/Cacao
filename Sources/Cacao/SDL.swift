@@ -14,7 +14,9 @@ import SDL
 @_silgen_name("SDLEventRun")
 internal func SDLEventRun() {
     
+    #if os(macOS) || swift(>=4.0)
     assert(Thread.current.isMainThread, "Should only be called from main thread")
+    #endif
     
     SDL.initialize(subSystems: [.video]).sdlAssert()
     

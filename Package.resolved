@@ -2,114 +2,87 @@
   "object": {
     "pins": [
       {
-        "reference": {
-          "identity": "cairo",
-          "isLocal": false,
-          "path": "https://github.com/PureSwift/Cairo.git"
-        },
+        "package": "CCairo",
+        "repositoryURL": "https://github.com/PureSwift/CCairo.git",
         "state": {
-          "branch": "master",
-          "revision": "9fa92e223d8f596e3c545f320f1235178dec79d2",
-          "version": null
+          "branch": null,
+          "revision": "1bd46ac81056766182be22fccc2cdf0e457f042f",
+          "version": "1.1.1"
         }
       },
       {
-        "reference": {
-          "identity": "ccairo",
-          "isLocal": false,
-          "path": "https://github.com/PureSwift/CCairo.git"
-        },
+        "package": "CFontConfig",
+        "repositoryURL": "https://github.com/PureSwift/CFontConfig.git",
         "state": {
-          "branch": "master",
-          "revision": "9828dafe5d7d4df38cc81614416c52df1c707d7d",
-          "version": null
+          "branch": null,
+          "revision": "e5bae817dbd1eb402f395d960485c52350b2bd88",
+          "version": "1.0.1"
         }
       },
       {
-        "reference": {
-          "identity": "cfontconfig",
-          "isLocal": false,
-          "path": "https://github.com/PureSwift/CFontConfig.git"
-        },
+        "package": "CFreeType",
+        "repositoryURL": "https://github.com/PureSwift/CFreeType.git",
         "state": {
-          "branch": "master",
-          "revision": "149b01e9a29e265f785dc6ab5003b4a6f1074a5f",
-          "version": null
+          "branch": null,
+          "revision": "079909dc68c13c700bb6bab3059ddf51f642b43a",
+          "version": "1.0.4"
         }
       },
       {
-        "reference": {
-          "identity": "cfreetype",
-          "isLocal": false,
-          "path": "https://github.com/PureSwift/CFreeType.git"
-        },
+        "package": "CLCMS",
+        "repositoryURL": "https://github.com/PureSwift/CLCMS.git",
         "state": {
-          "branch": "master",
-          "revision": "5d65c8825addca5f30ff2c16e8b7e6f61562f618",
-          "version": null
+          "branch": null,
+          "revision": "20d18d62ebc642e52758512cab59af06f2d3655e",
+          "version": "1.0.0"
         }
       },
       {
-        "reference": {
-          "identity": "clcms",
-          "isLocal": false,
-          "path": "https://github.com/PureSwift/CLCMS.git"
-        },
+        "package": "CSDL2",
+        "repositoryURL": "https://github.com/PureSwift/CSDL2.git",
         "state": {
-          "branch": "master",
-          "revision": "4808ad3fa6d244eb5a328a1b3fe0439f5954a831",
-          "version": null
+          "branch": null,
+          "revision": "a4798aa0174f6661404b9df4ccaf2ba1dc9cc92c",
+          "version": "1.0.1"
         }
       },
       {
-        "reference": {
-          "identity": "csdl2",
-          "isLocal": false,
-          "path": "https://github.com/PureSwift/CSDL2.git"
-        },
+        "package": "Cairo",
+        "repositoryURL": "https://github.com/PureSwift/Cairo.git",
         "state": {
-          "branch": "master",
-          "revision": "ddd0ebb3500f45f1e09fb054ca2a89480df2c45f",
-          "version": null
+          "branch": null,
+          "revision": "bc207ab2e367fbafef51a47b85a7e1eb2821ce57",
+          "version": "1.2.3"
         }
       },
       {
-        "reference": {
-          "identity": "littlecms",
-          "isLocal": false,
-          "path": "https://github.com/PureSwift/LittleCMS.git"
-        },
+        "package": "LittleCMS",
+        "repositoryURL": "https://github.com/PureSwift/LittleCMS.git",
         "state": {
-          "branch": "master",
-          "revision": "5bfebf596b080f8c7dc5f403f2f0784cef130906",
-          "version": null
+          "branch": null,
+          "revision": "4143dfd3916be5b1ccd3cc46c27d939e9b63c0dd",
+          "version": "1.0.2"
         }
       },
       {
-        "reference": {
-          "identity": "sdl",
-          "isLocal": false,
-          "path": "https://github.com/PureSwift/SDL.git"
-        },
+        "package": "SDL",
+        "repositoryURL": "https://github.com/PureSwift/SDL.git",
         "state": {
-          "branch": "master",
-          "revision": "10688a8b2975a34f555ae7d06dbf640a3d7a1373",
-          "version": null
+          "branch": null,
+          "revision": "7d73084635022234e399385ae2724ca03d47d2a5",
+          "version": "1.0.1"
         }
       },
       {
-        "reference": {
-          "identity": "silica",
-          "isLocal": false,
-          "path": "https://github.com/PureSwift/Silica.git"
-        },
+        "package": "Silica",
+        "repositoryURL": "https://github.com/PureSwift/Silica.git",
         "state": {
-          "branch": "master",
-          "revision": "199e3e7b4b49ceb1f3612d1f9b68164229a193d3",
-          "version": null
+          "branch": null,
+          "revision": "b504b0368de794dde11c6e9da71fbd4ae4845c99",
+          "version": "1.3.0"
         }
       }
     ]
   },
-  "version": 2
+  "version": 1
 }

@@ -209,7 +209,8 @@ open class UITableViewCell: UIView {
     
     internal weak var tableView: UITableView?
     
-    fileprivate let style: UITableViewCellStyle
+    @_versioned
+    internal let style: UITableViewCellStyle
     
     // added as subview in `init()`
     fileprivate lazy var separatorView: UITableViewCellSeparatorView = UITableViewCellSeparatorView()
@@ -459,7 +460,6 @@ internal final class UITableViewCellSelectedBackground: UIView {
 
 internal struct UITableViewCellLayoutManager {
     
-    @inline(__always)
     static func layoutSubviews(of cell: UITableViewCell) {
         
         let bounds = cell.bounds
@@ -503,7 +503,6 @@ internal struct UITableViewCellLayoutManager {
         return UITableViewLabel(frame: .zero, cell: cell)
     }
     
-    @inline(__always)
     static func textLabel(for cell: UITableViewCell) -> UITableViewLabel {
         
         let style = cell.style
@@ -532,7 +531,6 @@ internal struct UITableViewCellLayoutManager {
         return label
     }
     
-    @inline(__always)
     static func detailTextLabel(for cell: UITableViewCell) -> UITableViewLabel? {
         
         let style = cell.style
@@ -563,7 +561,6 @@ internal struct UITableViewCellLayoutManager {
         }
     }
     
-    @inline(__always)
     static func imageView(for cell: UITableViewCell) -> UIImageView? {
         
         let style = cell.style

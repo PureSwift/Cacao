@@ -5,13 +5,7 @@
 //  Created by Alsey Coleman Miller on 6/8/17.
 //
 
-import class Foundation.NSObject
-import typealias Foundation.TimeInterval
-import class Foundation.ProcessInfo
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import struct Foundation.CGRect
+import Foundation
 import Silica
 
 /// An object representing the location, size, movement, and force of a touch occurring on the screen.

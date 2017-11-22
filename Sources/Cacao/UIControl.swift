@@ -30,7 +30,7 @@ open class UIControl: UIView {
     public func addTarget(_ target: AnyHashable?, action: Selector, for controlEvents: UIControlEvents) {
         
         let target = Target(target)
-        
+
         targetActions[target, default: [:]][controlEvents,  default: []].append(action)
     }
     

@@ -67,7 +67,7 @@ internal final class UIEventEnvironment {
         let eventType = SDL_EventType(rawValue: sdlEvent.type)
         
         // FIXME: Implement tablet touch event
-        guard sdlEvent.button.which != -1
+        guard sdlEvent.button.which != .max
             else { return nil }
         
         let screenLocation = CGPoint(x: CGFloat(sdlEvent.button.x),

@@ -19,17 +19,17 @@ public class UIEvent {
     
     public func touches(for view: UIView) -> Set<UITouch>? {
         
-        return allTouches?.filter({ $0.view === view })
+        return Set(allTouches?.filter({ $0.view === view }) ?? [])
     }
     
     public func touches(for window: UIWindow) -> Set<UITouch>? {
         
-        return allTouches?.filter({ $0.window === window })
+        return Set(allTouches?.filter({ $0.window === window }) ?? [])
     }
     
     public func touches(for gestureRecognizer: UIGestureRecognizer) -> Set<UITouch>? {
         
-        return allTouches?.filter({ $0.gestureRecognizers?.contains(where: { $0 === gestureRecognizer }) ?? false })
+        return Set(allTouches?.filter({ $0.gestureRecognizers?.contains(where: { $0 === gestureRecognizer }) ?? false }) ?? [])
     }
     
     // MARK: - Getting Event Attributes

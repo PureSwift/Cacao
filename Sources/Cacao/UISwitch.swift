@@ -1,4 +1,4 @@
-//
+ //
 //  UISwitch.swift
 //  Cacao
 //
@@ -154,66 +154,94 @@ open class UISwitch: UIControl {
                 UIView.animations.append(Animation(view: self,
                                                    duration: animationDuration,
                                                    value: (start: oldValue.on, end: newValue.on),
-                                                   keyPath: \UISwitch.internalState.on))
+                                                   keyPath: .init(get: { $0.internalState.on },
+                                                                  set: { $0.internalState.on = $1 })))
+                                                   //keyPath: \UISwitch.internalState.on))
                 
                 // Tapped
                 
                 UIView.animations.append(Animation(view: self,
                                                    duration: animationDuration,
                                                    value: (start: oldValue.tapped, end: newValue.tapped),
-                                                   keyPath: \UISwitch.internalState.tapped))
+                                                   keyPath: .init(get: { $0.internalState.tapped },
+                                                                  set: { $0.internalState.tapped = $1 })))
+                                                   //keyPath: \UISwitch.internalState.tapped))
                 
                 // Fill Alpha
                 
                 UIView.animations.append(Animation(view: self,
                                                    duration: animationDuration,
                                                    value: (start: oldValue.fillAlpha, end: newValue.fillAlpha),
-                                                   keyPath: \UISwitch.internalState.fillAlpha))
+                                                   keyPath: .init(get: { $0.internalState.fillAlpha },
+                                                                  set: { $0.internalState.fillAlpha = $1 })))
+                                                   //keyPath: \UISwitch.internalState.fillAlpha))
                 
                 // Fill color
                 
                 UIView.animations.append(Animation(view: self,
                                                    duration: animationDuration,
                                                    value: (start: oldValue.fillColor.red, end: newValue.fillColor.red),
-                                                   keyPath: \UISwitch.internalState.fillColor.red))
+                                                   keyPath: .init(get: { $0.internalState.fillColor.red },
+                                                                  set: { $0.internalState.fillColor.red = $1 })))
+                                                   //keyPath: \UISwitch.internalState.fillColor.red))
                 
                 UIView.animations.append(Animation(view: self,
                                                    duration: animationDuration,
-                                                   value: (start: oldValue.fillColor.green, end: newValue.fillColor.green),
-                                                   keyPath: \UISwitch.internalState.fillColor.green))
+                                                   value: (start: oldValue.fillColor.green,
+                                                           end: newValue.fillColor.green),
+                                                   keyPath: .init(get: { $0.internalState.fillColor.green },
+                                                                  set: { $0.internalState.fillColor.green = $1 })))
+                                                   //keyPath: \UISwitch.internalState.fillColor.green))
                 
                 UIView.animations.append(Animation(view: self,
                                                    duration: animationDuration,
-                                                   value: (start: oldValue.fillColor.blue, end: newValue.fillColor.blue),
-                                                   keyPath: \UISwitch.internalState.fillColor.blue))
+                                                   value: (start: oldValue.fillColor.blue,
+                                                           end: newValue.fillColor.blue),
+                                                   keyPath: .init(get: { $0.internalState.fillColor.blue },
+                                                                  set: { $0.internalState.fillColor.blue = $1 })))
+                                                   //keyPath: \UISwitch.internalState.fillColor.blue))
                 
                 UIView.animations.append(Animation(view: self,
                                                    duration: animationDuration,
-                                                   value: (start: oldValue.fillColor.alpha, end: newValue.fillColor.alpha),
-                                                   keyPath: \UISwitch.internalState.fillColor.alpha))
+                                                   value: (start: oldValue.fillColor.alpha,
+                                                           end: newValue.fillColor.alpha),
+                                                   keyPath: .init(get: { $0.internalState.fillColor.alpha },
+                                                                  set: { $0.internalState.fillColor.alpha = $1 })))
+                                                   //keyPath: \UISwitch.internalState.fillColor.alpha))
                 
                 // Thumb Color
                 
                 UIView.animations.append(Animation(view: self,
                                                    duration: animationDuration,
-                                                   value: (start: oldValue.thumbColor.red, end: newValue.thumbColor.red),
-                                                   keyPath: \UISwitch.internalState.thumbColor.red))
+                                                   value: (start: oldValue.thumbColor.red,
+                                                           end: newValue.thumbColor.red),
+                                                   keyPath: .init(get: { $0.internalState.thumbColor.red },
+                                                                  set: { $0.internalState.thumbColor.red = $1 })))
+                                                   //keyPath: \UISwitch.internalState.thumbColor.red))
                 
                 UIView.animations.append(Animation(view: self,
                                                    duration: animationDuration,
-                                                   value: (start: oldValue.thumbColor.green, end: newValue.thumbColor.green),
-                                                   keyPath: \UISwitch.internalState.thumbColor.green))
+                                                   value: (start: oldValue.thumbColor.green,
+                                                           end: newValue.thumbColor.green),
+                                                   keyPath: .init(get: { $0.internalState.thumbColor.green },
+                                                                  set: { $0.internalState.thumbColor.green = $1 })))
+                                                   //keyPath: \UISwitch.internalState.thumbColor.green))
                 
                 UIView.animations.append(Animation(view: self,
                                                    duration: animationDuration,
-                                                   value: (start: oldValue.thumbColor.blue, end: newValue.thumbColor.blue),
-                                                   keyPath: \UISwitch.internalState.thumbColor.blue))
+                                                   value: (start: oldValue.thumbColor.blue,
+                                                           end: newValue.thumbColor.blue),
+                                                   keyPath: .init(get: { $0.internalState.thumbColor.blue },
+                                                                  set: { $0.internalState.thumbColor.blue = $1 })))
+                                                   //keyPath: \UISwitch.internalState.thumbColor.blue))
                 
                 UIView.animations.append(Animation(view: self,
                                                    duration: animationDuration,
-                                                   value: (start: oldValue.thumbColor.alpha, end: newValue.thumbColor.alpha),
-                                                   keyPath: \UISwitch.internalState.thumbColor.alpha))
-                
+                                                   value: (start: oldValue.thumbColor.alpha,
+                                                           end: newValue.thumbColor.alpha),
+                                                   keyPath: .init(get: { $0.internalState.thumbColor.alpha },
+                                                                  set: { $0.internalState.thumbColor.alpha = $1 })))
+                                                   //keyPath: \UISwitch.internalState.thumbColor.alpha))
                 
             } else {
                 

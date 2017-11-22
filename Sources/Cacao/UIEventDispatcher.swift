@@ -17,13 +17,13 @@ internal final class UIEventDispatcher {
     // mainEnvironment
     let environment: UIEventEnvironment
     
-    private var runLoop: RunLoop?
+    fileprivate var runLoop: RunLoop?
     
-    private weak var handleEventQueueRunLoopSource: CFRunLoopSource?
+    fileprivate weak var handleEventQueueRunLoopSource: CFRunLoopSource?
     
-    private weak var collectHIDEventsRunLoopSource: CFRunLoopSource?
+    fileprivate weak var collectHIDEventsRunLoopSource: CFRunLoopSource?
     
-    private var eventFetcher: UIEventFetcher?
+    fileprivate var eventFetcher: UIEventFetcher?
     
     // MARK: - Initialization
     

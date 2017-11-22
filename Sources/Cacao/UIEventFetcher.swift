@@ -39,7 +39,9 @@ internal final class UIEventFetcher {
     /// Poll SDL events on the main run loop
     internal func pollEvents() {
         
-        assert(Thread.current.isMainThread)
+        #if os(macOS) || swift(>=4.0)
+        assert(Thread.current.isMainThread, "Should only be called from main thread")
+        #endif
         
         // poll event queue
         

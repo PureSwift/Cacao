@@ -328,7 +328,7 @@ open class UITableView: UIScrollView {
         layoutTableView()
         
         return cache.cells.cached.keys
-            .filter { bounds.intersects(rectForRow(at: $0)) } // get visible cells
+            .filter { self.bounds.intersects(self.rectForRow(at: $0)) } // get visible cells
             .sorted()
     }
     
