@@ -61,13 +61,29 @@ open class UIWindow: UIView {
         
         let gestureEnvironment = UIApplication.shared.gestureEnvironment
         
+        // handle touches event
+        if let touchesEvent = event as? UITouchesEvent {
+            
+            gestureEnvironment.updateGestures(for: event, window: self)
+            
+            sendTouches(for: touchesEvent)
+            
+        } else if let pressesEvent = event as? UIPressesEvent {
+            
+            guard isUserInteractionEnabled else { return }
+            
+            gestureEnvironment.updateGestures(for: event, window: self)
+            
+            sendButtons(for: pressesEvent)
+        }
+        
+        
+        
+        /*
         switch event.type {
             
         case .touches:
             
-            gestureEnvironment.updateGestures(for: event, window: self)
-            
-            /*
             let touches = event.touches(for: self) ?? []
             
             let gestureRecognizers = touches.reduce([UIGestureRecognizer](), { $0 + ($1.gestureRecognizers ?? []) })
@@ -104,12 +120,12 @@ open class UIWindow: UIView {
                 case .ended: touch.view?.touchesEnded(touches, with: event)
                 case .cancelled: touch.view?.touchesCancelled(touches, with: event)
                 }
-            }*/
+            }
             
         default:
             
             fatalError("\(event.type) events not implemented")
-        }
+        }*/
     }
     
     // MARK: - Subclassed Methods
@@ -140,7 +156,23 @@ open class UIWindow: UIView {
         layoutIfNeeded()
     }
     
-    private func sendTouches(for event: UIEvent) {
+    private func sendTouches(for event: UITouchesEvent) {
+        
+        let touches = event.touches
+        
+        for touch in touches {
+            
+            switch touch.phase {
+            case .began: touch.view?.touchesBegan(touches, with: event)
+            case .moved: touch.view?.touchesMoved(touches, with: event)
+            case .stationary: break
+            case .ended: touch.view?.touchesEnded(touches, with: event)
+            case .cancelled: touch.view?.touchesCancelled(touches, with: event)
+            }
+        }
+    }
+    
+    private func sendButtons(for event: UIPressesEvent) {
         
         
     }
