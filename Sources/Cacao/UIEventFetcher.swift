@@ -53,7 +53,8 @@ internal final class UIEventFetcher {
             self.receiveHIDEvent(sdlEvent)
         }
         
-        self.eventFetcherSink?.eventFetcherDidReceiveEvents(self)
+        // signal events availible
+        self.signalEventsAvailable(with: .eventsPolled)
     }
     
     private func receiveHIDEvent(_ event: SDL_Event) {
@@ -117,10 +118,10 @@ internal final class UIEventFetcher {
         */
     }
     
-    private func signalEventsAvailable(with reason: EventsAvailableReason = .none, filteredEventCount: Int = 0) {
+    private func signalEventsAvailable(with reason: EventsAvailableReason = .none) {
         
         // log signaling reason
-        UIApplication.shared.options.log?("\(#function) with reason \(reason) and \(filteredEventCount) filtered events.")
+        UIApplication.shared.options.log?("\(#function) with reason \(reason)")
         
         // signal
         //self.shouldSignalOnDisplayLink = false
@@ -132,8 +133,6 @@ internal final class UIEventFetcher {
         incomingHIDEvents.forEach { environment.enqueueHIDEvent($0)  }
         
         incomingHIDEvents.removeAll()
-        
-        //environment.commitTimeForTouchEvents = self.commitTimeForTouchEvents
     }
 }
 
@@ -151,5 +150,6 @@ private extension UIEventFetcher {
         case none
         case sinkChanged // 0x1
         case displayLinkDidFire // 0x2
+        case eventsPolled // 0x3
     }
 }
