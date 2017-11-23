@@ -5,9 +5,7 @@
 //  Created by Alsey Coleman Miller on 6/17/17.
 //
 
-import class Foundation.NSObject
-import typealias Foundation.TimeInterval
-import struct Foundation.CGFloat
+import Foundation
 
 /// An object that represents the presence or movement of a button press on the screen for a particular event.
 public class UIPress: NSObject {
@@ -91,6 +89,11 @@ public class UIPressesEvent: UIEvent {
     public func presses(for gesture: UIGestureRecognizer) -> Set<UIPress> {
         
         return Set(allPresses.filter({ ($0.gestureRecognizers ?? []).contains(where: { $0 === gesture }) }))
+    }
+    
+    internal func physicalButtons(for window: UIWindow) -> Set<UIPress> {
+        
+        return Set(allPresses.filter({ $0.window === window }))
     }
 }
 

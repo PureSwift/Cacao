@@ -64,4 +64,14 @@ final class TableViewController: UITableViewController {
         
         return "test \(number)"
     }
+    
+    override func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        
+        print("Did scroll")
+    }
+    
+    override func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        
+        print("Will begin dragging")
+    }
 }

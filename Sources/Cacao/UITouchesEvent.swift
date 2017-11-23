@@ -42,4 +42,9 @@ internal final class UITouchesEvent: UIEvent {
         
         return Set(views)
     }
+    
+    internal override func gestureRecognizers(for window: UIWindow) -> Set<UIGestureRecognizer> {
+        
+        return Set(touches(for: window)?.reduce([UIGestureRecognizer](), { $0.0 + ($0.1.gestureRecognizers ?? []) }) ?? [])
+    }
 }

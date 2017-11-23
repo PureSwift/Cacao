@@ -20,7 +20,7 @@ import Foundation
     import Silica
 #endif
 
-final class ScrollViewController: UIViewController {
+final class ScrollViewController: UIViewController, UIScrollViewDelegate {
     
     // MARK: - Views
     
@@ -38,6 +38,7 @@ final class ScrollViewController: UIViewController {
         view.backgroundColor = UIColor.white
         
         scrollView = UIScrollView()
+        scrollView.delegate = self
         view.addSubview(scrollView)
         
         contentView = UIView()
@@ -61,12 +62,23 @@ final class ScrollViewController: UIViewController {
         
         scrollView.contentSize = contentSize
         contentView.bounds.size = contentSize
+        contentView.frame = .zero
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         //scrollView.contentOffset = CGPoint(x: 30, y: 30)
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        
+        print("Did scroll")
+    }
+    
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        
+        print("Will begin dragging")
     }
 }
 

@@ -64,8 +64,10 @@ open class UIWindow: UIView {
         // handle touches event
         if let touchesEvent = event as? UITouchesEvent {
             
+            // send touches to gesture recognizers
             gestureEnvironment.updateGestures(for: event, window: self)
             
+            // send touches directly to views (legacy API)
             sendTouches(for: touchesEvent)
             
         } else if let pressesEvent = event as? UIPressesEvent {
@@ -76,9 +78,7 @@ open class UIWindow: UIView {
             
             sendButtons(for: pressesEvent)
         }
-        
-        
-        
+                
         /*
         switch event.type {
             

@@ -60,6 +60,13 @@ public class UIEvent {
         
         self.timestamp = timestamp
     }
+    
+    // MARK: - Private Methods
+    
+    internal func gestureRecognizers(for window: UIWindow) -> Set<UIGestureRecognizer> {
+        
+        return []
+    }
 }
 
 // MARK: - CustomStringConvertible
