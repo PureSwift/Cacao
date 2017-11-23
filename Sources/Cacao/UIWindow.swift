@@ -23,7 +23,7 @@ open class UIWindow: UIView {
     public final var windowLevel: UIWindowLevel = UIWindowLevelNormal
     
     /// A Boolean value that indicates whether the window is the key window for the app.
-    public final var isKeyWindow: Bool { return UIScreen.main.keyWindow === self }
+    public final var isKeyWindow: Bool { return UIApplication.shared.keyWindow === self }
     
     // MARK: - Initialization
     
@@ -70,7 +70,10 @@ open class UIWindow: UIView {
             // send touches directly to views (legacy API)
             sendTouches(for: touchesEvent)
             
-        } else if let pressesEvent = event as? UIPressesEvent {
+        }
+        
+        // handle presses
+        else if let pressesEvent = event as? UIPressesEvent {
             
             guard isUserInteractionEnabled else { return }
             
@@ -78,54 +81,6 @@ open class UIWindow: UIView {
             
             sendButtons(for: pressesEvent)
         }
-                
-        /*
-        switch event.type {
-            
-        case .touches:
-            
-            let touches = event.touches(for: self) ?? []
-            
-            let gestureRecognizers = touches.reduce([UIGestureRecognizer](), { $0 + ($1.gestureRecognizers ?? []) })
-            
-            // handle gestures
-            
-            for gesture in gestureRecognizers {
-                
-                guard gesture.shouldRecognize
-                    else { continue }
-                
-                gesture.touches = touches.sorted(by: { $0.timestamp < $1.timestamp })
-                
-                for touch in touches {
-                    
-                    switch touch.phase {
-                    case .began: gesture.touchesBegan(touches, with: event)
-                    case .moved: gesture.touchesMoved(touches, with: event)
-                    case .stationary: break
-                    case .ended: gesture.touchesEnded(touches, with: event)
-                    case .cancelled: gesture.touchesCancelled(touches, with: event)
-                    }
-                }
-            }
-            
-            // handle touches
-            
-            for touch in touches {
-                
-                switch touch.phase {
-                case .began: touch.view?.touchesBegan(touches, with: event)
-                case .moved: touch.view?.touchesMoved(touches, with: event)
-                case .stationary: break
-                case .ended: touch.view?.touchesEnded(touches, with: event)
-                case .cancelled: touch.view?.touchesCancelled(touches, with: event)
-                }
-            }
-            
-        default:
-            
-            fatalError("\(event.type) events not implemented")
-        }*/
     }
     
     // MARK: - Subclassed Methods

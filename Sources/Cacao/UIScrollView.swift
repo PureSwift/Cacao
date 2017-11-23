@@ -30,6 +30,14 @@ open class UIScrollView: UIView {
     
     // MARK: - Responding to Scroll View Interactions
     
+    // Cacao extension
+    public var ignoreMouseEvents: Bool {
+        
+        get { return scrollGestureRecognizer.ignoreMouseEvents }
+        
+        set { scrollGestureRecognizer.ignoreMouseEvents = newValue }
+    }
+    
     /// The delegate of the scroll-view object.
     public weak var delegate: UIScrollViewDelegate?
     
@@ -610,6 +618,8 @@ public extension UIScrollViewDelegate {
 fileprivate final class UIScrollViewPanGestureRecognizer: UIPanGestureRecognizer {
     
     weak var scrollview: UIScrollView!
+    
+    var ignoreMouseEvents: Bool = false
     
     init(targetAction: TargetAction, scrollview: UIScrollView) {
         super.init(targetAction: targetAction)

@@ -9,18 +9,7 @@ import Foundation
 
 internal final class UIGestureEnvironment {
     
-    private(set) var gestureRecognizers = Set<UIGestureRecognizer>()
-    
-    private(set) var gestureRecognizersNeedingUpdate = Set<UIGestureRecognizer>()
-    
-    init() {
-        
-    }
-    
-    internal func addGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer) {
-        
-        gestureRecognizers.insert(gestureRecognizer)
-    }
+    init() { }
     
     internal func updateGestures(for event: UIEvent, window: UIWindow) {
         
@@ -28,106 +17,45 @@ internal final class UIGestureEnvironment {
         
         if let touchesEvent = event as? UITouchesEvent {
             
-            deliver(event: touchesEvent, to: gestureRecognizers) { (gestureRecognizer) in
-                /*
-                if gestureRecognizer.state.rawValue <= UIGestureRecognizerState.changed.rawValue {
-                    
-                    
-                }*/
-                
-                return true
-            }
+            deliver(event: touchesEvent, to: gestureRecognizers)
             
         } else if let pressesEvent = event as? UIPressesEvent {
             
-            deliver(event: pressesEvent, to: gestureRecognizers) { (gestureRecognizer) in
-                
-                return true
-            }
+            deliver(event: pressesEvent, to: gestureRecognizers)
         }
     }
     
-    private func deliver<Event: UIEvent>(event: Event, to gestureRecognizers: Set<UIGestureRecognizer>, using block: (UIGestureRecognizer) -> (Bool)) {
+    private func deliver(event: UIEvent,
+                         to gestureRecognizers: Set<UIGestureRecognizer>,
+                         using block: (UIGestureRecognizer) -> (Bool) = { _ in return true }) {
         
         gestureRecognizers.forEach {
             
             if block($0) {
-                
-                markDirty($0)
-                setGestureNeedsUpdate($0)
+                update(gesture: $0, with: event)
             }
         }
+    }
+    
+    private func update(gesture: UIGestureRecognizer, with event: UIEvent) {
         
-        if hasGesturesNeedingUpdate {
+        // handle touches
+        
+        guard gesture.shouldRecognize
+            else { return }
+        
+        let touches = event.touches(for: gesture) ?? []
+        
+        gesture.touches = touches.sorted(by: { $0.timestamp < $1.timestamp })
+        
+        for touch in touches {
             
-            update()
-        }
-    }
-    
-    private func markDirty(_ gesture: UIGestureRecognizer) {
-        
-        
-    }
-    
-    private func setGestureNeedsUpdate(_ gesture: UIGestureRecognizer) {
-        
-        if gesture.view != nil {
-            
-            gestureRecognizersNeedingUpdate.insert(gesture)
-            
-        } else {
-            
-            clearGestureNeedsUpdate(gesture)
-        }
-    }
-    
-    @inline(__always)
-    private func clearGestureNeedsUpdate(_ gesture: UIGestureRecognizer) {
-        
-        gestureRecognizersNeedingUpdate.remove(gesture)
-    }
-    
-    private func queueGestureRecognizersForResetIfFinished() {
-        
-        
-    }
-    
-    private var hasGesturesNeedingUpdate: Bool {
-        
-        @inline(__always)
-        get { return gestureRecognizersNeedingUpdate.isEmpty == false }
-    }
-    
-    private func update() {
-        
-        if let event = UIApplication.shared.touchesEvent {
-            
-            for gesture in gestureRecognizersNeedingUpdate {
-                
-                let touches = event.touches(for: gesture) ?? []
-                
-                let gestureRecognizers = touches.reduce([UIGestureRecognizer](), { $0 + ($1.gestureRecognizers ?? []) })
-                
-                // handle gestures
-                
-                for gesture in gestureRecognizers {
-                    
-                    guard gesture.shouldRecognize
-                        else { continue }
-                    
-                    gesture.touches = touches.sorted(by: { $0.timestamp < $1.timestamp })
-                    
-                    for touch in touches {
-                        
-                        switch touch.phase {
-                        case .began: gesture.touchesBegan(touches, with: event)
-                        case .moved: gesture.touchesMoved(touches, with: event)
-                        case .stationary: break
-                        case .ended: gesture.touchesEnded(touches, with: event)
-                        case .cancelled: gesture.touchesCancelled(touches, with: event)
-                        }
-                    }
-                }
+            switch touch.phase {
+            case .began: gesture.touchesBegan(touches, with: event)
+            case .moved: gesture.touchesMoved(touches, with: event)
+            case .stationary: break
+            case .ended: gesture.touchesEnded(touches, with: event)
+            case .cancelled: gesture.touchesCancelled(touches, with: event)
             }
         }
     }

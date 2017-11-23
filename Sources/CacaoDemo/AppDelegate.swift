@@ -31,7 +31,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         
         self.window = UIWindow(frame: UIScreen.main.bounds)
         
-        self.window?.rootViewController = TableViewController()
+        self.window?.rootViewController = ScrollViewController()
         
         self.window?.makeKeyAndVisible()
         

@@ -135,6 +135,12 @@ open class UITableViewController: UIViewController, UITableViewDataSource, UITab
         fatalError("\(type(of: self)) cannot provide cells for \(#function)")
     }
     
+    // MARK: - UIScrollViewDelegate
+    
+    open func scrollViewDidScroll(_ scrollView: UIScrollView) { }
+    
+    open func scrollViewWillBeginDragging(_ scrollView: UIScrollView) { }
+    
     // MARK: - Private
     
     private let style: UITableViewStyle
