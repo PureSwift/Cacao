@@ -39,7 +39,7 @@ internal final class UIEventEnvironment {
             guard let event = event(for: sdlEvent)
                 else { handleNonUIEvent(sdlEvent); continue }
             
-            
+            application.sendEvent(event)
         }
         
         // clear queue

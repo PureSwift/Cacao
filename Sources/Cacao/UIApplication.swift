@@ -83,10 +83,13 @@ public final class UIApplication: UIResponder {
     /// after handling the event in your implementation.
     public func sendEvent(_ event: UIEvent) {
         
-        keyWindow?.sendEvent(event)
+        self.windows.forEach { $0.sendEvent(event) }
     }
     
-    public func sendAction(_ selector: String, to target: AnyObject?, from sender: AnyObject?, for event: UIEvent?) {
+    public func sendAction(_ selector: String,
+                           to target: AnyObject?,
+                           from sender: AnyObject?,
+                           for event: UIEvent?) {
         
         
     }
