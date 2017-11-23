@@ -167,7 +167,7 @@ open class UINavigationBar: UIView {
 /// delegate should implement to update its views when items are pushed and popped from the stack.
 /// The navigation bar represents only the bar at the top of the screen, not the view below.
 /// It’s the application’s responsibility to implement the behavior when the top item changes.
-public protocol UINavigationBarDelegate: class, UIBarPositioningDelegate {
+public protocol UINavigationBarDelegate: UIBarPositioningDelegate {
     
     /// Returns a Boolean value indicating whether the navigation bar should push an item.
     func navigationBar(_ navigationBar: UINavigationBar, shouldPush item: UINavigationItem) -> Bool

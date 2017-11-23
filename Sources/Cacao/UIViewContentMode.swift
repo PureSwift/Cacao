@@ -12,10 +12,7 @@
     import Glibc
 #endif
 
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import struct Foundation.CGRect
+import Foundation
 import Silica
 
 public enum UIViewContentMode: Int {
@@ -37,10 +34,11 @@ public enum UIViewContentMode: Int {
     case bottomRight
 }
 
-// Cacao extension
-public extension UIViewContentMode {
+// MARK: - Internal Cacao Extension
+
+internal extension UIViewContentMode {
     
-    public func rect(for bounds: CGRect, size: CGSize) -> CGRect {
+    func rect(for bounds: CGRect, size: CGSize) -> CGRect {
         
         switch self {
             

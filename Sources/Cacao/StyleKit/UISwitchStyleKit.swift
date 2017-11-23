@@ -9,10 +9,7 @@
 //  http://www.paintcodeapp.com
 //
 
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import struct Foundation.CGRect
+import Foundation
 import Silica
 
 class UISwitchStyleKit {

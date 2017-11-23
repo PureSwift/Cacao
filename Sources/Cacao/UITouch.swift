@@ -5,17 +5,18 @@
 //  Created by Alsey Coleman Miller on 6/8/17.
 //
 
-import class Foundation.NSObject
-import typealias Foundation.TimeInterval
-import class Foundation.ProcessInfo
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import struct Foundation.CGRect
+import Foundation
 import Silica
 
 /// An object representing the location, size, movement, and force of a touch occurring on the screen.
 public final class UITouch: NSObject {
+    
+    internal init(_ touch: Touch) {
+        
+        self.touches = [touch]
+        
+        super.init()
+    }
     
     internal private(set) var touches: [Touch]
         
@@ -44,11 +45,6 @@ public final class UITouch: NSObject {
                        y: location.y - previousLocation.y)
     }
     
-    internal init(_ touch: Touch) {
-        
-        self.touches = [touch]
-    }
-    
     internal func update(_ touch: Touch) {
         
         touches.append(touch)
@@ -57,13 +53,13 @@ public final class UITouch: NSObject {
     // MARK: - Getting the Location of a Touch
     
     /// The view to which touches are being delivered, if any.
-    public var view: UIView? { return touches.last!.view }
+    public var view: UIView? { return touches.last?.view }
     
     /// The window in which the touch initially occurred.
-    public var window: UIWindow? { return touches.last!.window }
+    public var window: UIWindow? { return touches.last?.window }
     
     /// The gesture recognizers that are receiving the touch object.
-    public var gestureRecognizers: [UIGestureRecognizer]? { return touches.last!.gestureRecognizers }
+    public var gestureRecognizers: [UIGestureRecognizer]? { return touches.last?.gestureRecognizers }
     
     /// The phase of the touch.
     public var phase: UITouchPhase { return touches.last!.phase }
@@ -98,17 +94,12 @@ public final class UITouch: NSObject {
         return view.convert(previousTouch.location, to: view)
     }
     
+    // MARK: - CustomStringConvertible
+    
     public override var description: String {
         
         return "\(Swift.type(of: self))(timestamp: \(timestamp), location: \(location), phase: \(phase))"
     }
-}
-
-// MARK: - CustomStringConvertible
-
-extension UITouch {
-    
-    
 }
 
 // MARK: - Supporting Types

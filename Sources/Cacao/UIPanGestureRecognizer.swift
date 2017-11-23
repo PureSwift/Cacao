@@ -5,13 +5,11 @@
 //  Created by Alsey Coleman Miller on 6/17/17.
 //
 
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import typealias Foundation.TimeInterval
+import Foundation
+import Silica
 
 /// A concrete subclass of `UIGestureRecognizer that looks for panning (dragging) gestures.
-public final class UIPanGestureRecognizer: UIGestureRecognizer {
+open class UIPanGestureRecognizer: UIGestureRecognizer {
         
     // MARK: - Configuring the Gesture Recognizer
     
@@ -86,7 +84,7 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
     
     // MARK: - Overridden Methods
     
-    public override func reset() {
+    open override func reset() {
         super.reset()
         
         translation = .zero
@@ -97,7 +95,7 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
         start = nil
     }
     
-    public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
+    open override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
         
         guard let _ = validate(event: event)
             else { return }
@@ -106,7 +104,7 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
         self.lastMovement = event.timestamp
     }
     
-    public override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent) {
+    open override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent) {
         
         guard let gestureTouches = validate(event: event)
             else { return }
@@ -138,7 +136,7 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
         }
     }
     
-    public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
+    open override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
         
         switch self.state {
             
@@ -162,5 +160,15 @@ public final class UIPanGestureRecognizer: UIGestureRecognizer {
             
             self.transition(to: .failed)
         }
+    }
+    
+    internal func shouldTryToBegin(with event: UIEvent) {
+        
+        
+    }
+    
+    internal func willScrollY() {
+        
+        
     }
 }

@@ -90,7 +90,7 @@ public class UIPressesEvent: UIEvent {
     /// Returns the state of all physical buttons in the event that are associated with a particular gesture recognizer.
     public func presses(for gesture: UIGestureRecognizer) -> Set<UIPress> {
         
-        return allPresses.filter({ ($0.gestureRecognizers ?? []).contains(where: { $0 === gesture }) })
+        return Set(allPresses.filter({ ($0.gestureRecognizers ?? []).contains(where: { $0 === gesture }) }))
     }
 }
 

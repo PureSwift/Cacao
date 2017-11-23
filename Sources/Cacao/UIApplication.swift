@@ -5,10 +5,7 @@
 //  Created by Alsey Coleman Miller on 6/7/17.
 //
 
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import struct Foundation.CGRect
+import Foundation
 import CSDL2
 import SDL
 import Silica
@@ -19,64 +16,14 @@ import Cairo
 @_silgen_name("UIApplicationMain")
 public func UIApplicationMain(delegate: UIApplicationDelegate, options: CacaoOptions = CacaoOptions()) {
     
-    UIApplication.shared.delegate = delegate
-    
-    SDL.initialize(subSystems: [.video]).sdlAssert()
-    
-    defer { SDL.quit() }
-    
-    var windowOptions: Set<Window.Option> = [.allowRetina, .opengl]
-    
-    if options.canResizeWindow {
-        
-        windowOptions.insert(.resizable)
-    }
-    
-    let preferredSize = options.windowSize
-    
-    let initialWindowSize = preferredSize // can we query for screen resolution?
-    
-    let window = Window(title: options.windowName, frame: (x: .centered, y: .centered, width: Int(initialWindowSize.width), height:  Int(initialWindowSize.height)), options: windowOptions).sdlAssert()
-    
-    // create UIScreen
-    let screen = UIScreen(window: window, size: initialWindowSize)
-    UIScreen.main = screen
-    
-    let launchOptions = [UIApplicationLaunchOptionsKey: Any]()
-    
-    guard delegate.application(UIApplication.shared, willFinishLaunchingWithOptions: launchOptions),
-        delegate.application(UIApplication.shared, didFinishLaunchingWithOptions: launchOptions)
-        else { options.log("Application delegate could not launch app"); return }
-    
-    defer { delegate.applicationWillTerminate(UIApplication.shared) }
+    // initialize singleton application
+    _UIApp = UIApplication(delegate: delegate, options: options)
     
     // enter main loop
+    _UIApp.run()
     
-    let framesPerSecond = screen.maximumFramesPerSecond
-    
-    var frame = 0
-    
-    let eventPoller = SDLEventPoller(screen: screen)
-    
-    while !eventPoller.done {
-        
-        frame += 1
-        
-        let startTime = SDL_GetTicks()
-        
-        eventPoller.poll()
-        
-        // render to screen
-        screen.update()
-        
-        // sleep to save energy
-        let frameDuration = Int(SDL_GetTicks() - startTime)
-        
-        if frameDuration < (1000 / framesPerSecond) {
-            
-            SDL_Delay(UInt32((1000 / framesPerSecond) - frameDuration))
-        }
-    }
+    // start polling for SDL events
+    SDLEventRun()
 }
 
 /// Cacao-specific application launch settings
@@ -88,16 +35,30 @@ public struct CacaoOptions {
         
     public var canResizeWindow: Bool = true
     
-    public var log: (String) -> () = { print($0) }
+    public var log: ((String) -> ())?
     
     public init() { }
 }
+
+internal private(set) var _UIApp: UIApplication!
 
 public final class UIApplication: UIResponder {
     
     // MARK: - Getting the App Instance
     
-    public static var shared = UIApplication()
+    public static var shared: UIApplication { return _UIApp }
+    
+    private override init() { fatalError() }
+    
+    fileprivate init(delegate: UIApplicationDelegate, options: CacaoOptions) {
+        
+        assert(_UIApp == nil, "\(UIApplication.self) is a singleton and should only be initialized once.")
+        
+        self.options = options
+        self.delegate = delegate
+        
+        super.init()
+    }
         
     // MARK: - Getting the App Delegate
     
@@ -106,7 +67,7 @@ public final class UIApplication: UIResponder {
     // MARK: - Getting App Windows
     
     /// The app's key window.
-    public var keyWindow: UIWindow? { return UIScreen.main.keyWindow }
+    public var keyWindow: UIWindow? { return keyWindow(for: UIScreen.main) }
     
     /// The app's visible and hidden windows.
     public var windows: [UIWindow] { return UIScreen.screens.reduce([UIWindow](), { $0 + $1.windows }) }
@@ -147,15 +108,76 @@ public final class UIApplication: UIResponder {
     // MARK: - Managing Background Execution
     
     public fileprivate(set) var applicationState: UIApplicationState = .active
+    
+    // MARK: - Private
+    
+    internal let options: CacaoOptions
+    
+    internal private(set) var isDone: Bool = false
+    
+    internal lazy var eventFetcher: UIEventFetcher = UIEventFetcher(eventFetcherSink: self.eventDispatcher)
+    
+    internal lazy var eventDispatcher: UIEventDispatcher = UIEventDispatcher(application: self)
+    
+    internal lazy var gestureEnvironment: UIGestureEnvironment = UIGestureEnvironment()
+    
+    internal var touchesEvent: UITouchesEvent? { return eventDispatcher.environment.touchesEvent }
+    
+    internal var physicalKeyboardEvent: UIPhysicalKeyboardEvent? { return eventDispatcher.environment.physicalKeyboardEvent }
+    
+    internal private(set) var alwaysHitTestsForMainScreen: Bool = false
+    
+    internal func quit() {
+        
+        self.isDone = true
+    }
+    
+    private func keyWindow(for screen: UIScreen) -> UIWindow? {
+        
+        return screen.keyWindow
+    }
+    
+    private func sendHeadsetOriginatedMediaRemoteCommand() {
+        
+        
+    }
+    
+    private func sendWillEnterForegroundCallbacks() {
+        
+        
+    }
+    
+    // Scroll to top
+    private func scrollsToTopInitiatorView() {
+        
+        
+    }
+    
+    private func shouldAttemptOpenURL() {  }
+    
+    private var isRunningInTaskSwitcher: Bool = false
 }
 
+fileprivate extension UIApplication {
+    
+    func run() {
+        
+        // register for changes, if possible
+        
+        // get main run loop
+        let mainRunLoop = RunLoop.main
+        
+        // install the run loop source for the event dispatcher
+        self.eventDispatcher.installEventRunLoopSources(mainRunLoop)
+    }
+}
 // MARK: - Supporting Types
 
 public protocol UIApplicationDelegate: class {
     
     func application(_ application: UIApplication, willFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey : Any]?) -> Bool
     
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey : Any]) -> Bool
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey : Any]?) -> Bool
     
     func applicationDidBecomeActive(_ application: UIApplication)
     
@@ -206,7 +228,7 @@ public extension UIApplicationDelegate {
     
     func application(_ application: UIApplication, willFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey : Any]?) -> Bool { return true }
     
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey : Any]) -> Bool { return true }
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey : Any]?) -> Bool { return true }
     
     func applicationDidBecomeActive(_ application: UIApplication) { }
     

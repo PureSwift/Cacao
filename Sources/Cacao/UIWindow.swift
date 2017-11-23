@@ -5,10 +5,7 @@
 //  Created by Alsey Coleman Miller on 6/7/17.
 //
 
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import struct Foundation.CGRect
+import Foundation
 import Silica
 
 /// An object that provides the backdrop for your app’s user interface and provides important event-handling behaviors.
@@ -62,10 +59,15 @@ open class UIWindow: UIView {
     /// Dispatches the specified event to its views.
     public final func sendEvent(_ event: UIEvent) {
         
+        let gestureEnvironment = UIApplication.shared.gestureEnvironment
+        
         switch event.type {
             
         case .touches:
             
+            gestureEnvironment.updateGestures(for: event, window: self)
+            
+            /*
             let touches = event.touches(for: self) ?? []
             
             let gestureRecognizers = touches.reduce([UIGestureRecognizer](), { $0 + ($1.gestureRecognizers ?? []) })
@@ -102,7 +104,7 @@ open class UIWindow: UIView {
                 case .ended: touch.view?.touchesEnded(touches, with: event)
                 case .cancelled: touch.view?.touchesCancelled(touches, with: event)
                 }
-            }
+            }*/
             
         default:
             
@@ -136,6 +138,11 @@ open class UIWindow: UIView {
         addSubview(viewController.view)
         
         layoutIfNeeded()
+    }
+    
+    private func sendTouches(for event: UIEvent) {
+        
+        
     }
 }
 
