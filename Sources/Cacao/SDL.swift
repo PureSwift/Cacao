@@ -69,7 +69,7 @@ internal func SDLEventRun() {
         eventFetcher.pollEvents()
         
         // run loop
-        runloop.run(mode: .defaultRunLoopMode, before: Date() + 0.1)
+        runloop.run(mode: .defaultRunLoopMode, before: Date() + (1.0 / TimeInterval(framesPerSecond)))
         
         // render to screen
         screen.update()
