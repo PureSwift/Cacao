@@ -6,6 +6,12 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
+#if os(macOS)
+    import Darwin.C.math
+#elseif os(Linux)
+    import Glibc
+#endif
+
 import Foundation
 import Silica
 
@@ -839,7 +845,7 @@ open class UITableView: UIScrollView {
         var tableViewHeight: CGFloat = 0
         
         let contentOffsetY = contentOffset.y
-        let visibleBounds = CGRect(x: 0, y: contentOffsetY, width: bounds.size.width, height: bounds.size.height)
+        let visibleBounds = CGRect(x: 0, y: abs(contentOffsetY), width: bounds.size.width, height: bounds.size.height)
         
         // layout header
         if let headerView = tableHeaderView {
@@ -906,7 +912,10 @@ open class UITableView: UIScrollView {
                 cell.configureSeparator(style: separatorStyle, color: separatorColor)
                 
                 // add cell as subview
-                addSubview(cell)
+                if subviews.contains(cell) == false {
+                    
+                    addSubview(cell)
+                }
             }
         }
         

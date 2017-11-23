@@ -173,9 +173,7 @@ internal final class UIEventEnvironment {
             
             touchesEvent = nil
         }
-        
-        print(event)
-        
+                
         return event
     }
     
