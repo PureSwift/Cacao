@@ -21,9 +21,9 @@ before_install:
 install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then SWIFT_DIR=tests ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir $SWIFT_DIR ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then curl https://swift.org/builds/$SWIFT_VERSION/ubuntu1404/$SWIFT_VERSION/$SWIFT_VERSION-ubuntu14.04.tar.gz -s | tar xz -C $SWIFT_DIR &> /dev/null ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then curl https://swift.org/builds/swift-4.0.2-release/ubuntu1404/swift-4.0.2-release/swift-4.0.2-release-ubuntu14.04.tar.gz -s | tar xz -C $SWIFT_DIR &> /dev/null ; fi
 env:
-  - SWIFT_VERSION=swift-4.0.2-RELEASE-ubuntu14.04
+  - SWIFT_VERSION=swift-4.0.2-RELEASE
 script:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then swift package generate-xcodeproj ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then xctool test -project Cacao.xcodeproj -scheme "CacaoDemo" -sdk macosx ONLY_ACTIVE_ARCH=NO  ; fi
