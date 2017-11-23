@@ -1,16 +1,25 @@
 language: generic
-osx_image: xcode9
+osx_image: xcode9.1
 os:
   - linux
+  - osx
 sudo: required
 dist: trusty
+compiler:
+  - gcc
+  - clang
+addons:
+  apt:
+    packages:
+    - libsdl2-dev
+    - libfreetype6-dev
+    - libpng-dev
+    - pkg-config
+	- libcairo-dev
+	- libsdl2-dev
+	- liblcms2-dev
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install carthage ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then carthage bootstrap ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install cairo sdl2 lcms2 ; fi
-  
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install clang libcairo-dev libsdl2-dev liblcms2-dev ; fi
 install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then SWIFT_DIR=tests ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir $SWIFT_DIR ; fi
