@@ -12,10 +12,7 @@
     import Glibc
 #endif
 
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import struct Foundation.CGRect
+import Foundation
 import Silica
 
 open class UIScrollView: UIView {
@@ -27,8 +24,7 @@ open class UIScrollView: UIView {
         
         let action = UIGestureRecognizer.TargetAction(action: self.panGesture, name: "panGesture")
         
-        self.panGestureRecognizer = UIPanGestureRecognizer(targetAction: action)
-        
+        self.scrollGestureRecognizer = UIScrollViewPanGestureRecognizer(targetAction: action, scrollview: self)
         self.addGestureRecognizer(panGestureRecognizer)
     }
     
@@ -249,7 +245,7 @@ open class UIScrollView: UIView {
     }
     
     /// The refresh control associated with the scroll view.
-    public var refreshControl: UIRefreshControl? = nil {
+    public var refreshControl: UIRefreshControl? {
         
         didSet {
             
@@ -263,7 +259,12 @@ open class UIScrollView: UIView {
     ///
     /// Your application accesses this property when it wants to more precisely control
     /// which pan gestures are recognized by the scroll view.
-    public private(set) var panGestureRecognizer: UIPanGestureRecognizer!
+    public var panGestureRecognizer: UIPanGestureRecognizer {
+        
+        return scrollGestureRecognizer
+    }
+    
+    private var scrollGestureRecognizer: UIScrollViewPanGestureRecognizer!
     
     // MARK: - Managing the Keyboard
     
@@ -603,4 +604,24 @@ public extension UIScrollViewDelegate {
     func scrollViewDidZoom(_ scrollView: UIScrollView) { }
     
     func scrollViewShouldScrollToTop(_ scrollView: UIScrollView) -> Bool { return true }
+}
+
+// https://github.com/ceekay1991/iOS11RuntimeHeaders/blob/d01a3a0e5d725c6ec68ab6c8df0a3621056bed50/Frameworks/UIKit.framework/UIScrollViewPanGestureRecognizer.h
+fileprivate final class UIScrollViewPanGestureRecognizer: UIPanGestureRecognizer {
+    
+    weak var scrollview: UIScrollView!
+    
+    init(targetAction: TargetAction, scrollview: UIScrollView) {
+        super.init(targetAction: targetAction)
+        
+        self.scrollview = scrollview
+    }
+    
+    internal override func shouldTryToBegin(with event: UIEvent) {
+        
+        guard scrollview.scrollHorizontal
+            else { return }
+        
+        
+    }
 }

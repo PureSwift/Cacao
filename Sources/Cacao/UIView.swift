@@ -6,12 +6,7 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import struct Foundation.CGRect
-import typealias Foundation.TimeInterval
-import struct Foundation.Date
+import Foundation
 import CSDL2
 import SDL
 import Silica
@@ -27,6 +22,16 @@ open class UIView: UIResponder {
     
     // MARK: - Initializing a View Object
     
+    deinit {
+        
+        removeAllGestureRecognizers()
+    }
+    
+    public override convenience init() {
+        
+        self.init(frame: .zero)
+    }
+    
     /// Initializes and returns a newly allocated view object with the specified frame rectangle.
     public init(frame: CGRect) {
         
@@ -34,6 +39,13 @@ open class UIView: UIResponder {
         
         self.frame = frame
     }
+    
+    // MARK: - CustomStringConvertible
+    /*
+    open override var description: String {
+        
+        return String(format: "<%@: %p; frame = %@; hidden = %@; layer = %@>", NSStringFromClass(type(of: self)) as! NSString, self, "\(self.frame)", (self.isHidden ? "YES" : "NO"), "\(self.texture ?? "nil" as Any)")
+    }*/
     
     // MARK: - Properties
     
@@ -205,8 +217,10 @@ open class UIView: UIResponder {
     open var frame: CGRect {
         get { return _frame }
         set {
+            let oldValue = _bounds
             _frame = newValue
             _bounds.size = newValue.size
+            boundsDidChange(from: oldValue, to: newValue)
         }
     }
     private var _frame = CGRect()
@@ -229,11 +243,28 @@ open class UIView: UIResponder {
     public final var bounds: CGRect {
         get { return _bounds }
         set {
+            let oldValue = _bounds
             _bounds = newValue
             _frame.size = newValue.size
+            boundsDidChange(from: oldValue, to: newValue)
         }
     }
     private var _bounds = CGRect()
+    
+    private func boundsDidChange(from oldBounds: CGRect, to newBounds: CGRect) {
+        
+        // bounds changed
+        guard oldBounds != newBounds else { return }
+        
+        // FIXME: Do the docs state this happens?
+        setNeedsLayout()
+        
+        // Autoresize subviews
+        if autoresizesSubviews, oldBounds.size != newBounds.size {
+            
+            subviews.forEach { $0.frame.resize($0.autoresizingMask, containerSize: (oldBounds.size, newBounds.size)) }
+        }
+    }
     
     /// The center of the frame.
     ///
@@ -472,7 +503,7 @@ open class UIView: UIResponder {
     /// That method performs any needed calculations and returns them to this method, which then makes the change.
     public final func sizeToFit() {
         
-        // TODO
+        // TODO: sizeToFit
     }
     
     /// The natural size for the receiving view, considering only properties of the view itself.
@@ -490,6 +521,17 @@ open class UIView: UIResponder {
         
         return CGSize(width: UIViewNoIntrinsicMetric, height: UIViewNoIntrinsicMetric)
     }
+    
+    /// A Boolean value that determines whether the receiver automatically resizes its subviews when its bounds change.
+    ///
+    /// When set to `true`, the receiver adjusts the size of its subviews when its bounds change.
+    /// The default value is `true`.
+    public var autoresizesSubviews: Bool = true
+    
+    /// An integer bit mask that determines how the receiver resizes itself when its superview’s bounds change.
+    ///
+    /// When a view’s bounds change, that view automatically resizes its subviews according to each subview’s autoresizing mask.
+    public var autoresizingMask: UIViewAutoresizing = []
     
     // MARK: - Identifying the View at Runtime
     
@@ -562,16 +604,19 @@ open class UIView: UIResponder {
         return nil
     }
     
+    @nonobjc
     public final func convert(_ point: CGPoint, from view: UIView?) -> CGPoint {
         
         fatalError()
     }
     
+    @nonobjc
     public final func convert(_ rect: CGRect, to view: UIView?) -> CGPoint {
         
         fatalError()
     }
     
+    @nonobjc
     public final func convert(_ rect: CGRect, from view: UIView?) -> CGPoint {
         
         fatalError()
@@ -595,7 +640,8 @@ open class UIView: UIResponder {
     internal var shouldRender: Bool {
         return isHidden == false
             && alpha > 0
-            && (bounds.size.width >= 1.0 || bounds.size.height >= 1.0)
+            && bounds.size.width >= 1.0
+            && bounds.size.height >= 1.0 // must be at least 1x1
     }
     
     internal final func render(on screen: UIScreen, in rect: SDL_Rect) {
@@ -665,7 +711,7 @@ open class UIView: UIResponder {
         screen.renderer.copy(texture, destination: rect)
     }
     
-    internal func draw(in context: CGContext) {
+    internal func draw(in context: Silica.CGContext) {
         
         UIGraphicsPushContext(context)
         
@@ -690,7 +736,9 @@ open class UIView: UIResponder {
     
     /// Lays out subviews.
     ///
-    /// The default implementation of this method does nothing.
+    /// If contraints are availible, the default implementation uses any constraints you have set
+    /// to determine the size and position of any subviews.
+    /// Otherwise, the default implementation of this method does nothing.
     ///
     /// Subclasses can override this method as needed to perform more precise layout of their subviews.
     /// You should override this method only if the autoresizing and constraint-based behaviors of
@@ -814,12 +862,20 @@ open class UIView: UIResponder {
     /// Attaches a gesture recognizer to the view.
     public func addGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer) {
         
+        addGestureRecognizer(gestureRecognizer, atEnd: true)
+    }
+    
+    private func addGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, atEnd: Bool) {
+        
         // remove from old view
         gestureRecognizer.view?.removeGestureRecognizer(gestureRecognizer)
         
         // add to view
         gestureRecognizer.view = self
-        gestureRecognizers?.append(gestureRecognizer)
+        atEnd ? gestureRecognizers?.append(gestureRecognizer) : gestureRecognizers?.insert(gestureRecognizer, at: 0)
+        
+        // update gesture environment
+        UIApplication.shared.gestureEnvironment.addGestureRecognizer(gestureRecognizer)
     }
     
     /// Detaches a gesture recognizer from the receiving view.
@@ -830,6 +886,11 @@ open class UIView: UIResponder {
         
         gestureRecognizers?.remove(at: index)
         gestureRecognizer.view = nil
+    }
+    
+    private func removeAllGestureRecognizers() {
+        
+        gestureRecognizers?.forEach { removeGestureRecognizer($0) }
     }
     
     /// The gesture-recognizer objects currently attached to the view.
@@ -907,10 +968,25 @@ internal class Animation {
             
             let currentValue = value.start + (progress * delta)
             
-            view[keyPath: keyPath] = currentValue
+            //view[keyPath: keyPath] = currentValue
+            keyPath.set(view, currentValue)
             
             return progress < 1.0
         }
+    }
+}
+
+final class ReferenceWritableKeyPath<Value, Property> {
+    
+    let get: (Value) -> (Property)
+    
+    let set: (Value, Property) -> ()
+    
+    init(get: @escaping (Value) -> (Property),
+         set: @escaping (Value, Property) -> ()) {
+        
+        self.get = get
+        self.set = set
     }
 }
 

@@ -6,17 +6,14 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import struct Foundation.CGRect
+import Foundation
 import Silica
 
 // MARK: - Methods
 
 public extension String {
     
-    func draw(in rect: CGRect, context: CGContext, attributes: TextAttributes = TextAttributes()) {
+    func draw(in rect: CGRect, context: Silica.CGContext, attributes: TextAttributes = TextAttributes()) {
         
         // set context values
         context.setTextAttributes(attributes)

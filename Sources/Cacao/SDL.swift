@@ -5,179 +5,82 @@
 //  Created by Alsey Coleman Miller on 6/7/17.
 //
 
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import struct Foundation.CGRect
+import Foundation
 import CSDL2
 import SDL
 
-// MARK: - Events
+// MARK: - Main SDL run loop
 
-internal final class SDLEventPoller {
+@_silgen_name("SDLEventRun")
+internal func SDLEventRun() {
     
-    let screen: UIScreen
+    #if os(macOS) || swift(>=4.0)
+    assert(Thread.current.isMainThread, "Should only be called from main thread")
+    #endif
     
-    private(set) var done: Bool = false
+    SDL.initialize(subSystems: [.video]).sdlAssert()
     
-    private(set) var sdlEvent = SDL_Event()
+    defer { SDL.quit() }
     
-    private(set) var mouseEvent: UIEvent?
+    let options = UIApplication.shared.options
     
-    init(screen: UIScreen) {
+    let delegate = UIApplication.shared.delegate!
+    
+    var windowOptions: Set<Window.Option> = [.allowRetina, .opengl]
+    
+    if options.canResizeWindow {
         
-        self.screen = screen
+        windowOptions.insert(.resizable)
     }
     
-    func poll() {
-        
-        // poll event queue
-        
-        var pollEventStatus: Int32 = 0
-        
-        repeat {
-            
-            pollEventStatus = SDL_PollEvent(&sdlEvent)
-            
-            let eventType = SDL_EventType(rawValue: sdlEvent.type)
-            
-            switch eventType {
-                
-            case SDL_QUIT, SDL_APP_TERMINATING:
-                
-                done = true
-                
-            case SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP, SDL_MOUSEMOTION:
-                
-                mouse()
-                
-            case SDL_WINDOWEVENT:
-                
-                let windowEvent = SDL_WindowEventID(rawValue: SDL_WindowEventID.RawValue(sdlEvent.window.event))
-                
-                switch windowEvent {
-                    
-                case SDL_WINDOWEVENT_SIZE_CHANGED:
-                    
-                    screen.updateSize()
-                    
-                case SDL_WINDOWEVENT_FOCUS_GAINED, SDL_WINDOWEVENT_FOCUS_LOST:
-                    
-                    #if os(Linux)
-                        screen.needsDisplay = true
-                    #else
-                        break
-                    #endif
-                    
-                default: break
-                }
-                
-            default: break
-            }
-            
-        } while pollEventStatus != 0
-    }
+    let preferredSize = options.windowSize
     
-    private func mouse() {
+    let initialWindowSize = preferredSize // can we query for screen resolution?
+    
+    let window = Window(title: options.windowName, frame: (x: .centered, y: .centered, width: Int(initialWindowSize.width), height:  Int(initialWindowSize.height)), options: windowOptions).sdlAssert()
+    
+    // create main UIScreen
+    let screen = UIScreen(window: window, size: initialWindowSize)
+    UIScreen._main = screen
+    
+    let framesPerSecond = screen.maximumFramesPerSecond
+    
+    let launchOptions = [UIApplicationLaunchOptionsKey: Any]()
+    
+    guard delegate.application(UIApplication.shared, willFinishLaunchingWithOptions: launchOptions),
+        delegate.application(UIApplication.shared, didFinishLaunchingWithOptions: launchOptions)
+        else { options.log?("Application delegate could not launch app"); return }
+    
+    assert(screen.keyWindow?.rootViewController != nil, "Application windows are expected to have a root view controller at the end of application launch")
+    
+    defer { delegate.applicationWillTerminate(UIApplication.shared) }
+    
+    let eventFetcher = UIApplication.shared.eventFetcher
+    
+    // enter main loop
+    let runloop = RunLoop.current
+    
+    // run until app is finished
+    while _UIApp.isDone == false {
         
-        let eventType = SDL_EventType(rawValue: sdlEvent.type)
+        let startTime = SDL_GetTicks()
         
-        guard sdlEvent.button.which != -1
-            else { return }
+        // poll events (should never block)
+        eventFetcher.pollEvents()
         
-        let screenLocation = CGPoint(x: CGFloat(sdlEvent.button.x),
-                                     y: CGFloat(sdlEvent.button.y))
+        // run loop
+        runloop.run(mode: .defaultRunLoopMode, before: Date() + 0.1)
         
-        let timestamp = Double(sdlEvent.button.timestamp) / 1000
+        // render to screen
+        screen.update()
         
-        let event: UIEvent
+        // sleep to save energy
+        let frameDuration = Int(SDL_GetTicks() - startTime)
         
-        if let currentEvent = mouseEvent {
+        if frameDuration < (1000 / framesPerSecond) {
             
-            event = currentEvent
-            
-        } else {
-            
-            event = UIEvent(timestamp: timestamp)
+            SDL_Delay(UInt32((1000 / framesPerSecond) - frameDuration))
         }
-        
-        /// Only the key window can receive touch input
-        guard let window = UIApplication.shared.keyWindow,
-            let view = window.hitTest(screenLocation, with: event)
-            else { return }
-        
-        let touch: UITouch
-        
-        if let previousTouch = event.allTouches?.first {
-            
-            touch = previousTouch
-            
-            let newPhase: UITouchPhase
-            
-            assert(previousTouch.phase != .ended, "Did not create new event after touches ended")
-            
-            // touches ended
-            if eventType == SDL_MOUSEBUTTONUP {
-                
-                newPhase = .ended
-                
-            } else {
-                
-                if touch.location == screenLocation {
-                    
-                    newPhase = .stationary
-                    
-                } else {
-                    
-                    newPhase = .moved
-                }
-            }
-            
-            let internalTouch = UITouch.Touch(location: screenLocation,
-                                              timestamp: timestamp,
-                                              phase: newPhase,
-                                              view: view,
-                                              window: window,
-                                              gestureRecognizers: view.gestureRecognizers ?? [])
-            
-            touch.update(internalTouch)
-            
-        } else {
-            
-            guard eventType == SDL_MOUSEBUTTONDOWN
-                else { return }
-            
-            // new touch sequence
-            
-            let internalTouch = UITouch.Touch(location: screenLocation,
-                                              timestamp: timestamp,
-                                              phase: .began,
-                                              view: view,
-                                              window: window,
-                                              gestureRecognizers: view.gestureRecognizers ?? [])
-            
-            touch = UITouch(internalTouch)
-            
-            event.touches = [touch]
-        }
-        
-        switch touch.phase {
-            
-        case .began:
-            
-            mouseEvent = event
-            
-        case .moved, .stationary:
-            
-            mouseEvent?.timestamp = timestamp
-            
-        case .ended, .cancelled:
-            
-            mouseEvent = nil
-        }
-        
-        // inform responder chain
-        window.sendEvent(event)
     }
 }
 

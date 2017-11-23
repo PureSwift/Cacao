@@ -9,8 +9,8 @@ internal final class WeakReference<Value: AnyObject> {
     
     weak var value: Value?
     
-    @inline(__always)
     init(_ value: Value) {
+        
         self.value = value
     }
 }
@@ -29,7 +29,6 @@ internal struct WeakArray<Element: AnyObject> {
     
     private var strongReferences: [Element] {
         
-        @inline(__always)
         get { return storage.flatMap { $0.value } }
     }
     
@@ -46,7 +45,7 @@ internal struct WeakArray<Element: AnyObject> {
         storage = storage.filter({ $0.value != nil })
     }
     
-    public init(elements: [Element] = []) {
+    public init(elements: [Element]) {
         
         self.storage = elements.map { WeakReference($0) }
     }

@@ -84,4 +84,6 @@ public struct UIColor {
     public static var white = UIColor(cgColor: CGColor.white)
     
     public static var black = UIColor(cgColor: CGColor.black)
+    
+    public static let clear = UIColor(red: 0, green: 0, blue: 0, alpha: 0)
 }

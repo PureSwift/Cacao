@@ -6,10 +6,7 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import struct Foundation.CGRect
+import Foundation
 import Silica
 
 /// The `UIBezierPath` class lets you define a path consisting of straight and curved line segments
@@ -29,13 +26,13 @@ public final class UIBezierPath {
     
     // MARK: - Properties
     
-    public var cgPath: CGPath
+    public var cgPath: Silica.CGPath
     
     public var lineWidth: CGFloat = 1.0
     
-    public var lineCapStyle: CGLineCap = .butt
+    public var lineCapStyle: Silica.CGLineCap = .butt
     
-    public var lineJoinStyle: CGLineJoin = .miter
+    public var lineJoinStyle: Silica.CGLineJoin = .miter
     
     public var miterLimit: CGFloat = 10
     
@@ -47,7 +44,7 @@ public final class UIBezierPath {
     
     // MARK: - Initialization
     
-    public init(cgPath path: CGPath = CGPath()) {
+    public init(cgPath path: Silica.CGPath = CGPath()) {
         
         self.cgPath = path
     }
@@ -119,7 +116,7 @@ public final class UIBezierPath {
             path.addLine(to: CGPoint(x: bottomLeft.x, y: bottomLeft.y))
         }
         if corners.contains(.topLeft) {
-            path.addLine(to: CGPoint(x: topLeft.x, y: topLeft.y+cornerRadii.height))
+            path.addLine(to: CGPoint(x: topLeft.x, y: topLeft.y + cornerRadii.height))
             addCurve(CGPoint(x: topLeft.x, y: topLeft.y),
                      CGPoint(x: topLeft.x+cornerRadii.width, y: topLeft.y),
                      CGPoint(x: topLeft.x+cornerRadii.width, y: topLeft.y))
@@ -160,7 +157,7 @@ public final class UIBezierPath {
         
         context.saveGState()
         setContextPath()
-        let fillRule: CGPathFillRule = usesEvenOddFillRule ? .evenOdd : .winding
+        let fillRule: Silica.CGPathFillRule = usesEvenOddFillRule ? .evenOdd : .winding
         context.fillPath(using: fillRule)
         context.beginPath()
         context.restoreGState()

@@ -13,18 +13,23 @@
 #endif
 
 import Foundation
-import Cacao
-import Silica
+
+#if os(iOS)
+    import UIKit
+#else
+    import Cacao
+    import Silica
+#endif
 
 final class ContentModeViewController: UIViewController {
     
     // MARK: - Views
     
-    private(set) var label: UILabel!
+    private(set) weak var label: UILabel!
     
-    private(set) var logoView: SwiftLogoView!
+    private(set) weak var logoView: SwiftLogoView!
     
-    private(set) var button: UIButton!
+    private(set) weak var button: UIButton!
     
     // MARK: - Properties
     
@@ -34,7 +39,7 @@ final class ContentModeViewController: UIViewController {
     
     override func loadView() {
         
-        logoView = SwiftLogoView(frame: CGRect()) // since we dont use autoresizing, initial size doesnt matter
+        let logoView = SwiftLogoView(frame: CGRect()) // since we dont use autoresizing, initial size doesnt matter
         
         self.view = logoView
         
@@ -42,17 +47,22 @@ final class ContentModeViewController: UIViewController {
         
         logoView.pointSize = 150
         
-        label = UILabel(frame: CGRect()) // layoutSubviews will set size
+        let label = UILabel() // layoutSubviews will set size
         
         label.text = "\(modes[0])"
         
         label.textColor = UIColor.white
         
-        button = UIButton(frame: CGRect())
+        let button = UIButton()
         
-        let selector = Selector(name: "changeMode", action: { (_, sender, _) in self.changeMode(sender: sender as! UIButton) })
+        button.isOpaque = true
         
+        #if os(iOS)
+        button.addTarget(self, action: #selector(_changeMode), for: .touchUpInside)
+        #else
+        let selector = Selector(name: "changeMode", action: { (_, sender, _) in self.changeMode(sender as! UIButton) })
         button.addTarget(self, action: selector, for: .touchUpInside)
+        #endif
         
         label.textAlignment = .center
         
@@ -61,6 +71,10 @@ final class ContentModeViewController: UIViewController {
         view.addSubview(label)
         
         view.backgroundColor = UIColor.blue
+        
+        self.button = button
+        self.label = label
+        self.logoView = logoView
     }
     
     override func viewWillLayoutSubviews() {
@@ -84,7 +98,11 @@ final class ContentModeViewController: UIViewController {
     
     // MARK: - Actions
     
-    func changeMode(sender: UIButton) {
+    #if os(iOS)
+    @IBAction func _changeMode(_ sender: UIButton) { changeMode(sender) }
+    #endif
+    
+    func changeMode(_ sender: UIButton) {
         
         let currentMode = logoView.contentMode
         

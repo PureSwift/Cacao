@@ -20,21 +20,11 @@ open class UITableView: UIScrollView {
         // UITableView properties
         self.style = style
         
-        // UIScrollView properties
+        // initialize
         super.init(frame: frame)
-        self.showsHorizontalScrollIndicator = false
-        self.showsVerticalScrollIndicator = true
-        //self.alwaysBounceVertical = true
-        self.bounces = true
         
-        
-        // UIView
-        switch style {
-        case .plain:
-            self.backgroundColor = .white
-        case .grouped:
-            break
-        }
+        // setup common
+        self.setupTableViewCommon()
     }
     
     public override convenience init(frame: CGRect) {
@@ -84,7 +74,7 @@ open class UITableView: UIScrollView {
     public var separatorStyle: UITableViewCellSeparatorStyle = .singleLine
     
     /// The color of separator rows in the table view.
-    public var separatorColor: UIColor? = UIColor(red: 0.88, green: 0.88, blue: 0.88)
+    public var separatorColor: UIColor? = UITableView.defaultSeparatorColor
     
     /// The effect applied to table separators.
     //public var separatorEffect: UIVisualEffect?
@@ -107,7 +97,7 @@ open class UITableView: UIScrollView {
     }
     
     /// Specifies the default inset of cell separators.
-    public var separatorInset: UIEdgeInsets = UIEdgeInsets()
+    public var separatorInset: UIEdgeInsets = UITableView.defaultSeparatorInset
     
     // MARK: - Creating Table View Cells
     
@@ -337,8 +327,8 @@ open class UITableView: UIScrollView {
         
         layoutTableView()
         
-        return cache.cells.cached.keys
-            .filter { bounds.intersects(rectForRow(at: $0)) } // get visible cells
+        return Array(cache.cells.cached.keys)
+            .filter { self.bounds.intersects(self.rectForRow(at: $0)) } // get visible cells
             .sorted()
     }
     
@@ -418,7 +408,7 @@ open class UITableView: UIScrollView {
             // select new row
             if let indexPath = indexPath {
                 
-                cellForRow(at: indexPath)?.selected = true
+                cellForRow(at: indexPath)?.isSelected = true
             }
         }
         
@@ -434,7 +424,7 @@ open class UITableView: UIScrollView {
             else { return }
         
         // FIXME: deselect animated
-        self.cellForRow(at: indexPath)?.selected = false
+        self.cellForRow(at: indexPath)?.isSelected = false
         self.indexPathForSelectedRow = nil
     }
     
@@ -554,7 +544,7 @@ open class UITableView: UIScrollView {
         
         // clear selection
         indexPathForSelectedRow = nil
-        //highlightedRow = nil
+        indexPathForHighlightedRow = nil
         
         // rebuild section cache
         updateSectionsCache()
@@ -674,9 +664,13 @@ open class UITableView: UIScrollView {
     
     // MARK: - Private
     
-    private static let defaultRowHeight: CGFloat = 43
+    internal static let defaultRowHeight: CGFloat = 44
     
-    private static let defaultHeaderFooterHeight: CGFloat = 22
+    internal static let defaultHeaderFooterHeight: CGFloat = 22
+    
+    internal static let defaultSeparatorColor = UIColor(red: 0.88, green: 0.88, blue: 0.88)
+    
+    internal static let defaultSeparatorInset = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 0)
     
     private static let defaultDataSource = DefaultDataSource()
     
@@ -700,6 +694,25 @@ open class UITableView: UIScrollView {
     
     /// An index path identifying the row and section of the highlighted row.
     private var indexPathForHighlightedRow: IndexPath?
+    
+    private func setupTableViewCommon() {
+        
+        // set default values
+        
+        // UIScrollView properties
+        self.showsHorizontalScrollIndicator = false
+        self.showsVerticalScrollIndicator = true
+        //self.alwaysBounceVertical = true
+        self.bounces = true
+        
+        // UIView
+        switch style {
+        case .plain:
+            self.backgroundColor = .white
+        case .grouped:
+            break
+        }
+    }
     
     @inline(__always)
     private func reloadDataIfNeeded() {
@@ -886,10 +899,11 @@ open class UITableView: UIScrollView {
                 
                 // configure cell
                 cell.frame = rowRect
+                cell.tableView = self
                 cell.backgroundColor = backgroundColor
-                cell.highlighted = indexPath == indexPathForHighlightedRow
-                //cell.configureSeparator()
-                cell.selected = indexPathsForSelectedRows?.contains(indexPath) ?? false
+                cell.isHighlighted = indexPath == indexPathForHighlightedRow
+                cell.isSelected = indexPathsForSelectedRows?.contains(indexPath) ?? false
+                cell.configureSeparator(style: separatorStyle, color: separatorColor)
                 
                 // add cell as subview
                 addSubview(cell)
@@ -974,7 +988,7 @@ open class UITableView: UIScrollView {
     }
 }
 
-// MARK: - Supporting Types
+// MARK: - Private Supporting Types
 
 private extension UITableView {
     
@@ -1004,7 +1018,6 @@ private extension UITableView {
     
     struct Section {
         
-        var rowsHeight: CGFloat = 0.0
         var headerHeight: CGFloat = 0.0
         var footerHeight: CGFloat = 0.0
         var rowHeights = [CGFloat]()
@@ -1017,6 +1030,12 @@ private extension UITableView {
             
             @inline(__always)
             get { return rowHeights.count }
+        }
+        
+        var rowsHeight: CGFloat {
+            
+            @inline(__always)
+            get { return rowHeights.reduce(0, { $0 + $1 }) }
         }
         
         var sectionHeight: CGFloat {
@@ -1077,6 +1096,31 @@ private extension UITableView {
         fileprivate init() { }
     }
 }
+
+fileprivate final class UITableViewSubviewManager {
+    
+    private(set) weak var tableView: UITableView!
+    
+    private(set) var cellsReadyForReuse = [IndexPath: UITableViewCell]()
+    
+    private(set) var reusableCells = Set<UITableViewCell>()
+    
+    private(set)var dropAnimationCells = Set<UITableViewCell>()
+    
+    private(set) var reusePreventedCells = Set<UITableViewCell>()
+    
+    fileprivate init(tableView: UITableView) {
+        
+        self.tableView = tableView
+    }
+    
+    func beginDropAnimation(for cell: UITableViewCell) {
+        
+        
+    }
+}
+
+// MARK: - Supporting Types
 
 /// The style of the table view.
 public enum UITableViewStyle: Int {

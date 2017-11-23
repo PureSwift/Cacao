@@ -6,17 +6,15 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import struct Foundation.CGRect
+import Foundation
 import CSDL2
 import SDL
 import Silica
 
 public final class UIScreen {
     
-    public static internal(set) var main: UIScreen!
+    public static var main: UIScreen { return _main }
+    internal static var _main: UIScreen!
     
     public static var screens: [UIScreen] { return [UIScreen.main] }
     

@@ -12,8 +12,13 @@
 #endif
 
 import Foundation
-import Cacao
-import Silica
+
+#if os(iOS)
+    import UIKit
+#else
+    import Cacao
+    import Silica
+#endif
 
 final class ScrollViewController: UIViewController {
     
@@ -29,13 +34,13 @@ final class ScrollViewController: UIViewController {
     
     override func loadView() {
         
-        view = UIView(frame: CGRect())
+        view = UIView()
         view.backgroundColor = UIColor.white
         
-        scrollView = UIScrollView(frame: CGRect())
+        scrollView = UIScrollView()
         view.addSubview(scrollView)
         
-        contentView = UIView(frame: CGRect())
+        contentView = UIView()
         contentView.backgroundColor = UIColor.blue
         contentView.isUserInteractionEnabled = false
         scrollView.addSubview(contentView)

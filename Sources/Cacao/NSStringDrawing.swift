@@ -39,7 +39,9 @@ public extension String {
         
         let descender = (CGFloat(font.cgFont.scaledFont.descent) * font.pointSize) / CGFloat(font.cgFont.scaledFont.unitsPerEm)
         
-        textFrame.size.height -= descender
+        
+        textFrame.size.height = textFrame.size.height - descender
+        //textFrame.size.height -= descender // Swift 3 error
         
         return textFrame
     }
