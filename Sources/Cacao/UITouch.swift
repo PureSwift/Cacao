@@ -11,9 +11,10 @@ import Silica
 /// An object representing the location, size, movement, and force of a touch occurring on the screen.
 public final class UITouch: NSObject {
     
-    internal init(_ touch: Touch) {
+    internal init(touch: Touch, inputType: InputType) {
         
         self.touches = [touch]
+        self.inputType = inputType
         
         super.init()
     }
@@ -51,6 +52,9 @@ public final class UITouch: NSObject {
     }
     
     // MARK: - Getting the Location of a Touch
+    
+    // Cacao Extension
+    public let inputType: InputType
     
     /// The view to which touches are being delivered, if any.
     public var view: UIView? { return touches.last?.view }
@@ -123,6 +127,15 @@ public enum UITouchPhase: Int {
 }
 
 // MARK: - Internal
+
+public extension UITouch {
+    
+    public enum InputType {
+        
+        case touchscreen
+        case mouse
+    }
+}
 
 internal extension UITouch {
     

@@ -67,8 +67,8 @@ internal final class UIEventEnvironment {
         let eventType = SDL_EventType(rawValue: sdlEvent.type)
         
         // FIXME: Implement tablet touch event
-        guard sdlEvent.button.which != .max
-            else { return nil }
+        //guard sdlEvent.button.which != .max
+        //    else { return nil }
         
         let screenLocation = CGPoint(x: CGFloat(sdlEvent.button.x),
                                      y: CGFloat(sdlEvent.button.y))
@@ -86,10 +86,23 @@ internal final class UIEventEnvironment {
             event = UITouchesEvent(timestamp: timestamp)
         }
         
-        /// Only the key window can recieve touch input
+        // get UIView touched
+        // Only the key window can recieve touch input
         guard let window = UIApplication.shared.keyWindow,
             let view = window.hitTest(screenLocation, with: event)
             else { return nil }
+        
+        // get UIGestureRecognizer touched
+        var gestures = [UIGestureRecognizer]()
+        
+        var gestureView: UIView? = view
+        
+        while let view = gestureView {
+            
+            gestures += (view.gestureRecognizers ?? [])
+            
+            gestureView = view.superview
+        }
         
         let touch: UITouch
         
@@ -123,7 +136,7 @@ internal final class UIEventEnvironment {
                                               phase: newPhase,
                                               view: view,
                                               window: window,
-                                              gestureRecognizers: view.gestureRecognizers ?? [])
+                                              gestureRecognizers: gestures)
             
             touch.update(internalTouch)
             
@@ -139,9 +152,9 @@ internal final class UIEventEnvironment {
                                               phase: .began,
                                               view: view,
                                               window: window,
-                                              gestureRecognizers: view.gestureRecognizers ?? [])
+                                              gestureRecognizers: gestures)
             
-            touch = UITouch(internalTouch)
+            touch = UITouch(touch: internalTouch, inputType: .mouse)
             
             event.addTouch(touch)
         }
@@ -160,7 +173,7 @@ internal final class UIEventEnvironment {
             
             touchesEvent = nil
         }
-        
+                
         return event
     }
     

@@ -866,7 +866,7 @@ open class UIView: UIResponder {
         atEnd ? gestureRecognizers?.append(gestureRecognizer) : gestureRecognizers?.insert(gestureRecognizer, at: 0)
         
         // update gesture environment
-        UIApplication.shared.gestureEnvironment.addGestureRecognizer(gestureRecognizer)
+        //UIApplication.shared.gestureEnvironment.addGestureRecognizer(gestureRecognizer)
     }
     
     /// Detaches a gesture recognizer from the receiving view.
