@@ -15,8 +15,8 @@ let package = Package(
     ],
     dependencies: [
         .Package(url: "https://github.com/PureSwift/Silica.git", majorVersion: 1),
-		.Package(url: "https://github.com/PureSwift/Cairo.git", majorVersion: 1),
-		.Package(url: "https://github.com/PureSwift/SDL.git", majorVersion: 1),
+				.Package(url: "https://github.com/PureSwift/Cairo.git", majorVersion: 1),
+				.Package(url: "https://github.com/PureSwift/SDL.git", majorVersion: 1),
         .Package(url: "https://github.com/PureSwift/CSDL2.git", majorVersion: 1)
     ],
     exclude: ["iOS", "Resources"]
