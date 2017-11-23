@@ -25,4 +25,3 @@ script:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export PATH=$(pwd)/tests/$SWIFT_VERSION-ubuntu14.04/usr/bin:"${PATH}" ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then swift build ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then swift test ; fi
-  
