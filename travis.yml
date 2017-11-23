@@ -1,0 +1,28 @@
+language: generic
+osx_image: xcode9
+os:
+  - linux
+sudo: required
+dist: trusty
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install carthage ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then carthage bootstrap ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install cairo sdl2 lcms2 ; fi
+  
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install clang libcairo-dev libsdl2-dev liblcms2-dev ; fi
+install:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then SWIFT_DIR=tests ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir $SWIFT_DIR ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then curl https://swift.org/builds/$SWIFT_VERSION/ubuntu1404/$SWIFT_VERSION/$SWIFT_VERSION-ubuntu14.04.tar.gz -s | tar xz -C $SWIFT_DIR &> /dev/null ; fi
+env:
+  - SWIFT_VERSION=swift-4.0.2-RELEASE-ubuntu14.04
+script:
+  - uname
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then swift package generate-xcodeproj ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then xctool test -project Cacao.xcodeproj -scheme "CacaoDemo" -sdk macosx ONLY_ACTIVE_ARCH=NO ; fi
+  
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export PATH=$(pwd)/tests/$SWIFT_VERSION-ubuntu14.04/usr/bin:"${PATH}" ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then swift build ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then swift test ; fi
+  
