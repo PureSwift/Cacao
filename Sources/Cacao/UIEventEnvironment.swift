@@ -14,7 +14,7 @@ internal final class UIEventEnvironment {
     
     internal private(set) weak var application: UIApplication!
     
-    internal private(set) var eventQueue = [SDL_Event]()
+    internal private(set) var eventQueue = [IOHIDEvent]()
     
     internal var commitTimeForTouchEvents: TimeInterval = 0
     
@@ -27,185 +27,165 @@ internal final class UIEventEnvironment {
         self.application = application
     }
     
-    internal func enqueueHIDEvent(_ event: SDL_Event) {
+    internal func enqueueHIDEvent(_ event: IOHIDEvent) {
         
         eventQueue.append(event) // prepend
     }
     
     internal func handleEventQueue() {
         
-        for sdlEvent in eventQueue {
+        for hidEvent in eventQueue {
             
-            guard let event = event(for: sdlEvent)
-                else { handleNonUIEvent(sdlEvent); continue }
+            guard let event = event(for: hidEvent)
+                else { handleNonUIEvent(hidEvent); continue }
             
             application.sendEvent(event)
         }
         
-        if let sdlEvent = eventQueue.first {
+        if let hidEvent = eventQueue.first {
             
-            print("Processed \(eventQueue.count) events (\(SDL_GetTicks() - sdlEvent.common.timestamp)ms)")
+            print("Processed \(eventQueue.count) events (\(SDL_GetTicks() - UInt32(hidEvent.timestamp))ms)")
         }
         
         // clear queue
         eventQueue.removeAll()
     }
     
-    private func event(for sdlEvent: SDL_Event) -> UIEvent? {
+    private func event(for hidEvent: IOHIDEvent) -> UIEvent? {
         
-        let eventType = SDL_EventType(rawValue: sdlEvent.type)
-        
-        switch eventType {
+        switch hidEvent.data {
             
-        case SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP, SDL_MOUSEMOTION:
+        case let .mouse(mouseEvent, screenLocation):
             
-            return mouseEvent(for: sdlEvent)
-        
+            let timestamp = Double(hidEvent.timestamp) / 1000
+            
+            let event: UITouchesEvent
+            
+            if let currentEvent = touchesEvent {
+                
+                event = currentEvent
+                
+            } else {
+                
+                event = UITouchesEvent(timestamp: timestamp)
+            }
+            
+            // get UIView touched
+            // Only the key window can recieve touch input
+            guard let window = UIApplication.shared.keyWindow,
+                let view = window.hitTest(screenLocation, with: event)
+                else { return nil }
+            
+            // get UIGestureRecognizer touched
+            var gestures = [UIGestureRecognizer]()
+            
+            var gestureView: UIView? = view
+            
+            while let view = gestureView {
+                
+                gestures += (view.gestureRecognizers ?? [])
+                
+                gestureView = view.superview
+            }
+            
+            let touch: UITouch
+            
+            if let previousTouch = event.allTouches?.first {
+                
+                touch = previousTouch
+                
+                let newPhase: UITouchPhase
+                
+                assert(previousTouch.phase != .ended, "Did not create new event after touches ended")
+                
+                // touches ended
+                if mouseEvent == .up {
+                    
+                    newPhase = .ended
+                    
+                } else {
+                    
+                    if touch.location == screenLocation {
+                        
+                        newPhase = .stationary
+                        
+                    } else {
+                        
+                        newPhase = .moved
+                    }
+                }
+                
+                let internalTouch = UITouch.Touch(location: screenLocation,
+                                                  timestamp: timestamp,
+                                                  phase: newPhase,
+                                                  view: view,
+                                                  window: window,
+                                                  gestureRecognizers: gestures)
+                
+                touch.update(internalTouch)
+                
+            } else {
+                
+                guard mouseEvent == .down
+                    else { return nil }
+                
+                // new touch sequence
+                
+                let internalTouch = UITouch.Touch(location: screenLocation,
+                                                  timestamp: timestamp,
+                                                  phase: .began,
+                                                  view: view,
+                                                  window: window,
+                                                  gestureRecognizers: gestures)
+                
+                touch = UITouch(touch: internalTouch, inputType: .mouse)
+                
+                event.addTouch(touch)
+            }
+            
+            switch touch.phase {
+                
+            case .began:
+                
+                touchesEvent = event
+                
+            case .moved, .stationary:
+                
+                touchesEvent?.timestamp = timestamp
+                
+            case .ended, .cancelled:
+                
+                touchesEvent = nil
+            }
+            
+            return event
+            
         default:
             
             return nil
         }
     }
     
-    private func mouseEvent(for sdlEvent: SDL_Event) -> UIEvent? {
-        
-        let eventType = SDL_EventType(rawValue: sdlEvent.type)
-        
-        // FIXME: Implement tablet touch event
-        //guard sdlEvent.button.which != .max
-        //    else { return nil }
-        
-        let screenLocation = CGPoint(x: CGFloat(sdlEvent.button.x),
-                                     y: CGFloat(sdlEvent.button.y))
-        
-        let timestamp = Double(sdlEvent.button.timestamp) / 1000
-        
-        let event: UITouchesEvent
-        
-        if let currentEvent = touchesEvent {
-            
-            event = currentEvent
-            
-        } else {
-            
-            event = UITouchesEvent(timestamp: timestamp)
-        }
-        
-        // get UIView touched
-        // Only the key window can recieve touch input
-        guard let window = UIApplication.shared.keyWindow,
-            let view = window.hitTest(screenLocation, with: event)
-            else { return nil }
-        
-        // get UIGestureRecognizer touched
-        var gestures = [UIGestureRecognizer]()
-        
-        var gestureView: UIView? = view
-        
-        while let view = gestureView {
-            
-            gestures += (view.gestureRecognizers ?? [])
-            
-            gestureView = view.superview
-        }
-        
-        let touch: UITouch
-        
-        if let previousTouch = event.allTouches?.first {
-            
-            touch = previousTouch
-            
-            let newPhase: UITouchPhase
-            
-            assert(previousTouch.phase != .ended, "Did not create new event after touches ended")
-            
-            // touches ended
-            if eventType == SDL_MOUSEBUTTONUP {
-                
-                newPhase = .ended
-                
-            } else {
-                
-                if touch.location == screenLocation {
-                    
-                    newPhase = .stationary
-                    
-                } else {
-                    
-                    newPhase = .moved
-                }
-            }
-            
-            let internalTouch = UITouch.Touch(location: screenLocation,
-                                              timestamp: timestamp,
-                                              phase: newPhase,
-                                              view: view,
-                                              window: window,
-                                              gestureRecognizers: gestures)
-            
-            touch.update(internalTouch)
-            
-        } else {
-            
-            guard eventType == SDL_MOUSEBUTTONDOWN
-                else { return nil }
-            
-            // new touch sequence
-            
-            let internalTouch = UITouch.Touch(location: screenLocation,
-                                              timestamp: timestamp,
-                                              phase: .began,
-                                              view: view,
-                                              window: window,
-                                              gestureRecognizers: gestures)
-            
-            touch = UITouch(touch: internalTouch, inputType: .mouse)
-            
-            event.addTouch(touch)
-        }
-        
-        switch touch.phase {
-            
-        case .began:
-            
-            touchesEvent = event
-            
-        case .moved, .stationary:
-            
-            touchesEvent?.timestamp = timestamp
-            
-        case .ended, .cancelled:
-            
-            touchesEvent = nil
-        }
-                
-        return event
-    }
-    
-    private func handleNonUIEvent(_ sdlEvent: SDL_Event) {
+    private func handleNonUIEvent(_ hidEvent: IOHIDEvent) {
         
         guard let app = self.application
             else { fatalError("\(UIApplication.self) released") }
         
-        let eventType = SDL_EventType(rawValue: sdlEvent.type)
-        
-        switch eventType {
+        switch hidEvent.data {
             
-        case SDL_QUIT, SDL_APP_TERMINATING:
+        case .quit:
             
             app.quit()
             
-        case SDL_WINDOWEVENT:
-            
-            let windowEvent = SDL_WindowEventID(rawValue: SDL_WindowEventID.RawValue(sdlEvent.window.event))
+        case let .window(windowEvent):
             
             switch windowEvent {
                 
-            case SDL_WINDOWEVENT_SIZE_CHANGED:
+            case .sizeChange:
                 
                 UIScreen.main.updateSize()
                 
-            case SDL_WINDOWEVENT_FOCUS_GAINED, SDL_WINDOWEVENT_FOCUS_LOST:
+            case .focusChange:
                 
                 #if os(Linux)
                     UIScreen.main.needsDisplay = true
@@ -213,7 +193,6 @@ internal final class UIEventEnvironment {
                     break
                 #endif
                 
-            default: break
             }
             
         default:

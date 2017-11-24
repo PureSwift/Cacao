@@ -21,7 +21,7 @@ internal final class UIEventFetcher {
     }
     
     // The queue of incoming events
-    private var incomingHIDEvents = [SDL_Event]()
+    private var incomingHIDEvents = [IOHIDEvent]()
     
     // timer used to push events along with display refresh
     private var displayLink: CADisplayLink!
@@ -52,8 +52,11 @@ internal final class UIEventFetcher {
         // get all events in SDL event queue
         while SDL_PollEvent(&sdlEvent) != 0 {
             
+            guard let hidEvent = IOHIDEvent(sdlEvent: &sdlEvent)
+                else { continue }
+            
             eventCount += 1
-            self.receiveHIDEvent(sdlEvent)
+            self.receiveHIDEvent(hidEvent)
         }
         
         // signal events availible
@@ -62,10 +65,19 @@ internal final class UIEventFetcher {
         return eventCount
     }
     
-    private func receiveHIDEvent(_ event: SDL_Event) {
+    private func receiveHIDEvent(_ event: IOHIDEvent) {
         
-        // add to queue of incoming events
-        self.incomingHIDEvents.append(event)
+        if let lastEvent = incomingHIDEvents.last,
+            event.isContinuation(of: lastEvent) {
+            
+            // replace last event
+            incomingHIDEvents[incomingHIDEvents.count - 1] = event
+            
+        } else {
+            
+            // add to queue of incoming events
+            incomingHIDEvents.append(event)
+        }
         
         /*
         // determine if digitizer event
@@ -126,7 +138,10 @@ internal final class UIEventFetcher {
     private func signalEventsAvailable(with reason: EventsAvailableReason = .none) {
         
         // log signaling reason
-        UIApplication.shared.options.log?("\(#function) with reason \(reason)")
+        if incomingHIDEvents.isEmpty == false {
+            
+            print("\(incomingHIDEvents.count) events availible with reason \(reason)")
+        }
         
         // signal
         //self.shouldSignalOnDisplayLink = false

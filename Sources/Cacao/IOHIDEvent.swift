@@ -89,6 +89,25 @@ internal struct IOHIDEvent {
         }
     }
     
+    /// Merge the data if an event into another
+    func isContinuation(of event: IOHIDEvent) -> Bool {
+        
+        switch (self.data, event.data) {
+            
+        case (.quit, .quit):
+            return true
+            
+        case let (.mouse(lhsMouseEvent, _), .mouse(rhsMouseEvent, _)):
+            return lhsMouseEvent == rhsMouseEvent
+            
+        case (.window(_), .window(_)):
+            
+            return false
+            
+        default:
+            return false
+        }
+    }
 }
 
 internal extension IOHIDEvent {
