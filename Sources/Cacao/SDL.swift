@@ -66,10 +66,17 @@ internal func SDLEventRun() {
         let startTime = SDL_GetTicks()
         
         // poll events (should never block)
-        eventFetcher.pollEvents()
+        let eventCount = eventFetcher.pollEvents()
+        
+        if eventCount > 0 {
+            
+            print("Polled \(eventCount) events (\(SDL_GetTicks() - startTime)ms)")
+        }
         
         // run loop
+        let runLoopStartTime = SDL_GetTicks()
         runloop.run(mode: .defaultRunLoopMode, before: Date() + (1.0 / TimeInterval(framesPerSecond)))
+        print("Runloop took (\(SDL_GetTicks() - runLoopStartTime)ms)")
         
         // render to screen
         screen.update()

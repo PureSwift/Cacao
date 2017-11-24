@@ -29,7 +29,7 @@ internal final class UIEventEnvironment {
     
     internal func enqueueHIDEvent(_ event: SDL_Event) {
         
-        eventQueue.insert(event, at: 0) // prepend
+        eventQueue.append(event) // prepend
     }
     
     internal func handleEventQueue() {
@@ -40,6 +40,11 @@ internal final class UIEventEnvironment {
                 else { handleNonUIEvent(sdlEvent); continue }
             
             application.sendEvent(event)
+        }
+        
+        if let sdlEvent = eventQueue.first {
+            
+            print("Processed \(eventQueue.count) events (\(SDL_GetTicks() - sdlEvent.common.timestamp)ms)")
         }
         
         // clear queue

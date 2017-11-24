@@ -37,7 +37,7 @@ internal final class UIEventFetcher {
     // MARK: - Methods
     
     /// Poll SDL events on the main run loop
-    internal func pollEvents() {
+    internal func pollEvents() -> Int {
         
         #if os(macOS) || swift(>=4.0)
         assert(Thread.current.isMainThread, "Should only be called from main thread")
@@ -47,14 +47,19 @@ internal final class UIEventFetcher {
         
         var sdlEvent = SDL_Event()
         
+        var eventCount = 0
+        
         // get all events in SDL event queue
         while SDL_PollEvent(&sdlEvent) != 0 {
             
+            eventCount += 1
             self.receiveHIDEvent(sdlEvent)
         }
         
         // signal events availible
         self.signalEventsAvailable(with: .eventsPolled)
+        
+        return eventCount
     }
     
     private func receiveHIDEvent(_ event: SDL_Event) {
