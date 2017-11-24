@@ -60,6 +60,10 @@ internal func SDLEventRun() {
     // enter main loop
     let runloop = RunLoop.current
     
+    typealias SDLTimeMS = UInt32
+    
+    let expectedLoopTime = SDLTimeMS(1000 / framesPerSecond)
+    
     // run until app is finished
     while _UIApp.isDone == false {
         
@@ -82,11 +86,11 @@ internal func SDLEventRun() {
         screen.update()
         
         // sleep to save energy
-        let frameDuration = Int(SDL_GetTicks() - startTime)
+        let frameDuration = SDL_GetTicks() - startTime
         
-        if frameDuration < (1000 / framesPerSecond) {
+        if frameDuration < expectedLoopTime {
             
-            SDL_Delay(UInt32((1000 / framesPerSecond) - frameDuration))
+            SDL_Delay(expectedLoopTime - frameDuration)
         }
     }
 }
