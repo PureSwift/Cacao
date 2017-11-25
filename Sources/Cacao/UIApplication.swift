@@ -59,7 +59,7 @@ public final class UIApplication: UIResponder {
         
         super.init()
     }
-        
+    
     // MARK: - Getting the App Delegate
     
     public fileprivate(set) weak var delegate: UIApplicationDelegate?
@@ -128,6 +128,8 @@ public final class UIApplication: UIResponder {
     
     internal var physicalKeyboardEvent: UIPhysicalKeyboardEvent? { return eventDispatcher.environment.physicalKeyboardEvent }
     
+    internal var wheelEvent: UIWheelEvent? { return eventDispatcher.environment.wheelEvent }
+    
     internal private(set) var alwaysHitTestsForMainScreen: Bool = false
     
     internal func quit() {
@@ -159,6 +161,11 @@ public final class UIApplication: UIResponder {
     private func shouldAttemptOpenURL() {  }
     
     private var isRunningInTaskSwitcher: Bool = false
+    
+    public override func wheelChanged(with event: UIWheelEvent) {
+        
+        super.wheelChanged(with: event)
+    }
 }
 
 fileprivate extension UIApplication {

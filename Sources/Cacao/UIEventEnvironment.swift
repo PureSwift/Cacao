@@ -22,6 +22,10 @@ internal final class UIEventEnvironment {
     
     internal private(set) var physicalKeyboardEvent: UIPhysicalKeyboardEvent?
     
+    internal private(set) var wheelEvent: UIWheelEvent?
+    
+    internal private(set) var gameControllerEvent: UIGameControllerEvent?
+    
     internal init(application: UIApplication) {
         
         self.application = application

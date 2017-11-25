@@ -37,6 +37,7 @@ internal final class UIEventFetcher {
     // MARK: - Methods
     
     /// Poll SDL events on the main run loop
+    @discardableResult
     internal func pollEvents() -> Int {
         
         #if os(macOS) || swift(>=4.0)

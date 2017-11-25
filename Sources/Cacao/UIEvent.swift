@@ -111,4 +111,17 @@ public enum UIEventType: Int {
 public enum UIEventSubtype: Int {
     
     case none
+    case motionShake
+    case remoteControlPlay
+    case remoteControlPause
+    case remoteControlStop
+    case remoteControlTogglePlayPause
+    case remoteControlNextTrack
+    case remoteControlPreviousTrack
+    case remoteControlBeginSeekingBackward
+    case remoteControlEndSeekingBackward
+    case remoteControlBeginSeekingForward
+    case remoteControlEndSeekingForward
+    
+    
 }
