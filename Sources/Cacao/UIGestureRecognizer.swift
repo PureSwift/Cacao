@@ -5,8 +5,7 @@
 //  Created by Alsey Coleman Miller on 6/8/17.
 //
 
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
+import Foundation
 
 /// The base class for concrete gesture recognizers.
 ///
@@ -14,7 +13,7 @@ import struct Foundation.CGPoint
 /// for recognizing a sequence of touches (or other input) and acting on that recognition.
 /// When one of these objects recognizes a common gesture or, in some cases,
 /// a change in the gesture, it sends an action message to each designated target object.
-open class UIGestureRecognizer {
+open class UIGestureRecognizer: NSObject {
     
     // MARK: - Internal Properties
     
@@ -27,17 +26,16 @@ open class UIGestureRecognizer {
     internal weak var gestureEnvironment: UIGestureEnvironment?
     
     // MARK: - Initializing a Gesture Recognizer
-    
-    public init() { }
-    
+        
     // Valid action method signatures:
     //     -(void)handleGesture;
     //     -(void)handleGesture:(UIGestureRecognizer*)gestureRecognizer;
     
     /// Initializes an allocated gesture-recognizer object with a target and an action selector.
     public init(targetAction: TargetAction) {
+        super.init()
         
-        addTarget(targetAction)
+        self.addTarget(targetAction)
     }
     
     // MARK: - Adding and Removing Targets and Actions

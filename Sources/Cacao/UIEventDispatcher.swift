@@ -65,8 +65,8 @@ internal final class UIEventDispatcher {
         self.collectHIDEventsRunLoopSource = source
     }
     
-    fileprivate func handleHIDEventFetcherDrain() {
-        
+    internal func handleHIDEventFetcherDrain() {
+                
         eventFetcher?.drainEvents(into: environment)
         environment.handleEventQueue()
     }

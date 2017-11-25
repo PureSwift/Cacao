@@ -21,7 +21,7 @@ internal final class UIEventFetcher {
     }
     
     // The queue of incoming events
-    private var incomingHIDEvents = [SDL_Event]()
+    private var incomingHIDEvents = [IOHIDEvent]()
     
     // timer used to push events along with display refresh
     private var displayLink: CADisplayLink!
@@ -37,7 +37,8 @@ internal final class UIEventFetcher {
     // MARK: - Methods
     
     /// Poll SDL events on the main run loop
-    internal func pollEvents() {
+    @discardableResult
+    internal func pollEvents() -> Int {
         
         #if os(macOS) || swift(>=4.0)
         assert(Thread.current.isMainThread, "Should only be called from main thread")
@@ -47,19 +48,37 @@ internal final class UIEventFetcher {
         
         var sdlEvent = SDL_Event()
         
+        var eventCount = 0
+        
         // get all events in SDL event queue
         while SDL_PollEvent(&sdlEvent) != 0 {
             
-            self.receiveHIDEvent(sdlEvent)
+            guard let hidEvent = IOHIDEvent(sdlEvent: &sdlEvent)
+                else { continue }
+            
+            eventCount += 1
+            self.receiveHIDEvent(hidEvent)
         }
         
-        self.eventFetcherSink?.eventFetcherDidReceiveEvents(self)
+        // signal events availible
+        self.signalEventsAvailable(with: .eventsPolled)
+        
+        return eventCount
     }
     
-    private func receiveHIDEvent(_ event: SDL_Event) {
+    private func receiveHIDEvent(_ event: IOHIDEvent) {
         
-        // add to queue of incoming events
-        self.incomingHIDEvents.append(event)
+        if let lastEvent = incomingHIDEvents.last,
+            event.isContinuation(of: lastEvent) {
+            
+            // replace last event
+            incomingHIDEvents[incomingHIDEvents.count - 1] = event
+            
+        } else {
+            
+            // add to queue of incoming events
+            incomingHIDEvents.append(event)
+        }
         
         /*
         // determine if digitizer event
@@ -117,10 +136,13 @@ internal final class UIEventFetcher {
         */
     }
     
-    private func signalEventsAvailable(with reason: EventsAvailableReason = .none, filteredEventCount: Int = 0) {
+    private func signalEventsAvailable(with reason: EventsAvailableReason = .none) {
         
         // log signaling reason
-        UIApplication.shared.options.log?("\(#function) with reason \(reason) and \(filteredEventCount) filtered events.")
+        if incomingHIDEvents.isEmpty == false {
+            
+            print("\(incomingHIDEvents.count) events availible with reason \(reason)")
+        }
         
         // signal
         //self.shouldSignalOnDisplayLink = false
@@ -132,8 +154,6 @@ internal final class UIEventFetcher {
         incomingHIDEvents.forEach { environment.enqueueHIDEvent($0)  }
         
         incomingHIDEvents.removeAll()
-        
-        //environment.commitTimeForTouchEvents = self.commitTimeForTouchEvents
     }
 }
 
@@ -151,5 +171,6 @@ private extension UIEventFetcher {
         case none
         case sinkChanged // 0x1
         case displayLinkDidFire // 0x2
+        case eventsPolled // 0x3
     }
 }

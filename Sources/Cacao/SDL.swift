@@ -60,26 +60,38 @@ internal func SDLEventRun() {
     // enter main loop
     let runloop = RunLoop.current
     
+    typealias SDLTimeMS = UInt32
+    
+    let expectedLoopTime = SDLTimeMS(1000 / framesPerSecond)
+    
     // run until app is finished
     while _UIApp.isDone == false {
         
         let startTime = SDL_GetTicks()
         
         // poll events (should never block)
-        eventFetcher.pollEvents()
+        let eventCount = eventFetcher.pollEvents()
+        
+        if eventCount > 0 {
+            
+            print("Polled \(eventCount) events (\(SDL_GetTicks() - startTime)ms)")
+        }
         
         // run loop
-        runloop.run(mode: .defaultRunLoopMode, before: Date() + 0.1)
+        let runLoopStartTime = SDL_GetTicks()
+        //runloop.run(mode: .defaultRunLoopMode, before: Date() + (1.0 / TimeInterval(framesPerSecond)))
+        _UIApp.eventDispatcher.handleHIDEventFetcherDrain()
+        if eventCount > 0 { print("Runloop took (\(SDL_GetTicks() - runLoopStartTime)ms)") }
         
         // render to screen
         screen.update()
         
         // sleep to save energy
-        let frameDuration = Int(SDL_GetTicks() - startTime)
+        let frameDuration = SDL_GetTicks() - startTime
         
-        if frameDuration < (1000 / framesPerSecond) {
+        if frameDuration < expectedLoopTime {
             
-            SDL_Delay(UInt32((1000 / framesPerSecond) - frameDuration))
+            SDL_Delay(expectedLoopTime - frameDuration)
         }
     }
 }

@@ -7,7 +7,9 @@
 
 import Foundation
 
-internal final class UIWheelEvent: UIEvent {
+public final class UIWheelEvent: UIEvent {
     
     public override var type: UIEventType { return .scrollWheel }
+    
+    public var wheelVelocity: CGFloat = 0
 }

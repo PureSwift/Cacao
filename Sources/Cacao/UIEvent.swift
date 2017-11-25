@@ -60,6 +60,13 @@ public class UIEvent {
         
         self.timestamp = timestamp
     }
+    
+    // MARK: - Private Methods
+    
+    internal func gestureRecognizers(for window: UIWindow) -> Set<UIGestureRecognizer> {
+        
+        return []
+    }
 }
 
 // MARK: - CustomStringConvertible
@@ -104,4 +111,17 @@ public enum UIEventType: Int {
 public enum UIEventSubtype: Int {
     
     case none
+    case motionShake
+    case remoteControlPlay
+    case remoteControlPause
+    case remoteControlStop
+    case remoteControlTogglePlayPause
+    case remoteControlNextTrack
+    case remoteControlPreviousTrack
+    case remoteControlBeginSeekingBackward
+    case remoteControlEndSeekingBackward
+    case remoteControlBeginSeekingForward
+    case remoteControlEndSeekingForward
+    
+    
 }

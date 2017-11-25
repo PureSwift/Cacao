@@ -23,6 +23,7 @@ open class UIResponder: NSObject {
     /// UIViewController similarly implements the method and returns its view’s superview.
     /// UIWindow returns the application object. UIApplication returns nil.
     open var next: UIResponder? {
+        
         return nil
     }
     
@@ -46,4 +47,13 @@ open class UIResponder: NSObject {
     open func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) { }
     
     open func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) { }
+    
+    // MARK: - Cacao Extensions
+    
+    open func wheelChanged(with event: UIWheelEvent) {
+        
+        next?.wheelChanged(with: event)
+    }
+    
+    
 }
