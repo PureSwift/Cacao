@@ -13,5 +13,15 @@ public final class UIWheelEvent: UIEvent {
     
     public let translation: CGSize
     
+    internal init(timestamp: TimeInterval, translation: CGSize) {
+        
+        self.translation = translation
+        
+        super.init(timestamp: timestamp)
+    }
     
+    internal override func sendEvent(to responder: UIResponder) {
+        
+        responder.wheelChanged(with: self)
+    }
 }

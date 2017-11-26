@@ -69,7 +69,6 @@ open class UIWindow: UIView {
             
             // send touches directly to views (legacy API)
             sendTouches(for: touchesEvent)
-            
         }
         
         // handle presses
@@ -80,6 +79,19 @@ open class UIWindow: UIView {
             gestureEnvironment.updateGestures(for: event, window: self)
             
             sendButtons(for: pressesEvent)
+            
+        } else if let moveEvent = event as? UIMoveEvent {
+            
+            if let focusResponder = self.focusResponder {
+                
+                moveEvent.sendEvent(to: focusResponder)
+            }
+            
+        } else {
+            
+            let responder = self.firstResponder
+            
+            event.sendEvent(to: responder)
         }
     }
     

@@ -46,7 +46,7 @@ public class UIEvent {
     ///
     /// The UIEventType constant returned by this property indicates the general type of this event—for example,
     /// whether it is a touch or motion event.
-    public var type: UIEventType { return  .touches }
+    public var type: UIEventType { fatalError("Should override for \(self)") }
     
     /// Returns the subtype of the event.
     ///
@@ -66,6 +66,11 @@ public class UIEvent {
     internal func gestureRecognizers(for window: UIWindow) -> Set<UIGestureRecognizer> {
         
         return []
+    }
+    
+    internal func sendEvent(to responder: UIResponder) {
+        
+        fatalError("Should override for \(self)")
     }
 }
 

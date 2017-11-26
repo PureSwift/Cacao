@@ -11,5 +11,17 @@ internal final class UIPhysicalKeyboardEvent: UIPressesEvent {
     
     public override var type: UIEventType { return .physicalKeyboard }
     
-    public private(set) var keyCode: Int = 0
+    //public let keyCode: Int
+    
+    //public let isKeyDown: Bool
+    
+}
+
+extension UIPhysicalKeyboardEvent {
+    
+    enum State {
+        
+        case pressed
+        case released
+    }
 }

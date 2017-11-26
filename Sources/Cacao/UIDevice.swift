@@ -71,7 +71,7 @@ public final class UIDevice {
         #elseif os(Android)
             return "Android"
         #elseif os(Linux)
-            return "Linux PC"
+            return "Linux"
         #endif
     }
     

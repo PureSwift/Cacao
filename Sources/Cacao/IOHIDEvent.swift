@@ -31,8 +31,6 @@ internal struct IOHIDEvent {
              SDL_MOUSEBUTTONUP,
              SDL_MOUSEMOTION:
             
-            //guard sdlEvent.touch
-            
             let mouseEvent: MouseEvent
             
             switch eventType {
@@ -89,7 +87,26 @@ internal struct IOHIDEvent {
             }
             
             self.data = .window(windowEvent)
+            /*
+        case SDL_KEYUP,
+             SDL_KEYDOWN:
             
+            let state: KeyState
+            
+            switch Int32(sdlEvent.key.state) {
+                
+            case SDL_PRESSED:
+                state = .pressed
+                
+            case SDL_RELEASED:
+                state = .released
+                
+            default:
+                fatalError("Invalid key state \(sdlEvent.key.state)")
+            }
+            
+            sdlEvent.key.keysym.keyCode
+            */
         default:
             
             return nil
@@ -149,5 +166,11 @@ internal extension IOHIDEvent {
         
         case sizeChange
         case focusChange
+    }
+    
+    enum KeyState {
+        
+        case pressed
+        case released
     }
 }

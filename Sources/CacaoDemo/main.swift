@@ -7,13 +7,13 @@
 //
 
 #if os(iOS) || os(tvOS)
-    
+
 import UIKit
 
 UIApplicationMain(0, nil, nil, NSStringFromClass(AppDelegate.self))
     
 #else
-    
+
 import Cacao
 
 var options = CacaoOptions()

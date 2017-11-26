@@ -171,6 +171,11 @@ public final class UIApplication: UIResponder {
         
         
     }
+    
+    internal func handlePhysicalButtonEvent(_ event: UIPhysicalKeyboardEvent) {
+        
+        
+    }
 }
 
 fileprivate extension UIApplication {

@@ -164,6 +164,14 @@ internal final class UIEventEnvironment {
             
             return event
             
+        case let .mouseWheel(translation):
+            
+            let event = UIWheelEvent(timestamp: timestamp, translation: translation)
+            
+            
+            
+            return event
+            
         default:
             
             return nil
