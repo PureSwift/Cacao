@@ -103,7 +103,7 @@ public enum UIEventType: Int {
     case physicalKeyboard = 0x4
     case move = 0x5
     
-    case scrollWheel = 0x7
+    case wheel = 0x7
     case gameController = 0x8
     case drag = 0x9
 }

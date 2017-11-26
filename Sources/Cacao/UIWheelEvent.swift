@@ -9,7 +9,9 @@ import Foundation
 
 public final class UIWheelEvent: UIEvent {
     
-    public override var type: UIEventType { return .scrollWheel }
+    public override var type: UIEventType { return .wheel }
     
-    public var wheelVelocity: CGFloat = 0
+    public let translation: CGSize
+    
+    
 }

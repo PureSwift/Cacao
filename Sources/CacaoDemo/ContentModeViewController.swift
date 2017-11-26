@@ -14,8 +14,9 @@
 
 import Foundation
 
-#if os(iOS)
+#if os(iOS) || os(tvOS)
     import UIKit
+    import CoreGraphics
 #else
     import Cacao
     import Silica
@@ -57,7 +58,7 @@ final class ContentModeViewController: UIViewController {
         
         button.isOpaque = true
         
-        #if os(iOS)
+        #if os(iOS) || os(tvOS)
         button.addTarget(self, action: #selector(_changeMode), for: .touchUpInside)
         #else
         let selector = Selector(name: "changeMode", action: { (_, sender, _) in self.changeMode(sender as! UIButton) })
@@ -98,7 +99,7 @@ final class ContentModeViewController: UIViewController {
     
     // MARK: - Actions
     
-    #if os(iOS)
+    #if os(iOS) || os(tvOS)
     @IBAction func _changeMode(_ sender: UIButton) { changeMode(sender) }
     #endif
     

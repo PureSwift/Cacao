@@ -166,6 +166,11 @@ public final class UIApplication: UIResponder {
         
         super.wheelChanged(with: event)
     }
+    
+    internal func sendButtonEvent(with pressInfo: UIPressInfo) {
+        
+        
+    }
 }
 
 fileprivate extension UIApplication {

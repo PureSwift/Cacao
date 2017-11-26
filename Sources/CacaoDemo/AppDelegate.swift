@@ -8,8 +8,9 @@
 
 import Foundation
 
-#if os(iOS)
+#if os(iOS) || os(tvOS)
     import UIKit
+    import CoreGraphics
 #else
     import Cacao
     import Silica
@@ -26,7 +27,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         print("Device: \(UIDevice.current.name)")
         print("Model: \(UIDevice.current.model)")
         print("System: \(UIDevice.current.systemName) \(UIDevice.current.systemVersion)")
+        #if !os(tvOS)
         print("Battery: \(UIDevice.current.batteryLevel) (\(UIDevice.current.batteryState))")
+        #endif
         print("FPS: \(UIScreen.main.maximumFramesPerSecond)")
         
         self.window = UIWindow(frame: UIScreen.main.bounds)

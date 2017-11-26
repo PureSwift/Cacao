@@ -14,8 +14,9 @@
 
 import Foundation
 
-#if os(iOS)
+#if os(iOS) || os(tvOS)
     import UIKit
+    import CoreGraphics
 #else
     import Cacao
     import Silica
