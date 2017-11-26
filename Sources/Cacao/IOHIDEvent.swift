@@ -13,7 +13,7 @@ internal struct IOHIDEvent {
     
     let timestamp: UInt
     
-    let data: Data
+    private(set) var data: Data
     
     init?(sdlEvent: inout SDL_Event) {
         
@@ -59,6 +59,13 @@ internal struct IOHIDEvent {
             
             self.data = .mouse(mouseEvent, screenLocation)
             
+        case SDL_MOUSEWHEEL:
+            
+            let translation = CGSize(width: CGFloat(sdlEvent.wheel.x),
+                                     height: CGFloat(sdlEvent.wheel.y))
+            
+            self.data = .mouseWheel(translation)
+            
         case SDL_WINDOWEVENT:
             
             let sdlWindowEvent = SDL_WindowEventID(rawValue: SDL_WindowEventID.RawValue(sdlEvent.window.event))
@@ -90,22 +97,34 @@ internal struct IOHIDEvent {
     }
     
     /// Merge the data if an event into another
-    func isContinuation(of event: IOHIDEvent) -> Bool {
+    func merge(event: IOHIDEvent) -> IOHIDEvent? {
         
         switch (self.data, event.data) {
             
         case (.quit, .quit):
-            return true
+            return event
             
         case let (.mouse(lhsMouseEvent, _), .mouse(rhsMouseEvent, _)):
-            return lhsMouseEvent == rhsMouseEvent
+            return lhsMouseEvent == rhsMouseEvent ? event : nil
             
         case (.window(_), .window(_)):
+            return nil
             
-            return false
+        case let (.mouseWheel(lhsTranslation), .mouseWheel(rhsTranslation)):
+            
+            var mergedEvent = event
+            
+            let size = CGSize(width: lhsTranslation.width + rhsTranslation.width,
+                              height: lhsTranslation.height + rhsTranslation.height)
+            
+            // update data
+            mergedEvent.data = .mouseWheel(size)
+            
+            return mergedEvent
             
         default:
-            return false
+            
+            return nil
         }
     }
 }
@@ -116,6 +135,7 @@ internal extension IOHIDEvent {
         
         case quit
         case mouse(MouseEvent, CGPoint)
+        case mouseWheel(CGSize)
         case touch
         case window(WindowEvent)
     }

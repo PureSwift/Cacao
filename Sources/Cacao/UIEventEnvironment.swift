@@ -57,12 +57,12 @@ internal final class UIEventEnvironment {
     
     private func event(for hidEvent: IOHIDEvent) -> UIEvent? {
         
+        let timestamp = Double(hidEvent.timestamp) / 1000
+        
         switch hidEvent.data {
             
         case let .mouse(mouseEvent, screenLocation):
-            
-            let timestamp = Double(hidEvent.timestamp) / 1000
-            
+                        
             let event: UITouchesEvent
             
             if let currentEvent = touchesEvent {

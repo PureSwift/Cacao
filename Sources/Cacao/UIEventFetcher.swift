@@ -69,10 +69,10 @@ internal final class UIEventFetcher {
     private func receiveHIDEvent(_ event: IOHIDEvent) {
         
         if let lastEvent = incomingHIDEvents.last,
-            event.isContinuation(of: lastEvent) {
+            let mergedEvent = lastEvent.merge(event: event) {
             
             // replace last event
-            incomingHIDEvents[incomingHIDEvents.count - 1] = event
+            incomingHIDEvents[incomingHIDEvents.count - 1] = mergedEvent
             
         } else {
             
