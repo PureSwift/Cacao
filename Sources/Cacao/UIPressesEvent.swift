@@ -22,11 +22,6 @@ public class UIPressesEvent: UIEvent {
         return Set(allPresses.filter({ ($0.gestureRecognizers ?? []).contains(where: { $0 === gesture }) }))
     }
     
-    internal func sendEvent(to responder: UIResponder) {
-        
-        responder.press
-    }
-    
     internal func physicalButtons(for window: UIWindow) -> Set<UIPress> {
         
         return Set(allPresses.filter({ $0.window === window }))
@@ -35,5 +30,15 @@ public class UIPressesEvent: UIEvent {
     internal func responders(for window: UIWindow) -> Set<UIResponder> {
         
         return Set(allPresses.flatMap({ $0.responder }))
+    }
+    
+    internal func physicalButtons(for responder: UIResponder) -> Set<UIPress> {
+        
+        return Set(allPresses.filter({ $0.responder === responder }))
+    }
+    
+    internal func physicalButtons(for responder: UIResponder, with phase: UIPressPhase) -> Set<UIPress> {
+        
+        return Set(allPresses.filter({ $0.responder === responder && $0.phase == phase }))
     }
 }

@@ -19,8 +19,11 @@ public final class UIWheelEvent: UIEvent {
         
         super.init(timestamp: timestamp)
     }
+}
+
+extension UIWheelEvent: UIResponderEvent {
     
-    internal override func sendEvent(to responder: UIResponder) {
+    func sendEvent(to responder: UIResponder) {
         
         responder.wheelChanged(with: self)
     }

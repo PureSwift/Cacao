@@ -52,7 +52,7 @@ public class UIEvent {
     ///
     /// The `UIEventSubtype` constant returned by this property indicates the subtype of the event
     /// in relation to the general type, which is returned from the type property.
-    public internal(set) var subtype: UIEventSubtype = .none
+    public var subtype: UIEventSubtype { return .none }
     
     // MARK: - Initialization
     
@@ -66,11 +66,6 @@ public class UIEvent {
     internal func gestureRecognizers(for window: UIWindow) -> Set<UIGestureRecognizer> {
         
         return []
-    }
-    
-    internal func sendEvent(to responder: UIResponder) {
-        
-        fatalError("Should override for \(self)")
     }
 }
 
@@ -129,4 +124,11 @@ public enum UIEventSubtype: Int {
     case remoteControlEndSeekingForward
     
     
+}
+
+// MARK: - Internal
+
+internal protocol UIResponderEvent: class {
+    
+    func sendEvent(to responder: UIResponder)
 }

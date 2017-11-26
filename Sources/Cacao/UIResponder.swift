@@ -219,5 +219,8 @@ open class UIResponder: NSObject {
         next?.wheelChanged(with: event)
     }
     
-    
+    open func move(with event: UIMoveEvent) {
+        
+        next?.move(with: event)
+    }
 }

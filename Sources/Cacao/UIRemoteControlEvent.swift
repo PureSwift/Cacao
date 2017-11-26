@@ -13,3 +13,12 @@ internal final class UIRemoteControlEvent: UIEvent {
     
     
 }
+
+extension UIRemoteControlEvent: UIResponderEvent {
+    
+    @inline(__always)
+    func sendEvent(to responder: UIResponder) {
+        
+        responder.remoteControlReceived(with: self)
+    }
+}

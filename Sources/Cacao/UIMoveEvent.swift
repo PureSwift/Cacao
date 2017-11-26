@@ -7,12 +7,20 @@
 
 import Foundation
 
-internal final class UIMoveEvent: UIEvent {
+public final class UIMoveEvent: UIEvent {
     
     public override var type: UIEventType { return .move }
     
-    private(set) var focusHeading: UInt = 0
+    public private(set) var focusHeading: UInt = 0
     
-    private(set) var moveDirection: Int = 0
+    public private(set) var moveDirection: Int = 0
 }
 
+extension UIMoveEvent: UIResponderEvent {
+    
+    @inline(__always)
+    func sendEvent(to responder: UIResponder) {
+        
+        responder.move(with: self)
+    }
+}

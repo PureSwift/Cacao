@@ -87,11 +87,15 @@ open class UIWindow: UIView {
                 moveEvent.sendEvent(to: focusResponder)
             }
             
-        } else {
+        } else if let responderEvent = event as? UIResponderEvent {
             
             let responder = self.firstResponder
             
             event.sendEvent(to: responder)
+            
+        } else {
+            
+            fatalError("Event not handled \(event)")
         }
     }
     
@@ -141,7 +145,12 @@ open class UIWindow: UIView {
     
     private func sendButtons(for event: UIPressesEvent) {
         
+        let responders = event.responders(for: self)
         
+        for responder in responders {
+            
+            
+        }
     }
 }
 
