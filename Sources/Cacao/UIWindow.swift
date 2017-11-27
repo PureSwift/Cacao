@@ -89,9 +89,10 @@ open class UIWindow: UIView {
             
         } else if let responderEvent = event as? UIResponderEvent {
             
-            let responder = self.firstResponder
-            
-            event.sendEvent(to: responder)
+            if let responder = self.firstResponder {
+                
+                event.sendEvent(to: responder)
+            }
             
         } else {
             
@@ -108,9 +109,18 @@ open class UIWindow: UIView {
     
     // MARK: - UIResponder
     
-    open override var next: UIResponder? {
+    public final override var next: UIResponder? {
         
         return UIApplication.shared
+    }
+    
+    public final override func becomeFirstResponder() -> Bool {
+        
+        guard let rootViewController = self.rootViewController,
+            rootViewController.becomeFirstResponder()
+            else { return super.becomeFirstResponder() }
+        
+        return true
     }
     
     // MARK: - Private Methods
@@ -151,6 +161,11 @@ open class UIWindow: UIView {
             
             
         }
+    }
+    
+    internal override var responderWindow: UIWindow? {
+        
+        return self
     }
 }
 

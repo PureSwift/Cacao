@@ -901,6 +901,17 @@ open class UIView: UIResponder {
         return viewController ?? superview
     }
     
+    open override func becomeFirstResponder() -> Bool {
+        
+        // CHECKME
+        return super.becomeFirstResponder()
+    }
+    
+    open override var canBecomeFirstResponder: Bool {
+        
+        return true
+    }
+    
     // MARK: - Animating Views with Block Objects
     
     internal private(set) static var animationDuration: TimeInterval?

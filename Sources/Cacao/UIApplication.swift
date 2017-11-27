@@ -48,16 +48,12 @@ public final class UIApplication: UIResponder {
     
     public static var shared: UIApplication { return _UIApp }
     
-    private override init() { fatalError() }
-    
     fileprivate init(delegate: UIApplicationDelegate, options: CacaoOptions) {
         
         assert(_UIApp == nil, "\(UIApplication.self) is a singleton and should only be initialized once.")
         
         self.options = options
         self.delegate = delegate
-        
-        super.init()
     }
     
     // MARK: - Getting the App Delegate
@@ -175,6 +171,11 @@ public final class UIApplication: UIResponder {
     internal func handlePhysicalButtonEvent(_ event: UIPhysicalKeyboardEvent) {
         
         
+    }
+    
+    public override func becomeFirstResponder() -> Bool {
+        
+        return keyWindow?.becomeFirstResponder() ?? false
     }
 }
 

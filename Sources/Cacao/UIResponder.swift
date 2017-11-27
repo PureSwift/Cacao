@@ -28,6 +28,57 @@ open class UIResponder: NSObject {
         return nil
     }
     
+    /// Returns a Boolean value indicating whether this object is the first responder.
+    open var isFirstResponder: Bool {
+        
+        return self === _firstResponder
+    }
+    
+    /// Returns a Boolean value indicating whether this object can become the first responder.
+    open var canBecomeFirstResponder: Bool {
+        
+        return false
+    }
+    
+    /// Asks Cacao to make this object the first responder in its window.
+    open func becomeFirstResponder() -> Bool {
+        
+        // must belong to a view hierarchy
+        guard let responderWindow = self.responderWindow
+            else { fatalError("Not part of a valid view hierarchy") }
+        
+        // is already first responder
+        guard isFirstResponder == false
+            else { return true }
+        
+        // cannot become first responder
+        guard canBecomeFirstResponder
+            else { return false }
+        
+        
+    }
+    
+    /// Returns a Boolean value indicating whether the receiver is willing to relinquish first-responder status.
+    open var canResignFirstResponder: Bool {
+        
+        return true
+    }
+    
+    /// Notifies this object that it has been asked to relinquish its status as first responder in its window.
+    ///
+    /// The default implementation returns true, resigning first responder status.
+    /// You can override this method in your custom responders to update your object's state or perform other actions,
+    /// such as removing the highlight from a selection. You can also return false, refusing to relinquish first responder
+    /// status. If you override this method, you must call super (the superclass implementation) at some point in your code.
+    open func resignFirstResponder() -> Bool {
+        
+        // not first responder
+        guard isFirstResponder
+            else { return true }
+        
+        
+    }
+    
     // MARK: - Responding to Touch Events
     
     /// Tells this object that one or more new touches occurred in a view or window.
@@ -210,7 +261,7 @@ open class UIResponder: NSObject {
     /// When an key combination is pressed that matches a key command object,
     /// Cacao walks the responder chain looking for an object that implements the corresponding action method.
     /// It calls that method on the first object it finds and then stops processing the event.
-    public var keyCommands: [UIKeyCommand]? { return nil }
+    open var keyCommands: [UIKeyCommand]? { return nil }
     
     // MARK: - Cacao Extensions
     
@@ -222,5 +273,17 @@ open class UIResponder: NSObject {
     open func move(with event: UIMoveEvent) {
         
         next?.move(with: event)
+    }
+    
+    // MARK: - Internal
+    
+    internal var responderWindow: UIWindow? {
+        
+        return next?.responderWindow
+    }
+    
+    internal func _firstResponder() -> UIResponder? {
+        
+        return next?._firstResponder()
     }
 }
