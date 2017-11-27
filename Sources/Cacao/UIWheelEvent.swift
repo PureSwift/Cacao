@@ -23,6 +23,7 @@ public final class UIWheelEvent: UIEvent {
 
 extension UIWheelEvent: UIResponderEvent {
     
+    @inline(__always)
     func sendEvent(to responder: UIResponder) {
         
         responder.wheelChanged(with: self)

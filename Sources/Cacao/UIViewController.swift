@@ -5,12 +5,7 @@
 //  Created by Alsey Coleman Miller on 6/7/17.
 //
 
-import class Foundation.NSCoder
-import class Foundation.Bundle
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import struct Foundation.CGRect
+import Foundation
 import Silica
 
 open class UIViewController: UIResponder {
@@ -129,6 +124,16 @@ open class UIViewController: UIResponder {
         
     }
     
+    open func viewWillDisappear(_ animated: Bool) {
+        
+        
+    }
+    
+    open func viewDidDisappear(_ animated: Bool) {
+        
+        
+    }
+    
     // MARK: - Configuring the View’s Layout Behavior
     
     /// Called to notify the view controller that its view is about to layout its subviews.
@@ -159,6 +164,87 @@ open class UIViewController: UIResponder {
             else { return }
         
         parent?.childViewControllers.remove(at: index)
+    }
+    
+    /// Transitions between two of the view controller's child view controllers.
+    ///
+    /// This method adds the second view controller's view to the view hierarchy and
+    /// then performs the animations defined in your animations block.
+    /// After the animation completes, it removes the first view controller's view from the view hierarchy.
+    /// This method is only intended to be called by an implementation of a custom container view controller.
+    /// If you override this method, you must call super in your implementation.
+    public func transition(from fromViewController: UIViewController,
+                    to toViewController: UIViewController,
+                    duration: TimeInterval,
+                    options: UIViewAnimationOptions = [],
+                    animations: (() -> Void)?,
+                    completion: ((Bool) -> Void)? = nil) {
+        
+        let animated = duration > 0
+        fromViewController.beginAppearanceTransition(false, animated: animated)
+        toViewController.beginAppearanceTransition(true, animated: animated)
+        
+        // run animations
+        
+        self.view.addSubview(toViewController.view)
+        fromViewController.view?.removeFromSuperview()
+        
+    }
+    
+    /// Returns a Boolean value indicating whether appearance methods are forwarded to child view controllers.
+    ///
+    /// - Returns: true if appearance methods are forwarded or false if they are not.
+    ///
+    /// This method is called to determine whether to automatically forward appearance-related containment
+    /// callbacks to child view controllers.
+    /// The default implementation returns true. Subclasses of the `UIViewController` class that implement containment
+    /// logic may override this method to control how these methods are forwarded.
+    /// If you override this method and return false, you are responsible for telling the child when its
+    /// views are going to appear or disappear.
+    /// You do this by calling the child view controller's `beginAppearanceTransition(_:animated:)`
+    /// and `endAppearanceTransition()` methods.
+    public var shouldAutomaticallyForwardAppearanceMethods: Bool {
+        
+        return true
+    }
+    
+    /// Tells a child controller its appearance is about to change.
+    ///
+    /// If you are implementing a custom container controller,
+    /// use this method to tell the child that its views are about to appear or disappear.
+    public func beginAppearanceTransition(_ isAppearing: Bool,
+                                          animated: Bool) {
+        
+        if shouldAutomaticallyForwardAppearanceMethods {
+            
+            childViewControllers
+                .filter { $0.isViewLoaded && $0.view.isDescendant(of: self.view) }
+                .forEach { $0.beginAppearanceTransition(isAppearing, animated: animated) }
+        }
+        
+        if isAppearing {
+            
+            let _ = self.view
+            viewWillAppear(animated)
+            
+        } else {
+            
+            viewWillDisappear(animated)
+        }
+    }
+    
+    /// Tells a child controller its appearance has changed.
+    ///
+    /// If you are implementing a custom container controller,
+    /// use this method to tell the child that the view transition is complete.
+    public func endAppearanceTransition() {
+        
+        if shouldAutomaticallyForwardAppearanceMethods {
+            
+            childViewControllers.forEach { $0.endAppearanceTransition() }
+        }
+        
+        //if isview
     }
     
     // MARK: - Responding to Containment Events

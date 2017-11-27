@@ -352,17 +352,63 @@ open class UIView: UIResponder {
     @inline(__always)
     private func addSubview(_ view: UIView, _ body: (inout [UIView], UIView) -> ()) {
         
+        let oldWindow = view.window
+        let newWindow = self.window
+        
+        // remove from previous superview
         if view.superview !== self {
             view.removeFromSuperview()
         }
         
+        // store subview in array
         body(&subviews, view)
         
+        view.willMove(toSuperview: self)
+        
+        // set super view weak reference
         view.superview = self
         
+        // inform view of change
+        if oldWindow?.screen !== newWindow?.screen {
+            didMoveToScreen()
+        }
+        view.didMoveToSuperview()
         didAddSubview(view)
         
+        // force redraw
         setNeedsDisplay()
+    }
+    
+    private func willMove(fromWindow: UIWindow?, toWindow: UIWindow?) {
+        
+        guard fromWindow !== toWindow
+            else { return }
+        
+        if isFirstResponder {
+            let _ = resignFirstResponder()
+        }
+        
+        willMove(toWindow: toWindow)
+        
+        subviews.forEach { $0.willMove(fromWindow: fromWindow, toWindow: toWindow) }
+        
+        viewController?.beginAppearanceTransition(toWindow != nil, animated: false)
+    }
+    
+    private func didMove(fromWindow: UIWindow?, toWindow: UIWindow?) {
+        
+        guard fromWindow !== toWindow
+            else { return }
+        
+        
+    }
+    
+    private func didMoveToScreen() {
+        
+        //self.contentScaleFactor = self.window.screen.scale
+        self.setNeedsDisplay()
+        
+        self.subviews.forEach { $0.didMoveToScreen() }
     }
     
     /// Moves the specified subview so that it appears on top of its siblings.
@@ -625,6 +671,25 @@ open class UIView: UIResponder {
     // MARK: - Drawing
     
     open func draw(_ rect: CGRect) { /* implemented by subclasses */ }
+    
+    /// The scale factor applied to the view.
+    ///
+    /// The scale factor determines how content in the view is mapped from the logical coordinate space
+    /// (measured in points) to the device coordinate space (measured in pixels).
+    /// This value is typically either 1.0 or 2.0. Higher scale factors indicate that each point in
+    /// the view is represented by more than one pixel in the underlying layer.
+    /// For example, if the scale factor is 2.0 and the view frame size is 50 x 50 points,
+    /// the size of the bitmap used to present that content is 100 x 100 pixels.
+    ///
+    /// The default value for this property is the scale factor associated with the screen currently displaying the view.
+    ///
+    /// In general, you should not need to modify the value in this property.
+    /// However, if your application draws using OpenGL ES, you may want to change
+    /// the scale factor to trade image quality for rendering performance.
+    public final var contentScaleFactor: CGFloat {
+        
+        return self.window?.screen.scale ?? UIScreen.main.scale
+    }
     
     /// The backing rendering node / texture.
     ///
@@ -889,6 +954,7 @@ open class UIView: UIResponder {
     
     /// Asks the view if the gesture recognizer should be allowed to continue tracking touch events.
     open func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        
         return true
     }
     
