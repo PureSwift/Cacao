@@ -86,8 +86,8 @@ open class UITableViewController: UIViewController, UITableViewDataSource, UITab
         assert(self.tableView != nil, "Table View not loaded")
     }
     
-    open override func viewWillAppear(animated: Bool) {
-        super.viewWillAppear(animated: animated)
+    open override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         
         /// Reload on first appearance
         if self.didReload == false {
@@ -104,8 +104,8 @@ open class UITableViewController: UIViewController, UITableViewDataSource, UITab
         }
     }
     
-    open override func viewDidAppear(animated: Bool) {
-        super.viewDidAppear(animated: animated)
+    open override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         
         // flash scroll indicators
         self.tableView.flashScrollIndicators()

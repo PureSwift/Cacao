@@ -81,17 +81,18 @@ open class UIWindow: UIView {
             sendButtons(for: pressesEvent)
             
         } else if let moveEvent = event as? UIMoveEvent {
-            
+            // TODO: Implement self.focusResponder
+            /*
             if let focusResponder = self.focusResponder {
                 
                 moveEvent.sendEvent(to: focusResponder)
-            }
+            }*/
             
         } else if let responderEvent = event as? UIResponderEvent {
             
             if let responder = self.firstResponder {
                 
-                event.sendEvent(to: responder)
+                responderEvent.sendEvent(to: responder)
             }
             
         } else {
@@ -108,6 +109,26 @@ open class UIWindow: UIView {
     }
     
     // MARK: - UIResponder
+    
+    internal var _firstResponder: UIResponder?
+    
+    internal override var firstResponder: UIResponder? {
+        
+        return _firstResponder
+    }
+    
+    /*
+    internal override var firstResponder: UIResponder? {
+        
+        if let fieldEditor = _firstResponder as? UIFieldEditor {
+            
+            return fieldEditor.proxiedView
+            
+        } else {
+            
+            return _firstResponder
+        }
+    }*/
     
     public final override var next: UIResponder? {
         

@@ -31,7 +31,7 @@ open class UIResponder: NSObject {
     /// Returns a Boolean value indicating whether this object is the first responder.
     open var isFirstResponder: Bool {
         
-        return self === _firstResponder
+        return self === self.firstResponder
     }
     
     /// Returns a Boolean value indicating whether this object can become the first responder.
@@ -55,7 +55,16 @@ open class UIResponder: NSObject {
         guard canBecomeFirstResponder
             else { return false }
         
+        // resign previous first responder
+        guard responderWindow.firstResponder?.resignFirstResponder() ?? true
+            else { return false }
         
+        // set new responder
+        responderWindow._firstResponder = self
+        
+        // TODO: Handle input
+        
+        return true
     }
     
     /// Returns a Boolean value indicating whether the receiver is willing to relinquish first-responder status.
@@ -72,11 +81,12 @@ open class UIResponder: NSObject {
     /// status. If you override this method, you must call super (the superclass implementation) at some point in your code.
     open func resignFirstResponder() -> Bool {
         
-        // not first responder
-        guard isFirstResponder
-            else { return true }
+        responderWindow?._firstResponder = nil
+        
+        // TODO: handle input
         
         
+        return true
     }
     
     // MARK: - Responding to Touch Events
@@ -282,8 +292,8 @@ open class UIResponder: NSObject {
         return next?.responderWindow
     }
     
-    internal func _firstResponder() -> UIResponder? {
+    internal var firstResponder: UIResponder? {
         
-        return next?._firstResponder()
+        return next?.firstResponder
     }
 }

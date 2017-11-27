@@ -119,12 +119,12 @@ open class UIViewController: UIResponder {
     
     // MARK: - Responding to View Events
     
-    open func viewWillAppear(animated: Bool) {
+    open func viewWillAppear(_ animated: Bool) {
         
         
     }
     
-    open func viewDidAppear(animated: Bool) {
+    open func viewDidAppear(_ animated: Bool) {
         
         
     }
@@ -200,5 +200,10 @@ open class UIViewController: UIResponder {
     open override var next: UIResponder? {
         
         return view?.superview
+    }
+    
+    internal override var firstResponder: UIResponder? {
+        
+        return self.view.firstResponder ?? super.firstResponder
     }
 }

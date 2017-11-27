@@ -912,6 +912,11 @@ open class UIView: UIResponder {
         return true
     }
     
+    internal override var firstResponder: UIResponder? {
+        
+        return responderWindow?.firstResponder
+    }
+    
     // MARK: - Animating Views with Block Objects
     
     internal private(set) static var animationDuration: TimeInterval?
