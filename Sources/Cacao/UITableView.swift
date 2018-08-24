@@ -794,7 +794,7 @@ open class UITableView: UIScrollView {
             
             let numberOfRowsInSection = self.numberOfRows(inSection: sectionIndex)
             
-            var section = Section()
+            let section = Section()
             section.headerTitle = dataSource.tableView(self, titleForHeaderInSection: sectionIndex)
             section.footerTitle = dataSource.tableView(self, titleForFooterInSection: sectionIndex)
             section.headerHeight = _delegate.tableView(self, heightForHeaderInSection: sectionIndex)
@@ -1001,13 +1001,13 @@ open class UITableView: UIScrollView {
 
 private extension UITableView {
     
-    struct Cache {
+    final class Cache {
         
         var sections = [Section]()
         var cells = (reusable: Set<UITableViewCell>(), cached: [IndexPath: UITableViewCell]())
     }
     
-    struct ReuseIdentifiers {
+    final class ReuseIdentifiers {
         
         enum Cell {
             
@@ -1025,7 +1025,7 @@ private extension UITableView {
         var headerFooters = [String: HeaderFooter]()
     }
     
-    struct Section {
+    final class Section {
         
         var headerHeight: CGFloat = 0.0
         var footerHeight: CGFloat = 0.0
