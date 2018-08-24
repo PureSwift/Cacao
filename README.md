@@ -7,13 +7,19 @@
 
 Pure Swift Cross-platform UIKit (Cocoa Touch) implementation (Supports Linux)
 
-## Dependencies
+## Build
 
 ### OS X
-`brew install cairo sdl2 lcms2`
+```
+brew install cairo sdl2 lcms2
+swift build -Xlinker -L/usr/local/lib
+```
 
 ### Ubuntu
-`sudo apt-get install libcairo-dev libsdl2-dev liblcms2-dev`
+```
+sudo apt-get install libcairo-dev libsdl2-dev liblcms2-dev
+swift build
+```
 
 ## Screenshots
 
