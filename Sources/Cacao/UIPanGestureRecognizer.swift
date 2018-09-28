@@ -8,9 +8,9 @@
 import Foundation
 import Silica
 
-/// A concrete subclass of `UIGestureRecognizer that looks for panning (dragging) gestures.
+/// A concrete subclass of `UIGestureRecognizer` that looks for panning (dragging) gestures.
 open class UIPanGestureRecognizer: UIGestureRecognizer {
-        
+    
     // MARK: - Configuring the Gesture Recognizer
     
     /// The maximum number of fingers that can be touching the view for this gesture to be recognized.
@@ -118,7 +118,8 @@ open class UIPanGestureRecognizer: UIGestureRecognizer {
             
             fallthrough
             
-        case .began, .changed:
+        case .began,
+             .changed:
             
             let delta = gestureTouches.delta
             

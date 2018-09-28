@@ -23,39 +23,50 @@ internal struct IOHIDEvent {
         
         switch eventType {
             
-        case SDL_QUIT, SDL_APP_TERMINATING:
+        case SDL_QUIT,
+             SDL_APP_TERMINATING:
             
             self.data = .quit
             
-        case SDL_MOUSEBUTTONDOWN,
-             SDL_MOUSEBUTTONUP,
-             SDL_MOUSEMOTION:
+        case SDL_FINGERDOWN,
+             SDL_FINGERUP,
+             SDL_FINGERMOTION:
             
-            let mouseEvent: MouseEvent
+            let screenEvent: ScreenInputEvent
             
             switch eventType {
-                
-            case SDL_MOUSEBUTTONDOWN:
-                
-                mouseEvent = .down
-                
-            case SDL_MOUSEBUTTONUP:
-                
-                mouseEvent = .up
-                
-            case SDL_MOUSEMOTION:
-                
-                mouseEvent = .motion
-                
-            default:
-                
-                return nil
+            case SDL_FINGERDOWN: screenEvent = .down
+            case SDL_FINGERUP: screenEvent = .up
+            case SDL_FINGERMOTION: screenEvent = .motion
+            default: return nil
             }
             
             let screenLocation = CGPoint(x: CGFloat(sdlEvent.button.x),
                                          y: CGFloat(sdlEvent.button.y))
             
-            self.data = .mouse(mouseEvent, screenLocation)
+            self.data = .touch(screenEvent, screenLocation)
+            
+        case SDL_MOUSEBUTTONDOWN,
+             SDL_MOUSEBUTTONUP,
+             SDL_MOUSEMOTION:
+            
+            // dont translate touch screen events.
+            guard sdlEvent.button.which != Uint32(bitPattern: -1)
+                else { return nil }
+            
+            let screenEvent: ScreenInputEvent
+            
+            switch eventType {
+            case SDL_MOUSEBUTTONDOWN: screenEvent = .down
+            case SDL_MOUSEBUTTONUP: screenEvent = .up
+            case SDL_MOUSEMOTION: screenEvent = .motion
+            default: return nil
+            }
+            
+            let screenLocation = CGPoint(x: CGFloat(sdlEvent.button.x),
+                                         y: CGFloat(sdlEvent.button.y))
+            
+            self.data = .mouse(screenEvent, screenLocation)
             
         case SDL_MOUSEWHEEL:
             
@@ -71,22 +82,18 @@ internal struct IOHIDEvent {
             let windowEvent: WindowEvent
             
             switch sdlWindowEvent {
-                
-            case SDL_WINDOWEVENT_SIZE_CHANGED:
-                
-                windowEvent = .sizeChange
-                
+            case SDL_WINDOWEVENT_SIZE_CHANGED: windowEvent = .sizeChange
             case SDL_WINDOWEVENT_FOCUS_GAINED,
-                 SDL_WINDOWEVENT_FOCUS_LOST:
-                
-                windowEvent = .focusChange
-                
-            default:
-                
-                return nil
+                 SDL_WINDOWEVENT_FOCUS_LOST: windowEvent = .focusChange
+            default: return nil
             }
             
             self.data = .window(windowEvent)
+            
+        case SDL_APP_LOWMEMORY:
+            
+            self.data = .lowMemory
+            
             /*
         case SDL_KEYUP,
              SDL_KEYDOWN:
@@ -121,8 +128,11 @@ internal struct IOHIDEvent {
         case (.quit, .quit):
             return event
             
-        case let (.mouse(lhsMouseEvent, _), .mouse(rhsMouseEvent, _)):
-            return lhsMouseEvent == rhsMouseEvent ? event : nil
+        case let (.touch(lhsEvent, _), .touch(rhsEvent, _)):
+            return lhsEvent == rhsEvent ? event : nil
+            
+        case let (.mouse(lhsEvent, _), .mouse(rhsEvent, _)):
+            return lhsEvent == rhsEvent ? event : nil
             
         case (.window(_), .window(_)):
             return nil
@@ -151,15 +161,18 @@ internal extension IOHIDEvent {
     enum Data {
         
         case quit
-        case mouse(MouseEvent, CGPoint)
+        case mouse(ScreenInputEvent, CGPoint)
         case mouseWheel(CGSize)
-        case touch
+        case touch(ScreenInputEvent, CGPoint)
         case window(WindowEvent)
+        case lowMemory
     }
     
-    enum MouseEvent {
+    enum ScreenInputEvent {
         
-        case down, up, motion
+        case down
+        case up
+        case motion
     }
     
     enum WindowEvent {

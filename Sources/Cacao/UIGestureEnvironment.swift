@@ -40,7 +40,6 @@ internal final class UIGestureEnvironment {
     private func update(gesture: UIGestureRecognizer, with event: UIEvent) {
         
         // handle touches
-        
         guard gesture.shouldRecognize
             else { return }
         

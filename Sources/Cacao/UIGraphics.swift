@@ -18,24 +18,24 @@ import Silica
 /// This function may be called from any thread of your app.
 public func UIGraphicsGetCurrentContext() -> CGContext? {
     
-    return ContextStack.last
+    return UIGraphicsContextStack.last
 }
 
 /// Makes the specified graphics context the current context.
 public func UIGraphicsPushContext(_ context: CGContext) {
     
-    ContextStack.append(context)
+    UIGraphicsContextStack.append(context)
 }
 
 /// Removes the current graphics context from the top of the stack, restoring the previous context.
 public func UIGraphicsPopContext() {
     
-    if ContextStack.isEmpty == false {
+    if UIGraphicsContextStack.isEmpty == false {
         
-        ContextStack.removeLast()
+        UIGraphicsContextStack.removeLast()
     }
 }
 
 // MARK: - Private
 
-private var ContextStack: [CGContext] = []
+private var UIGraphicsContextStack: [CGContext] = []

@@ -133,6 +133,11 @@ public final class UIApplication: UIResponder {
         self.isDone = true
     }
     
+    internal func lowMemory() {
+        
+        
+    }
+    
     private func keyWindow(for screen: UIScreen) -> UIWindow? {
         
         return screen.keyWindow

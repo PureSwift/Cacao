@@ -99,6 +99,18 @@ open class UIGestureRecognizer: NSObject {
     /// May only be changed by direct subclasses of `UIGestureRecognizer`.
     open var state = UIGestureRecognizerState()
     
+    private let states: [(from: UIGestureRecognizerState, to: UIGestureRecognizerState, notify: Bool, reset: Bool)] =
+        [(.possible, .recognized, true, true),
+         (.possible, .failed, false, true),
+         (.possible, .began, true, false),
+         (.began, .changed, true, false),
+         (.began, .cancelled, true, true),
+         (.began, .failed, true, true),
+         (.began, .ended, true, true),
+         (.changed, .changed, true, false),
+         (.changed, .cancelled, true, true),
+         (.changed, .ended, true, true)]
+    
     @discardableResult
     internal func transition(to state: UIGestureRecognizerState) -> (notify: Bool, reset: Bool) {
         
@@ -108,18 +120,6 @@ open class UIGestureRecognizer: NSObject {
         
         guard oldValue != newValue
             else { return (false, false) }
-        
-        let states: [(from: UIGestureRecognizerState, to: UIGestureRecognizerState, notify: Bool, reset: Bool)] =
-            [(.possible, .recognized, true, true),
-             (.possible, .failed, false, true),
-             (.possible, .began, true, false),
-             (.began, .changed, true, false),
-             (.began, .cancelled, true, true),
-             (.began, .failed, true, true),
-             (.began, .ended, true, true),
-             (.changed, .changed, true, false),
-             (.changed, .cancelled, true, true),
-             (.changed, .ended, true, true)]
         
         guard let transition = states.first(where: { $0.from == oldValue && $0.to == newValue })
             else { fatalError("Invalid transition \(oldValue) -> \(newValue)") }

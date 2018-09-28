@@ -6,10 +6,7 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import struct Foundation.CGRect
+import Foundation
 import Silica
 
 public extension String {
@@ -95,7 +92,7 @@ public final class NSMutableParagraphStyle {
     }
 }
 
-extension NSMutableParagraphStyle: CacaoConvertible {
+extension NSMutableParagraphStyle {
     
     public func toCacao() -> ParagraphStyle {
         
@@ -118,7 +115,7 @@ public enum NSTextAlignment: Int {
     public init() { self = .left }
 }
 
-extension NSTextAlignment: CacaoConvertible {
+extension NSTextAlignment {
     
     public func toCacao() -> TextAlignment {
         

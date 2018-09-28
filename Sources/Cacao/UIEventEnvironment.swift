@@ -61,8 +61,8 @@ internal final class UIEventEnvironment {
         
         switch hidEvent.data {
             
-        case let .mouse(mouseEvent, screenLocation):
-                        
+        case let .touch(mouseEvent, screenLocation):
+            
             let event: UITouchesEvent
             
             if let currentEvent = touchesEvent {
@@ -142,7 +142,7 @@ internal final class UIEventEnvironment {
                                                   window: window,
                                                   gestureRecognizers: gestures)
                 
-                touch = UITouch(touch: internalTouch, inputType: .mouse)
+                touch = UITouch(touch: internalTouch, inputType: .touchscreen)
                 
                 event.addTouch(touch)
             }
@@ -153,11 +153,13 @@ internal final class UIEventEnvironment {
                 
                 touchesEvent = event
                 
-            case .moved, .stationary:
+            case .moved,
+                 .stationary:
                 
                 touchesEvent?.timestamp = timestamp
                 
-            case .ended, .cancelled:
+            case .ended,
+                 .cancelled:
                 
                 touchesEvent = nil
             }
@@ -167,7 +169,7 @@ internal final class UIEventEnvironment {
         case let .mouseWheel(translation):
             
             let event = UIWheelEvent(timestamp: timestamp, translation: translation)
-                        
+            
             return event
             
         default:
@@ -186,6 +188,10 @@ internal final class UIEventEnvironment {
         case .quit:
             
             app.quit()
+            
+        case .lowMemory:
+            
+            app.lowMemory()
             
         case let .window(windowEvent):
             
