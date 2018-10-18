@@ -56,6 +56,9 @@ open class UIWindow: UIView {
     /// Called automatically to inform the window that it is no longer the key window.
     open func resignKey() { /* subclass implementation */ }
     
+    /// last touch event, used for scrolling
+    private var lastTouchEvent: UITouchesEvent?
+    
     /// Dispatches the specified event to its views.
     public final func sendEvent(_ event: UIEvent) {
         
@@ -69,8 +72,10 @@ open class UIWindow: UIView {
             
             // send touches directly to views (legacy API)
             sendTouches(for: touchesEvent)
+            
+            // cache event
+            lastTouchEvent = touchesEvent
         }
-        
         // handle presses
         else if let pressesEvent = event as? UIPressesEvent {
             
@@ -88,6 +93,18 @@ open class UIWindow: UIView {
                 moveEvent.sendEvent(to: focusResponder)
             }*/
             
+        } else if let wheelEvent = event as? UIWheelEvent {
+            
+            guard isUserInteractionEnabled else { return }
+            
+            guard let touchEvent = lastTouchEvent,
+                let touch = touchEvent.touches.first,
+                touch.phase == .moved,
+                let view = touch.view
+                else { return }
+            
+            wheelEvent.sendEvent(to: view)
+        
         } else if let responderEvent = event as? UIResponderEvent {
             
             if let responder = self.firstResponder {

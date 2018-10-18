@@ -23,7 +23,6 @@ internal final class UITouchesEvent: UIEvent {
             
             addGestureRecognizers(for: view, to: touch)
         }
-        
     }
     
     private func invalidateGestureRecognizerForWindowCache() {

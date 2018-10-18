@@ -348,6 +348,13 @@ open class UIScrollView: UIView {
         }
     }
     
+    open override func wheelChanged(with event: UIWheelEvent) {
+        
+        beginDragging()
+        drag(with: CGPoint(x: event.translation.width, y: event.translation.height))
+        endDragging(velocity: .zero)
+    }
+    
     private func beginDragging() {
         
         guard isDragging == false
