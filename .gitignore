@@ -5,3 +5,5 @@ Cacao.xcodeproj
 *.xcuserstate
 *.xcworkspacedata
 *.xcuserdatad
+
+iOS/SDL2/

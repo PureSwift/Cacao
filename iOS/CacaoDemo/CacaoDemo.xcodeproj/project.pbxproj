@@ -7,49 +7,38 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6E00A8AE1FCB1BD800005FCC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6E00A8AD1FCB1BD800005FCC /* Assets.xcassets */; };
-		6E00A8B31FCB1BFB00005FCC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F11FC11FA800854A61 /* AppDelegate.swift */; };
-		6E00A8B41FCB1BFB00005FCC /* ContentModeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F21FC11FA800854A61 /* ContentModeViewController.swift */; };
-		6E00A8B51FCB1BFB00005FCC /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F31FC11FA800854A61 /* main.swift */; };
-		6E00A8B61FCB1BFB00005FCC /* ScrollViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F41FC11FA800854A61 /* ScrollViewController.swift */; };
-		6E00A8B71FCB1BFB00005FCC /* SwiftLogoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F51FC11FA800854A61 /* SwiftLogoView.swift */; };
-		6E00A8B91FCB1BFB00005FCC /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F71FC11FA800854A61 /* TableViewController.swift */; };
-		6E00A8BC1FCB1DCE00005FCC /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6E00A8BB1FCB1DCE00005FCC /* Main.storyboard */; };
 		6E9366E91FC11F7E00854A61 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6E9366E71FC11F7E00854A61 /* LaunchScreen.storyboard */; };
-		6E9366F81FC11FA800854A61 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F11FC11FA800854A61 /* AppDelegate.swift */; };
-		6E9366F91FC11FA800854A61 /* ContentModeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F21FC11FA800854A61 /* ContentModeViewController.swift */; };
-		6E9366FB1FC11FA800854A61 /* ScrollViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F41FC11FA800854A61 /* ScrollViewController.swift */; };
-		6E9366FC1FC11FA800854A61 /* SwiftLogoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F51FC11FA800854A61 /* SwiftLogoView.swift */; };
-		6E9366FD1FC11FA800854A61 /* SwitchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F61FC11FA800854A61 /* SwitchViewController.swift */; };
-		6E9366FE1FC11FA800854A61 /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F71FC11FA800854A61 /* TableViewController.swift */; };
-		6E9366FF1FC1286100854A61 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F31FC11FA800854A61 /* main.swift */; };
+		6EE1EE7B2179577C00379C6B /* Application.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE1EE7A2179577C00379C6B /* Application.swift */; };
+		6EE1EE7D2179579400379C6B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE1EE7C2179579400379C6B /* main.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		6EE1EE8621795D6C00379C6B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6EE1EE7E21795D6C00379C6B /* SDL.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = FD6526630DE8FCCB002AD96B;
+			remoteInfo = "libSDL-iOS";
+		};
+		6EE1EE8821795D6C00379C6B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6EE1EE7E21795D6C00379C6B /* SDL.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = FAB598141BB5C1B100BE72C5;
+			remoteInfo = "libSDL-tvOS";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
-		6E00A8A41FCB1BD800005FCC /* CacaoDemoTV.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CacaoDemoTV.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		6E00A8AD1FCB1BD800005FCC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		6E00A8AF1FCB1BD800005FCC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		6E00A8BB1FCB1DCE00005FCC /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
 		6E9366DB1FC11F7E00854A61 /* CacaoDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CacaoDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6E9366E81FC11F7E00854A61 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		6E9366EA1FC11F7E00854A61 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		6E9366F11FC11FA800854A61 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		6E9366F21FC11FA800854A61 /* ContentModeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentModeViewController.swift; sourceTree = "<group>"; };
-		6E9366F31FC11FA800854A61 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		6E9366F41FC11FA800854A61 /* ScrollViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScrollViewController.swift; sourceTree = "<group>"; };
-		6E9366F51FC11FA800854A61 /* SwiftLogoView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftLogoView.swift; sourceTree = "<group>"; };
-		6E9366F61FC11FA800854A61 /* SwitchViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwitchViewController.swift; sourceTree = "<group>"; };
-		6E9366F71FC11FA800854A61 /* TableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TableViewController.swift; sourceTree = "<group>"; };
+		6EE1EE7A2179577C00379C6B /* Application.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Application.swift; sourceTree = "<group>"; };
+		6EE1EE7C2179579400379C6B /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		6EE1EE7E21795D6C00379C6B /* SDL.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = SDL.xcodeproj; path = "../../../../../../Users/coleman/Downloads/SDL2-2.0.8/Xcode-iOS/SDL/SDL.xcodeproj"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		6E00A8A11FCB1BD800005FCC /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		6E9366D81FC11F7E00854A61 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -60,21 +49,11 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		6E00A8A51FCB1BD800005FCC /* CacaoDemoTV */ = {
-			isa = PBXGroup;
-			children = (
-				6E00A8BB1FCB1DCE00005FCC /* Main.storyboard */,
-				6E00A8AD1FCB1BD800005FCC /* Assets.xcassets */,
-				6E00A8AF1FCB1BD800005FCC /* Info.plist */,
-			);
-			path = CacaoDemoTV;
-			sourceTree = "<group>";
-		};
 		6E9366D21FC11F7E00854A61 = {
 			isa = PBXGroup;
 			children = (
+				6EE1EE7E21795D6C00379C6B /* SDL.xcodeproj */,
 				6E9366DD1FC11F7E00854A61 /* CacaoDemo */,
-				6E00A8A51FCB1BD800005FCC /* CacaoDemoTV */,
 				6E9366DC1FC11F7E00854A61 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -83,7 +62,6 @@
 			isa = PBXGroup;
 			children = (
 				6E9366DB1FC11F7E00854A61 /* CacaoDemo.app */,
-				6E00A8A41FCB1BD800005FCC /* CacaoDemoTV.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -91,48 +69,26 @@
 		6E9366DD1FC11F7E00854A61 /* CacaoDemo */ = {
 			isa = PBXGroup;
 			children = (
-				6E9366F01FC11FA800854A61 /* Sources */,
+				6EE1EE7C2179579400379C6B /* main.swift */,
+				6EE1EE7A2179577C00379C6B /* Application.swift */,
 				6E9366E71FC11F7E00854A61 /* LaunchScreen.storyboard */,
 				6E9366EA1FC11F7E00854A61 /* Info.plist */,
 			);
 			path = CacaoDemo;
 			sourceTree = "<group>";
 		};
-		6E9366F01FC11FA800854A61 /* Sources */ = {
+		6EE1EE7F21795D6C00379C6B /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				6E9366F11FC11FA800854A61 /* AppDelegate.swift */,
-				6E9366F21FC11FA800854A61 /* ContentModeViewController.swift */,
-				6E9366F31FC11FA800854A61 /* main.swift */,
-				6E9366F41FC11FA800854A61 /* ScrollViewController.swift */,
-				6E9366F51FC11FA800854A61 /* SwiftLogoView.swift */,
-				6E9366F61FC11FA800854A61 /* SwitchViewController.swift */,
-				6E9366F71FC11FA800854A61 /* TableViewController.swift */,
+				6EE1EE8721795D6C00379C6B /* libSDL2.a */,
+				6EE1EE8921795D6C00379C6B /* libSDL2.a */,
 			);
-			name = Sources;
-			path = ../../../Sources/CacaoDemo;
+			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		6E00A8A31FCB1BD800005FCC /* CacaoDemoTV */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 6E00A8B21FCB1BD800005FCC /* Build configuration list for PBXNativeTarget "CacaoDemoTV" */;
-			buildPhases = (
-				6E00A8A01FCB1BD800005FCC /* Sources */,
-				6E00A8A11FCB1BD800005FCC /* Frameworks */,
-				6E00A8A21FCB1BD800005FCC /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = CacaoDemoTV;
-			productName = CacaoDemoTV;
-			productReference = 6E00A8A41FCB1BD800005FCC /* CacaoDemoTV.app */;
-			productType = "com.apple.product-type.application";
-		};
 		6E9366DA1FC11F7E00854A61 /* CacaoDemo */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 6E9366ED1FC11F7E00854A61 /* Build configuration list for PBXNativeTarget "CacaoDemo" */;
@@ -160,12 +116,9 @@
 				LastUpgradeCheck = 0910;
 				ORGANIZATIONNAME = PureSwift;
 				TargetAttributes = {
-					6E00A8A31FCB1BD800005FCC = {
-						CreatedOnToolsVersion = 9.1;
-						ProvisioningStyle = Automatic;
-					};
 					6E9366DA1FC11F7E00854A61 = {
 						CreatedOnToolsVersion = 9.1;
+						LastSwiftMigration = 0940;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -181,24 +134,37 @@
 			mainGroup = 6E9366D21FC11F7E00854A61;
 			productRefGroup = 6E9366DC1FC11F7E00854A61 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 6EE1EE7F21795D6C00379C6B /* Products */;
+					ProjectRef = 6EE1EE7E21795D6C00379C6B /* SDL.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				6E9366DA1FC11F7E00854A61 /* CacaoDemo */,
-				6E00A8A31FCB1BD800005FCC /* CacaoDemoTV */,
 			);
 		};
 /* End PBXProject section */
 
-/* Begin PBXResourcesBuildPhase section */
-		6E00A8A21FCB1BD800005FCC /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				6E00A8AE1FCB1BD800005FCC /* Assets.xcassets in Resources */,
-				6E00A8BC1FCB1DCE00005FCC /* Main.storyboard in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
+/* Begin PBXReferenceProxy section */
+		6EE1EE8721795D6C00379C6B /* libSDL2.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libSDL2.a;
+			remoteRef = 6EE1EE8621795D6C00379C6B /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		6EE1EE8921795D6C00379C6B /* libSDL2.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libSDL2.a;
+			remoteRef = 6EE1EE8821795D6C00379C6B /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
+/* Begin PBXResourcesBuildPhase section */
 		6E9366D91FC11F7E00854A61 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -210,30 +176,12 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		6E00A8A01FCB1BD800005FCC /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				6E00A8B91FCB1BFB00005FCC /* TableViewController.swift in Sources */,
-				6E00A8B31FCB1BFB00005FCC /* AppDelegate.swift in Sources */,
-				6E00A8B41FCB1BFB00005FCC /* ContentModeViewController.swift in Sources */,
-				6E00A8B51FCB1BFB00005FCC /* main.swift in Sources */,
-				6E00A8B61FCB1BFB00005FCC /* ScrollViewController.swift in Sources */,
-				6E00A8B71FCB1BFB00005FCC /* SwiftLogoView.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		6E9366D71FC11F7E00854A61 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6E9366FD1FC11FA800854A61 /* SwitchViewController.swift in Sources */,
-				6E9366FF1FC1286100854A61 /* main.swift in Sources */,
-				6E9366FE1FC11FA800854A61 /* TableViewController.swift in Sources */,
-				6E9366F81FC11FA800854A61 /* AppDelegate.swift in Sources */,
-				6E9366F91FC11FA800854A61 /* ContentModeViewController.swift in Sources */,
-				6E9366FB1FC11FA800854A61 /* ScrollViewController.swift in Sources */,
-				6E9366FC1FC11FA800854A61 /* SwiftLogoView.swift in Sources */,
+				6EE1EE7D2179579400379C6B /* main.swift in Sources */,
+				6EE1EE7B2179577C00379C6B /* Application.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -251,40 +199,6 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
-		6E00A8B01FCB1BD800005FCC /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
-				CODE_SIGN_STYLE = Automatic;
-				INFOPLIST_FILE = CacaoDemoTV/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = org.pureswift.CacaoDemoTV;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = appletvos;
-				SWIFT_VERSION = 4.0;
-				TARGETED_DEVICE_FAMILY = 3;
-				TVOS_DEPLOYMENT_TARGET = 11.1;
-			};
-			name = Debug;
-		};
-		6E00A8B11FCB1BD800005FCC /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
-				CODE_SIGN_STYLE = Automatic;
-				INFOPLIST_FILE = CacaoDemoTV/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = org.pureswift.CacaoDemoTV;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = appletvos;
-				SWIFT_VERSION = 4.0;
-				TARGETED_DEVICE_FAMILY = 3;
-				TVOS_DEPLOYMENT_TARGET = 11.1;
-			};
-			name = Release;
-		};
 		6E9366EB1FC11F7E00854A61 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -398,11 +312,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = CacaoDemo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = org.pureswift.CacaoDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -411,11 +328,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = CacaoDemo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = org.pureswift.CacaoDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 3.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -423,15 +342,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		6E00A8B21FCB1BD800005FCC /* Build configuration list for PBXNativeTarget "CacaoDemoTV" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				6E00A8B01FCB1BD800005FCC /* Debug */,
-				6E00A8B11FCB1BD800005FCC /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		6E9366D61FC11F7E00854A61 /* Build configuration list for PBXProject "CacaoDemo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
