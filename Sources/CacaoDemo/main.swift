@@ -10,8 +10,8 @@
 
 import UIKit
 
-UIApplicationMain(0, nil, nil, NSStringFromClass(AppDelegate.self))
-    
+let _ = UIApplicationMain(0, nil, nil, NSStringFromClass(AppDelegate.self))
+
 #else
 
 import Cacao

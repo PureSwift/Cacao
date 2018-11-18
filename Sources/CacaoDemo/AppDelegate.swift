@@ -16,9 +16,10 @@ import Foundation
     import Silica
 #endif
 
+@UIApplicationMain
 final class AppDelegate: NSObject, UIApplicationDelegate {
     
-    static let shared = AppDelegate()
+    static var shared: AppDelegate { return UIApplication.shared.delegate as! AppDelegate }
     
     var window: UIWindow?
     
@@ -33,9 +34,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         print("FPS: \(UIScreen.main.maximumFramesPerSecond)")
         
         self.window = UIWindow(frame: UIScreen.main.bounds)
-        
-        self.window?.rootViewController = TableViewController()
-        
+        self.window?.rootViewController = ScrollViewController()
         self.window?.makeKeyAndVisible()
         
         return true

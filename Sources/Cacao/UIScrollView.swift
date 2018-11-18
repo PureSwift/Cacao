@@ -7,13 +7,19 @@
 //
 
 #if os(macOS)
-    import Darwin.C.math
+    import Darwin
 #elseif os(Linux)
     import Glibc
 #endif
 
 import Foundation
+
+#if os(iOS)
+import UIKit
+import CoreGraphics
+#else
 import Silica
+#endif
 
 open class UIScrollView: UIView {
     
@@ -22,21 +28,16 @@ open class UIScrollView: UIView {
     public override init(frame: CGRect) {
         super.init(frame: frame)
         
-        let action = UIGestureRecognizer.TargetAction(action: self.panGesture, name: "panGesture")
-        
-        self.scrollGestureRecognizer = UIScrollViewPanGestureRecognizer(targetAction: action, scrollview: self)
         self.addGestureRecognizer(panGestureRecognizer)
     }
     
-    // MARK: - Responding to Scroll View Interactions
-    
-    // Cacao extension
-    public var ignoreMouseEvents: Bool {
-        
-        get { return scrollGestureRecognizer.ignoreMouseEvents }
-        
-        set { scrollGestureRecognizer.ignoreMouseEvents = newValue }
+    #if os(iOS)
+    public required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
+    #endif
+    
+    // MARK: - Responding to Scroll View Interactions
     
     /// The delegate of the scroll-view object.
     public weak var delegate: UIScrollViewDelegate?
@@ -48,28 +49,19 @@ open class UIScrollView: UIView {
         get { return _contentOffset }
         set { setContentOffset(newValue, animated: false) }
     }
+    
     private var _contentOffset: CGPoint = .zero
     
     /// Sets the offset from the content view’s origin that corresponds to the receiver’s origin.
     public func setContentOffset(_ contentOffset: CGPoint, animated: Bool) {
         
-        if animated {
-            
-            // FIXME: Animate
-            _contentOffset.x = round(contentOffset.x)
-            _contentOffset.y = round(contentOffset.y)
-            updateBounds()
-            
-            delegate?.scrollViewDidScroll(self)
-            
-        } else {
-            
-            _contentOffset.x = round(contentOffset.x)
-            _contentOffset.y = round(contentOffset.y)
-            updateBounds()
-            
-            delegate?.scrollViewDidScroll(self)
-        }
+        //if animated { }
+        
+        _contentOffset.x = round(contentOffset.x)
+        _contentOffset.y = round(contentOffset.y)
+        updateBounds()
+        
+        delegate?.scrollViewDidScroll(self)
     }
     
     /// The size of the content view.
@@ -90,7 +82,6 @@ open class UIScrollView: UIView {
             
             contentOffset.x -= contentInset.left - oldValue.left
             contentOffset.y -= contentInset.top - oldValue.top
-            
             updateBounds()
         }
     }
@@ -268,11 +259,18 @@ open class UIScrollView: UIView {
     /// Your application accesses this property when it wants to more precisely control
     /// which pan gestures are recognized by the scroll view.
     public var panGestureRecognizer: UIPanGestureRecognizer {
-        
         return scrollGestureRecognizer
     }
     
-    private var scrollGestureRecognizer: UIScrollViewPanGestureRecognizer!
+    private lazy var scrollGestureRecognizer: UIScrollViewPanGestureRecognizer = {
+        #if os(iOS)
+        let gestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(_panGesture))
+        #else
+        let action = UIGestureRecognizer.TargetAction(action: self.panGesture, name: "panGesture")
+        let gestureRecognizer = UIScrollViewPanGestureRecognizer(targetAction: action, scrollview: self)
+        #endif
+        return gestureRecognizer
+    }()
     
     // MARK: - Managing the Keyboard
     
@@ -297,17 +295,17 @@ open class UIScrollView: UIView {
         bringScrollersToFront()
     }
     
-    public override func addSubview(_ subview: UIView) {
+    open override func addSubview(_ subview: UIView) {
         super.addSubview(subview)
         bringScrollersToFront()
     }
     
-    public override func bringSubview(toFront subview: UIView) {
+    open override func bringSubview(toFront subview: UIView) {
         super.bringSubview(toFront: subview)
         bringScrollersToFront()
     }
     
-    public override func insertSubview(_ subview: UIView, at index: Int) {
+    open override func insertSubview(_ subview: UIView, at index: Int) {
         super.insertSubview(subview, at: index)
         bringScrollersToFront()
     }
@@ -319,41 +317,38 @@ open class UIScrollView: UIView {
     // Used for calculating delta
     private var previousTranslation: CGPoint?
     
+    #if os(iOS)
+    @objc private func _panGesture(_ gesture: UIGestureRecognizer) {
+        panGesture(gesture)
+    }
+    #endif
+    
     private func panGesture(_ gesture: UIGestureRecognizer) {
         
-        if gesture === panGestureRecognizer {
-            
-            switch panGestureRecognizer.state {
-                
-            case .began:
-                
-                beginDragging()
-                
-            case .changed:
-                
-                let translation = panGestureRecognizer.translation(in: self)
-                
-                drag(with: translation)
-                
-            case .ended:
-                
-                let velocity = panGestureRecognizer.velocity(in: self)
-                
-                endDragging(velocity: velocity)
-                
-            case .possible, .failed, .cancelled:
-                
-                break
-            }
+        guard gesture === panGestureRecognizer
+            else { assertionFailure(); return }
+        
+        switch gesture.state {
+        case .began:
+            beginDragging()
+        case .changed:
+            let translation = panGestureRecognizer.translation(in: self)
+            drag(with: translation)
+        case .ended:
+            let velocity = panGestureRecognizer.velocity(in: self)
+            endDragging(velocity: velocity)
+        case .possible, .failed, .cancelled:
+            break
         }
     }
     
+    /*
     open override func wheelChanged(with event: UIWheelEvent) {
         
         beginDragging()
         drag(with: CGPoint(x: event.translation.width, y: event.translation.height))
         endDragging(velocity: .zero)
-    }
+    }*/
     
     private func beginDragging() {
         
@@ -621,6 +616,9 @@ public extension UIScrollViewDelegate {
     func scrollViewShouldScrollToTop(_ scrollView: UIScrollView) -> Bool { return true }
 }
 
+#if os(iOS)
+typealias UIScrollViewPanGestureRecognizer = UIPanGestureRecognizer
+#else
 // https://github.com/ceekay1991/iOS11RuntimeHeaders/blob/d01a3a0e5d725c6ec68ab6c8df0a3621056bed50/Frameworks/UIKit.framework/UIScrollViewPanGestureRecognizer.h
 fileprivate final class UIScrollViewPanGestureRecognizer: UIPanGestureRecognizer {
     
@@ -642,3 +640,4 @@ fileprivate final class UIScrollViewPanGestureRecognizer: UIPanGestureRecognizer
         
     }
 }
+#endif
