@@ -74,12 +74,14 @@ final class ScrollViewController: UIViewController, UIScrollViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        scrollView.contentOffset = CGPoint(x: 30, y: 30)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.scrollView.setContentOffset(CGPoint(x: 50, y: 50), animated: true)
+        }
     }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         
-        print("Did scroll")
+        print("Did scroll \(scrollView.contentOffset)")
         assert(scrollView.contentOffset == scrollView.bounds.origin)
     }
     

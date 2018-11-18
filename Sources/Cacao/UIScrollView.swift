@@ -392,8 +392,8 @@ open class UIScrollView: UIView {
         
         let originalOffset = contentOffset
         var proposedOffset = originalOffset
-        proposedOffset.x += delta.x
-        proposedOffset.y += delta.y
+        proposedOffset.x -= delta.x
+        proposedOffset.y -= delta.y
         let confinedOffset = confined(contentOffset: proposedOffset)
         
         if bounces {
@@ -410,6 +410,8 @@ open class UIScrollView: UIView {
         else {
             contentOffset = confinedOffset
         }
+ 
+        contentOffset = confinedOffset
     }
     
     private func endDragging(velocity: CGPoint) {
@@ -480,6 +482,7 @@ open class UIScrollView: UIView {
     
     private func confined(contentOffset: CGPoint) -> CGPoint {
         
+        /*
         var contentOffset = contentOffset
         
         let scrollerBounds = UIEdgeInsetsInsetRect(bounds, contentInset)
@@ -508,7 +511,7 @@ open class UIScrollView: UIView {
         if contentSize.height <= scrollerBounds.size.height {
             contentOffset.y = 0
         }
-        
+        */
         return contentOffset
     }
     
