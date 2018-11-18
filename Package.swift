@@ -1,23 +1,40 @@
-// swift-tools-version:3.0.2
-// The swift-tools-version declares the minimum version of Swift required to build this package.
-
+// swift-tools-version:4.1
 import PackageDescription
 
 let package = Package(
     name: "Cacao",
-    targets: [
-                 Target(
-                    name: "CacaoDemo",
-                    dependencies: [.Target(name: "Cacao")]),
-                 Target(
-                    name: "Cacao"
-					)
-    ],
+    products: [
+        .library(name: "Cacao", targets: ["Cacao"]),
+        .executable(name: "CacaoDemo", targets: ["CacaoDemo"]),
+        ],
     dependencies: [
-        .Package(url: "https://github.com/PureSwift/Silica.git", majorVersion: 1),
-		.Package(url: "https://github.com/PureSwift/Cairo.git", majorVersion: 1),
-		.Package(url: "https://github.com/PureSwift/SDL.git", majorVersion: 1),
-        .Package(url: "https://github.com/PureSwift/CSDL2.git", majorVersion: 1)
+        .package(
+            url: "https://github.com/PureSwift/Silica.git",
+            .branch("master")
+        ),
+        .package(
+            url: "https://github.com/PureSwift/Cairo.git",
+            .branch("master")
+        ),
+        .package(
+            url: "https://github.com/PureSwift/SDL.git",
+            .branch("master")
+        )
     ],
-    exclude: ["iOS", "Resources"]
+    targets: [
+        .target(
+            name: "Cacao",
+            dependencies: [
+                "Silica",
+                "Cairo",
+                "SDL"
+            ]
+        ),
+        .target(
+            name: "CacaoDemo",
+            dependencies: [
+                "Cacao"
+            ]
+        ),
+        ]
 )

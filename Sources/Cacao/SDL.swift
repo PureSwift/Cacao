@@ -18,7 +18,8 @@ internal func SDLEventRun() {
     assert(Thread.current.isMainThread, "Should only be called from main thread")
     #endif
     
-    SDL.initialize(subSystems: [.video]).sdlAssert()
+    do { try SDL.initialize(subSystems: [.video]) }
+    catch { fatalError("Could not initialize SDL: \(error)") }
     
     defer { SDL.quit() }
     
@@ -26,7 +27,7 @@ internal func SDLEventRun() {
     
     let delegate = UIApplication.shared.delegate!
     
-    var windowOptions: Set<Window.Option> = [.allowRetina, .opengl]
+    var windowOptions: BitMaskOptionSet<SDLWindow.Option> = [.allowRetina, .opengl]
     
     if options.canResizeWindow {
         
@@ -37,10 +38,14 @@ internal func SDLEventRun() {
     
     let initialWindowSize = preferredSize // can we query for screen resolution?
     
-    let window = Window(title: options.windowName, frame: (x: .centered, y: .centered, width: Int(initialWindowSize.width), height:  Int(initialWindowSize.height)), options: windowOptions).sdlAssert()
+    let window = try! SDLWindow(title: options.windowName,
+                               frame: (x: .centered, y: .centered,
+                                       width: Int(initialWindowSize.width),
+                                       height:  Int(initialWindowSize.height)),
+                               options: windowOptions)
     
     // create main UIScreen
-    let screen = UIScreen(window: window, size: initialWindowSize)
+    let screen = try! UIScreen(window: window, size: initialWindowSize)
     UIScreen._main = screen
     
     let framesPerSecond = screen.maximumFramesPerSecond
@@ -84,7 +89,8 @@ internal func SDLEventRun() {
         if eventCount > 0 { print("Runloop took (\(SDL_GetTicks() - runLoopStartTime)ms)") }
         
         // render to screen
-        screen.update()
+        do { try screen.update() }
+        catch { fatalError("Could not render: \(error)") }
         
         // sleep to save energy
         let frameDuration = SDL_GetTicks() - startTime
@@ -93,41 +99,5 @@ internal func SDLEventRun() {
             
             SDL_Delay(expectedLoopTime - frameDuration)
         }
-    }
-}
-
-// MARK: - Assertions
-
-internal extension Bool {
-    
-    @inline(__always)
-    func sdlAssert(function: String = #function, file: StaticString = #file, line: UInt = #line) {
-        
-        guard self else { sdlFatalError(function: function, file: file, line: line) }
-    }
-}
-
-internal extension Optional {
-    
-    @inline(__always)
-    func sdlAssert(function: String = #function, file: StaticString = #file, line: UInt = #line) -> Wrapped {
-        
-        guard let value = self
-            else { sdlFatalError(function: function, file: file, line: line) }
-        
-        return value
-    }
-}
-
-@_silgen_name("_cacao_sdl_fatal_error")
-internal func sdlFatalError(function: String = #function, file: StaticString = #file, line: UInt = #line) -> Never {
-    
-    if let error = SDL.errorDescription {
-        
-        fatalError("SDL error: \(error)", file: file, line: line)
-        
-    } else {
-        
-        fatalError("An SDL error occurred", file: file, line: line)
     }
 }

@@ -45,12 +45,12 @@ public final class UIFont: Equatable {
 
 public extension UIFont {
     
-    static func systemFontOfSize(_ size: CGFloat) -> UIFont {
+    static func systemFont(ofSize size: CGFloat) -> UIFont {
         
         return UIFont(name: "HelveticaNeu", size: size)!
     }
     
-    static func boldSystemFontOfSize(_ size: CGFloat) -> UIFont {
+    static func boldSystemFont(ofSize size: CGFloat) -> UIFont {
         
         return UIFont(name: "HelveticaNeu-Bold", size: size)!
     }

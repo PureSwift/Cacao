@@ -37,13 +37,13 @@ internal final class UITouchesEvent: UIEvent {
     
     internal func views(for window: UIWindow) -> Set<UIView> {
         
-        let views = self.touches(for: window)?.flatMap { $0.view } ?? []
-        
+        let views = self.touches(for: window)?.compactMap { $0.view } ?? []
         return Set(views)
     }
     
     internal override func gestureRecognizers(for window: UIWindow) -> Set<UIGestureRecognizer> {
         
-        return Set(touches(for: window)?.reduce([UIGestureRecognizer](), { $0.0 + ($0.1.gestureRecognizers ?? []) }) ?? [])
+        let touches = self.touches(for: window) ?? []
+        return Set(touches.reduce([], { $0 + ($1.gestureRecognizers ?? []) }))
     }
 }

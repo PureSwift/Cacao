@@ -6,10 +6,7 @@
 //  Copyright © 2016 PureSwift. All rights reserved.
 //
 
-import struct Foundation.CGFloat
-import struct Foundation.CGPoint
-import struct Foundation.CGSize
-import struct Foundation.CGRect
+import Foundation
 import Silica
 
 open class UILabel: UIView {
@@ -25,7 +22,7 @@ open class UILabel: UIView {
     
     // MARK: - Properties
     
-    open var text: String = "" { didSet { setNeedsDisplay() } }
+    open var text: String? { didSet { setNeedsDisplay() } }
     
     open var font: UIFont = UIFont(name: "Helvetica", size: 17)! { didSet { setNeedsDisplay() } }
     
@@ -35,8 +32,7 @@ open class UILabel: UIView {
     
     // MARK: - Draw
     
-    @nonobjc
-    open override func draw(_ rect: CGRect?) {
+    open override func draw(_ rect: CGRect) {
         
         guard let context = UIGraphicsGetCurrentContext()
             else { return }
@@ -46,7 +42,7 @@ open class UILabel: UIView {
         attributes.color = textColor
         attributes.paragraphStyle.alignment = textAlignment
         
-        text.draw(in: self.bounds, context: context, attributes: attributes)
+        text?.draw(in: self.bounds, context: context, attributes: attributes)
     }
 }
 

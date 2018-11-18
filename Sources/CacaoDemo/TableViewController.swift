@@ -11,7 +11,7 @@ import Foundation
 import UIKit
 import CoreGraphics
 #else
-//import Cacao
+import Cacao
 import Silica
 #endif
 
@@ -45,12 +45,6 @@ final class TableViewController: UITableViewController {
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
             self?.data = Array((1...100))
         }
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        
     }
     
     // MARK: - UITableViewDataSource

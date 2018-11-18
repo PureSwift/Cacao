@@ -18,7 +18,6 @@ import Cacao
 
 var options = CacaoOptions()
 options.windowName = "CacaoDemo"
-
 UIApplicationMain(delegate: AppDelegate.shared, options: options)
     
 #endif

@@ -36,14 +36,14 @@ public final class UIScreen {
     
     public var maximumFramesPerSecond: Int {
         
-        return Int(window.displayMode?.refresh_rate ?? 60)
+        return try! window.displayMode().refreshRate
     }
     
-    internal let window: Window
+    internal let window: SDLWindow
     
     private var size: (window: CGSize, native: CGSize) { didSet { sizeChanged() } }
     
-    internal let renderer: Renderer
+    internal let renderer: SDLRenderer
     
     internal var needsDisplay = true
     
@@ -57,15 +57,15 @@ public final class UIScreen {
     
     // MARK: - Intialization
     
-    internal init(window: Window, size: CGSize) {
+    internal init(window: SDLWindow, size: CGSize) throws {
         
-        self.renderer = Renderer(window: window).sdlAssert()
+        self.renderer = try SDLRenderer(window: window)
         self.window = window
         self.size = (size, size)
         
         // update values
         self.updateSize()
-        self.renderer.drawColor = (0x00, 0x00, 0x00, 0xFF)
+        try self.renderer.setDrawColor((0x00, 0x00, 0x00, 0xFF))
     }
     
     // MARK: - Methods
@@ -86,7 +86,7 @@ public final class UIScreen {
     }
     
     /// Layout (if needed) and redraw the screen
-    internal func update() {
+    internal func update() throws {
         
         // apply animations
         if UIView.animations.isEmpty == false {
@@ -112,12 +112,12 @@ public final class UIScreen {
             
             defer { needsDisplay = false }
             
-            renderer.clear()
+            try renderer.clear()
             
             for window in windows {
                 
                 // render view hierarchy
-                render(view: window)
+                try render(view: window)
             }
             
             // render to screen
@@ -134,7 +134,7 @@ public final class UIScreen {
         needsLayout = true
     }
     
-    private func render(view: UIView, origin: CGPoint = CGPoint()) {
+    private func render(view: UIView, origin: CGPoint = .zero) throws {
         
         guard view.shouldRender
             else { return }
@@ -152,10 +152,10 @@ public final class UIScreen {
                             h: Int32(view.bounds.size.height * scale))
         
         // render view
-        view.render(on: self, in: rect)
+        try view.render(on: self, in: rect)
         
         // render subviews
-        view.subviews.forEach { render(view: $0, origin: relativeOrigin) }
+        try view.subviews.forEach { try render(view: $0, origin: relativeOrigin) }
     }
     
     internal func addWindow(_ window: UIWindow) {

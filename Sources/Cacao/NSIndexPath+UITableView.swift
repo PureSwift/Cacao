@@ -22,7 +22,7 @@ public extension IndexPath {
     }
 
     @inline(__always)
-    init(row: Int, in section: Int) {
+    init(row: Int, section: Int) {
         
         self.init(indexes: [section, row])
     }

@@ -700,7 +700,7 @@ open class UIView: UIResponder {
     /// (e.g. video streaming, SDL game) instead of the CoreGraphics drawing API.
     ///
     /// - Warning: Do not hold a reference to this object as it can be recreated as needed for rendering.
-    public private(set) var texture: Texture?
+    public private(set) var texture: SDLTexture?
     
     internal var shouldRender: Bool {
         return isHidden == false
@@ -709,7 +709,7 @@ open class UIView: UIResponder {
             && bounds.size.height >= 1.0 // must be at least 1x1
     }
     
-    internal final func render(on screen: UIScreen, in rect: SDL_Rect) {
+    internal final func render(on screen: UIScreen, in rect: SDL_Rect) throws {
         
         guard shouldRender
             else { return }
@@ -718,33 +718,34 @@ open class UIView: UIResponder {
         let nativeSize = (width: Int(bounds.size.width * scale),
                           height: Int(bounds.size.height * scale))
         
-        let texture: Texture
+        let texture: SDLTexture
         
         // reuse cached texture if view hasn't been resized.
         if let cachedTexture = self.texture,
-            cachedTexture.width == nativeSize.width,
-            cachedTexture.height == nativeSize.height {
+            let attributes = try? cachedTexture.attributes(),
+            attributes.width == nativeSize.width,
+            attributes.height == nativeSize.height {
             
             texture = cachedTexture
             
         } else {
             
-            texture = Texture(renderer: screen.renderer,
-                              format: PixelFormat.RawValue(SDL_PIXELFORMAT_ARGB8888),
-                              access: .streaming,
-                              width: nativeSize.width,
-                              height: nativeSize.height).sdlAssert()
+            texture = try SDLTexture(renderer: screen.renderer,
+                                     format: .argb8888, // SDL_PIXELFORMAT_ARGB8888
+                                     access: .streaming,
+                                     width: nativeSize.width,
+                                     height: nativeSize.height)
             
-            texture.blendMode = .alpha
+            try texture.setBlendMode([.alpha])
             
             // cache for reuse if view size isn't changed
             self.texture = texture
         }
         
         // unlock and modify texture
-        texture.withUnsafeMutableBytes {
+        try texture.withUnsafeMutableBytes {
             
-            let surface = try! Cairo.Surface.Image(mutableBytes: $0.assumingMemoryBound(to: UInt8.self),
+            let surface = try Cairo.Surface.Image(mutableBytes: $0.assumingMemoryBound(to: UInt8.self),
                                                    format: .argb32,
                                                    width: nativeSize.width,
                                                    height: nativeSize.height,
@@ -764,7 +765,7 @@ open class UIView: UIResponder {
             surface.finish()
         }
         
-        screen.renderer.copy(texture, destination: rect)
+        try screen.renderer.copy(texture, destination: rect)
     }
     
     internal func draw(in context: Silica.CGContext) {
@@ -1082,9 +1083,9 @@ final class ReferenceWritableKeyPath<Value, Property> {
                 let nativeSize = (width: Int(bounds.size.width * scale),
                                   height: Int(bounds.size.height * scale))
                 
-                let surface = cachedTexture.withUnsafeMutableBytes {
+                let surface = try! cachedTexture.withUnsafeMutableBytes {
                     
-                    try! Cairo.Surface.Image(mutableBytes: $0.assumingMemoryBound(to: UInt8.self), format: .argb32, width: nativeSize.width, height: nativeSize.height, stride: $1)
+                    try Cairo.Surface.Image(mutableBytes: $0.assumingMemoryBound(to: UInt8.self), format: .argb32, width: nativeSize.width, height: nativeSize.height, stride: $1)
                 }
                 
                 let data = try! surface!.writePNG()
