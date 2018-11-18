@@ -35,18 +35,20 @@ final class ScrollViewController: UIViewController, UIScrollViewDelegate {
     
     override func loadView() {
         
-        view = UIView(frame: CGRect(x: 0, y: 0, width: 360, height: 560))
+        view = UIView(frame: CGRect(x: 0, y: 0, width: 320, height: 400))
         view.backgroundColor = .white
         
-        scrollView = UIScrollView(frame: view.frame)
+        scrollView = UIScrollView(frame: CGRect(x: 0, y: 0, width: 320, height: 400))
         scrollView.delegate = self
         view.addSubview(scrollView)
         
+        #if os(iOS)
         if #available(iOS 11.0, *) {
-            scrollView.contentInsetAdjustmentBehavior = .never
+            ((scrollView as NSObject) as? UIKit.UIScrollView)?.contentInsetAdjustmentBehavior = .never
         }
+        #endif
         
-        contentView = UIView(frame: scrollView.bounds)
+        contentView = UIView(frame: CGRect(x: 0, y: 0, width: 320, height: 400))
         contentView.backgroundColor = .blue
         contentView.isUserInteractionEnabled = false
         scrollView.addSubview(contentView)
@@ -59,23 +61,26 @@ final class ScrollViewController: UIViewController, UIScrollViewDelegate {
     
     override func viewWillLayoutSubviews() {
         
-        scrollView.frame = view.bounds
-        var contentSize = view.bounds.size
+        let size = view.bounds.size
+        var contentSize = size
         contentSize.width += 100
         contentSize.height += 100
+        
+        scrollView.frame.size = size
         scrollView.contentSize = contentSize
-        contentView.frame = scrollView.bounds
+        contentView.frame.size = size
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        //scrollView.contentOffset = CGPoint(x: 30, y: 30)
+        scrollView.contentOffset = CGPoint(x: 30, y: 30)
     }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         
         print("Did scroll")
+        assert(scrollView.contentOffset == scrollView.bounds.origin)
     }
     
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
