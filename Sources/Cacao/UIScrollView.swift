@@ -482,36 +482,67 @@ open class UIScrollView: UIView {
     
     private func confined(contentOffset: CGPoint) -> CGPoint {
         
-        /*
-        var contentOffset = contentOffset
-        
         let scrollerBounds = UIEdgeInsetsInsetRect(bounds, contentInset)
         
-        // dont allow content offset lower than end of content
-        let contentOffsetMin = CGPoint(x: scrollerBounds.size.width - contentSize.width,
-                                       y: scrollerBounds.size.height - contentSize.height)
+        var contentOffset = contentOffset
         
-        if contentOffset.x < contentOffsetMin.x {
-            contentOffset.x = contentOffsetMin.x
+        if bounces {
+            
+            // FIXME: Bounces scrolling
+            
+            // dont allow content offset lower than end of content
+            let contentOffsetMax = CGPoint(x: contentSize.width - scrollerBounds.size.width,
+                                           y: contentSize.height - scrollerBounds.size.height)
+            
+            if contentOffset.x > contentOffsetMax.x {
+                contentOffset.x = contentOffsetMax.x
+            }
+            
+            if contentOffset.y > contentOffsetMax.y {
+                contentOffset.y = contentOffsetMax.y
+            }
+            
+            // non-bouncing content offset
+            contentOffset.x = max(contentOffset.x, 0)
+            contentOffset.y = max(contentOffset.y, 0)
+            
+            // no scrolling if content size is smaller or exactly the size of the scroll view
+            if contentSize.width <= scrollerBounds.size.width {
+                contentOffset.x = 0
+            }
+            
+            if contentSize.height <= scrollerBounds.size.height {
+                contentOffset.y = 0
+            }
+            
+        } else {
+            
+            // dont allow content offset lower than end of content
+            let contentOffsetMax = CGPoint(x: contentSize.width - scrollerBounds.size.width,
+                                           y: contentSize.height - scrollerBounds.size.height)
+            
+            if contentOffset.x > contentOffsetMax.x {
+                contentOffset.x = contentOffsetMax.x
+            }
+            
+            if contentOffset.y > contentOffsetMax.y {
+                contentOffset.y = contentOffsetMax.y
+            }
+            
+            // non-bouncing content offset
+            contentOffset.x = max(contentOffset.x, 0)
+            contentOffset.y = max(contentOffset.y, 0)
+            
+            // no scrolling if content size is smaller or exactly the size of the scroll view
+            if contentSize.width <= scrollerBounds.size.width {
+                contentOffset.x = 0
+            }
+            
+            if contentSize.height <= scrollerBounds.size.height {
+                contentOffset.y = 0
+            }
         }
-        
-        if contentOffset.y < contentOffsetMin.y {
-            contentOffset.y = contentOffsetMin.y
-        }
-        
-        // non-bouncing content offset should always be zero or or smaller
-        contentOffset.x = min(contentOffset.x, 0)
-        contentOffset.y = min(contentOffset.y, 0)
-        
-        // no scrolling if content size is smaller or exactly the size of the scroll view
-        if contentSize.width <= scrollerBounds.size.width {
-            contentOffset.x = 0
-        }
-        
-        if contentSize.height <= scrollerBounds.size.height {
-            contentOffset.y = 0
-        }
-        */
+ 
         return contentOffset
     }
     
