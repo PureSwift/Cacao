@@ -35,19 +35,23 @@ final class ScrollViewController: UIViewController, UIScrollViewDelegate {
     
     override func loadView() {
         
-        view = UIView()
-        view.backgroundColor = UIColor.white
+        view = UIView(frame: CGRect(x: 0, y: 0, width: 360, height: 560))
+        view.backgroundColor = .white
         
-        scrollView = UIScrollView()
+        scrollView = UIScrollView(frame: view.frame)
         scrollView.delegate = self
         view.addSubview(scrollView)
         
-        contentView = UIView()
-        contentView.backgroundColor = UIColor.blue
+        if #available(iOS 11.0, *) {
+            scrollView.contentInsetAdjustmentBehavior = .never
+        }
+        
+        contentView = UIView(frame: scrollView.bounds)
+        contentView.backgroundColor = .blue
         contentView.isUserInteractionEnabled = false
         scrollView.addSubview(contentView)
         
-        logoView = SwiftLogoView(frame: CGRect(origin: .zero, size: CGSize(width: 100, height: 100)))
+        logoView = SwiftLogoView(frame: CGRect(x: 20, y: 20, width: 100, height: 100))
         logoView.pointSize = 100
         logoView.contentMode = .scaleAspectFill
         scrollView.addSubview(logoView)
@@ -56,14 +60,11 @@ final class ScrollViewController: UIViewController, UIScrollViewDelegate {
     override func viewWillLayoutSubviews() {
         
         scrollView.frame = view.bounds
-        
-        var contentSize = scrollView.bounds.size
+        var contentSize = view.bounds.size
         contentSize.width += 100
         contentSize.height += 100
-        
         scrollView.contentSize = contentSize
-        contentView.bounds.size = contentSize
-        contentView.frame = .zero
+        contentView.frame = scrollView.bounds
     }
     
     override func viewDidLoad() {

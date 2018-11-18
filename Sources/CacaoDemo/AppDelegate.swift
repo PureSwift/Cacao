@@ -31,7 +31,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         #if !os(tvOS)
         print("Battery: \(UIDevice.current.batteryLevel) (\(UIDevice.current.batteryState))")
         #endif
-        print("FPS: \(UIScreen.main.maximumFramesPerSecond)")
+        if #available(iOS 10.3, *) {
+            print("FPS: \(UIScreen.main.maximumFramesPerSecond)")
+        }
         
         self.window = UIWindow(frame: UIScreen.main.bounds)
         self.window?.rootViewController = ScrollViewController()

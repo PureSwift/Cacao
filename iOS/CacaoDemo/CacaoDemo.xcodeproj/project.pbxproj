@@ -14,7 +14,6 @@
 		6E00A8B71FCB1BFB00005FCC /* SwiftLogoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F51FC11FA800854A61 /* SwiftLogoView.swift */; };
 		6E00A8B91FCB1BFB00005FCC /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F71FC11FA800854A61 /* TableViewController.swift */; };
 		6E00A8BC1FCB1DCE00005FCC /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6E00A8BB1FCB1DCE00005FCC /* Main.storyboard */; };
-		6E45B70C219FD73E00DC3DC9 /* UIScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E45B6F0219FD1A700DC3DC9 /* UIScrollView.swift */; };
 		6E9366E91FC11F7E00854A61 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6E9366E71FC11F7E00854A61 /* LaunchScreen.storyboard */; };
 		6E9366F81FC11FA800854A61 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F11FC11FA800854A61 /* AppDelegate.swift */; };
 		6E9366F91FC11FA800854A61 /* ContentModeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F21FC11FA800854A61 /* ContentModeViewController.swift */; };
@@ -396,7 +395,6 @@
 				6E9366FD1FC11FA800854A61 /* SwitchViewController.swift in Sources */,
 				6E9366F81FC11FA800854A61 /* AppDelegate.swift in Sources */,
 				6E9366F91FC11FA800854A61 /* ContentModeViewController.swift in Sources */,
-				6E45B70C219FD73E00DC3DC9 /* UIScrollView.swift in Sources */,
 				6E9366FB1FC11FA800854A61 /* ScrollViewController.swift in Sources */,
 				6E9366FC1FC11FA800854A61 /* SwiftLogoView.swift in Sources */,
 			);
@@ -566,6 +564,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 4W79SG34MW;
 				INFOPLIST_FILE = CacaoDemo/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = org.pureswift.CacaoDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -580,6 +579,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 4W79SG34MW;
 				INFOPLIST_FILE = CacaoDemo/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = org.pureswift.CacaoDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
