@@ -7,6 +7,13 @@
 
 import Foundation
 
+#if os(iOS)
+import UIKit
+import CoreGraphics
+#else
+import Silica
+#endif
+
 /// A reusable view that can be placed at the top or bottom of a table section
 /// to display additional information for that section.
 ///
@@ -24,6 +31,12 @@ open class UITableViewHeaderFooterView: UIView {
         
         super.init(frame: .zero)
     }
+    
+    #if os(iOS)
+    public required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    #endif
     
     // MARK: - Accessing the Content Views
     

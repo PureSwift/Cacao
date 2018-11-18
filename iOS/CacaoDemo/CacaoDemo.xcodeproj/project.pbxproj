@@ -15,6 +15,11 @@
 		6E00A8B91FCB1BFB00005FCC /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F71FC11FA800854A61 /* TableViewController.swift */; };
 		6E00A8BC1FCB1DCE00005FCC /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6E00A8BB1FCB1DCE00005FCC /* Main.storyboard */; };
 		6E45B71421A1217C00DC3DC9 /* UIScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E45B6F0219FD1A700DC3DC9 /* UIScrollView.swift */; };
+		6E45B71521A12A0A00DC3DC9 /* UITableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E45B6F4219FD1A700DC3DC9 /* UITableView.swift */; };
+		6E45B71621A12A1200DC3DC9 /* UITableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E45B6F5219FD1A700DC3DC9 /* UITableViewCell.swift */; };
+		6E45B71721A12A2A00DC3DC9 /* UITableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E45B6F6219FD1A700DC3DC9 /* UITableViewController.swift */; };
+		6E45B71821A12A2E00DC3DC9 /* UITableViewHeaderFooterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E45B6F7219FD1A700DC3DC9 /* UITableViewHeaderFooterView.swift */; };
+		6E45B71921A12C5000DC3DC9 /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F71FC11FA800854A61 /* TableViewController.swift */; };
 		6E9366E91FC11F7E00854A61 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6E9366E71FC11F7E00854A61 /* LaunchScreen.storyboard */; };
 		6E9366F81FC11FA800854A61 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F11FC11FA800854A61 /* AppDelegate.swift */; };
 		6E9366F91FC11FA800854A61 /* ContentModeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9366F21FC11FA800854A61 /* ContentModeViewController.swift */; };
@@ -324,7 +329,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0910;
-				LastUpgradeCheck = 0910;
+				LastUpgradeCheck = 1010;
 				ORGANIZATIONNAME = PureSwift;
 				TargetAttributes = {
 					6E00A8A31FCB1BD800005FCC = {
@@ -394,11 +399,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				6E9366FD1FC11FA800854A61 /* SwitchViewController.swift in Sources */,
+				6E45B71621A12A1200DC3DC9 /* UITableViewCell.swift in Sources */,
 				6E9366F81FC11FA800854A61 /* AppDelegate.swift in Sources */,
+				6E45B71721A12A2A00DC3DC9 /* UITableViewController.swift in Sources */,
 				6E9366F91FC11FA800854A61 /* ContentModeViewController.swift in Sources */,
 				6E45B71421A1217C00DC3DC9 /* UIScrollView.swift in Sources */,
+				6E45B71921A12C5000DC3DC9 /* TableViewController.swift in Sources */,
+				6E45B71821A12A2E00DC3DC9 /* UITableViewHeaderFooterView.swift in Sources */,
 				6E9366FB1FC11FA800854A61 /* ScrollViewController.swift in Sources */,
 				6E9366FC1FC11FA800854A61 /* SwiftLogoView.swift in Sources */,
+				6E45B71521A12A0A00DC3DC9 /* UITableView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -464,6 +474,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -471,6 +482,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
@@ -522,6 +534,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -529,6 +542,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;

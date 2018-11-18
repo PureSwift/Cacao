@@ -13,7 +13,13 @@
 #endif
 
 import Foundation
+
+#if os(iOS)
+import UIKit
+import CoreGraphics
+#else
 import Silica
+#endif
 
 /// A view that presents data using rows arranged in a single column.
 open class UITableView: UIScrollView {
@@ -37,6 +43,12 @@ open class UITableView: UIScrollView {
         
         self.init(frame: frame, style: .plain)
     }
+    
+    #if os(iOS)
+    public required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    #endif
     
     // MARK: - Providing the Table View Data
     
@@ -298,7 +310,7 @@ open class UITableView: UIScrollView {
                     
                     if rect.intersects(simpleRowRect) {
                         
-                        results.append(IndexPath(row: row, in: sectionIndex))
+                        results.append(IndexPath(row: row, section: sectionIndex))
                         
                     } else if pastEnd {
                         
@@ -325,7 +337,7 @@ open class UITableView: UIScrollView {
     /// each representing a visible cell in the table view.
     public var visibleCells: [UITableViewCell] {
         
-        return indexPathsForVisibleRows?.flatMap { cellForRow(at: $0) } ?? []
+        return indexPathsForVisibleRows?.compactMap { cellForRow(at: $0) } ?? []
     }
     
     /// An array of index paths each identifying a visible row in the table view.
@@ -674,7 +686,7 @@ open class UITableView: UIScrollView {
     
     internal static let defaultHeaderFooterHeight: CGFloat = 22
     
-    internal static let defaultSeparatorColor = UIColor(red: 0.88, green: 0.88, blue: 0.88)
+    internal static let defaultSeparatorColor = UIColor(red: 0.88, green: 0.88, blue: 0.88, alpha: 1.0)
     
     internal static let defaultSeparatorInset = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 0)
     
@@ -832,7 +844,7 @@ open class UITableView: UIScrollView {
             
             for row in 0 ..< numberOfRowsInSection {
                 
-                let rowHeight = _delegate.tableView(self, heightForRowAt: IndexPath(row: row, in: sectionIndex))
+                let rowHeight = _delegate.tableView(self, heightForRowAt: IndexPath(row: row, section: sectionIndex))
                 section.rowHeights[row] = rowHeight
             }
             
@@ -884,7 +896,7 @@ open class UITableView: UIScrollView {
             for row in 0 ..< section.numberOfRows {
                 
                 // create index path for row in section
-                let indexPath = IndexPath(row: row, in: sectionIndex)
+                let indexPath = IndexPath(row: row, section: sectionIndex)
                 
                 // get layout rect for row
                 let rowRect = rectForRow(at: indexPath)
@@ -1058,14 +1070,20 @@ private extension UITableView {
         
         init(title: String) {
             super.init(frame: CGRect())
-            self.font = UIFont.boldSystemFontOfSize(17)
+            self.font = UIFont.boldSystemFont(ofSize: 17)
             self.textColor = .white
             self.backgroundColor = UIColor(red: 0.9, green: 0.9, blue: 0.9, alpha: 0.8)
             //self.shadowColor = UIColor(red: (100 / 255.0), green: (105 / 255.0), blue: (110 / 255.0))
             //self.shadowOffset = CGSize(width: 0, height: 1)
         }
         
-        override func draw(_ rect: CGRect?) {
+        #if os(iOS)
+        public required init?(coder aDecoder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        #endif
+        
+        override func draw(_ rect: CGRect) {
             /*
             let size: CGSize = bounds.size
             UIColor(red: CGFloat(166 / 255.0), green: CGFloat(177 / 255.0), blue: CGFloat(187 / 255.0), alpha: CGFloat(1)).setFill()

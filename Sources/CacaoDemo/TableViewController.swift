@@ -8,35 +8,52 @@
 import Foundation
 
 #if os(iOS) || os(tvOS)
-    import UIKit
-    import CoreGraphics
+import UIKit
+import CoreGraphics
 #else
-    import Cacao
-    import Silica
+//import Cacao
+import Silica
 #endif
 
 final class TableViewController: UITableViewController {
     
-    private let data = Array((1...100))
+    // MARK: - Properties
+    
+    private var data = Array((1...5)) {
+        
+        didSet { tableView.reloadData() }
+    }
     
     private let cellReuseIdentifier = "Cell"
+    
+    // MARK: - Loading
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        #if os(iOS)
+        if #available(iOS 11.0, *) {
+            ((tableView as NSObject) as? UIKit.UIScrollView)?.contentInsetAdjustmentBehavior = .never
+        }
+        #endif
+        
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: cellReuseIdentifier)
         
-        #if os(iOS)
-        tableView.estimatedRowHeight = 44
-        tableView.rowHeight = UITableViewAutomaticDimension
-        #endif
+        //tableView.estimatedRowHeight = 44
+        //tableView.rowHeight = UITableViewAutomaticDimension
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
+            self?.data = Array((1...100))
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        let _ = self.tableView.becomeFirstResponder()
+        
     }
+    
+    // MARK: - UITableViewDataSource
     
     override func numberOfSections(in tableView: UITableView) -> Int {
         
@@ -57,6 +74,8 @@ final class TableViewController: UITableViewController {
         return cell
     }
     
+    // MARK: - Methods
+    
     private func configure(cell: UITableViewCell, at indexPath: IndexPath) {
         
         let item = self[indexPath]
@@ -69,15 +88,5 @@ final class TableViewController: UITableViewController {
         let number = data[indexPath.row]
         
         return "test \(number)"
-    }
-    
-    override func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        
-        print("Did scroll")
-    }
-    
-    override func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        
-        print("Will begin dragging")
     }
 }

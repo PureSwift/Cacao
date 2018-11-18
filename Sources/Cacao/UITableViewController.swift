@@ -6,7 +6,13 @@
 //
 
 import Foundation
+
+#if os(iOS)
+import UIKit
+import CoreGraphics
+#else
 import Silica
+#endif
 
 /// A controller object that manages a table view.
 open class UITableViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
@@ -27,6 +33,12 @@ open class UITableViewController: UIViewController, UITableViewDataSource, UITab
         self.style = style
         super.init(nibName: nil, bundle: nil)
     }
+    
+    #if os(iOS)
+    public required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    #endif
     
     // MARK: - Getting the Table View
     

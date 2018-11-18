@@ -7,6 +7,13 @@
 
 import Foundation
 
+#if os(iOS)
+import UIKit
+import CoreGraphics
+#else
+import Silica
+#endif
+
 /// A cell in a table view.
 ///
 /// This class includes properties and methods for setting and managing cell content
@@ -29,6 +36,12 @@ open class UITableViewCell: UIView {
         
         self.setupTableViewCellCommon()
     }
+    
+    #if os(iOS)
+    public required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    #endif
     
     // MARK: - Reusing Cells
     
@@ -326,6 +339,12 @@ internal final class UITableViewCellContentView: UIView {
         self.tableViewCellContentViewCommonSetup()
     }
     
+    #if os(iOS)
+    public required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    #endif
+    
     private func tableViewCellContentViewCommonSetup() {
         
         // should only be called once
@@ -342,9 +361,11 @@ internal final class UITableViewCellContentView: UIView {
         let contentSubviews: [UIView?] = [textLabel, detailTextLabel, imageView]
         
         // add as subviews to content view
-        contentSubviews
-            .flatMap { $0 }
-            .forEach { self.addSubview($0) }
+        contentSubviews.forEach {
+            if let view = $0 {
+                self.addSubview(view)
+            }
+        }
         
         // set properties
         self.textLabel = textLabel
@@ -418,6 +439,12 @@ internal final class _UITableViewCellSeparatorView: UIView {
         
         self.isHidden = true
     }
+    
+    #if os(iOS)
+    public required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    #endif
     
     override func draw(_ rect: CGRect) {
         
@@ -595,7 +622,7 @@ internal class UITableViewLabel: UILabel {
     
     private(set) weak var cell: UITableViewCell!
     
-    override var text: String {
+    override var text: String? {
         
         didSet {
             
@@ -611,6 +638,12 @@ internal class UITableViewLabel: UILabel {
         
         self.cell = cell
     }
+    
+    #if os(iOS)
+    public required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    #endif
 }
 
 // MARK: - ReusableView Protocol
