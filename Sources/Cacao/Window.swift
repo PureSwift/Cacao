@@ -77,6 +77,8 @@ public final class Window {
         }
     }
     
+    public var scale: CGFloat { CGFloat(sdlWindow.drawableSize.width) / size.width }
+    
     // MARK: - Methods
     
     public func setNeedsDisplay() {
@@ -84,8 +86,41 @@ public final class Window {
     }
     
     internal func update() throws {
+        if needsDisplay {
+            
+        }
+    }
+    
+    internal func render() throws {
+        defer { needsDisplay = false }
+        try renderer.clear()
+        // render view hierarchy
+        try render(view: window)
+        // render to screen
+        renderer.present()
+    }
+    
+    internal func render(view: View, origin: CGPoint = .zero) throws {
         
+        guard view.shouldRender
+            else { return }
         
+        // add translation
+        var relativeOrigin = origin
+        relativeOrigin.x += (view.frame.origin.x + (view.superview?.bounds.origin.x ?? 0.0)) * scale
+        relativeOrigin.y += (view.frame.origin.y + (view.superview?.bounds.origin.y ?? 0.0)) * scale
+        
+        // frame of view relative to SDL window
+        let rect = SDL_Rect(x: Int32(relativeOrigin.x),
+                            y: Int32(relativeOrigin.y),
+                            w: Int32(view.bounds.size.width * scale),
+                            h: Int32(view.bounds.size.height * scale))
+        
+        // render view
+        try view.render(on: self, in: rect)
+        
+        // render subviews
+        try view.subviews.forEach { try render(view: $0, origin: relativeOrigin) }
     }
     
     internal func handle(_ event: SDL_WindowEvent) {
