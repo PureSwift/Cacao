@@ -1,0 +1,126 @@
+//
+//  Resolution.swift
+//  Cacao
+//
+//  Created by Alsey Coleman Miller on 11/13/26.
+//
+
+import Foundation
+#if canImport(CoreGraphics)
+import CoreGraphics
+#endif
+import Observation
+
+/// What a view contributes to its node: its behavior and its child views.
+internal struct Resolution {
+
+    /// How the node lays out and draws, or `nil` for a transparent node,
+    /// whose children take part in layout as if they were its parent's.
+    var behavior: (any NodeBehavior)?
+
+    /// The child views, keyed by their structural identity within this node.
+    var children: [ChildView]
+
+    /// Traits, identifiers, preferences and lifecycle actions of the node.
+    var attributes: NodeAttributes
+
+    init(
+        behavior: (any NodeBehavior)? = nil,
+        children: [ChildView] = [],
+        attributes: NodeAttributes = NodeAttributes()
+    ) {
+        self.behavior = behavior
+        self.children = children
+        self.attributes = attributes
+    }
+}
+
+/// A child view and its identity within its parent node.
+internal struct ChildView {
+
+    /// The child's structural identity among its siblings.
+    var key: AnyHashable
+
+    var view: any View
+
+    /// The child's environment, or `nil` to inherit the parent's.
+    var environment: EnvironmentValues?
+
+    init<Key: Hashable>(key: Key, view: any View, environment: EnvironmentValues? = nil) {
+        self.key = AnyHashable(key)
+        self.view = view
+        self.environment = environment
+    }
+}
+
+/// Attributes of a node that aren't its layout or drawing.
+internal struct NodeAttributes {
+
+    /// Values that containers read from their subviews, like layout priority.
+    var traits = LayoutTraits()
+
+    /// The accessibility identifier, which also identifies the view in tests.
+    var identifier: String?
+
+    /// A preference value this node sets for its subtree.
+    var preference: PreferenceValue?
+
+    /// A function that transforms a preference value from this node's subtree.
+    var preferenceTransform: PreferenceTransform?
+
+    /// An action called when a preference from this node's subtree changes.
+    var preferenceObserver: PreferenceObserver?
+
+    var onAppear: (() -> Void)?
+
+    var onDisappear: (() -> Void)?
+}
+
+// MARK: - ResolveContext
+
+/// The node a view is resolved in, and the services resolving uses.
+@MainActor
+internal struct ResolveContext {
+
+    let node: ViewNode
+
+    var environment: EnvironmentValues {
+        node.environment
+    }
+
+    var graph: ViewGraph {
+        node.graph
+    }
+
+    /// Connects the dynamic properties of `value` to the node, then evaluates
+    /// `body`, recording the observable properties it reads so that a change
+    /// to any of them invalidates the node.
+    func evaluate<Result>(
+        _ body: () -> Result,
+        installing value: () -> Any
+    ) -> Result {
+        DynamicProperties.install(in: value(), node: node)
+        let token = node.observationToken
+        return withObservationTracking(body, onChange: {
+            token.invalidate()
+        })
+    }
+}
+
+/// Invalidates a node when an observable property its body read changes.
+internal final class ObservationToken: @unchecked Sendable {
+
+    private weak var node: ViewNode?
+
+    private weak var queue: InvalidationQueue?
+
+    @MainActor
+    init(node: ViewNode) {
+        self.node = node
+        self.queue = node.graph.invalidations
+    }
+
+    func invalidate() {
+        queue?.enqueue(node)
+    }
+}
