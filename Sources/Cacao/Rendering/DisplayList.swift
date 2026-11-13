@@ -61,12 +61,21 @@ package struct DisplayList: Equatable, Sendable {
 
         /// Text laid out in the frame.
         case text(ResolvedText)
+
+        /// A shape drawn in the frame.
+        case shape(ShapeContent)
+
+        /// An image scaled to the frame.
+        case image(ImageContent)
     }
 
     package enum Effect: Equatable, Sendable {
 
         /// The nested list drawn as a group with the opacity.
         case opacity(Double)
+
+        /// The nested list clipped to a viewport and moved by a scroll offset.
+        case scroll(ScrollEffect)
     }
 }
 
@@ -76,7 +85,8 @@ extension ViewGraph {
 
     /// The display list for the last layout.
     package func displayList() -> DisplayList {
-        DisplayList(items: root.displayItems())
+        needsDisplay = false
+        return DisplayList(items: root.displayItems())
     }
 }
 
