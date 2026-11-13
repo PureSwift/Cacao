@@ -110,8 +110,26 @@ internal struct _ListRows<Content: View>: View, PrimitiveView {
 
     func resolve(in context: ResolveContext) -> Resolution {
         let selection = self.selection
-        return LazyStack(axis: .vertical, alignment: HorizontalAlignment.leading.key, spacing: 0, rowTransform: { view, id in
-            _ListRow(content: AnyView(view), id: id, selection: selection)
+        return LazyStack(axis: .vertical, alignment: HorizontalAlignment.leading.key, spacing: 0, rowTransform: { view, id, kind -> any View in
+            switch kind {
+            case .row:
+                return _ListRow(content: AnyView(view), id: id, selection: selection)
+            case .header:
+                return AnyView(view)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 18)
+                    .padding(.bottom, 6)
+            case .footer:
+                return AnyView(view)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 6)
+            }
         })
         .resolve(content: content, in: context)
     }
