@@ -13,8 +13,8 @@ on macOS) only when it changes, and composited every frame by the
 [SDL3](https://github.com/PureSwift/SDL) renderer (Metal, Vulkan or OpenGL),
 so scrolling and animation never repaint.
 
-> **Status:** early development (Phase 2: views, layout, drawing, taps and
-> scrolling in a window on Linux and macOS). See
+> **Status:** early development (Phase 3: views, layout, controls, text input,
+> lazy lists and GPU-composited drawing on Linux and macOS). See
 > [the plan](Documentation/Plan.md) for the architecture and roadmap. The
 > previous UIKit implementation is preserved at the
 > [`uikit-legacy`](https://github.com/PureSwift/Cacao/tree/uikit-legacy) tag.
