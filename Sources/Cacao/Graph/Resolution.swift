@@ -96,6 +96,9 @@ internal struct NodeAttributes {
 
     /// A drag gesture on the node's views.
     var drag: DragHandler?
+
+    /// Menu items shown on a secondary click.
+    var contextMenu: AnyView?
 }
 
 // MARK: - ResolveContext
