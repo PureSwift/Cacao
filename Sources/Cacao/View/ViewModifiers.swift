@@ -27,6 +27,11 @@ internal struct OpacityBehavior: UnaryLayoutBehavior {
     func displayEffect(node: ViewNode) -> DisplayList.Effect? {
         .opacity(opacity)
     }
+
+    /// Invisible views don't take hits.
+    func allowsHitTesting(node: ViewNode) -> Bool {
+        opacity > 0
+    }
 }
 
 internal struct _OpacityEffect: ViewModifier, LayoutModifier {
