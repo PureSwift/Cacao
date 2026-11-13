@@ -55,6 +55,36 @@ package final class ViewGraph {
 
     private(set) var layoutGeneration = 0
 
+    /// The tap gesture node a press started on.
+    weak var activeTap: ViewNode?
+
+    var activeTapIsInside = false
+
+    /// Whether the drawing changed without an update, as when scrolling.
+    package internal(set) var needsDisplay = true
+
+    /// Called when the drawing changes without an update.
+    package var onNeedsDisplay: (() -> Void)?
+
+    /// Counts of the graph's work, for tests and diagnostics.
+    package struct Statistics: Equatable, Sendable {
+
+        /// Nodes resolved: bodies evaluated or primitives described.
+        package var resolves = 0
+
+        /// Layout passes.
+        package var layouts = 0
+    }
+
+    package internal(set) var statistics = Statistics()
+
+    /// Marks the drawing as changed.
+    package func setNeedsDisplay() {
+        guard !needsDisplay else { return }
+        needsDisplay = true
+        onNeedsDisplay?()
+    }
+
     /// Creates a graph for a root view and resolves it.
     package init<Root: View>(
         rootView: Root,
@@ -188,6 +218,8 @@ package final class ViewGraph {
         update()
         self.size = size
         layoutGeneration += 1
+        statistics.layouts += 1
+        needsDisplay = true
         let proposal = ProposedViewSize(size)
         guard let content = LayoutProxy.combining(root.layoutChildren(forRoot: true)) else {
             return
