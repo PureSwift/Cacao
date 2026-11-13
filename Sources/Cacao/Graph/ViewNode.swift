@@ -106,6 +106,7 @@ internal final class ViewNode {
 
     /// Resolves the node's view and, recursively, its children.
     func resolve() {
+        graph.statistics.resolves += 1
         isDirty = false
         version += 1
         cachedLayoutChildren = nil
