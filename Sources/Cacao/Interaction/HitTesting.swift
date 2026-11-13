@@ -16,10 +16,10 @@ import CoreGraphics
 internal struct TapHandler {
 
     /// Called when a press starts, and when it moves in or out of the views.
-    var onPressChanged: ((Bool) -> Void)?
+    var onPressChanged: (@MainActor (Bool) -> Void)?
 
     /// Called when a press ends on the views.
-    var action: () -> Void
+    var action: @MainActor () -> Void
 }
 
 internal struct _TapGestureModifier: ViewModifier, PrimitiveViewModifier {
@@ -55,7 +55,7 @@ extension View {
 
     /// Adds an action to perform when this view recognizes a tap gesture.
     public func onTapGesture(count: Int = 1, perform action: @escaping () -> Void) -> some View {
-        modifier(_TapGestureModifier(handler: TapHandler(action: action)))
+        modifier(_TapGestureModifier(handler: TapHandler(action: { action() })))
     }
 
     /// Defines the content shape for hit testing.
@@ -94,6 +94,10 @@ extension ViewNode {
             return nil
         }
         var childPoint = point
+        if let clip = behavior as? ClipBehavior {
+            let local = CGPoint(x: point.x - frame.minX, y: point.y - frame.minY)
+            guard clip.path(node: self).contains(local) else { return nil }
+        }
         if let scroll = behavior as? ScrollBehavior {
             guard frame.contains(point) else { return nil }
             let offset = scroll.state(of: self).offset
@@ -166,10 +170,28 @@ extension ViewGraph {
                 active.attributes.tap?.onPressChanged?(false)
             }
             let path = root.hitTest(point) ?? []
-            activeTap = path.last { $0.attributes.tap != nil }
+            // Focus follows clicks: the innermost focusable view, or none.
+            focus(path.last { $0.attributes.focus != nil })
+            // The innermost drag or tap gesture takes the press.
+            let dragIndex = path.lastIndex { $0.attributes.drag != nil }
+            let tapIndex = path.lastIndex { $0.attributes.tap != nil }
+            if let dragIndex, dragIndex >= (tapIndex ?? -1) {
+                let node = path[dragIndex]
+                activeDrag = node
+                activeDragStart = point
+                activeDragFrame = node.windowFrame
+                activeTap = nil
+                node.attributes.drag?.onChanged(point, point, activeDragFrame)
+                return
+            }
+            activeTap = tapIndex.map { path[$0] }
             activeTapIsInside = true
             activeTap?.attributes.tap?.onPressChanged?(true)
         case .moved:
+            if let drag = activeDrag {
+                drag.attributes.drag?.onChanged(activeDragStart, point, activeDragFrame)
+                return
+            }
             guard let target = activeTap else { return }
             let inside = target.isAttached && (root.hitTest(point)?.contains { $0 === target } ?? false)
             if inside != activeTapIsInside {
@@ -177,6 +199,11 @@ extension ViewGraph {
                 target.attributes.tap?.onPressChanged?(inside)
             }
         case .ended:
+            if let drag = activeDrag {
+                activeDrag = nil
+                drag.attributes.drag?.onEnded(activeDragStart, point, activeDragFrame)
+                return
+            }
             guard let target = activeTap else { return }
             activeTap = nil
             let inside = target.isAttached && (root.hitTest(point)?.contains { $0 === target } ?? false)
@@ -187,6 +214,10 @@ extension ViewGraph {
         case .cancelled:
             activeTap?.attributes.tap?.onPressChanged?(false)
             activeTap = nil
+            if let drag = activeDrag {
+                activeDrag = nil
+                drag.attributes.drag?.onEnded(activeDragStart, activeDragStart, activeDragFrame)
+            }
         }
     }
 }
