@@ -1,7 +1,7 @@
 # Cacao: SwiftUI for Linux and macOS — Plan
 
-Status: **Phase 3 done** (lazy lists, controls, focus and keyboard, clips
-and group opacity); Phase 4 next.
+Status: **Phase 4 done** (forms and sections, grids, navigation, tabs,
+sheets, alerts, dialogs, popovers and context menus); Phase 5 next.
 
 Notes:
 - Phase 1: 26 layout cases match Apple's SwiftUI frame for frame on macOS
@@ -15,7 +15,18 @@ Notes:
   peak at 10 ms (`ListScrollBenchmark`). Measurements and explicit
   alignments are cached across layout passes, and unchanged subtrees
   keep their placement.
+- Phase 4: lists and forms flatten their content's structure (tuples,
+  groups, conditionals, `ForEach`, sections) into rows, lazily for lists.
+  Navigation stacks keep every screen alive and draw the top one; bars show
+  what screens set through `navigationTitle`, `toolbar` and `searchable`.
+  Presentations are keyed to the view that presents them and update without
+  re-evaluating the window's content.
 - Known gaps, for later phases:
+  - Navigation, tabs and presentations switch instantly; transitions come
+    with Phase 5's animations.
+  - Toolbar items are found from the structure of toolbar content, as picker
+    options are; `bottomBar` items show in the navigation bar.
+  - `NavigationSplitView` has fixed column widths and no column visibility.
   - A unary modifier applied to several views lays them out as one implicit
     `VStack`; SwiftUI applies the modifier to each view.
   - Shape clips draw through a triangle fan, which is exact for convex
@@ -339,7 +350,7 @@ Each phase ends green on macOS and Linux CI.
 | **1. Core** ✅ | `View`, `ViewBuilder`, `ViewNode` tree + identity, `@State`/`@Binding`/`@Environment`/`EnvironmentKey`/`@Observable`, preferences; `Text`, `Color`, `Spacer`, `Divider`, stacks, `ForEach`, `Group`, `AnyView`; `Layout` protocol + stack/frame/padding/alignment; `DisplayList` | Headless tests produce correct frames for the stack/frame matrix (cross‑checked against Apple SwiftUI on macOS — §5) |
 | **2. Compositor + host** ✅ | Layer tree + commit, SDL3 GPU compositor with texture cache, Silica layer‑content drawing, text engine, SDL3 host with vsync frame clock, `App`/`WindowGroup`, hit testing, `Button`, `onTapGesture`, `Shape`s, `Image`, `ScrollView` with `CacaoScrollPhysics`, frame‑time overlay | `CacaoDemo` runs on Linux and macOS; a long `ScrollView` scrolls with zero rasterization per frame (asserted by compositor counters) |
 | **3. Lazy content & controls** ✅ | Lazy stacks/`List` with overscan + per‑frame budget, tiling, GPU rounded clips / group opacity; Toggle, Slider, Stepper, TextField/SecureField/TextEditor, Picker, ProgressView, Label, Link, Menu, DisclosureGroup, styles, focus + keyboard | 10,000‑row `List` scroll benchmark holds refresh rate (§2.5); "Controls" catalog screen interactive |
-| **4. Containers & navigation** | Form/Section, lazy grids, Grid, NavigationStack/SplitView, TabView, toolbar, searchable, sheets/alerts/dialogs/popovers/context menus | Catalog navigation + list screens |
+| **4. Containers & navigation** ✅ | Form/Section, lazy grids, Grid, NavigationStack/SplitView, TabView, toolbar, searchable, sheets/alerts/dialogs/popovers/context menus | Catalog navigation + list screens |
 | **5. Animation & gestures** | Animatable, transactions, transitions (run as compositor‑side property animations where possible), matchedGeometryEffect, full gesture set, TimelineView, Canvas, scroll target behaviors | Animated catalog screens hold refresh rate on a mid‑range Linux box |
 | **6. Polish** | GeometryReader/coordinate spaces edge cases, ViewThatFits, safe area, accessibility hooks (AT‑SPI later), multi‑window, `SwiftUI` alias module, docs | API coverage table published; sample apps compile unchanged |
 
