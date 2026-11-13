@@ -219,4 +219,9 @@ internal struct FillBehavior: NodeBehavior {
     func displayContent(node: ViewNode) -> DisplayList.Content? {
         .color(color)
     }
+
+    /// Clear colors don't take hits.
+    func hitTest(_ point: CGPoint, node: ViewNode) -> Bool {
+        color.opacity > 0 && node.frame.contains(point)
+    }
 }
