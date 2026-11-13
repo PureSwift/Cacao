@@ -107,7 +107,7 @@ let package = Package(
             name: "CacaoSDLTests",
             dependencies: ["CacaoSDL"]
         )
-    ] + swiftUITargets
+    ] + swiftUITargets + layoutParityTargets
 )
 
 // MARK: - SwiftUI alias module
@@ -124,4 +124,33 @@ var swiftUITargets: [Target] {
 #else
 var swiftUIProducts: [Product] { [] }
 var swiftUITargets: [Target] { [] }
+#endif
+
+// MARK: - Layout parity
+
+// On macOS, the same corpus of layouts (Tests/LayoutParity/LayoutCorpus.swift)
+// is compiled against Apple's SwiftUI and against Cacao, and a test expects
+// the same frames from both.
+#if os(macOS)
+var layoutParityTargets: [Target] {
+    [
+        .target(
+            name: "CacaoParityApple",
+            path: "Tests/LayoutParity/Apple",
+            swiftSettings: [.define("PARITY_APPLE")]
+        ),
+        .target(
+            name: "CacaoParityCacao",
+            dependencies: ["Cacao"],
+            path: "Tests/LayoutParity/Cacao"
+        ),
+        .testTarget(
+            name: "CacaoLayoutParityTests",
+            dependencies: ["CacaoParityApple", "CacaoParityCacao"],
+            path: "Tests/LayoutParity/Tests"
+        )
+    ]
+}
+#else
+var layoutParityTargets: [Target] { [] }
 #endif
