@@ -19,6 +19,7 @@ public struct Text: Equatable, Sendable {
         var font: Font?
         var weight: Font.Weight?
         var isItalic = false
+        var isMonospacedDigit = false
         var color: Color?
     }
 
@@ -85,6 +86,11 @@ public struct Text: Equatable, Sendable {
         modifyingRuns { $0.isItalic = $0.isItalic || isActive }
     }
 
+    /// Modifies the text view's font to use fixed-width digits.
+    public func monospacedDigit() -> Text {
+        modifyingRuns { $0.isMonospacedDigit = true }
+    }
+
     /// Sets the color of the text displayed by this view.
     public func foregroundColor(_ color: Color?) -> Text {
         modifyingRuns { $0.color = $0.color ?? color }
@@ -120,6 +126,9 @@ extension Text: View, PrimitiveView {
                 }
                 if run.isItalic {
                     font = font.italic()
+                }
+                if run.isMonospacedDigit {
+                    font = font.monospacedDigit()
                 }
                 return ResolvedText.Run(
                     string: run.string,
