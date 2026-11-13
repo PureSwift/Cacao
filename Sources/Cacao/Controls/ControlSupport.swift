@@ -97,9 +97,15 @@ internal struct _ChevronShape: Shape {
 
     var pointsDown = true
 
+    var pointsLeft = false
+
     nonisolated func path(in rect: CGRect) -> Path {
         Path { path in
-            if pointsDown {
+            if pointsLeft {
+                path.move(to: CGPoint(x: rect.minX + rect.width * 0.65, y: rect.minY + rect.height * 0.2))
+                path.addLine(to: CGPoint(x: rect.minX + rect.width * 0.35, y: rect.midY))
+                path.addLine(to: CGPoint(x: rect.minX + rect.width * 0.65, y: rect.maxY - rect.height * 0.2))
+            } else if pointsDown {
                 path.move(to: CGPoint(x: rect.minX + rect.width * 0.2, y: rect.minY + rect.height * 0.35))
                 path.addLine(to: CGPoint(x: rect.midX, y: rect.minY + rect.height * 0.65))
                 path.addLine(to: CGPoint(x: rect.maxX - rect.width * 0.2, y: rect.minY + rect.height * 0.35))
@@ -177,6 +183,8 @@ extension View {
 internal struct Option {
     var tag: AnyHashable?
     var label: AnyView
+    /// Traits set on the option's view, such as a tab item.
+    var traits = LayoutTraits()
 }
 
 /// Content whose options can be listed without evaluating it.
@@ -231,10 +239,18 @@ extension _ConditionalContent: OptionSource {
 
 extension ModifiedContent: OptionSource where Content: View, Modifier == _TraitWritingModifier {
     func options() -> [Option] {
-        if let tag = modifier.traits[TagKey.self] {
-            return [Option(tag: tag, label: AnyView(self))]
+        let inner = Cacao.options(in: content)
+        // A single view keeps its traits, merged with those set outside.
+        guard inner.count == 1 else {
+            return inner.map { option in
+                var option = option
+                option.traits = option.traits.merging(modifier.traits)
+                option.tag = option.traits[TagKey.self] ?? option.tag
+                return option
+            }
         }
-        return Cacao.options(in: content)
+        let traits = inner[0].traits.merging(modifier.traits)
+        return [Option(tag: traits[TagKey.self] ?? inner[0].tag, label: AnyView(self), traits: traits)]
     }
 }
 
