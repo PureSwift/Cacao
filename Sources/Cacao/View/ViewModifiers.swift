@@ -111,3 +111,72 @@ extension View {
         modifier(_AttributesModifier { $0.onDisappear = action })
     }
 }
+
+// MARK: - onChange
+
+/// Runs an action after an update in which a value changed.
+internal struct _ValueActionModifier<Value: Equatable>: ViewModifier, PrimitiveViewModifier {
+
+    let value: Value
+
+    let initial: Bool
+
+    let action: (Value, Value) -> Void
+
+    func resolve(content: any View, in context: ResolveContext) -> Resolution {
+        let node = context.node
+        let key = "onChange"
+        if let last = node.dynamicStorage[key] as? ValueBox<Value> {
+            if last.value != value {
+                let old = last.value
+                let new = value
+                last.value = value
+                let action = self.action
+                node.graph.deferAction { action(old, new) }
+            }
+        } else {
+            node.dynamicStorage[key] = ValueBox(value)
+            if initial {
+                let value = self.value
+                let action = self.action
+                node.graph.deferAction { action(value, value) }
+            }
+        }
+        return Resolution(children: [ChildView(key: 0, view: content)])
+    }
+
+    typealias Body = Never
+}
+
+/// A value kept in a node between updates.
+internal final class ValueBox<Value> {
+    var value: Value
+    init(_ value: Value) { self.value = value }
+}
+
+extension View {
+
+    /// Adds an action to perform when the given value changes.
+    public func onChange<V: Equatable>(
+        of value: V,
+        initial: Bool = false,
+        _ action: @escaping (_ oldValue: V, _ newValue: V) -> Void
+    ) -> some View {
+        modifier(_ValueActionModifier(value: value, initial: initial, action: action))
+    }
+
+    /// Adds an action to perform when the given value changes.
+    public func onChange<V: Equatable>(
+        of value: V,
+        initial: Bool = false,
+        _ action: @escaping () -> Void
+    ) -> some View {
+        modifier(_ValueActionModifier(value: value, initial: initial) { _, _ in action() })
+    }
+
+    /// Adds an action to perform when the given value changes.
+    @available(*, deprecated, message: "Use onChange with a two or zero parameter action closure instead.")
+    public func onChange<V: Equatable>(of value: V, perform action: @escaping (_ newValue: V) -> Void) -> some View {
+        modifier(_ValueActionModifier(value: value, initial: false) { _, new in action(new) })
+    }
+}
