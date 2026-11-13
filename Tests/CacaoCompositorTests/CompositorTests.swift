@@ -14,6 +14,9 @@ final class RecordingBackend: CompositorBackend {
         case fill(CGRect)
         case draw(TextureID, CGRect)
         case clip(CGRect?)
+        case beginLayer(TextureID)
+        case endLayer
+        case drawLayer(TextureID, CGRect, Double, masked: Bool)
     }
 
     var commands: [Command] = []
@@ -29,8 +32,27 @@ final class RecordingBackend: CompositorBackend {
         return texture
     }
 
+    func makeLayer(width: Int, height: Int) -> TextureID? {
+        next += 1
+        let texture = TextureID(rawValue: next)
+        liveTextures.insert(texture)
+        return texture
+    }
+
     func destroyTexture(_ texture: TextureID) {
         liveTextures.remove(texture)
+    }
+
+    func beginLayer(_ layer: TextureID) {
+        commands.append(.beginLayer(layer))
+    }
+
+    func endLayer() {
+        commands.append(.endLayer)
+    }
+
+    func drawLayer(_ layer: TextureID, in rect: CGRect, opacity: Double, mask: [CGPoint]?) {
+        commands.append(.drawLayer(layer, rect, opacity, masked: mask != nil))
     }
 
     func beginFrame(width: Int, height: Int, clearColor: Color.Resolved) {
@@ -188,4 +210,144 @@ final class RecordingBackend: CompositorBackend {
 
 func rect(_ x: CGFloat, _ y: CGFloat, _ width: CGFloat, _ height: CGFloat) -> CGRect {
     CGRect(x: x, y: y, width: width, height: height)
+}
+
+@MainActor
+@Suite struct CompositorEffectTests {
+
+    private func make<V: View>(_ view: V, size: CGSize = CGSize(width: 200, height: 200)) -> (ViewGraph, Compositor, RecordingBackend) {
+        let engine = SilicaTextEngine()
+        let backend = RecordingBackend()
+        let compositor = Compositor(backend: backend, textEngine: engine)
+        let graph = ViewGraph(rootView: view, textEngine: engine)
+        graph.layout(in: size)
+        return (graph, compositor, backend)
+    }
+
+    private func layerDraws(_ backend: RecordingBackend) -> [(CGRect, Double, Bool)] {
+        backend.commands.compactMap { command in
+            if case let .drawLayer(_, rect, opacity, masked) = command { return (rect, opacity, masked) }
+            return nil
+        }
+    }
+
+    @Test func groupOpacityUsesALayer() {
+        let (graph, compositor, backend) = make(
+            ZStack {
+                Color.red.frame(width: 60, height: 60)
+                Color.blue.frame(width: 40, height: 40)
+            }
+            .opacity(0.5)
+        )
+        compositor.render(graph.displayList(), size: graph.size, scale: 1)
+        let layers = layerDraws(backend)
+        #expect(layers.count == 1)
+        #expect(layers.first?.0 == rect(70, 70, 60, 60))
+        #expect(layers.first?.1 == 0.5)
+    }
+
+    @Test func singleItemOpacityNeedsNoLayer() {
+        let (graph, compositor, backend) = make(Color.red.frame(width: 60, height: 60).opacity(0.5))
+        compositor.render(graph.displayList(), size: graph.size, scale: 1)
+        #expect(layerDraws(backend).isEmpty)
+    }
+
+    @Test func roundedClipUsesAMaskedLayer() {
+        let (graph, compositor, backend) = make(
+            Color.red.frame(width: 80, height: 80).clipShape(RoundedRectangle(cornerRadius: 12))
+        )
+        compositor.render(graph.displayList(), size: graph.size, scale: 1)
+        let layers = layerDraws(backend)
+        #expect(layers.count == 1)
+        #expect(layers.first?.2 == true)
+        // Drawing again reuses the layer and rasterizes nothing.
+        compositor.render(graph.displayList(), size: graph.size, scale: 1)
+        #expect(compositor.lastFrame.rasterizations == 0)
+        #expect(compositor.lastFrame.uploads == 0)
+    }
+
+    @Test func rectangularClipUsesTheClipRect() {
+        let (graph, compositor, backend) = make(
+            Color.red.frame(width: 100, height: 100).frame(width: 50, height: 50).clipped()
+        )
+        compositor.render(graph.displayList(), size: graph.size, scale: 1)
+        #expect(layerDraws(backend).isEmpty)
+        #expect(backend.commands.contains(.clip(rect(75, 75, 50, 50))))
+    }
+
+    /// A very tall item is drawn in tiles, and only the tiles that show.
+    @Test func tallContentIsTiled() {
+        let lines = (0..<400).map { "Line \($0)" }.joined(separator: "\n")
+        let (graph, compositor, _) = make(
+            ScrollView { Text(lines).frame(maxWidth: .infinity, alignment: .leading) },
+            size: CGSize(width: 300, height: 400)
+        )
+        compositor.render(graph.displayList(), size: graph.size, scale: 2)
+        // 800 pixels of window: one tile row, at most 2 tiles.
+        #expect(compositor.lastFrame.rasterizations <= 2)
+        graph.scroll(by: CGSize(width: 0, height: 3000), at: CGPoint(x: 150, y: 200))
+        compositor.render(graph.displayList(), size: graph.size, scale: 2)
+        #expect(compositor.lastFrame.rasterizations >= 1)
+        #expect(compositor.lastFrame.rasterizations <= 2)
+    }
+}
+
+/// Scrolls a 10,000 row list and checks the work per frame stays bounded.
+@MainActor
+@Suite struct ListScrollBenchmark {
+
+    @Test func tenThousandRows() {
+        struct Rows: View {
+            var body: some View {
+                List(0..<10_000, id: \.self) { index in
+                    HStack {
+                        Circle().fill(Color.blue).frame(width: 24, height: 24)
+                        Text("Row \(index)")
+                        Spacer()
+                        Text("Detail").foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        let engine = SilicaTextEngine()
+        let backend = RecordingBackend()
+        let compositor = Compositor(backend: backend, textEngine: engine)
+        let size = CGSize(width: 400, height: 800)
+        let graph = ViewGraph(rootView: Rows(), textEngine: engine)
+        func frame() {
+            if graph.needsUpdate {
+                graph.layout(in: size)
+            }
+            compositor.render(graph.displayList(), size: size, scale: 2)
+        }
+        graph.layout(in: size)
+        frame()
+        frame()
+        var times: [Double] = []
+        var maxRasterizations = 0
+        var maxNodes = 0
+        var updates = 0
+        // Two seconds at 120 Hz, scrolling 2,400 points a second.
+        for _ in 0..<240 {
+            let start = Date()
+            graph.scroll(by: CGSize(width: 0, height: 20), at: CGPoint(x: 200, y: 400))
+            if graph.needsUpdate { updates += 1 }
+            frame()
+            times.append(Date().timeIntervalSince(start))
+            maxRasterizations = max(maxRasterizations, compositor.lastFrame.rasterizations)
+            var nodes = 0
+            graph.root.forEachNode { _ in nodes += 1 }
+            maxNodes = max(maxNodes, nodes)
+        }
+        let sorted = times.sorted()
+        let median = sorted[sorted.count / 2] * 1000
+        let p95 = sorted[sorted.count * 95 / 100] * 1000
+        let worst = sorted.last! * 1000
+        print("ListScrollBenchmark: median \(median) ms, p95 \(p95) ms, worst \(worst) ms, updates \(updates) of 240 frames, max nodes \(maxNodes), max rasterizations \(maxRasterizations)")
+        // Deterministic bounds: rows are created in batches, not every frame,
+        // the graph stays small, and frames only rasterize rows coming into view.
+        #expect(updates < 60)
+        #expect(maxNodes < 2_500)
+        #expect(maxRasterizations <= 60)
+    }
 }
