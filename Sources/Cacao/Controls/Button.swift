@@ -88,8 +88,12 @@ internal struct _ButtonBody: View {
 
     @Environment(\.buttonStyle) private var style
 
+    @Environment(\.dismissPopup) private var dismissPopup
+
     var body: some View {
         let isPressed = $isPressed
+        let dismissPopup = self.dismissPopup
+        let action = self.action
         style.makeBody(configuration: ButtonStyleConfiguration(
             role: role,
             label: ButtonStyleConfiguration.Label(content: label),
@@ -98,7 +102,11 @@ internal struct _ButtonBody: View {
         .contentShape(Rectangle())
         .modifier(_TapGestureModifier(handler: TapHandler(
             onPressChanged: { isPressed.wrappedValue = $0 },
-            action: action
+            action: {
+                action()
+                // A button in a popup, like a menu item, closes it.
+                dismissPopup?()
+            }
         )))
     }
 }
