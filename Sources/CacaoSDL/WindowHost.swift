@@ -69,6 +69,9 @@ final class WindowHost {
         self.backend = SDLBackend(renderer: renderer)
         self.compositor = Compositor(backend: backend, textEngine: textEngine)
         var environment = EnvironmentValues()
+        environment.openURL = OpenURLAction { url in
+            _ = SDL_OpenURL(url.absoluteString)
+        }
         environment.displayScale = CGFloat(SDL_GetWindowPixelDensity(window))
         environment.colorScheme = SDL_GetSystemTheme() == SDL_SYSTEM_THEME_DARK ? .dark : .light
         self.graph = ViewGraph(rootView: description.rootView, environment: environment, textEngine: textEngine)
@@ -76,6 +79,14 @@ final class WindowHost {
         graph.onNeedsDisplay = { [weak self] in
             self?.needsRender = true
         }
+        graph.clipboard = Clipboard(
+            read: {
+                guard SDL_HasClipboardText(), let text = SDL_GetClipboardText() else { return nil }
+                defer { SDL_free(text) }
+                return String(cString: text)
+            },
+            write: { _ = SDL_SetClipboardText($0) }
+        )
     }
 
     func close() {
@@ -142,10 +153,77 @@ final class WindowHost {
         case SDL_EVENT_KEY_DOWN where event.key.key == SDLK_F12:
             showsStatistics.toggle()
             needsRender = true
+        case SDL_EVENT_KEY_DOWN:
+            if let key = Self.keyCode(event.key.key, modifiers: event.key.mod) {
+                graph.keyDown(key, modifiers: Self.modifiers(event.key.mod))
+            }
+        case SDL_EVENT_TEXT_INPUT:
+            if let text = event.text.text {
+                graph.insertText(String(cString: text))
+            }
         default:
             break
         }
     }
+
+    // MARK: Keyboard
+
+    private static func modifiers(_ mod: SDL_Keymod) -> KeyModifiers {
+        var modifiers: KeyModifiers = []
+        if mod & 0x0003 != 0 { modifiers.insert(.shift) }
+        if mod & 0x00C0 != 0 { modifiers.insert(.control) }
+        if mod & 0x0300 != 0 { modifiers.insert(.option) }
+        if mod & 0x0C00 != 0 { modifiers.insert(.command) }
+        return modifiers
+    }
+
+    /// The key for an SDL key code. Characters only count with the control
+    /// or command key held; typing arrives as text input.
+    private static func keyCode(_ key: SDL_Keycode, modifiers mod: SDL_Keymod) -> KeyCode? {
+        switch key {
+        case SDLK_LEFT: return .left
+        case SDLK_RIGHT: return .right
+        case SDLK_UP: return .up
+        case SDLK_DOWN: return .down
+        case SDLK_HOME: return .home
+        case SDLK_END: return .end
+        case SDLK_PAGEUP: return .pageUp
+        case SDLK_PAGEDOWN: return .pageDown
+        case SDLK_BACKSPACE: return .backspace
+        case SDLK_DELETE: return .delete
+        case SDLK_RETURN, SDLK_KP_ENTER: return .returnKey
+        case SDLK_ESCAPE: return .escape
+        case SDLK_TAB: return .tab
+        default:
+            guard mod & 0x0CC0 != 0, key < 0x80, let scalar = Unicode.Scalar(key) else {
+                return nil
+            }
+            return .character(Character(scalar))
+        }
+    }
+
+    /// Starts or stops text input (and an input method) as focus moves in
+    /// and out of text fields.
+    private func updateTextInput() {
+        let wantsText = graph.acceptsTextInput
+        if wantsText != isTextInputActive {
+            isTextInputActive = wantsText
+            if wantsText {
+                SDL_StartTextInput(window)
+            } else {
+                SDL_StopTextInput(window)
+            }
+        }
+        if wantsText, let frame = graph.focusedFrame {
+            var area = SDL_Rect(
+                x: Int32(frame.minX), y: Int32(frame.minY),
+                w: Int32(frame.width), h: Int32(frame.height)
+            )
+            SDL_SetTextInputArea(window, &area, 0)
+        }
+    }
+
+    private var isTextInputActive = false
 
     func systemThemeChanged() {
         let colorScheme: ColorScheme = SDL_GetSystemTheme() == SDL_SYSTEM_THEME_DARK ? .dark : .light
@@ -164,6 +242,7 @@ final class WindowHost {
             graph.update()
             needsLayout = true
         }
+        updateTextInput()
         let size = size
         if needsLayout || graph.size != size {
             graph.layout(in: size)
