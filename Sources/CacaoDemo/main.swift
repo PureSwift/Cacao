@@ -1,23 +1,12 @@
 //
 //  main.swift
-//  Cacao
+//  CacaoDemo
 //
-//  Created by Alsey Coleman Miller on 5/21/16.
-//  Copyright © 2016 PureSwift. All rights reserved.
+//  Created by Alsey Coleman Miller on 11/13/26.
 //
-
-#if os(iOS) || os(tvOS)
-
-import UIKit
-
-let _ = UIApplicationMain(0, nil, nil, NSStringFromClass(AppDelegate.self))
-
-#else
 
 import Cacao
+import CacaoSDL
 
-var options = CacaoOptions()
-options.windowName = "CacaoDemo"
-UIApplicationMain(delegate: AppDelegate.shared, options: options)
-    
-#endif
+// The component catalog arrives with Phase 2, as an `@main struct: App`.
+print("Cacao \(Cacao.version), SDL \(CacaoSDL.sdlVersion)")
