@@ -62,6 +62,9 @@ internal final class ViewNode {
 
     var sizeCache: [ProposedViewSize: CGSize] = [:]
 
+    /// Explicit alignment guides by guide and proposal; `nil` values too.
+    var explicitAlignmentCache: [ExplicitAlignmentKey: CGFloat?] = [:]
+
     var layoutCache: Any?
 
     /// The node's frame in the root's coordinate space, from the last layout.
@@ -70,7 +73,23 @@ internal final class ViewNode {
     /// The layout pass that last placed this node.
     var placedGeneration = -1
 
+    /// Where and with which proposal the node was last placed.
+    var lastPlacement: (origin: CGPoint, proposal: ProposedViewSize)?
+
     var cachedLayoutChildren: [LayoutProxy]?
+
+    /// Whether the node's measurements from the last layout still hold:
+    /// false once it or a node in its subtree is resolved.
+    var isLayoutValid = false
+
+    /// Marks this node's and its ancestors' measurements stale.
+    func invalidateLayout() {
+        var node: ViewNode? = self
+        while let current = node, current.isLayoutValid {
+            current.isLayoutValid = false
+            node = current.parent
+        }
+    }
 
     init(
         graph: ViewGraph,
@@ -100,13 +119,19 @@ internal final class ViewNode {
     func update(view: any View, environment: EnvironmentValues) {
         self.view = view
         self.environment = environment
+        wasUpdatedByParent = true
     }
+
+    /// Whether the node got a new view value from its parent since it was
+    /// last resolved, rather than only being invalidated itself.
+    private(set) var wasUpdatedByParent = false
 
     // MARK: Resolving
 
     /// Resolves the node's view and, recursively, its children.
     func resolve() {
         graph.statistics.resolves += 1
+        invalidateLayout()
         isDirty = false
         version += 1
         cachedLayoutChildren = nil
@@ -119,7 +144,8 @@ internal final class ViewNode {
         }
         behavior = resolution.behavior
         attributes = resolution.attributes
-        reconcile(resolution.children)
+        wasUpdatedByParent = false
+        reconcile(resolution.children, keepingExisting: resolution.keepsExistingChildren)
     }
 
     private func resolveComposite<V: View>(_ view: V, in context: ResolveContext) -> Resolution {
@@ -133,7 +159,7 @@ internal final class ViewNode {
 
     /// Matches child views to existing child nodes by key and type, creating
     /// and removing nodes as needed, and resolves each child.
-    private func reconcile(_ childViews: [ChildView]) {
+    private func reconcile(_ childViews: [ChildView], keepingExisting: Bool = false) {
         var existing: [AnyHashable: ViewNode] = [:]
         for child in children {
             existing[child.key] = child
@@ -154,6 +180,10 @@ internal final class ViewNode {
             let node: ViewNode
             if let match = existing[key], match.viewType == ObjectIdentifier(type(of: childView.view)) {
                 existing[key] = nil
+                if keepingExisting, !match.isDirty {
+                    newChildren.append(match)
+                    continue
+                }
                 match.update(view: childView.view, environment: environment)
                 node = match
             } else {
