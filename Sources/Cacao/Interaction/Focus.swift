@@ -174,8 +174,8 @@ extension ViewGraph {
             focus(nodes[next])
             return true
         case .escape:
-            if isPresentingPopup {
-                dismissAllPopups()
+            if isPresenting {
+                dismissTopPresentation()
                 return true
             }
             if focusedNode != nil {
