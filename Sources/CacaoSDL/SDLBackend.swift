@@ -53,6 +53,75 @@ final class SDLBackend: CompositorBackend {
         return TextureID(rawValue: nextTexture)
     }
 
+    func makeLayer(width: Int, height: Int) -> TextureID? {
+        guard let texture = SDL_CreateTexture(
+            renderer,
+            SDL_PIXELFORMAT_ABGR8888,
+            SDL_TEXTUREACCESS_TARGET,
+            Int32(width),
+            Int32(height)
+        ) else {
+            return nil
+        }
+        SDL_SetTextureBlendMode(texture, Self.premultipliedBlend)
+        nextTexture += 1
+        textures[nextTexture] = texture
+        return TextureID(rawValue: nextTexture)
+    }
+
+    /// The layers being drawn into, innermost last.
+    private var targets: [UnsafeMutablePointer<SDL_Texture>] = []
+
+    func beginLayer(_ layer: TextureID) {
+        guard let texture = textures[layer.rawValue] else { return }
+        targets.append(texture)
+        SDL_SetRenderTarget(renderer, texture)
+        SDL_SetRenderClipRect(renderer, nil)
+        SDL_SetRenderDrawColorFloat(renderer, 0, 0, 0, 0)
+        SDL_RenderClear(renderer)
+    }
+
+    func endLayer() {
+        targets.removeLast()
+        SDL_SetRenderTarget(renderer, targets.last)
+    }
+
+    func drawLayer(_ layer: TextureID, in rect: CGRect, opacity: Double, mask: [CGPoint]?) {
+        guard let texture = textures[layer.rawValue] else { return }
+        let alpha = Float(opacity)
+        guard let mask, mask.count >= 3, rect.width > 0, rect.height > 0 else {
+            // Premultiplied colors scale with the opacity too.
+            SDL_SetTextureColorModFloat(texture, alpha, alpha, alpha)
+            SDL_SetTextureAlphaModFloat(texture, alpha)
+            var frame = SDL_FRect(rect)
+            SDL_RenderTexture(renderer, texture, nil, &frame)
+            return
+        }
+        // A triangle fan around the polygon's centroid, sampling the layer.
+        SDL_SetTextureColorModFloat(texture, 1, 1, 1)
+        SDL_SetTextureAlphaModFloat(texture, 1)
+        let count = CGFloat(mask.count)
+        let center = CGPoint(x: mask.reduce(0) { $0 + $1.x } / count, y: mask.reduce(0) { $0 + $1.y } / count)
+        func vertex(_ point: CGPoint) -> SDL_Vertex {
+            SDL_Vertex(
+                position: SDL_FPoint(x: Float(point.x), y: Float(point.y)),
+                color: SDL_FColor(r: alpha, g: alpha, b: alpha, a: alpha),
+                tex_coord: SDL_FPoint(
+                    x: Float((point.x - rect.minX) / rect.width),
+                    y: Float((point.y - rect.minY) / rect.height)
+                )
+            )
+        }
+        var vertices = [vertex(center)] + mask.map(vertex)
+        var indices: [Int32] = []
+        for index in 1...mask.count {
+            indices.append(0)
+            indices.append(Int32(index))
+            indices.append(Int32(index % mask.count + 1))
+        }
+        SDL_RenderGeometry(renderer, texture, &vertices, Int32(vertices.count), &indices, Int32(indices.count))
+    }
+
     func destroyTexture(_ texture: TextureID) {
         if let pointer = textures.removeValue(forKey: texture.rawValue) {
             SDL_DestroyTexture(pointer)
@@ -60,6 +129,8 @@ final class SDLBackend: CompositorBackend {
     }
 
     func beginFrame(width: Int, height: Int, clearColor: Color.Resolved) {
+        targets.removeAll()
+        SDL_SetRenderTarget(renderer, nil)
         SDL_SetRenderClipRect(renderer, nil)
         SDL_SetRenderDrawColorFloat(renderer, clearColor.red, clearColor.green, clearColor.blue, 1)
         SDL_RenderClear(renderer)
@@ -74,6 +145,8 @@ final class SDLBackend: CompositorBackend {
 
     func draw(_ texture: TextureID, in rect: CGRect, opacity: Double, smooth: Bool) {
         guard let pointer = textures[texture.rawValue] else { return }
+        // Premultiplied colors scale with the opacity too.
+        SDL_SetTextureColorModFloat(pointer, Float(opacity), Float(opacity), Float(opacity))
         SDL_SetTextureAlphaModFloat(pointer, Float(opacity))
         SDL_SetTextureScaleMode(pointer, smooth ? SDL_SCALEMODE_LINEAR : SDL_SCALEMODE_NEAREST)
         var frame = SDL_FRect(rect)
