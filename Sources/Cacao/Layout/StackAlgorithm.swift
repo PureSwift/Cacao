@@ -15,7 +15,8 @@ import CoreGraphics
 /// With a concrete proposal along the major axis, children are sized in
 /// decreasing layout priority and, within a priority, from least to most
 /// flexible, each offered an even share of the space left. Lower priority
-/// children have their minimum lengths reserved first. Children are aligned
+/// children have their minimum lengths reserved first. Spacers are sized
+/// after every other child. Children are aligned
 /// along the minor axis by the stack's alignment guide.
 @MainActor
 internal struct StackAlgorithm {
@@ -168,8 +169,8 @@ internal struct StackAlgorithm {
             while j > 0 {
                 let a = order[j - 1]
                 let b = order[j]
-                let pa = children[a].priority
-                let pb = children[b].priority
+                let pa = children[a].stackPriority
+                let pb = children[b].stackPriority
                 let shouldSwap: Bool
                 if pa != pb {
                     shouldSwap = pb > pa
@@ -188,7 +189,7 @@ internal struct StackAlgorithm {
     private func priorityGroups(_ order: [Int]) -> [[Int]] {
         var groups: [[Int]] = []
         for index in order {
-            if let last = groups.last?.last, children[last].priority == children[index].priority {
+            if let last = groups.last?.last, children[last].stackPriority == children[index].stackPriority {
                 groups[groups.count - 1].append(index)
             } else {
                 groups.append([index])
