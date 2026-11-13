@@ -132,6 +132,8 @@ final class WindowHost {
             needsRender = true
         case SDL_EVENT_MOUSE_BUTTON_DOWN where event.button.button == UInt8(SDL_BUTTON_LEFT):
             graph.pointer(.began, at: CGPoint(x: CGFloat(event.button.x), y: CGFloat(event.button.y)))
+        case SDL_EVENT_MOUSE_BUTTON_DOWN where event.button.button == UInt8(SDL_BUTTON_RIGHT):
+            graph.secondaryClick(at: CGPoint(x: CGFloat(event.button.x), y: CGFloat(event.button.y)))
         case SDL_EVENT_MOUSE_BUTTON_UP where event.button.button == UInt8(SDL_BUTTON_LEFT):
             graph.pointer(.ended, at: CGPoint(x: CGFloat(event.button.x), y: CGFloat(event.button.y)))
         case SDL_EVENT_MOUSE_MOTION where event.motion.state & 0x1 != 0:
@@ -248,6 +250,13 @@ final class WindowHost {
             graph.layout(in: size)
             needsLayout = false
             needsRender = true
+        }
+        // Layout can invalidate views, as when lazy stacks need rows that
+        // came into view: settle them before drawing.
+        var passes = 0
+        while graph.needsUpdate, passes < 4 {
+            graph.layout(in: size)
+            passes += 1
         }
         if graph.needsDisplay {
             needsRender = true
