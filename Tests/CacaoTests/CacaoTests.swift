@@ -4,6 +4,6 @@ import Testing
 @Suite struct CacaoTests {
 
     @Test func version() {
-        #expect(!Cacao.version.isEmpty)
+        #expect(!CacaoLibrary.version.isEmpty)
     }
 }
