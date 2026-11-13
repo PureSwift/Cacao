@@ -45,6 +45,12 @@ internal protocol NodeBehavior {
 
     /// The node's children in drawing order, back to front.
     func displayOrder(of children: [ViewNode]) -> [ViewNode]
+
+    /// Whether the node's own drawing takes a hit at `point`.
+    func hitTest(_ point: CGPoint, node: ViewNode) -> Bool
+
+    /// Whether the node and its subtree take hits at all.
+    func allowsHitTesting(node: ViewNode) -> Bool
 }
 
 extension NodeBehavior {
@@ -142,6 +148,15 @@ internal struct LayoutProxy {
 
     var priority: Double {
         traits[LayoutPriorityKey.self]
+    }
+
+    /// The priority a stack sizes the child with: spacers without an
+    /// explicit priority come last, after every other child, as in SwiftUI.
+    var stackPriority: Double {
+        if case let .node(node) = storage, node.behavior is SpacerBehavior, traits.values[ObjectIdentifier(LayoutPriorityKey.self)] == nil {
+            return -.infinity
+        }
+        return priority
     }
 
     /// An identifier unique among proxies of the same layout pass.
