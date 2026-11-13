@@ -131,6 +131,7 @@ internal struct ScrollBehavior: NodeBehavior {
         let state = ScrollState(axes: axes)
         state.onChange = { [weak graph = node.graph] in
             graph?.setNeedsDisplay()
+            graph?.scrollDidChange()
         }
         node.dynamicStorage["scroll"] = state
         return state
