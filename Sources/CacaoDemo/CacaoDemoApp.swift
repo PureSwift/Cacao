@@ -15,40 +15,60 @@ struct CacaoDemoApp: App {
         WindowGroup("Cacao") {
             ContentView()
         }
-        .defaultSize(width: 520, height: 760)
+        .defaultSize(width: 900, height: 720)
     }
 }
 
-enum Tab: String, CaseIterable, Hashable {
+/// The catalog's screens.
+enum Screen: String, CaseIterable, Hashable {
     case controls = "Controls"
     case list = "List"
     case shapes = "Shapes"
+    case grids = "Grids"
+    case navigation = "Navigation"
+    case presentations = "Presentations"
+    case tabs = "Tabs"
 }
 
 struct ContentView: View {
 
-    /// The first tab, from `CACAO_DEMO_TAB`, for screenshots.
-    @State private var tab = ProcessInfo.processInfo.environment["CACAO_DEMO_TAB"].flatMap(Tab.init(rawValue:)) ?? .controls
+    /// The first screen, from `CACAO_DEMO_SCREEN`, for screenshots.
+    private let initial = ProcessInfo.processInfo.environment["CACAO_DEMO_SCREEN"].flatMap(Screen.init(rawValue:)) ?? .controls
 
     var body: some View {
-        VStack(spacing: 0) {
-            Picker("Section", selection: $tab) {
-                ForEach(Tab.allCases, id: \.self) { tab in
-                    Text(tab.rawValue).tag(tab)
+        NavigationSplitView {
+            List {
+                Section("Catalog") {
+                    ForEach(Screen.allCases, id: \.self) { screen in
+                        NavigationLink(screen.rawValue, value: screen)
+                    }
                 }
             }
-            .pickerStyle(.segmented)
-            .padding()
-            Divider()
-            switch tab {
-            case .controls:
-                ControlsScreen()
-            case .list:
-                ListScreen()
-            case .shapes:
-                ShapesScreen()
+            .navigationTitle("Cacao")
+            .navigationDestination(for: Screen.self) { ScreenView(screen: $0) }
+        } detail: {
+            ScreenView(screen: initial)
+        }
+    }
+}
+
+struct ScreenView: View {
+
+    let screen: Screen
+
+    var body: some View {
+        Group {
+            switch screen {
+            case .controls: ControlsScreen()
+            case .list: ListScreen()
+            case .shapes: ShapesScreen()
+            case .grids: GridsScreen()
+            case .navigation: NavigationScreen()
+            case .presentations: PresentationsScreen()
+            case .tabs: TabsScreen()
             }
         }
+        .navigationTitle(screen.rawValue)
     }
 }
 
@@ -70,8 +90,7 @@ struct ControlsScreen: View {
     @State private var showDetails = false
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
+        Form {
                 Section("Toggles") {
                     Toggle("Notifications", isOn: $notifications)
                     Toggle("I agree to the terms", isOn: $agree)
@@ -92,6 +111,9 @@ struct ControlsScreen: View {
                         ProgressView(value: volume).progressViewStyle(.circular)
                         Text("Spinners")
                     }
+                    Text(name.isEmpty ? "Type a name below and press Return." : "Hello, \(name)!")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
                 Section("Text") {
                     TextField("Name", text: $name)
@@ -99,11 +121,6 @@ struct ControlsScreen: View {
                     SecureField("Password", text: $password)
                     TextEditor(text: $notes)
                         .frame(height: 70)
-                        .padding(4)
-                        .overlay { RoundedRectangle(cornerRadius: 6).strokeBorder(Color.gray.opacity(0.5)) }
-                    Text(name.isEmpty ? "Type a name and press Return." : "Hello, \(name)!")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
                 }
                 Section("Pickers") {
                     Picker("Flavor", selection: $flavor) {
@@ -138,30 +155,6 @@ struct ControlsScreen: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-            }
-            .padding()
-        }
-    }
-}
-
-/// A titled group of controls.
-struct Section<Content: View>: View {
-
-    let title: String
-
-    let content: Content
-
-    init(_ title: String, @ViewBuilder content: () -> Content) {
-        self.title = title
-        self.content = content()
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(title)
-                .font(.headline)
-                .foregroundStyle(.secondary)
-            content
         }
     }
 }
@@ -259,5 +252,168 @@ struct Overlapping: View {
             Circle().fill(.blue).frame(width: 70, height: 70).offset(x: 18)
         }
         .frame(width: 110, height: 70)
+    }
+}
+
+// MARK: - Grids
+
+struct GridsScreen: View {
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Grid").font(.headline)
+                Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 8) {
+                    GridRow {
+                        Text("Name").bold()
+                        Text("Kind").bold()
+                        Text("Size").bold()
+                    }
+                    Divider()
+                    GridRow {
+                        Text("Cacao.swift")
+                        Text("Swift source")
+                        Text("2 KB")
+                    }
+                    GridRow {
+                        Text("README.md")
+                        Text("Markdown")
+                        Text("4 KB")
+                    }
+                }
+                Text("Lazy grid of 2,000 cells").font(.headline)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 8) {
+                    ForEach(0..<2000, id: \.self) { index in
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(hue: Double(index % 36) / 36, saturation: 0.5, brightness: 0.9))
+                            .frame(height: 60)
+                            .overlay { Text("\(index)").font(.caption) }
+                    }
+                }
+            }
+            .padding()
+        }
+    }
+}
+
+// MARK: - Navigation
+
+struct NavigationScreen: View {
+
+    @State private var query = ""
+
+    private let fruits = ["Apple", "Banana", "Cherry", "Grape", "Kiwi", "Lemon", "Mango", "Orange", "Pear", "Plum"]
+
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(fruits.filter { query.isEmpty || $0.localizedCaseInsensitiveContains(query) }, id: \.self) { fruit in
+                    NavigationLink(fruit, value: fruit)
+                }
+            }
+            .navigationTitle("Fruits")
+            .searchable(text: $query, prompt: "Filter fruits")
+            .navigationDestination(for: String.self) { fruit in
+                VStack(spacing: 12) {
+                    Text(fruit).font(.largeTitle)
+                    Text("Pushed with a value link; the back button returns to the list.")
+                        .foregroundStyle(.secondary)
+                }
+                .navigationTitle(fruit)
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button("Favorite") { }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Presentations
+
+struct PresentationsScreen: View {
+
+    @State private var showSheet = false
+    @State private var showAlert = false
+    @State private var showDialog = false
+    @State private var showPopover = false
+    @State private var last = "Nothing yet"
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Button("Show sheet") { showSheet = true }
+                .sheet(isPresented: $showSheet) { SheetContent() }
+            Button("Show alert") { showAlert = true }
+                .alert("Delete the file?", isPresented: $showAlert) {
+                    Button("Cancel", role: .cancel) { last = "Cancelled" }
+                    Button("Delete", role: .destructive) { last = "Deleted" }
+                } message: {
+                    Text("This can't be undone.")
+                }
+            Button("Show confirmation dialog") { showDialog = true }
+                .confirmationDialog("Share", isPresented: $showDialog) {
+                    Button("Copy link") { last = "Copied link" }
+                    Button("Email") { last = "Emailed" }
+                    Button("Cancel", role: .cancel) { }
+                }
+            Button("Show popover") { showPopover = true }
+                .popover(isPresented: $showPopover) {
+                    Text("Popovers anchor to their view.")
+                }
+            Text("Right-click for a context menu")
+                .padding(12)
+                .background { RoundedRectangle(cornerRadius: 8).strokeBorder(Color.gray) }
+                .contextMenu {
+                    Button("Copy") { last = "Copy" }
+                    Button("Paste") { last = "Paste" }
+                }
+            Text("Last action: \(last)").foregroundStyle(.secondary)
+        }
+        .buttonStyle(.bordered)
+        .padding()
+    }
+}
+
+struct SheetContent: View {
+
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var name = "Untitled"
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("New Document").font(.title2).bold()
+            TextField("Name", text: $name)
+            HStack {
+                Spacer()
+                Button("Cancel") { dismiss() }
+                    .buttonStyle(.bordered)
+                Button("Create") { dismiss() }
+                    .buttonStyle(.borderedProminent)
+            }
+        }
+        .padding(24)
+    }
+}
+
+// MARK: - Tabs
+
+struct TabsScreen: View {
+
+    var body: some View {
+        TabView {
+            Tab("Inbox", value: 0) {
+                List(0..<20, id: \.self) { Text("Message \($0 + 1)") }
+            }
+            Tab("Sent", value: 1) {
+                Text("No sent messages").foregroundStyle(.secondary)
+            }
+            Tab("Settings", value: 2) {
+                Form {
+                    Toggle("Notifications", isOn: .constant(true))
+                }
+            }
+        }
     }
 }
