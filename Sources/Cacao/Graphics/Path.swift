@@ -263,6 +263,26 @@ public struct Path: Equatable, Sendable {
         return eoFill ? winding % 2 != 0 : winding != 0
     }
 
+    /// Whether a point is on the path's outline, stroked with a line width
+    /// (and a point of tolerance).
+    internal func strokeContains(_ point: CGPoint, lineWidth: CGFloat) -> Bool {
+        let reach = lineWidth / 2 + 1
+        for polygon in polygons() where !polygon.isEmpty {
+            for index in polygon.indices {
+                let a = polygon[index]
+                let b = polygon[(index + 1) % polygon.count]
+                let dx = b.x - a.x, dy = b.y - a.y
+                let lengthSquared = dx * dx + dy * dy
+                let t = lengthSquared > 0 ? min(max(((point.x - a.x) * dx + (point.y - a.y) * dy) / lengthSquared, 0), 1) : 0
+                let px = a.x + t * dx - point.x, py = a.y + t * dy - point.y
+                if px * px + py * py <= reach * reach {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
     private func cross(_ a: CGPoint, _ b: CGPoint, _ p: CGPoint) -> CGFloat {
         (b.x - a.x) * (p.y - a.y) - (p.x - a.x) * (b.y - a.y)
     }
