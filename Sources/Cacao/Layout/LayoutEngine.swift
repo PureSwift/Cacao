@@ -263,10 +263,15 @@ extension ViewNode {
         return result
     }
 
+    /// Clears the node's measurements once per layout pass if it, or a node
+    /// in its subtree, was resolved since the last layout. Measurements of
+    /// unchanged subtrees carry over between passes.
     private func resetLayoutCachesIfNeeded() {
-        if layoutGeneration != graph.layoutGeneration {
+        let isStale = !isLayoutValid && layoutGeneration != graph.layoutGeneration
+        if isStale || sizeCache.count > 64 {
             layoutGeneration = graph.layoutGeneration
             sizeCache.removeAll(keepingCapacity: true)
+            explicitAlignmentCache.removeAll(keepingCapacity: true)
             layoutCache = nil
         }
     }
@@ -283,7 +288,13 @@ extension ViewNode {
 
     func explicitAlignment(_ key: AlignmentKey, size: CGSize, proposal: ProposedViewSize) -> CGFloat? {
         resetLayoutCachesIfNeeded()
-        return behavior?.explicitAlignment(key, size: size, proposal: proposal, node: self)
+        let cacheKey = ExplicitAlignmentKey(alignment: key, proposal: proposal)
+        if let cached = explicitAlignmentCache[cacheKey] {
+            return cached
+        }
+        let value = behavior?.explicitAlignment(key, size: size, proposal: proposal, node: self)
+        explicitAlignmentCache[cacheKey] = value
+        return value
     }
 
     var spacing: ViewSpacing {
@@ -299,6 +310,12 @@ extension ViewNode {
     /// `origin`, then places its children. Children its behavior leaves
     /// unplaced are centered in the frame with the same proposal.
     func place(at origin: CGPoint, proposal: ProposedViewSize) {
+        // An unchanged subtree placed where it was keeps its frames.
+        if isLayoutValid, let last = lastPlacement, last.origin == origin, last.proposal == proposal {
+            placedGeneration = graph.layoutGeneration
+            return
+        }
+        lastPlacement = (origin, proposal)
         let size = sizeThatFits(proposal)
         frame = CGRect(origin: origin, size: size)
         placedGeneration = graph.layoutGeneration
@@ -311,4 +328,10 @@ extension ViewNode {
             )
         }
     }
+}
+
+/// A query for an explicit alignment guide of a node for a proposal.
+internal struct ExplicitAlignmentKey: Hashable {
+    let alignment: AlignmentKey
+    let proposal: ProposedViewSize
 }
