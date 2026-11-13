@@ -63,20 +63,26 @@ package enum Rasterizer {
     }
 
     /// Draws text or a shape of `size` points at `scale` pixels a point,
-    /// into a bitmap enlarged by the content's outset on every side.
+    /// into a bitmap enlarged by the content's outset on every side, or only
+    /// a region (in pixels) of that bitmap, for tiles.
     @MainActor
     package static func rasterize(
         _ content: DisplayList.Content,
         size: CGSize,
         scale: CGFloat,
+        region: CGRect? = nil,
         textEngine: SilicaTextEngine
     ) -> Silica.CGImage? {
         let outset = outset(of: content)
-        let pixels = CGSize(
+        let full = CGSize(
             width: max(1, ((size.width + 2 * outset) * scale).rounded(.up)),
             height: max(1, ((size.height + 2 * outset) * scale).rounded(.up))
         )
+        let pixels = region?.size ?? full
         return try? draw(size: pixels) { context in
+            if let region {
+                context.translateBy(x: -region.minX, y: -region.minY)
+            }
             context.scaleBy(x: scale, y: scale)
             context.translateBy(x: outset, y: outset)
             switch content {
