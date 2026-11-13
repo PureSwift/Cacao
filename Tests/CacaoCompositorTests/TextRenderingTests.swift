@@ -1,0 +1,74 @@
+import Foundation
+#if canImport(CoreGraphics)
+import CoreGraphics
+#endif
+import Testing
+@testable import Cacao
+@testable import CacaoCompositor
+import Silica
+
+@MainActor
+@Suite struct TextRenderingTests {
+
+    /// The rows and columns that have ink in a premultiplied RGBA image.
+    static func inkBounds(_ image: Silica.CGImage) -> CGRect? {
+        var minX = Int.max, minY = Int.max, maxX = -1, maxY = -1
+        image.data.withUnsafeBytes { bytes in
+            for y in 0..<image.height {
+                for x in 0..<image.width where bytes[y * image.bytesPerRow + x * 4 + 3] > 64 {
+                    minX = min(minX, x); maxX = max(maxX, x)
+                    minY = min(minY, y); maxY = max(maxY, y)
+                }
+            }
+        }
+        guard maxX >= 0 else { return nil }
+        return CGRect(x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1)
+    }
+
+    static func text(_ string: String, size: CGFloat) -> ResolvedText {
+        ResolvedText(
+            runs: [ResolvedText.Run(
+                string: string,
+                font: Font.system(size: size).resolve(),
+                color: Color.Resolved(red: 0, green: 0, blue: 0)
+            )],
+            alignment: .leading,
+            lineLimit: nil
+        )
+    }
+
+    @Test func systemFontLoads() {
+        let engine = SilicaTextEngine()
+        #expect(engine.font(for: Font.body.resolve()) != nil)
+    }
+
+    @Test func measuresWithRealMetrics() {
+        let engine = SilicaTextEngine()
+        let layout = engine.layout(Self.text("Hello", size: 20), in: .unspecified)
+        #expect(layout.size.width > 20 && layout.size.width < 100)
+        #expect(layout.size.height > 18 && layout.size.height < 32)
+        #expect(layout.firstBaseline > 10 && layout.firstBaseline < layout.size.height)
+    }
+
+    @Test func wrapsAtSpaces() {
+        let engine = SilicaTextEngine()
+        let text = Self.text("Hello world again", size: 20)
+        let single = engine.layout(text, in: .unspecified)
+        let wrapped = engine.layout(text, in: ProposedViewSize(width: single.size.width / 2, height: nil))
+        #expect(wrapped.lines.count >= 2)
+        #expect(wrapped.size.width <= single.size.width / 2 + 0.5)
+    }
+
+    /// Glyphs are upright and sit on the baseline, within the measured frame.
+    @Test func drawsGlyphsInsideTheFrame() throws {
+        let engine = SilicaTextEngine()
+        let text = Self.text("H", size: 40)
+        let layout = engine.layout(text, in: .unspecified)
+        let image = try #require(Rasterizer.rasterize(.text(text), size: layout.size, scale: 1, textEngine: engine))
+        let ink = try #require(Self.inkBounds(image))
+        // An "H" spans from its cap height down to the baseline.
+        #expect(ink.minY > 0)
+        #expect(abs(ink.maxY - layout.firstBaseline) <= 2, "ink \(ink), baseline \(layout.firstBaseline)")
+        #expect(ink.height > 20)
+    }
+}
