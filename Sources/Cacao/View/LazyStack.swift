@@ -56,22 +56,6 @@ extension TupleView: LazyRowSource {
     }
 }
 
-/// A single view as one row.
-private struct SingleRowSource: LazyRowSource {
-
-    let view: any View
-
-    var rowCount: Int { 1 }
-
-    func row(at index: Int) -> (id: AnyHashable, view: any View) {
-        (AnyHashable(0), view)
-    }
-
-    func id(at index: Int) -> AnyHashable {
-        AnyHashable(0)
-    }
-}
-
 // MARK: - Views
 
 /// A view that arranges its children in a line that grows vertically,
@@ -162,6 +146,14 @@ internal final class LazyStackState {
     /// rows keep their views.
     var isRangeOnlyUpdate = false
 
+    /// For a lazy grid: its length across, from the last layout.
+    var crossLength: CGFloat?
+
+    /// For a lazy grid: its tracks and how many they resolved to.
+    var gridTracks: [GridItem]?
+
+    var trackCount = 0
+
     /// The identity of each row, by index.
     private(set) var ids: [AnyHashable] = []
 
@@ -248,11 +240,12 @@ internal struct LazyStack {
 
     let spacing: CGFloat?
 
-    /// Wraps each row's view, for lists.
-    let rowTransform: ((any View, AnyHashable) -> any View)?
+    /// Wraps each row's view, for lists: given the view, its element's
+    /// identity and whether it's a section header, row or footer.
+    let rowTransform: ((any View, AnyHashable, RowKind) -> any View)?
 
     func resolve(content: any View, in context: ResolveContext) -> Resolution {
-        let source: any LazyRowSource = (content as? any LazyRowSource) ?? SingleRowSource(view: content)
+        let source = FlattenedRows(content)
         let node = context.node
         let state = Self.state(of: node)
         let count = source.rowCount
@@ -270,7 +263,7 @@ internal struct LazyStack {
         environment.stackOrientation = axis
         let children = range.map { index -> ChildView in
             let row = source.row(at: index)
-            let view = rowTransform.map { $0(row.view, row.id) } ?? row.view
+            let view = rowTransform.map { $0(row.view, source.elementID(at: index), source.kind(at: index)) } ?? row.view
             return ChildView(key: row.id, view: view, environment: environment)
         }
         var resolution = Resolution(
@@ -356,6 +349,18 @@ internal struct LazyStackBehavior: NodeBehavior {
             }
         }
         node.lazyOffsets = offsets
+        // A lazy grid whose track count changes with its length across
+        // regroups its items.
+        if let tracks = state.gridTracks {
+            let across = bounds.size[minorAxis]
+            if state.crossLength != across {
+                state.crossLength = across
+                let count = tracks.tracks(in: across, defaultAlignment: .center).count
+                if count != state.trackCount {
+                    node.invalidate()
+                }
+            }
+        }
         node.graph.requestLazyRows(node)
     }
 }
