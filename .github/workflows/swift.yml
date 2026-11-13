@@ -25,6 +25,15 @@ jobs:
         env:
           SDL_VIDEO_DRIVER: offscreen
         run: swift test
+      - name: Demo screenshot
+        env:
+          SDL_VIDEO_DRIVER: offscreen
+          CACAO_SCREENSHOT: demo-linux.png
+        run: swift run CacaoDemo
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo-linux
+          path: demo-linux.png
 
   linux:
     name: Linux
@@ -43,7 +52,8 @@ jobs:
             libxfixes-dev libxi-dev libxss-dev libxtst-dev libxkbcommon-dev \
             libwayland-dev wayland-protocols libdecor-0-dev libdrm-dev \
             libgbm-dev libegl-dev libgl-dev libgles-dev libvulkan-dev \
-            libdbus-1-dev libudev-dev libpulse-dev libasound2-dev
+            libdbus-1-dev libudev-dev libpulse-dev libasound2-dev \
+            fonts-dejavu-core
       - name: Cache SDL3
         id: cache-sdl3
         uses: actions/cache@v4
