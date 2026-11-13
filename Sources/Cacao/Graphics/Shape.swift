@@ -237,8 +237,8 @@ internal struct ShapeBehavior<S: Shape>: NodeBehavior {
         switch drawing {
         case let .fill(style):
             return path.contains(local, eoFill: style.isEOFilled)
-        case .stroke:
-            return path.boundingRect.contains(local)
+        case let .stroke(style):
+            return path.strokeContains(local, lineWidth: style.lineWidth)
         }
     }
 }
