@@ -74,6 +74,15 @@ internal struct NodeAttributes {
     var onAppear: (() -> Void)?
 
     var onDisappear: (() -> Void)?
+
+    /// A tap gesture on the node's views.
+    var tap: TapHandler?
+
+    /// The shape, in the subtree's frame, that takes hits for the node.
+    var contentShape: ((CGRect) -> Path)?
+
+    /// Whether the node and its subtree take hits.
+    var allowsHitTesting = true
 }
 
 // MARK: - ResolveContext
