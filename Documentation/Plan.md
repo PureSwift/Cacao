@@ -1,25 +1,33 @@
 # Cacao: SwiftUI for Linux and macOS — Plan
 
-Status: **Phase 2 done** (drawing, input and scrolling in SDL3 windows);
-Phase 3 next.
+Status: **Phase 3 done** (lazy lists, controls, focus and keyboard, clips
+and group opacity); Phase 4 next.
 
 Notes:
 - Phase 1: 26 layout cases match Apple's SwiftUI frame for frame on macOS
-  (`Tests/LayoutParity`). Phase 2 added the finding that stacks size
-  spacers after every other child.
+  (`Tests/LayoutParity`), including the finding that stacks size spacers
+  after every other child.
 - Phase 2: the compositor keeps rasterized text and shapes in textures;
   scrolling over content already drawn does no evaluation, layout,
   rasterization or upload (`CompositorTests`).
+- Phase 3: a 10,000-row `List` keeps under 900 nodes. In a debug build,
+  scrolling takes 1.6 ms a frame at the median; frames that create rows
+  peak at 10 ms (`ListScrollBenchmark`). Measurements and explicit
+  alignments are cached across layout passes, and unchanged subtrees
+  keep their placement.
 - Known gaps, for later phases:
   - A unary modifier applied to several views lays them out as one implicit
     `VStack`; SwiftUI applies the modifier to each view.
-  - Nodes re-resolve their whole subtree when invalidated; there's no
-    equality check to skip unchanged children yet.
-  - Group opacity is applied per item, not to the group; rounded clips,
-    tiling and lazy stacks are Phase 3.
+  - Shape clips draw through a triangle fan, which is exact for convex
+    shapes only.
+  - Text editing works on Unicode scalars, not grapheme clusters, and has
+    no word movement or undo; the caret doesn't blink and spinners don't
+    spin until Phase 5's animations.
+  - `Picker` reads its options from the structure of its content (tags,
+    `ForEach`), not from evaluated views.
   - `Image(systemName:)` draws nothing yet (Q6).
-  - Trackpad and wheel scrolling haven't been tried by hand on Linux; the
-    physics and the zero-rasterization path are tested headless.
+  - Trackpad and wheel scrolling, and input methods, haven't been tried by
+    hand on Linux.
   - No `@Entry` macro, `ObservableObject`, `GeometryReader` or animation yet.
 
 Replace Cacao's 2017 UIKit clone (≈70 `UI*` files, SDL2 + Cairo) with a
@@ -330,7 +338,7 @@ Each phase ends green on macOS and Linux CI.
 | **0. Reset** ✅ | Tag legacy, remove UIKit code, new manifest/targets, CI (macOS + Ubuntu, `swift test`), README stub | Empty `Cacao` builds and tests on both OSes |
 | **1. Core** ✅ | `View`, `ViewBuilder`, `ViewNode` tree + identity, `@State`/`@Binding`/`@Environment`/`EnvironmentKey`/`@Observable`, preferences; `Text`, `Color`, `Spacer`, `Divider`, stacks, `ForEach`, `Group`, `AnyView`; `Layout` protocol + stack/frame/padding/alignment; `DisplayList` | Headless tests produce correct frames for the stack/frame matrix (cross‑checked against Apple SwiftUI on macOS — §5) |
 | **2. Compositor + host** ✅ | Layer tree + commit, SDL3 GPU compositor with texture cache, Silica layer‑content drawing, text engine, SDL3 host with vsync frame clock, `App`/`WindowGroup`, hit testing, `Button`, `onTapGesture`, `Shape`s, `Image`, `ScrollView` with `CacaoScrollPhysics`, frame‑time overlay | `CacaoDemo` runs on Linux and macOS; a long `ScrollView` scrolls with zero rasterization per frame (asserted by compositor counters) |
-| **3. Lazy content & controls** | Lazy stacks/`List` with overscan + per‑frame budget, tiling, GPU rounded clips / group opacity; Toggle, Slider, Stepper, TextField/SecureField/TextEditor, Picker, ProgressView, Label, Link, Menu, DisclosureGroup, styles, focus + keyboard | 10,000‑row `List` scroll benchmark holds refresh rate (§2.5); "Controls" catalog screen interactive |
+| **3. Lazy content & controls** ✅ | Lazy stacks/`List` with overscan + per‑frame budget, tiling, GPU rounded clips / group opacity; Toggle, Slider, Stepper, TextField/SecureField/TextEditor, Picker, ProgressView, Label, Link, Menu, DisclosureGroup, styles, focus + keyboard | 10,000‑row `List` scroll benchmark holds refresh rate (§2.5); "Controls" catalog screen interactive |
 | **4. Containers & navigation** | Form/Section, lazy grids, Grid, NavigationStack/SplitView, TabView, toolbar, searchable, sheets/alerts/dialogs/popovers/context menus | Catalog navigation + list screens |
 | **5. Animation & gestures** | Animatable, transactions, transitions (run as compositor‑side property animations where possible), matchedGeometryEffect, full gesture set, TimelineView, Canvas, scroll target behaviors | Animated catalog screens hold refresh rate on a mid‑range Linux box |
 | **6. Polish** | GeometryReader/coordinate spaces edge cases, ViewThatFits, safe area, accessibility hooks (AT‑SPI later), multi‑window, `SwiftUI` alias module, docs | API coverage table published; sample apps compile unchanged |
