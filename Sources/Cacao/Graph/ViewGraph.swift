@@ -51,6 +51,8 @@ package final class ViewGraph {
 
     private var disappearActions: [() -> Void] = []
 
+    private var deferredActions: [() -> Void] = []
+
     private var lastPreferenceValues: [Int: Any] = [:]
 
     private(set) var layoutGeneration = 0
@@ -59,6 +61,21 @@ package final class ViewGraph {
     weak var activeTap: ViewNode?
 
     var activeTapIsInside = false
+
+    /// The drag gesture node a press started on, and where the press started.
+    weak var activeDrag: ViewNode?
+
+    var activeDragStart = CGPoint(x: 0, y: 0)
+
+    var activeDragFrame = CGRect.zero
+
+    let focusedNodeReference = WeakNodeReference()
+
+    /// The lazy stacks in the graph, which create rows as they scroll.
+    var lazyStacks: [WeakNodeReference] = []
+
+    /// The system clipboard, provided by the host.
+    package var clipboard: Clipboard?
 
     /// Whether the drawing changed without an update, as when scrolling.
     package internal(set) var needsDisplay = true
@@ -85,6 +102,14 @@ package final class ViewGraph {
         onNeedsDisplay?()
     }
 
+    /// The app's root view.
+    private(set) var rootContent: AnyView
+
+    /// Views presented above the content, like menus.
+    var popups: [Popup] = []
+
+    var nextPopupID = 0
+
     /// Creates a graph for a root view and resolves it.
     package init<Root: View>(
         rootView: Root,
@@ -93,12 +118,13 @@ package final class ViewGraph {
     ) {
         self.textEngine = textEngine
         self.environment = environment
+        self.rootContent = AnyView(rootView)
         invalidations.graph = self
         self.root = ViewNode(
             graph: self,
             parent: nil,
             key: AnyHashable(0),
-            view: rootView,
+            view: _GraphRoot(content: rootContent, popups: []),
             environment: environment
         )
         appearedNodes.append(root)
@@ -106,24 +132,10 @@ package final class ViewGraph {
         finishUpdate()
     }
 
-    /// Replaces the root view.
+    /// Replaces the root view. A view of the same type keeps its state.
     package func setRootView<Root: View>(_ rootView: Root) {
-        if root.viewType == ObjectIdentifier(Root.self) {
-            root.update(view: rootView, environment: environment)
-            root.invalidate()
-        } else {
-            root.tearDown()
-            root = ViewNode(
-                graph: self,
-                parent: nil,
-                key: AnyHashable(0),
-                view: rootView,
-                environment: environment
-            )
-            appearedNodes.append(root)
-            root.resolve()
-            finishUpdate()
-        }
+        rootContent = AnyView(rootView)
+        updateRoot()
     }
 
     // MARK: Updating
@@ -142,6 +154,7 @@ package final class ViewGraph {
                 node.resolve()
             }
             finishUpdate()
+            applyFocusRequests()
             drainInvalidations()
         }
     }
@@ -153,7 +166,17 @@ package final class ViewGraph {
         }
     }
 
+    /// Runs an action after the current update, outside of resolving.
+    func deferAction(_ action: @escaping () -> Void) {
+        deferredActions.append(action)
+    }
+
     private func finishUpdate() {
+        let deferred = deferredActions
+        deferredActions.removeAll()
+        for action in deferred {
+            action()
+        }
         for action in disappearActions {
             action()
         }
@@ -220,16 +243,8 @@ package final class ViewGraph {
         layoutGeneration += 1
         statistics.layouts += 1
         needsDisplay = true
-        let proposal = ProposedViewSize(size)
-        guard let content = LayoutProxy.combining(root.layoutChildren(forRoot: true)) else {
-            return
-        }
-        let contentSize = content.size(in: proposal)
-        let origin = CGPoint(
-            x: (size.width - contentSize.width) / 2,
-            y: (size.height - contentSize.height) / 2
-        )
-        content.place(at: origin, proposal: proposal)
+        root.place(at: CGPoint(x: 0, y: 0), proposal: ProposedViewSize(size))
+        root.forEachNode { $0.isLayoutValid = true }
     }
 
     // MARK: Queries
@@ -269,8 +284,4 @@ extension ViewNode {
         parent != nil || graph.root === self
     }
 
-    /// The layout children of the root: its top-level units.
-    func layoutChildren(forRoot: Bool) -> [LayoutProxy] {
-        behavior != nil ? [LayoutProxy(node: self)] : layoutChildren
-    }
 }
