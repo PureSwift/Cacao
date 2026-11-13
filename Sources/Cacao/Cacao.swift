@@ -11,7 +11,7 @@
 /// environment, layout and the display list. It has no windowing or GPU
 /// dependencies, so it builds and tests headless on any host. Windows, input
 /// and rendering come from `CacaoSDL`.
-public enum Cacao {
+public enum CacaoLibrary {
 
     /// The version of the SwiftUI API surface Cacao implements.
     public static let version = "0.1.0"
