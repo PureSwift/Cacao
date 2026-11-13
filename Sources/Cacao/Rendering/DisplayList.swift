@@ -76,6 +76,12 @@ package struct DisplayList: Equatable, Sendable {
 
         /// The nested list clipped to a viewport and moved by a scroll offset.
         case scroll(ScrollEffect)
+
+        /// The nested list clipped to a shape in the item's frame.
+        case clip(ClipEffect)
+
+        /// The nested list drawn as one group before effects outside it.
+        case compositingGroup
     }
 }
 
