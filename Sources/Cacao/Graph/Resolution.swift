@@ -24,6 +24,10 @@ internal struct Resolution {
     /// Traits, identifiers, preferences and lifecycle actions of the node.
     var attributes: NodeAttributes
 
+    /// Whether existing children that aren't invalidated keep their views,
+    /// as when a lazy stack only creates rows that scrolled into view.
+    var keepsExistingChildren = false
+
     init(
         behavior: (any NodeBehavior)? = nil,
         children: [ChildView] = [],
@@ -83,6 +87,15 @@ internal struct NodeAttributes {
 
     /// Whether the node and its subtree take hits.
     var allowsHitTesting = true
+
+    /// How the node handles keyboard focus, if it can be focused.
+    var focus: FocusTarget?
+
+    /// A binding between a focus state and the focusable view in the subtree.
+    var focusBinding: FocusBinding?
+
+    /// A drag gesture on the node's views.
+    var drag: DragHandler?
 }
 
 // MARK: - ResolveContext
