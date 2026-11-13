@@ -13,7 +13,8 @@ on macOS) only when it changes, and composited every frame by the
 [SDL3](https://github.com/PureSwift/SDL) renderer (Metal, Vulkan or OpenGL),
 so scrolling and animation never repaint.
 
-> **Status:** early development (Phase 0: package skeleton). See
+> **Status:** early development (Phase 2: views, layout, drawing, taps and
+> scrolling in a window on Linux and macOS). See
 > [the plan](Documentation/Plan.md) for the architecture and roadmap. The
 > previous UIKit implementation is preserved at the
 > [`uikit-legacy`](https://github.com/PureSwift/Cacao/tree/uikit-legacy) tag.
@@ -26,6 +27,38 @@ so scrolling and animation never repaint.
 | `CacaoSDL` | Windows, the main loop, input and the SDL3 GPU compositor backend. |
 | `CacaoScrollPhysics` | Velocity tracking, deceleration, rubber band and spring-back. |
 | `SwiftUI` (Linux only) | Re-exports Cacao, so sources that `import SwiftUI` compile unchanged. |
+
+## Usage
+
+```swift
+import CacaoSDL // or `import SwiftUI` on Linux
+
+@main
+struct HelloApp: App {
+    var body: some Scene {
+        WindowGroup("Hello") {
+            ContentView()
+        }
+    }
+}
+
+struct ContentView: View {
+    @State private var count = 0
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text("Count: \(count)")
+                .font(.title)
+            Button("Increment") { count += 1 }
+                .buttonStyle(.borderedProminent)
+        }
+    }
+}
+```
+
+Run the demo with `swift run CacaoDemo`. Press F12 (or set
+`CACAO_SHOW_STATISTICS=1`) for frame times and compositor counts, and set
+`CACAO_SCREENSHOT=path.png` to save the first frame and quit.
 
 ## Building
 
@@ -47,7 +80,7 @@ Install Cairo and fontconfig, and SDL3 (3.2 or later), which isn't packaged
 on Ubuntu 24.04 and earlier, so build it from source:
 
 ```bash
-sudo apt-get install cmake ninja-build pkg-config libcairo2-dev libfontconfig-dev libfreetype-dev libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev libxkbcommon-dev libwayland-dev wayland-protocols libdecor-0-dev libdrm-dev libgbm-dev libegl-dev libgl-dev libgles-dev libvulkan-dev libdbus-1-dev libudev-dev libpulse-dev libasound2-dev
+sudo apt-get install cmake ninja-build pkg-config fonts-dejavu-core libcairo2-dev libfontconfig-dev libfreetype-dev libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev libxkbcommon-dev libwayland-dev wayland-protocols libdecor-0-dev libdrm-dev libgbm-dev libegl-dev libgl-dev libgles-dev libvulkan-dev libdbus-1-dev libudev-dev libpulse-dev libasound2-dev
 ```
 
 ```bash
