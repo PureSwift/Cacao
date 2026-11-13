@@ -123,6 +123,27 @@ public enum LayoutCorpus {
                 }
                 .fixedSize()
             },
+            LayoutCase("spacer-sized-last", width: 400, height: 100) {
+                HStack {
+                    Color.red.frame(width: 28, height: 28).probe("a")
+                    Color.blue.frame(maxWidth: 300).probe("b")
+                    Spacer().probe("spacer")
+                }
+            },
+            LayoutCase("spacer-sized-last-narrow", width: 250, height: 100) {
+                HStack {
+                    Color.blue.frame(maxWidth: 300).probe("b")
+                    Spacer().probe("spacer")
+                }
+            },
+            LayoutCase("spacers-share", width: 300, height: 100) {
+                HStack {
+                    Spacer().probe("s1")
+                    Color.red.frame(width: 40, height: 40).probe("a")
+                    Spacer().probe("s2")
+                    Color.blue.frame(width: 40, height: 40).probe("b")
+                }
+            },
             LayoutCase("priority", width: 300, height: 50) {
                 HStack(spacing: 0) {
                     Color.red.frame(minWidth: 50).probe("a")
