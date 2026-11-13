@@ -105,8 +105,8 @@ package final class ViewGraph {
     /// The app's root view.
     private(set) var rootContent: AnyView
 
-    /// Views presented above the content, like menus.
-    var popups: [Popup] = []
+    /// Views presented above the content, like menus and sheets.
+    var presentations: [Presentation] = []
 
     var nextPopupID = 0
 
@@ -124,7 +124,7 @@ package final class ViewGraph {
             graph: self,
             parent: nil,
             key: AnyHashable(0),
-            view: _GraphRoot(content: rootContent, popups: []),
+            view: _GraphRoot(content: rootContent),
             environment: environment
         )
         appearedNodes.append(root)
@@ -202,6 +202,10 @@ package final class ViewGraph {
     }
 
     func nodeDidDisappear(_ node: ViewNode) {
+        // What a view presented goes away with it.
+        if presentations.contains(where: { $0.owner == AnyHashable(node.id) }) {
+            removePresentation(owner: AnyHashable(node.id))
+        }
         if let action = node.attributes.onDisappear {
             disappearActions.append(action)
         }
