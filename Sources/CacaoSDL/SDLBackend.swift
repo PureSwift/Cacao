@@ -64,6 +64,9 @@ final class SDLBackend: CompositorBackend {
             return nil
         }
         SDL_SetTextureBlendMode(texture, Self.premultipliedBlend)
+        // Layers drawn smaller or larger than their pixels, as blurring
+        // does, average their pixels.
+        SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_LINEAR)
         nextTexture += 1
         textures[nextTexture] = texture
         return TextureID(rawValue: nextTexture)
@@ -122,14 +125,20 @@ final class SDLBackend: CompositorBackend {
         SDL_RenderGeometry(renderer, texture, &vertices, Int32(vertices.count), &indices, Int32(indices.count))
     }
 
-    func drawLayer(_ layer: TextureID, in rect: CGRect, tint: Color.Resolved) {
+    /// Keeps the destination where the source is opaque.
+    private static let destinationIn = SDL_ComposeCustomBlendMode(
+        SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_SRC_ALPHA, SDL_BLENDOPERATION_ADD,
+        SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_SRC_ALPHA, SDL_BLENDOPERATION_ADD
+    )
+
+    func mask(with layer: TextureID, in rect: CGRect) {
         guard let texture = textures[layer.rawValue] else { return }
-        // Premultiplied: the color scales by the tint's opacity.
-        let alpha = tint.opacity
-        SDL_SetTextureColorModFloat(texture, tint.red * alpha, tint.green * alpha, tint.blue * alpha)
-        SDL_SetTextureAlphaModFloat(texture, alpha)
+        SDL_SetTextureColorModFloat(texture, 1, 1, 1)
+        SDL_SetTextureAlphaModFloat(texture, 1)
+        SDL_SetTextureBlendMode(texture, Self.destinationIn)
         var frame = SDL_FRect(rect)
         SDL_RenderTexture(renderer, texture, nil, &frame)
+        SDL_SetTextureBlendMode(texture, Self.premultipliedBlend)
     }
 
     func drawLayer(_ layer: TextureID, corners: [CGPoint], opacity: Double) {
