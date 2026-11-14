@@ -160,6 +160,9 @@ extension ViewGraph {
            target.keyDown(key, modifiers) {
             return true
         }
+        if handleKeyPress(key, modifiers: modifiers) {
+            return true
+        }
         switch key {
         case .tab:
             let nodes = focusableNodes()
@@ -191,6 +194,10 @@ extension ViewGraph {
     /// Delivers typed text to the focused view.
     package func insertText(_ text: String) {
         guard let node = focusedNode, node.isAttached, let target = node.attributes.focus, target.acceptsText else {
+            // Without a text view, typed characters are key presses.
+            for character in text {
+                _ = handleKeyPress(.character(character), modifiers: [])
+            }
             return
         }
         target.insertText(text)
@@ -377,7 +384,7 @@ extension EnvironmentValues {
 extension View {
 
     /// Adds an action to perform when the user submits a value to this view.
-    public func onSubmit(perform action: @escaping () -> Void) -> some View {
+    public func onSubmit(of triggers: SubmitTriggers = .text, _ action: @escaping () -> Void) -> some View {
         transformEnvironment(\.onSubmit) { existing in
             let previous = existing
             existing = SubmitAction {
@@ -386,4 +393,21 @@ extension View {
             }
         }
     }
+}
+
+/// A type that defines various triggers that result in the firing of a
+/// submission action.
+public struct SubmitTriggers: OptionSet, Sendable {
+
+    public let rawValue: Int
+
+    public init(rawValue: Int) {
+        self.rawValue = rawValue
+    }
+
+    /// Defines triggers originating from text input controls.
+    public static let text = SubmitTriggers(rawValue: 1 << 0)
+
+    /// Defines triggers originating from search fields.
+    public static let search = SubmitTriggers(rawValue: 1 << 1)
 }
