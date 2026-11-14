@@ -1,5 +1,6 @@
 // swift-tools-version:6.4
 import PackageDescription
+import CompilerPluginSupport
 
 /// Cacao: the SwiftUI API, implemented in Swift, for Linux and macOS.
 ///
@@ -7,6 +8,7 @@ import PackageDescription
 ///
 /// - `Cacao`: the public SwiftUI API, evaluation, layout and the display list.
 ///   No SDL and no GPU, so it builds and tests headless anywhere.
+/// - `CacaoMacros`: the `@Entry` macro.
 /// - `CacaoScrollPhysics`: velocity, deceleration, rubber band and spring-back.
 /// - `CacaoCompositor`: the layer tree, drawn with Silica only when content
 ///   changes and composited on the GPU every frame.
@@ -43,11 +45,24 @@ let package = Package(
         .package(
             url: "https://github.com/PureSwift/SDL.git",
             branch: "master"
+        ),
+        .package(
+            url: "https://github.com/swiftlang/swift-syntax.git",
+            "602.0.0"..<"605.0.0"
         )
     ],
     targets: [
         .target(
-            name: "Cacao"
+            name: "Cacao",
+            dependencies: ["CacaoMacros"]
+        ),
+        .macro(
+            name: "CacaoMacros",
+            dependencies: [
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+                .product(name: "SwiftDiagnostics", package: "swift-syntax")
+            ]
         ),
         .target(
             name: "CacaoScrollPhysics"
