@@ -37,6 +37,13 @@ package struct DisplayList: Equatable, Sendable {
 
         package var value: Value
 
+        package init(frame: CGRect, identity: Int, version: Int, value: Value) {
+            self.frame = frame
+            self.identity = identity
+            self.version = version
+            self.value = value
+        }
+
         package static func == (lhs: Item, rhs: Item) -> Bool {
             lhs.frame == rhs.frame
                 && lhs.identity == rhs.identity
@@ -91,6 +98,9 @@ package struct DisplayList: Equatable, Sendable {
 
         /// The nested list clipped to a shape in the item's frame.
         case clip(ClipEffect)
+
+        /// The nested list drawn only as much as a mask's drawing is opaque.
+        case mask(DisplayList)
 
         /// The nested list drawn as one group before effects outside it.
         case compositingGroup
