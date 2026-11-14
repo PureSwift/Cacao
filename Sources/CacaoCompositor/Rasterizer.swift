@@ -90,8 +90,70 @@ package enum Rasterizer {
                 textEngine.draw(text, size: size, in: context)
             case let .shape(shape):
                 draw(shape, in: context)
+            case let .drawing(drawing):
+                draw(drawing, in: context, textEngine: textEngine)
             case .color, .image:
                 break
+            }
+        }
+    }
+
+    /// Draws a canvas's commands, each with its transform, opacity and clips.
+    @MainActor
+    private static func draw(_ drawing: DrawingContent, in context: Silica.CGContext, textEngine: SilicaTextEngine) {
+        for operation in drawing.operations {
+            let state: DrawingState
+            switch operation {
+            case let .shape(_, operationState), let .text(_, _, operationState), let .image(_, _, operationState):
+                state = operationState
+            }
+            guard state.opacity > 0 else { continue }
+            context.saveGState()
+            defer { context.restoreGState() }
+            for clip in state.clips {
+                context.saveGState()
+                context.concatenate(Silica.CGAffineTransform(clip.transform))
+                addPath(clip.path, to: context)
+                context.restoreGState()
+                context.clip(using: clip.isEOFilled ? .evenOdd : .winding)
+            }
+            context.concatenate(Silica.CGAffineTransform(state.transform))
+            // Opacity goes into colors: not every backend applies a
+            // context's alpha to fills.
+            let opacity = Float(state.opacity)
+            switch operation {
+            case var .shape(shape, _):
+                shape.color.opacity *= opacity
+                draw(shape, in: context)
+            case var .text(text, rect, _):
+                for index in text.runs.indices {
+                    text.runs[index].color.opacity *= opacity
+                }
+                context.translateBy(x: rect.minX, y: rect.minY)
+                textEngine.draw(text, size: rect.size, in: context)
+            case let .image(image, rect, _):
+                context.alpha = CGFloat(opacity)
+                if let decoded = decode(image) {
+                    context.draw(decoded, in: rect)
+                }
+            }
+        }
+    }
+
+    private static func addPath(_ path: Path, to context: Silica.CGContext) {
+        context.beginPath()
+        path.forEach { element in
+            switch element {
+            case let .move(to):
+                context.move(to: to)
+            case let .line(to):
+                context.addLine(to: to)
+            case let .quadCurve(to, control):
+                context.addQuadCurve(to: to, control: control)
+            case let .curve(to, control1, control2):
+                context.addCurve(to: to, control1: control1, control2: control2)
+            case .closeSubpath:
+                context.closePath()
             }
         }
     }
@@ -200,5 +262,12 @@ private extension Silica.CGLineJoin {
         case .bevel: self = .bevel
         default: self = .miter
         }
+    }
+}
+
+extension Silica.CGAffineTransform {
+
+    init(_ transform: Transform2D) {
+        self.init(a: transform.a, b: transform.b, c: transform.c, d: transform.d, tx: transform.tx, ty: transform.ty)
     }
 }
