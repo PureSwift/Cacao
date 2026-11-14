@@ -28,6 +28,9 @@ internal struct Resolution {
     /// as when a lazy stack only creates rows that scrolled into view.
     var keepsExistingChildren = false
 
+    /// Changes the transaction for the node's subtree in this update.
+    var transaction: ((inout Transaction) -> Void)?
+
     init(
         behavior: (any NodeBehavior)? = nil,
         children: [ChildView] = [],
@@ -99,6 +102,21 @@ internal struct NodeAttributes {
 
     /// Menu items shown on a secondary click.
     var contextMenu: AnyView?
+
+    /// How the node animates in and out.
+    var transition: AnyTransition?
+
+    /// The node's matched geometry group.
+    var matchedGeometry: AnyHashable?
+
+    /// Gestures attached to the node's views.
+    var gestures: [GestureAttachment] = []
+
+    /// The name of the node's coordinate space.
+    var coordinateSpaceName: AnyHashable?
+
+    /// Whether the node's layout's views are where scroll views settle.
+    var isScrollTargetLayout = false
 }
 
 // MARK: - ResolveContext
@@ -132,6 +150,36 @@ internal struct ResolveContext {
     }
 }
 
+extension ResolveContext {
+
+    /// For an animatable view or modifier: the value to evaluate, with its
+    /// animatable data partway through an animation when one is running,
+    /// starting one when the data changed in an animated transaction.
+    func animatedValue<V>(_ value: V) -> V {
+        guard let components = AnimatableViews.components(of: value) else {
+            return value
+        }
+        let graph = self.graph
+        let state = graph.animations(of: node)
+        defer { state.modelViewData = components }
+        if node.isAnimationFrame, let animation = state.viewData {
+            let current = animation.values(at: graph.time).values
+            return (AnimatableViews.view(value as! any View, with: current) as? V) ?? value
+        }
+        guard let model = state.modelViewData, model != components, model.count == components.count else {
+            return value
+        }
+        guard let animation = graph.currentAnimation else {
+            state.viewData = nil
+            return value
+        }
+        let from = state.viewData?.values(at: graph.time).values ?? model
+        state.viewData = PropertyAnimation(from: from, to: components, animation: animation, start: graph.time)
+        graph.animatedViewNodes[node.id] = WeakNodeReference(node)
+        return (AnimatableViews.view(value as! any View, with: from) as? V) ?? value
+    }
+}
+
 /// Invalidates a node when an observable property its body read changes.
 internal final class ObservationToken: @unchecked Sendable {
 
@@ -146,6 +194,6 @@ internal final class ObservationToken: @unchecked Sendable {
     }
 
     func invalidate() {
-        queue?.enqueue(node)
+        queue?.enqueue(node, transaction: Transaction.current)
     }
 }
