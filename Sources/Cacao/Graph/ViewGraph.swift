@@ -63,6 +63,19 @@ package final class ViewGraph {
     /// Timelines waiting to update, by node, with the time they update at.
     var wakeups: [Int: (node: WeakNodeReference, time: Double)] = [:]
 
+    /// The views the pointer hovers over.
+    var hoveredNodes: [Int: WeakNodeReference] = [:]
+
+    /// The window's insets that content stays inside of, like a notch's.
+    package var safeAreaInsets = EdgeInsets()
+
+    /// Actions to run once the current layout pass has placed every view.
+    var afterLayoutActions: [() -> Void] = []
+
+    /// Checks to run after each update, by node, like preference readers
+    /// checking the values they read.
+    var updateObservers: [Int: (node: WeakNodeReference, check: () -> Void)] = [:]
+
     /// Scroll views moving to a position programmatically.
     var scrollAnimations: [ObjectIdentifier: (state: ScrollState, animation: PropertyAnimation)] = [:]
 
@@ -224,6 +237,24 @@ package final class ViewGraph {
             node.attributes.onAppear?()
         }
         notifyPreferenceObservers()
+        for (id, observer) in updateObservers {
+            if observer.node.node?.isAttached == true {
+                observer.check()
+            } else {
+                updateObservers[id] = nil
+            }
+        }
+    }
+
+    /// Runs an action after the current layout pass places every view.
+    func afterLayout(_ action: @escaping () -> Void) {
+        afterLayoutActions.append(action)
+    }
+
+    /// Runs a check after every update, for as long as the node is in the
+    /// graph or until the node registers another.
+    func observeUpdates(of node: ViewNode, _ check: @escaping () -> Void) {
+        updateObservers[node.id] = (WeakNodeReference(node), check)
     }
 
     func nodeDidInvalidate(_ node: ViewNode) {
@@ -283,11 +314,29 @@ package final class ViewGraph {
     package func layout(in size: CGSize) {
         update()
         self.size = size
-        layoutGeneration += 1
-        statistics.layouts += 1
         needsDisplay = true
-        root.place(at: CGPoint(x: 0, y: 0), proposal: ProposedViewSize(size))
-        root.forEachNode { $0.isLayoutValid = true }
+        // Layout can invalidate views, like geometry readers given a new
+        // size: update them and lay out again, in the same transaction.
+        let transaction = baseTransaction
+        var passes = 0
+        while true {
+            layoutGeneration += 1
+            statistics.layouts += 1
+            root.place(at: CGPoint(x: 0, y: 0), proposal: ProposedViewSize(size))
+            root.forEachNode { $0.isLayoutValid = true }
+            let actions = afterLayoutActions
+            afterLayoutActions.removeAll()
+            for action in actions {
+                action()
+            }
+            drainInvalidations()
+            passes += 1
+            guard !dirtyNodes.isEmpty, passes < 4 else { break }
+            if pendingTransaction == nil {
+                pendingTransaction = transaction
+            }
+            update()
+        }
         commitAnimations()
     }
 
@@ -297,7 +346,7 @@ package final class ViewGraph {
     /// last layout.
     package func identifiedFrames() -> [String: CGRect] {
         var result: [String: CGRect] = [:]
-        root.forEachNode { node in
+        root.forEachDisplayedNode { node in
             guard let identifier = node.attributes.identifier, result[identifier] == nil else {
                 return
             }
@@ -310,7 +359,7 @@ package final class ViewGraph {
     /// root's coordinate space, from the last layout.
     package func frame(forIdentifier identifier: String) -> CGRect? {
         var result: CGRect?
-        root.forEachNode { node in
+        root.forEachDisplayedNode { node in
             guard result == nil, node.attributes.identifier == identifier else {
                 return
             }
@@ -322,6 +371,15 @@ package final class ViewGraph {
 }
 
 extension ViewNode {
+
+    /// Visits this node and the descendants it displays, depth first,
+    /// skipping views that don't show, like `ViewThatFits`' other candidates.
+    func forEachDisplayedNode(_ body: (ViewNode) -> Void) {
+        body(self)
+        for child in orderedChildren {
+            child.forEachDisplayedNode(body)
+        }
+    }
 
     /// Whether the node is still part of its graph's tree.
     var isAttached: Bool {
