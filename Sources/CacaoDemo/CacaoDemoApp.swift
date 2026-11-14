@@ -24,6 +24,8 @@ enum Screen: String, CaseIterable, Hashable {
     case controls = "Controls"
     case list = "List"
     case shapes = "Shapes"
+    case animation = "Animation"
+    case gestures = "Gestures"
     case grids = "Grids"
     case navigation = "Navigation"
     case presentations = "Presentations"
@@ -62,6 +64,8 @@ struct ScreenView: View {
             case .controls: ControlsScreen()
             case .list: ListScreen()
             case .shapes: ShapesScreen()
+            case .animation: AnimationScreen()
+            case .gestures: GesturesScreen()
             case .grids: GridsScreen()
             case .navigation: NavigationScreen()
             case .presentations: PresentationsScreen()
@@ -226,6 +230,208 @@ struct ShapesScreen: View {
             }
             .padding()
         }
+    }
+}
+
+// MARK: - Animation
+
+struct AnimationScreen: View {
+
+    @State private var isExpanded = false
+
+    @State private var showsBadge = true
+
+    @State private var isLeading = true
+
+    @State private var spins = 0.0
+
+    @Namespace private var namespace
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Section("Springs") {
+                    HStack(spacing: 16) {
+                        RoundedRectangle(cornerRadius: isExpanded ? 30 : 8)
+                            .fill(isExpanded ? Color.purple : Color.blue)
+                            .frame(width: isExpanded ? 220 : 80, height: 80)
+                        Button(isExpanded ? "Shrink" : "Grow") {
+                            withAnimation(.bouncy) { isExpanded.toggle() }
+                        }
+                    }
+                }
+                Section("Transitions") {
+                    HStack(spacing: 16) {
+                        Button(showsBadge ? "Hide" : "Show") {
+                            withAnimation(.smooth) { showsBadge.toggle() }
+                        }
+                        if showsBadge {
+                            Text("New")
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Capsule().fill(.orange))
+                                .transition(.scale.combined(with: .opacity))
+                        }
+                        Spacer()
+                    }
+                    .frame(height: 40)
+                }
+                Section("Matched geometry") {
+                    HStack {
+                        if isLeading {
+                            Circle().fill(.green)
+                                .matchedGeometryEffect(id: "dot", in: namespace)
+                                .frame(width: 40, height: 40)
+                        }
+                        Spacer()
+                        if !isLeading {
+                            Circle().fill(.green)
+                                .matchedGeometryEffect(id: "dot", in: namespace)
+                                .frame(width: 60, height: 60)
+                        }
+                    }
+                    .frame(height: 60)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        withAnimation(.snappy) { isLeading.toggle() }
+                    }
+                }
+                Section("Rotation") {
+                    HStack(spacing: 16) {
+                        RoundedRectangle(cornerRadius: 6).fill(.red)
+                            .frame(width: 50, height: 50)
+                            .rotationEffect(.degrees(spins * 90))
+                        Button("Spin") {
+                            withAnimation(.easeInOut(duration: 0.6)) { spins += 1 }
+                        }
+                    }
+                }
+                Section("Timeline and canvas") {
+                    TimelineView(.animation) { context in
+                        Clock(date: context.date)
+                    }
+                    .frame(width: 120, height: 120)
+                }
+            }
+            .padding()
+        }
+    }
+}
+
+/// A clock face drawn in a canvas.
+struct Clock: View {
+
+    let date: Date
+
+    var body: some View {
+        Canvas { context, size in
+            let radius = min(size.width, size.height) / 2
+            let center = CGPoint(x: size.width / 2, y: size.height / 2)
+            context.stroke(
+                Path(ellipseIn: CGRect(x: center.x - radius + 2, y: center.y - radius + 2, width: radius * 2 - 4, height: radius * 2 - 4)),
+                with: .color(.gray),
+                lineWidth: 3
+            )
+            let seconds = date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 60)
+            var hand = context
+            hand.translateBy(x: center.x, y: center.y)
+            hand.rotate(by: .degrees(seconds * 6))
+            var path = Path()
+            path.move(to: CGPoint(x: 0, y: 6))
+            path.addLine(to: CGPoint(x: 0, y: -radius + 12))
+            hand.stroke(path, with: .color(.red), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+            context.fill(
+                Path(ellipseIn: CGRect(x: center.x - 4, y: center.y - 4, width: 8, height: 8)),
+                with: .color(.primary)
+            )
+        }
+    }
+}
+
+// MARK: - Gestures
+
+struct GesturesScreen: View {
+
+    @GestureState private var dragOffset = CGSize.zero
+
+    @State private var position = CGSize.zero
+
+    @GestureState private var isPressing = false
+
+    @State private var pressCount = 0
+
+    @State private var scale: CGFloat = 1
+
+    @GestureState private var magnification: CGFloat = 1
+
+    @State private var taps = "Tap or double tap"
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Section("Drag") {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.gray.opacity(0.15))
+                    Circle()
+                        .fill(.blue)
+                        .frame(width: 50, height: 50)
+                        .offset(
+                            x: position.width + dragOffset.width,
+                            y: position.height + dragOffset.height
+                        )
+                        .gesture(
+                            DragGesture()
+                                .updating($dragOffset) { value, state, _ in
+                                    state = value.translation
+                                }
+                                .onEnded { value in
+                                    withAnimation(.spring) {
+                                        position.width += value.translation.width
+                                        position.height += value.translation.height
+                                    }
+                                }
+                        )
+                }
+                .frame(height: 160)
+            }
+            Section("Long press") {
+                HStack(spacing: 16) {
+                    Circle()
+                        .fill(isPressing ? Color.orange : Color.green)
+                        .frame(width: 50, height: 50)
+                        .scaleEffect(isPressing ? 1.3 : 1)
+                        .animation(.snappy, value: isPressing)
+                        .gesture(
+                            LongPressGesture(minimumDuration: 0.6)
+                                .updating($isPressing) { value, state, _ in state = value }
+                                .onEnded { _ in pressCount += 1 }
+                        )
+                    Text("Held \(pressCount) times")
+                }
+            }
+            Section("Taps") {
+                Text(taps)
+                    .padding()
+                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.gray.opacity(0.15)))
+                    .onTapGesture(count: 2) { taps = "Double tap" }
+                    .onTapGesture { taps = "Single tap" }
+            }
+            Section("Pinch") {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(.purple)
+                    .frame(width: 80, height: 80)
+                    .scaleEffect(scale * magnification)
+                    .frame(width: 200, height: 120)
+                    .contentShape(Rectangle())
+                    .gesture(
+                        MagnifyGesture()
+                            .updating($magnification) { value, state, _ in state = value.magnification }
+                            .onEnded { value in scale = min(max(scale * value.magnification, 0.5), 2) }
+                    )
+            }
+            Spacer()
+        }
+        .padding()
     }
 }
 
