@@ -2,6 +2,7 @@ import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
 #endif
+import Observation
 import Testing
 @testable import Cacao
 
@@ -170,6 +171,46 @@ extension ViewGraph {
         #expect(graph.texts.contains("Detail of Apple"))
         #expect(!graph.texts.contains("Detail of Pear"))
         #expect(!graph.texts.contains("Back"))
+    }
+
+    @Test func splitViewColumnWidthsAndVisibility() {
+        struct Split: View {
+            @Bindable var model: SplitModel
+            var body: some View {
+                NavigationSplitView(columnVisibility: $model.visibility) {
+                    Color.red.accessibilityIdentifier("sidebar")
+                        .navigationSplitViewColumnWidth(min: 100, ideal: 150, max: 300)
+                } content: {
+                    Color.green.accessibilityIdentifier("content")
+                        .navigationSplitViewColumnWidth(200)
+                } detail: {
+                    Color.blue.accessibilityIdentifier("detail")
+                }
+            }
+        }
+        let model = SplitModel()
+        let graph = layout(Split(model: model), width: 800, height: 400)
+        graph.settle()
+        var frames = graph.identifiedFrames()
+        #expect(frames["sidebar"]?.minX == 0)
+        #expect(frames["sidebar"]?.width == 150)
+        #expect(frames["content"]?.minX == 151)
+        #expect(frames["content"]?.width == 200)
+        #expect(frames["detail"]?.minX == 352)
+        #expect(frames["detail"]?.maxX == 800)
+
+        model.visibility = .doubleColumn
+        graph.settle()
+        frames = graph.identifiedFrames()
+        #expect(frames["content"]?.minX == 0)
+        #expect(frames["detail"]?.minX == 201)
+        #expect(!graph.colorItems.contains { $0.color == Color.red.resolve(in: EnvironmentValues()) })
+
+        model.visibility = .detailOnly
+        graph.settle()
+        frames = graph.identifiedFrames()
+        #expect(frames["detail"] == CGRect(x: 0, y: 0, width: 800, height: 400))
+        #expect(graph.colorItems.count == 1)
     }
 
     // MARK: Tabs
@@ -527,4 +568,9 @@ extension ViewGraph {
         }?.transforms.first?.ty ?? 0
         #expect(offset > 0)
     }
+}
+
+@Observable
+final class SplitModel {
+    var visibility = NavigationSplitViewVisibility.all
 }
