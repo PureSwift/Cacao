@@ -73,6 +73,16 @@ Notes:
   within a window move values; drops from the system arrive as file URLs
   and text, converted to what the destination takes. On macOS, each window
   shows its accessibility tree to VoiceOver as NSAccessibility elements.
+- Canvas: drawing commands with blend modes, filters or masks, and
+  layers, composite on their own: each draws into its own bitmap, which is
+  masked, filtered (shadows and blurs as three box blurs) and blended into
+  the result in software, by the W3C compositing formulas. Runs of plain
+  commands still draw together with Silica in one pass, so canvases without
+  these features cost what they did. Symbols are the canvas's tagged
+  children, laid out but not shown, whose drawings become commands.
+  Rotating a canvas found that Silica's Cairo backend transposes affine
+  matrices (`b` and `c` swapped), so rotations turned the wrong way on
+  Linux; Cacao transposes them back until Silica is fixed.
 - Known gaps, for later phases:
   - Tab switches don't animate (nor do they in SwiftUI by default).
   - No AT-SPI bridge on Linux yet.
@@ -80,7 +90,8 @@ Notes:
   - `RotateGesture` has no input yet: SDL reports pinches but not rotations.
   - On macOS, the system's trackpad momentum arrives as more scrolling, so
     snapping scroll views settle after it ends; paging moves at most a page.
-  - `Canvas` ignores blend modes and has no symbols.
+  - `Canvas` composites blend modes and filters in software, at a cost
+    for large canvases that use them.
   - `matchedGeometryEffect` moves frames only; `properties`, `anchor` and
     `isSource` are ignored.
   - Toolbar items are found from the structure of toolbar content, as picker
