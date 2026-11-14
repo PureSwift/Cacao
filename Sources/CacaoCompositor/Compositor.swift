@@ -56,6 +56,9 @@ package protocol CompositorBackend: AnyObject {
     /// Draws a layer in a rectangle, inside a convex polygon if given.
     func drawLayer(_ layer: TextureID, in rect: CGRect, opacity: Double, mask: [CGPoint]?)
 
+    /// Draws a layer as a silhouette in a color, for shadows.
+    func drawLayer(_ layer: TextureID, in rect: CGRect, tint: Color.Resolved)
+
     /// Draws a layer stretched to a quadrilateral: its top-leading,
     /// top-trailing, bottom-trailing and bottom-leading corners.
     func drawLayer(_ layer: TextureID, corners: [CGPoint], opacity: Double)
@@ -230,6 +233,8 @@ package final class Compositor {
                     let bounds = Self.bounds(of: nested.items).offsetBy(dx: -translation.x, dy: -translation.y)
                     drawGroup(nested.items, identity: item.identity, bounds: bounds, translation: translation, clip: clip, opacity: opacity * value, mask: nil)
                 }
+            case let .effect(.shadow(effect), nested):
+                drawShadowed(nested.items, identity: item.identity, shadow: effect, translation: translation, clip: clip, opacity: opacity)
             case let .effect(.compositingGroup, nested):
                 let bounds = Self.bounds(of: nested.items).offsetBy(dx: -translation.x, dy: -translation.y)
                 drawGroup(nested.items, identity: item.identity, bounds: bounds, translation: translation, clip: clip, opacity: opacity, mask: nil)
@@ -313,6 +318,47 @@ package final class Compositor {
         backend.drawLayer(layer, in: relative(pixels), opacity: opacity, mask: maskPixels)
         frameStatistics.layers += 1
         frameStatistics.draws += 1
+    }
+
+    /// Draws items into an offscreen layer, then the layer twice: as a
+    /// silhouette in the shadow's color, moved by its offset, and over it.
+    private func drawShadowed(
+        _ items: [DisplayList.Item],
+        identity: Int,
+        shadow: ShadowEffect,
+        translation: CGPoint,
+        clip: CGRect,
+        opacity: Double
+    ) {
+        let bounds = Self.bounds(of: items).offsetBy(dx: -translation.x, dy: -translation.y)
+        // What shows of the content, or of its moved shadow.
+        let reach = clip.union(clip.offsetBy(dx: -shadow.offset.width, dy: -shadow.offset.height))
+        let visible = bounds.intersection(reach)
+        guard !visible.isNull, !visible.isEmpty, opacity > 0 else {
+            markPresent(items)
+            return
+        }
+        let pixels = absolutePixelRect(visible)
+        let width = Int(pixels.width), height = Int(pixels.height)
+        guard width > 0, height > 0, width <= 8192, height <= 8192,
+              let layer = offscreen(identity: identity, width: width, height: height) else {
+            markPresent(items)
+            return
+        }
+        backend.beginLayer(layer)
+        targetOrigins.append(pixels.origin)
+        draw(items, translation: translation, clip: visible, opacity: 1)
+        backend.setClip(nil)
+        targetOrigins.removeLast()
+        backend.endLayer()
+        setClip(clip)
+        var tint = shadow.color
+        tint.opacity *= Float(opacity)
+        let shadowRect = relative(pixels.offsetBy(dx: shadow.offset.width * scale, dy: shadow.offset.height * scale))
+        backend.drawLayer(layer, in: shadowRect, tint: tint)
+        backend.drawLayer(layer, in: relative(pixels), opacity: opacity, mask: nil)
+        frameStatistics.layers += 1
+        frameStatistics.draws += 2
     }
 
     /// Draws items into an offscreen layer, untransformed, then draws the
@@ -609,6 +655,9 @@ package final class Compositor {
                 result = result.union(item.frame.insetBy(dx: -outset, dy: -outset))
             case .effect(.scroll, _), .effect(.clip, _):
                 result = result.union(item.frame)
+            case let .effect(.shadow(shadow), nested):
+                let content = bounds(of: nested.items)
+                result = result.union(content).union(content.offsetBy(dx: shadow.offset.width, dy: shadow.offset.height))
             case let .effect(_, nested):
                 result = result.union(bounds(of: nested.items))
             }
