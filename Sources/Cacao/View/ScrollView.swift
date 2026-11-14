@@ -165,6 +165,10 @@ internal struct ScrollBehavior: NodeBehavior {
     }
 
     func sizeThatFits(_ proposal: ProposedViewSize, node: ViewNode) -> CGSize {
+        // A viewport of the proposed size, for content measured relative to it.
+        if let width = proposal.width, let height = proposal.height, width.isFinite, height.isFinite {
+            ContainerSize.of(node).size = CGSize(width: width, height: height)
+        }
         let content = LayoutProxy.combining(node.layoutChildren)?.size(in: contentProposal(proposal)) ?? .zero
         func dimension(_ proposed: CGFloat?, _ content: CGFloat) -> CGFloat {
             guard let proposed, proposed.isFinite else { return content }
@@ -174,6 +178,8 @@ internal struct ScrollBehavior: NodeBehavior {
     }
 
     func placeChildren(in bounds: CGRect, proposal: ProposedViewSize, node: ViewNode) {
+        // Content sizes itself relative to the viewport.
+        ContainerSize.of(node).size = bounds.size
         let state = state(of: node)
         state.targetBehavior = targetBehavior
         state.isEnabled = isScrollEnabled
