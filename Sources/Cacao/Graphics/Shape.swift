@@ -187,9 +187,11 @@ public struct _ShapeView<Content: Shape, Style: ShapeStyle>: View, PrimitiveView
     public typealias Body = Never
 
     func resolve(in context: ResolveContext) -> Resolution {
-        Resolution(behavior: ShapeBehavior(
+        let style = AnyShapeStyle(style)
+        return Resolution(behavior: ShapeBehavior(
             shape: shape,
-            color: AnyShapeStyle(style).resolveColor(in: context.environment),
+            color: style.resolveColor(in: context.environment),
+            gradient: style.resolveGradient(in: context.environment),
             drawing: drawing
         ))
     }
@@ -209,6 +211,16 @@ package struct ShapeContent: Equatable, Sendable {
     package var color: Color.Resolved
 
     package var drawing: ShapeDrawing
+
+    /// A gradient drawn instead of the color.
+    package var gradient: GradientPaint?
+
+    package init(path: Path, color: Color.Resolved, drawing: ShapeDrawing, gradient: GradientPaint? = nil) {
+        self.path = path
+        self.color = color
+        self.drawing = drawing
+        self.gradient = gradient
+    }
 }
 
 internal struct ShapeBehavior<S: Shape>: AnimatableBehavior {
@@ -216,6 +228,8 @@ internal struct ShapeBehavior<S: Shape>: AnimatableBehavior {
     var shape: S
 
     var color: Color.Resolved
+
+    var gradient: GradientStyle? = nil
 
     let drawing: ShapeDrawing
 
@@ -242,10 +256,12 @@ internal struct ShapeBehavior<S: Shape>: AnimatableBehavior {
     }
 
     func displayContent(node: ViewNode) -> DisplayList.Content? {
-        .shape(ShapeContent(
-            path: shape.path(in: CGRect(origin: CGPoint(x: 0, y: 0), size: node.graph.presentationFrame(of: node).size)),
+        let bounds = CGRect(origin: CGPoint(x: 0, y: 0), size: node.graph.presentationFrame(of: node).size)
+        return .shape(ShapeContent(
+            path: shape.path(in: bounds),
             color: color,
-            drawing: drawing
+            drawing: drawing,
+            gradient: gradient?.paint(in: bounds)
         ))
     }
 
