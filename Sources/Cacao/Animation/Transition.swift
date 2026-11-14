@@ -380,13 +380,49 @@ internal struct MatchedGeometryKey: Hashable {
     let namespace: Namespace.ID
 }
 
+/// How a view takes part in a matched geometry group.
+internal struct MatchedGeometry {
+
+    let key: AnyHashable
+
+    let properties: MatchedGeometryProperties
+
+    let anchor: UnitPoint
+
+    /// Whether the view's geometry is the group's; other views take it.
+    let isSource: Bool
+
+    /// The point of `frame` at the view's anchor: where a source is, for
+    /// views that match its position.
+    func anchorPoint(in frame: CGRect) -> CGPoint {
+        CGPoint(x: frame.minX + frame.width * anchor.x, y: frame.minY + frame.height * anchor.y)
+    }
+
+    /// The frame of a view now at `current` that takes from a source what
+    /// `properties` say: its size, and its position, by lining up the view's
+    /// anchor with the source's `point`. A view that doesn't take the
+    /// position keeps its origin.
+    func frame(at current: CGRect, matching size: CGSize, point: CGPoint) -> CGRect {
+        let size = properties.contains(.size) ? size : current.size
+        guard properties.contains(.position) else {
+            return CGRect(origin: current.origin, size: size)
+        }
+        return CGRect(
+            x: point.x - size.width * anchor.x,
+            y: point.y - size.height * anchor.y,
+            width: size.width,
+            height: size.height
+        )
+    }
+}
+
 internal struct _MatchedGeometryModifier: ViewModifier, PrimitiveViewModifier {
 
-    let key: MatchedGeometryKey
+    let geometry: MatchedGeometry
 
     func resolve(content: any View, in context: ResolveContext) -> Resolution {
         var attributes = NodeAttributes()
-        attributes.matchedGeometry = AnyHashable(key)
+        attributes.matchedGeometry = geometry
         return Resolution(children: [ChildView(key: 0, view: content)], attributes: attributes)
     }
 
@@ -397,7 +433,9 @@ extension View {
 
     /// Defines a group of views with synchronized geometry: when one view
     /// with an identifier replaces another in an animated update, it moves
-    /// and resizes from where the other was.
+    /// and resizes from where the other was, and views that aren't the
+    /// source take the source's frame, as far as `properties` say, lining up
+    /// their `anchor` points.
     public func matchedGeometryEffect<ID: Hashable>(
         id: ID,
         in namespace: Namespace.ID,
@@ -405,7 +443,12 @@ extension View {
         anchor: UnitPoint = .center,
         isSource: Bool = true
     ) -> some View {
-        modifier(_MatchedGeometryModifier(key: MatchedGeometryKey(id: AnyHashable(id), namespace: namespace)))
+        modifier(_MatchedGeometryModifier(geometry: MatchedGeometry(
+            key: AnyHashable(MatchedGeometryKey(id: AnyHashable(id), namespace: namespace)),
+            properties: properties,
+            anchor: anchor,
+            isSource: isSource
+        )))
     }
 }
 
