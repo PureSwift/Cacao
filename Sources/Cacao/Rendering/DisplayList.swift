@@ -80,6 +80,12 @@ package struct DisplayList: Equatable, Sendable {
         /// The nested list drawn over its shadow.
         case shadow(ShadowEffect)
 
+        /// The nested list blurred.
+        case blur(BlurEffect)
+
+        /// The nested list's colors transformed by a matrix.
+        case colorMatrix(ColorMatrix)
+
         /// The nested list clipped to a viewport and moved by a scroll offset.
         case scroll(ScrollEffect)
 
