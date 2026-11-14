@@ -78,6 +78,25 @@ package struct Transform2D: Equatable, Sendable {
 /// A type-erased transition: how a view looks as it's inserted or removed.
 public struct AnyTransition: Sendable {
 
+    /// A transitioning view's frame, and the size of the window it's in.
+    internal struct TransitionGeometry {
+
+        let frame: CGRect
+
+        let container: CGSize
+
+        var minX: CGFloat { frame.minX }
+        var minY: CGFloat { frame.minY }
+        var maxX: CGFloat { frame.maxX }
+        var maxY: CGFloat { frame.maxY }
+        var midX: CGFloat { frame.midX }
+        var midY: CGFloat { frame.midY }
+        var width: CGFloat { frame.width }
+        var height: CGFloat { frame.height }
+        var origin: CGPoint { frame.origin }
+        var size: CGSize { frame.size }
+    }
+
     /// How a view looks at the start of its insertion, or the end of its
     /// removal, given its frame.
     internal struct State {
@@ -89,16 +108,16 @@ public struct AnyTransition: Sendable {
         }
     }
 
-    internal let insertion: @Sendable (CGRect) -> State
+    internal let insertion: @Sendable (TransitionGeometry) -> State
 
-    internal let removal: @Sendable (CGRect) -> State
+    internal let removal: @Sendable (TransitionGeometry) -> State
 
-    internal init(insertion: @escaping @Sendable (CGRect) -> State, removal: @escaping @Sendable (CGRect) -> State) {
+    internal init(insertion: @escaping @Sendable (TransitionGeometry) -> State, removal: @escaping @Sendable (TransitionGeometry) -> State) {
         self.insertion = insertion
         self.removal = removal
     }
 
-    internal init(_ state: @escaping @Sendable (CGRect) -> State) {
+    internal init(_ state: @escaping @Sendable (TransitionGeometry) -> State) {
         self.init(insertion: state, removal: state)
     }
 
@@ -136,10 +155,11 @@ public struct AnyTransition: Sendable {
     public static func move(edge: Edge) -> AnyTransition {
         AnyTransition { frame in
             switch edge {
+            // Just past the edge of the window.
             case .leading: State(transform: .translation(-frame.maxX, 0))
-            case .trailing: State(transform: .translation(frame.width + 2000, 0))
+            case .trailing: State(transform: .translation(max(frame.container.width - frame.minX, frame.width), 0))
             case .top: State(transform: .translation(0, -frame.maxY))
-            case .bottom: State(transform: .translation(0, frame.height + 2000))
+            case .bottom: State(transform: .translation(0, max(frame.container.height - frame.minY, frame.height)))
             }
         }
     }
@@ -181,8 +201,8 @@ public struct AnyTransition: Sendable {
     }
 
     /// The effect partway through: `progress` from 0 (out) to 1 (in).
-    internal func effect(progress: Double, frame: CGRect, isInsertion: Bool) -> (opacity: Double, transform: Transform2D) {
-        let state = (isInsertion ? insertion : removal)(frame)
+    internal func effect(progress: Double, frame: CGRect, container: CGSize, isInsertion: Bool) -> (opacity: Double, transform: Transform2D) {
+        let state = (isInsertion ? insertion : removal)(TransitionGeometry(frame: frame, container: container))
         let p = CGFloat(progress)
         let t = state.transform
         let transform = Transform2D(
