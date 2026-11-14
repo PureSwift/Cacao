@@ -17,6 +17,7 @@ public struct Color: Hashable, Sendable, CustomStringConvertible {
         case resolved(Resolved)
         case system(SystemColor)
         case opacity(Color, Double)
+        case mix(Color, Color, Double)
     }
 
     internal let storage: Storage
@@ -79,7 +80,23 @@ public struct Color: Hashable, Sendable, CustomStringConvertible {
             var resolved = color.resolve(in: environment)
             resolved.opacity *= Float(opacity)
             return resolved
+        case let .mix(base, other, fraction):
+            let base = base.resolve(in: environment)
+            let other = other.resolve(in: environment)
+            let amount = Float(fraction)
+            return Resolved(
+                red: base.red + (other.red - base.red) * amount,
+                green: base.green + (other.green - base.green) * amount,
+                blue: base.blue + (other.blue - base.blue) * amount,
+                opacity: base.opacity
+            )
         }
+    }
+
+    /// Returns a version of the color mixed with another color, by an
+    /// amount between 0 and 1.
+    public func mix(with other: Color, by fraction: Double) -> Color {
+        Color(storage: .mix(self, other, max(0, min(1, fraction))))
     }
 
     public var description: String {
@@ -87,6 +104,7 @@ public struct Color: Hashable, Sendable, CustomStringConvertible {
         case let .resolved(resolved): "\(resolved)"
         case let .system(color): color.rawValue
         case let .opacity(color, opacity): "\(Int(opacity * 100))% \(color)"
+        case let .mix(base, other, fraction): "\(base) mixed with \(other) by \(fraction)"
         }
     }
 }
