@@ -224,19 +224,6 @@ public enum PopoverAttachmentAnchor: Sendable {
     case point(UnitPoint)
 }
 
-/// A geometric value whose value is defined in the coordinate space of a view.
-public struct Anchor<Value> {
-
-    /// A type-erased geometry value that produces an anchored value of a given type.
-    public struct Source: Sendable {
-
-        internal init() { }
-
-        /// The bounds of the view.
-        public static var bounds: Source { Source() }
-    }
-}
-
 /// A popover's chrome: a card sized to its content.
 internal struct _PopoverContent: View {
 
