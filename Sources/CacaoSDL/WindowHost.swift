@@ -31,6 +31,12 @@ final class WindowHost {
 
     private let scrollController = ScrollController()
 
+    /// Where the mouse is, for pinches.
+    private var mouseLocation = CGPoint(x: 0, y: 0)
+
+    /// A pinch's total scale since it began.
+    private var pinchScale = 1.0
+
     /// Whether the next frame must be drawn.
     private var needsRender = true
 
@@ -109,7 +115,7 @@ final class WindowHost {
 
     /// Whether the window needs frames even without events.
     var isAnimating: Bool {
-        scrollController.isAnimating
+        scrollController.isAnimating || graph.hasActiveAnimations
     }
 
     private func updateBackground() {
@@ -131,13 +137,25 @@ final class WindowHost {
         case SDL_EVENT_WINDOW_EXPOSED:
             needsRender = true
         case SDL_EVENT_MOUSE_BUTTON_DOWN where event.button.button == UInt8(SDL_BUTTON_LEFT):
-            graph.pointer(.began, at: CGPoint(x: CGFloat(event.button.x), y: CGFloat(event.button.y)))
+            graph.pointer(.began, at: CGPoint(x: CGFloat(event.button.x), y: CGFloat(event.button.y)), time: now)
         case SDL_EVENT_MOUSE_BUTTON_DOWN where event.button.button == UInt8(SDL_BUTTON_RIGHT):
             graph.secondaryClick(at: CGPoint(x: CGFloat(event.button.x), y: CGFloat(event.button.y)))
         case SDL_EVENT_MOUSE_BUTTON_UP where event.button.button == UInt8(SDL_BUTTON_LEFT):
-            graph.pointer(.ended, at: CGPoint(x: CGFloat(event.button.x), y: CGFloat(event.button.y)))
-        case SDL_EVENT_MOUSE_MOTION where event.motion.state & 0x1 != 0:
-            graph.pointer(.moved, at: CGPoint(x: CGFloat(event.motion.x), y: CGFloat(event.motion.y)))
+            graph.pointer(.ended, at: CGPoint(x: CGFloat(event.button.x), y: CGFloat(event.button.y)), time: now)
+        case SDL_EVENT_MOUSE_MOTION:
+            mouseLocation = CGPoint(x: CGFloat(event.motion.x), y: CGFloat(event.motion.y))
+            if event.motion.state & 0x1 != 0 {
+                graph.pointer(.moved, at: mouseLocation, time: now)
+            }
+        case SDL_EVENT_PINCH_BEGIN:
+            // SDL reports each change; gestures see the total.
+            pinchScale = 1
+            graph.magnify(.began, scale: pinchScale, at: mouseLocation, time: now)
+        case SDL_EVENT_PINCH_UPDATE:
+            pinchScale *= Double(event.pinch.scale)
+            graph.magnify(.moved, scale: pinchScale, at: mouseLocation, time: now)
+        case SDL_EVENT_PINCH_END:
+            graph.magnify(.ended, scale: pinchScale, at: mouseLocation, time: now)
         case SDL_EVENT_MOUSE_WHEEL:
             var x = event.wheel.x
             var y = event.wheel.y
@@ -240,6 +258,8 @@ final class WindowHost {
     /// Steps animations, updates, lays out and draws if anything changed.
     func frame(now: Double) {
         scrollController.step(now: now)
+        // Moves animations to this frame; animatable views re-resolve.
+        graph.advanceAnimations(to: now)
         if graph.needsUpdate {
             graph.update()
             needsLayout = true
