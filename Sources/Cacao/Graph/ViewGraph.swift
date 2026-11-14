@@ -57,19 +57,50 @@ package final class ViewGraph {
 
     private(set) var layoutGeneration = 0
 
-    /// The tap gesture node a press started on.
-    weak var activeTap: ViewNode?
+    /// The gestures of the interaction in progress.
+    var gestureSession: GestureSession?
 
-    var activeTapIsInside = false
+    /// Timelines waiting to update, by node, with the time they update at.
+    var wakeups: [Int: (node: WeakNodeReference, time: Double)] = [:]
 
-    /// The drag gesture node a press started on, and where the press started.
-    weak var activeDrag: ViewNode?
+    /// Scroll views moving to a position programmatically.
+    var scrollAnimations: [ObjectIdentifier: (state: ScrollState, animation: PropertyAnimation)] = [:]
 
-    var activeDragStart = CGPoint(x: 0, y: 0)
-
-    var activeDragFrame = CGRect.zero
+    /// The current date, which tests replace.
+    package var dateProvider: () -> Date = { Date() }
 
     let focusedNodeReference = WeakNodeReference()
+
+    // MARK: Animation state
+
+    /// The time animations are evaluated at, in seconds, from the host's clock.
+    package var time: Double = 0
+
+    /// The transaction of state changes waiting for the next update.
+    var pendingTransaction: Transaction?
+
+    /// The transaction of the update in progress, as modifiers change it.
+    var currentTransaction = Transaction()
+
+    /// The transaction of the last update, for layout changes it causes.
+    var baseTransaction = Transaction()
+
+    /// The update whose changes the last layout animated.
+    var committedGeneration = -1
+
+    /// Counts updates, to tell what changed in the last one.
+    private(set) var updateGeneration = 0
+
+    var nodeAnimations: [Int: NodeAnimations] = [:]
+
+    /// Removed views transitioning out, by their parent node.
+    var ghosts: [Int: [Ghost]] = [:]
+
+    /// The frames of matched geometry groups from the last layout.
+    var matchedFrames: [AnyHashable: (frame: CGRect, node: Int)] = [:]
+
+    /// Animatable views mid-animation, re-resolved each frame.
+    var animatedViewNodes: [Int: WeakNodeReference] = [:]
 
     /// The lazy stacks in the graph, which create rows as they scroll.
     var lazyStacks: [WeakNodeReference] = []
@@ -145,6 +176,11 @@ package final class ViewGraph {
     /// they invalidate more nodes.
     package func update() {
         drainInvalidations()
+        guard !dirtyNodes.isEmpty else { return }
+        updateGeneration += 1
+        currentTransaction = pendingTransaction ?? Transaction()
+        pendingTransaction = nil
+        baseTransaction = currentTransaction
         var passes = 0
         while !dirtyNodes.isEmpty, passes < 16 {
             passes += 1
@@ -161,7 +197,8 @@ package final class ViewGraph {
 
     /// Marks the nodes invalidated since the last drain dirty.
     func drainInvalidations() {
-        for node in invalidations.drain() where node.isAttached {
+        for (node, transaction) in invalidations.drain() where node.isAttached {
+            record(transaction)
             node.invalidate()
         }
     }
@@ -202,6 +239,8 @@ package final class ViewGraph {
     }
 
     func nodeDidDisappear(_ node: ViewNode) {
+        nodeAnimations[node.id] = nil
+        animatedViewNodes[node.id] = nil
         // What a view presented goes away with it.
         if presentations.contains(where: { $0.owner == AnyHashable(node.id) }) {
             removePresentation(owner: AnyHashable(node.id))
@@ -249,6 +288,7 @@ package final class ViewGraph {
         needsDisplay = true
         root.place(at: CGPoint(x: 0, y: 0), proposal: ProposedViewSize(size))
         root.forEachNode { $0.isLayoutValid = true }
+        commitAnimations()
     }
 
     // MARK: Queries
