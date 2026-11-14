@@ -59,6 +59,8 @@ internal protocol PrimitiveScene {
 internal struct SceneModifiers {
 
     var defaultSize: CGSize?
+
+    var commands: [CommandMenuContent] = []
 }
 
 /// A window a host should open for an app.
@@ -81,13 +83,31 @@ package struct WindowDescription {
 
     /// Whether only one window of the scene may be open.
     package var isUnique = false
+
+    /// Whether the window opens when the app launches, if it's the first.
+    package var opensAtLaunch = true
 }
 
 extension Scene {
 
-    /// The windows a host opens for this scene, in order.
+    /// The windows a host opens for this scene, in order, each with the
+    /// commands of every scene.
     package func windowDescriptions() -> [WindowDescription] {
-        sceneWindows(of: self, modifiers: SceneModifiers())
+        var modifiers = SceneModifiers()
+        let windows = sceneWindows(of: self, modifiers: modifiers, collecting: &modifiers.commands)
+        let menus = modifiers.commands
+        guard !menus.isEmpty else { return windows }
+        return windows.map { window in
+            var window = window
+            let root = window.rootView
+            window.rootView = AnyView(root.background(alignment: .topLeading) { _CommandsLayer(menus: menus) })
+            if let make = window.makeRootView {
+                window.makeRootView = { value in
+                    AnyView(make(value).background(alignment: .topLeading) { _CommandsLayer(menus: menus) })
+                }
+            }
+            return window
+        }
     }
 }
 
@@ -97,6 +117,19 @@ internal func sceneWindows<S: Scene>(of scene: S, modifiers: SceneModifiers) -> 
         return primitive.windows(modifiers: modifiers)
     }
     return sceneWindows(of: scene.body, modifiers: modifiers)
+}
+
+/// The commands scenes add, collected while finding their windows.
+@MainActor
+internal var collectedCommands: [CommandMenuContent] = []
+
+@MainActor
+internal func sceneWindows<S: Scene>(of scene: S, modifiers: SceneModifiers, collecting commands: inout [CommandMenuContent]) -> [WindowDescription] {
+    collectedCommands = []
+    let windows = sceneWindows(of: scene, modifiers: modifiers)
+    commands = collectedCommands
+    collectedCommands = []
+    return windows
 }
 
 // MARK: - SceneBuilder
@@ -309,9 +342,11 @@ public struct _SceneModifierContent<Content: Scene>: Scene, PrimitiveScene {
     }
 
     func windows(modifiers: SceneModifiers) -> [WindowDescription] {
-        var modifiers = modifiers
-        modify(&modifiers)
-        return sceneWindows(of: content, modifiers: modifiers)
+        var modified = modifiers
+        modify(&modified)
+        // Commands apply to the whole app.
+        collectedCommands += modified.commands.dropFirst(modifiers.commands.count)
+        return sceneWindows(of: content, modifiers: modified)
     }
 }
 
