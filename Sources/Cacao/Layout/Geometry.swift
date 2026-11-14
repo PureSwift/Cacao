@@ -228,3 +228,30 @@ extension CGFloat {
         Swift.min(Swift.max(self, lower ?? -.infinity), upper ?? .infinity)
     }
 }
+
+#if !canImport(CoreGraphics)
+/// A structure that contains a two-dimensional vector, where Foundation
+/// doesn't provide one.
+public struct CGVector: Hashable, Sendable {
+
+    public var dx: CGFloat
+
+    public var dy: CGFloat
+
+    public init() {
+        self.dx = 0
+        self.dy = 0
+    }
+
+    public init(dx: CGFloat, dy: CGFloat) {
+        self.dx = dx
+        self.dy = dy
+    }
+
+    public init(dx: Double, dy: Double) {
+        self.init(dx: CGFloat(dx), dy: CGFloat(dy))
+    }
+
+    public static var zero: CGVector { CGVector() }
+}
+#endif
