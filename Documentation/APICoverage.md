@@ -38,11 +38,11 @@ tests.
 | `@SceneStorage` | ◐ | Kept while the app runs. |
 | `@FocusState`, `@GestureState`, `@Namespace` | ✅ | |
 | `EnvironmentKey`, `EnvironmentValues` | ✅ | |
-| `@Entry` | ✗ | Needs a macro target. |
+| `@Entry` | ✅ | In `EnvironmentValues` extensions. |
 | `PreferenceKey`, `preference`, `onPreferenceChange`, `transformPreference` | ✅ | |
 | `anchorPreference`, `Anchor`, `overlayPreferenceValue`, `backgroundPreferenceValue` | ✅ | |
 | `onAppear`, `onDisappear`, `onChange`, `task`, `task(id:)` | ✅ | |
-| `onReceive` | ✗ | |
+| `onReceive` | ✅ | Combine's publishers on Apple platforms; elsewhere Cacao's: subjects, `Just`, `Timer.publish`, notifications, `$published`. |
 
 ## Layout
 
@@ -60,25 +60,30 @@ tests.
 | `safeAreaInset`, `safeAreaPadding`, `ignoresSafeArea` | ◐ | Window safe area from SDL; the keyboard's isn't separate. |
 | `Grid`, `GridRow`, `LazyVGrid`, `LazyHGrid` | ✅ | |
 | `LazyVStack`, `LazyHStack` | ✅ | Rows are created as they scroll into view. |
-| `containerRelativeFrame` | ✗ | |
+| `containerRelativeFrame` | ✅ | Relative to the nearest scroll view, or the window. |
 
 ## Views and controls
 
 | API | | Notes |
 |---|---|---|
 | `Text` (fonts, weight, italic, monospaced digits, `textCase`) | ✅ | |
-| `underline`, `strikethrough`, `kerning`, `tracking`, `baselineOffset`, `truncationMode`, `minimumScaleFactor`, `lineSpacing` | ○ | |
+| `underline`, `strikethrough` (with patterns), `kerning`, `tracking`, `baselineOffset`, `lineSpacing` | ✅ | On `Text` and on views. |
+| `truncationMode`, `minimumScaleFactor`, `allowsTightening` | ○ | |
 | `Image` (resources, data, resizing, template rendering) | ✅ | |
 | `Image(systemName:)` | ○ | Sized like a symbol; draws nothing yet. |
 | `Shape`s, `Path`, fills and strokes, `strokeBorder` | ✅ | |
-| `Color`, `ShapeStyle`, `foregroundStyle`, `tint` | ✅ | Gradients resolve to a color. |
+| `Color`, `ShapeStyle`, `foregroundStyle`, `tint`, `Color.mix` | ✅ | |
+| `LinearGradient`, `RadialGradient`, `EllipticalGradient`, `AngularGradient`, `Color.gradient` | ✅ | As views and as fills and strokes of shapes; text in a gradient style draws in its average color. |
 | `Button` and styles, `Toggle` and styles, `Slider`, `Stepper` | ✅ | |
 | `TextField`, `SecureField`, `TextEditor` | ✅ | |
 | `Picker` (menu, segmented, inline), `Menu` | ✅ | |
 | `ProgressView`, `Label`, `Link`, `DisclosureGroup` | ✅ | |
 | `LabeledContent`, `ContentUnavailableView` | ✅ | |
-| `DatePicker`, `ColorPicker`, `Gauge`, `ShareLink` | ✗ | |
-| `Canvas`, `GraphicsContext` | ◐ | Paths, text, images, transforms, opacity and clips; no symbols, gradients or blend modes. |
+| `DatePicker` | ◐ | Compact (popovers) and graphical styles; other styles show as one of these. |
+| `ColorPicker` | ◐ | A palette with hue, saturation, brightness and opacity sliders; no `CGColor` binding. |
+| `Gauge` | ✅ | Linear and circular styles. |
+| `ShareLink` | ✗ | |
+| `Canvas`, `GraphicsContext` | ◐ | Paths, text, images, transforms, opacity, clips and gradient fills; gradient strokes draw in a color; no symbols or blend modes. |
 | `TimelineView` | ✅ | |
 
 ## Lists and navigation
@@ -114,7 +119,8 @@ tests.
 | Transitions: opacity, scale, offset, move, slide, push, asymmetric, combined | ✅ | |
 | `matchedGeometryEffect` | ◐ | Frames only. |
 | `scaleEffect`, `rotationEffect` | ✅ | Drawn on the GPU. |
-| `contentTransition`, `phaseAnimator`, `keyframeAnimator` | ✗ | `contentTransition` compiles. |
+| `PhaseAnimator`, `phaseAnimator`, `KeyframeAnimator`, `keyframeAnimator`, `KeyframeTimeline` | ✅ | Linear, spring, cubic and move keyframes. |
+| `contentTransition` | ○ | |
 
 ## Input
 
@@ -134,10 +140,11 @@ tests.
 | API | | Notes |
 |---|---|---|
 | `opacity`, `clipShape`, `clipped`, `cornerRadius`, `compositingGroup`, `drawingGroup` | ✅ | |
-| `shadow` | ◐ | Not blurred. |
+| `shadow` | ✅ | Blurred on the GPU. |
 | `mask` | ◐ | Shape masks. |
 | `border` | ✅ | |
-| `blur`, `brightness`, `contrast`, `saturation`, `grayscale`, `hueRotation` | ○ / ✗ | `blur` compiles. |
+| `blur` | ✅ | On the GPU, by downsampling. |
+| `brightness`, `contrast`, `saturation`, `grayscale`, `hueRotation`, `colorInvert`, `colorMultiply`, `luminanceToAlpha` | ✅ | Applied to colors and images as they're drawn. |
 
 ## Accessibility
 
@@ -154,5 +161,6 @@ tests.
 | API | | Notes |
 |---|---|---|
 | `preferredColorScheme`, `colorScheme` | ✅ | |
+| `locale`, `calendar`, `timeZone` | ✅ | |
 | `help`, `badge`, `redacted`, `controlSize`, `submitLabel`, `autocorrectionDisabled`, `imageScale`, `symbolRenderingMode` | ○ | |
 | `import SwiftUI` on Linux | ✅ | The `SwiftUI` module re-exports Cacao. |
