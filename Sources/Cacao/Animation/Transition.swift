@@ -71,6 +71,31 @@ package struct Transform2D: Equatable, Sendable {
     package var isTranslation: Bool {
         a == 1 && b == 0 && c == 0 && d == 1
     }
+
+    /// The transform that undoes this one, if it can be undone.
+    package func inverted() -> Transform2D? {
+        let determinant = a * d - b * c
+        guard determinant != 0 else { return nil }
+        return Transform2D(
+            a: d / determinant,
+            b: -b / determinant,
+            c: -c / determinant,
+            d: a / determinant,
+            tx: (c * ty - d * tx) / determinant,
+            ty: (b * tx - a * ty) / determinant
+        )
+    }
+
+    /// The bounding rectangle of a rectangle's transformed corners.
+    package func boundingRect(of rect: CGRect) -> CGRect {
+        guard !rect.isNull else { return rect }
+        let corners = [
+            apply(CGPoint(x: rect.minX, y: rect.minY)), apply(CGPoint(x: rect.maxX, y: rect.minY)),
+            apply(CGPoint(x: rect.minX, y: rect.maxY)), apply(CGPoint(x: rect.maxX, y: rect.maxY)),
+        ]
+        let xs = corners.map(\.x), ys = corners.map(\.y)
+        return CGRect(x: xs.min()!, y: ys.min()!, width: xs.max()! - xs.min()!, height: ys.max()! - ys.min()!)
+    }
 }
 
 // MARK: - AnyTransition
