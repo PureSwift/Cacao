@@ -77,6 +77,9 @@ package struct DisplayList: Equatable, Sendable {
         /// The nested list drawn as a group with the opacity.
         case opacity(Double)
 
+        /// The nested list drawn over its shadow.
+        case shadow(ShadowEffect)
+
         /// The nested list clipped to a viewport and moved by a scroll offset.
         case scroll(ScrollEffect)
 
@@ -115,13 +118,13 @@ extension ViewNode {
         if let content = behavior?.displayContent(node: self) {
             items.append(DisplayList.Item(frame: frame, identity: id, version: version, value: .content(content)))
         }
-        let ordered = behavior?.displayOrder(of: children) ?? children
+        let ordered = orderedChildren
         var childItems: [[DisplayList.Item]] = ordered.map { $0.displayItems() }
         // Removed children still transitioning out, where they were.
         if let ghosts = graph.ghosts[id] {
             for ghost in ghosts.sorted(by: { $0.index > $1.index }) {
                 let progress = ghost.animation.values(at: graph.time).values[0]
-                let effect = ghost.transition.effect(progress: progress, frame: ghost.frame, isInsertion: false)
+                let effect = ghost.transition.effect(progress: progress, frame: ghost.frame, container: graph.size, isInsertion: false)
                 let wrapped = Self.wrap(ghost.items, opacity: effect.opacity, transform: effect.transform, identity: ghost.identity, frame: ghost.frame)
                 childItems.insert(wrapped, at: min(ghost.index, childItems.count))
             }
@@ -155,7 +158,7 @@ extension ViewNode {
                 }
             } else if let transition = state.transition {
                 let progress = transition.animation.values(at: graph.time).values[0]
-                let effect = transition.transition.effect(progress: progress, frame: subtreeFrame, isInsertion: true)
+                let effect = transition.transition.effect(progress: progress, frame: subtreeFrame, container: graph.size, isInsertion: true)
                 items = Self.wrap(items, opacity: effect.opacity, transform: effect.transform, identity: id, frame: subtreeFrame)
             }
         }
