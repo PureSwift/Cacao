@@ -200,3 +200,19 @@ internal struct _ShapeStyleView: View, PrimitiveView {
 
     typealias Body = Never
 }
+
+/// A style that reflects the current tint color.
+public struct TintShapeStyle: ShapeStyle, ResolvableShapeStyle {
+
+    public init() { }
+
+    func resolveColor(in environment: EnvironmentValues) -> Color.Resolved {
+        Color.accentColor.resolve(in: environment)
+    }
+}
+
+extension ShapeStyle where Self == TintShapeStyle {
+
+    /// A style that reflects the current tint color.
+    public static var tint: TintShapeStyle { TintShapeStyle() }
+}
