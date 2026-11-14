@@ -211,11 +211,11 @@ package struct ShapeContent: Equatable, Sendable {
     package var drawing: ShapeDrawing
 }
 
-internal struct ShapeBehavior<S: Shape>: NodeBehavior {
+internal struct ShapeBehavior<S: Shape>: AnimatableBehavior {
 
-    let shape: S
+    var shape: S
 
-    let color: Color.Resolved
+    var color: Color.Resolved
 
     let drawing: ShapeDrawing
 
@@ -223,9 +223,27 @@ internal struct ShapeBehavior<S: Shape>: NodeBehavior {
         shape.sizeThatFits(proposal)
     }
 
+    /// The color, then the shape's animatable data, if it has any.
+    var animatableValues: [Double] {
+        color.components + (Self.shapeData(shape) ?? [])
+    }
+
+    func applying(_ values: [Double]) -> any NodeBehavior {
+        var behavior = self
+        behavior.color = Color.Resolved(components: Array(values.prefix(4)))
+        if values.count > 4 {
+            behavior.shape = (AnimatableViews.view(shape, with: Array(values.dropFirst(4))) as? S) ?? shape
+        }
+        return behavior
+    }
+
+    private static func shapeData(_ shape: S) -> [Double]? {
+        AnimatableViews.components(of: shape)
+    }
+
     func displayContent(node: ViewNode) -> DisplayList.Content? {
         .shape(ShapeContent(
-            path: shape.path(in: CGRect(origin: CGPoint(x: 0, y: 0), size: node.frame.size)),
+            path: shape.path(in: CGRect(origin: CGPoint(x: 0, y: 0), size: node.graph.presentationFrame(of: node).size)),
             color: color,
             drawing: drawing
         ))
