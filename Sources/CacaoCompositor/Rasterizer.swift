@@ -79,6 +79,22 @@ package enum Rasterizer {
             height: max(1, ((size.height + 2 * outset) * scale).rounded(.up))
         )
         let pixels = region?.size ?? full
+        if case let .shape(shape) = content, let gradient = shape.gradient {
+            // The shape drawn in white is the mask for the gradient's colors.
+            var mask = shape
+            mask.gradient = nil
+            mask.color = Color.Resolved(red: 1, green: 1, blue: 1, opacity: 1)
+            guard let coverage = rasterize(.shape(mask), size: size, scale: scale, region: region, textEngine: textEngine) else {
+                return nil
+            }
+            let origin = CGPoint(x: region?.minX ?? 0, y: region?.minY ?? 0)
+            return paint(gradient, through: coverage) { column, row in
+                CGPoint(
+                    x: (CGFloat(column) + 0.5 + origin.x) / scale - outset,
+                    y: (CGFloat(row) + 0.5 + origin.y) / scale - outset
+                )
+            }
+        }
         return try? draw(size: pixels) { context in
             if let region {
                 context.translateBy(x: -region.minX, y: -region.minY)
@@ -91,16 +107,58 @@ package enum Rasterizer {
             case let .shape(shape):
                 draw(shape, in: context)
             case let .drawing(drawing):
-                draw(drawing, in: context, textEngine: textEngine)
+                draw(drawing, in: context, scale: scale, textEngine: textEngine)
             case .color, .image:
                 break
             }
         }
     }
 
+    /// The gradient's colors at each pixel, at the coverage's alpha.
+    /// `point` gives the point in the gradient's space of a pixel's center.
+    package static func paint(
+        _ gradient: GradientPaint,
+        through coverage: Silica.CGImage,
+        point: (Int, Int) -> CGPoint
+    ) -> Silica.CGImage {
+        var data = coverage.data
+        let width = coverage.width, height = coverage.height, bytesPerRow = coverage.bytesPerRow
+        data.withUnsafeMutableBytes { bytes in
+            let pixels = bytes.bindMemory(to: UInt8.self)
+            for row in 0..<height {
+                for column in 0..<width {
+                    let offset = row * bytesPerRow + column * 4
+                    let covered = pixels[offset + 3]
+                    guard covered > 0 else { continue }
+                    let color = gradient.color(at: point(column, row))
+                    let alpha = Float(covered) / 255 * color.opacity
+                    pixels[offset] = UInt8(max(0, min(255, (color.red * alpha * 255).rounded())))
+                    pixels[offset + 1] = UInt8(max(0, min(255, (color.green * alpha * 255).rounded())))
+                    pixels[offset + 2] = UInt8(max(0, min(255, (color.blue * alpha * 255).rounded())))
+                    pixels[offset + 3] = UInt8(max(0, min(255, (alpha * 255).rounded())))
+                }
+            }
+        }
+        return Silica.CGImage(width: width, height: height, bytesPerRow: bytesPerRow, data: data)
+    }
+
+    /// A gradient drawn over a rectangle, in pixels of `scale` a point.
+    private static func gradientImage(_ gradient: GradientPaint, in rect: CGRect, scale: CGFloat) -> Silica.CGImage? {
+        let width = Int(min(4096, max(1, (rect.width * scale).rounded(.up))))
+        let height = Int(min(4096, max(1, (rect.height * scale).rounded(.up))))
+        let opaque = Data(repeating: 255, count: width * height * 4)
+        let coverage = Silica.CGImage(width: width, height: height, bytesPerRow: width * 4, data: opaque)
+        return paint(gradient, through: coverage) { column, row in
+            CGPoint(
+                x: rect.minX + (CGFloat(column) + 0.5) * rect.width / CGFloat(width),
+                y: rect.minY + (CGFloat(row) + 0.5) * rect.height / CGFloat(height)
+            )
+        }
+    }
+
     /// Draws a canvas's commands, each with its transform, opacity and clips.
     @MainActor
-    private static func draw(_ drawing: DrawingContent, in context: Silica.CGContext, textEngine: SilicaTextEngine) {
+    private static func draw(_ drawing: DrawingContent, in context: Silica.CGContext, scale: CGFloat, textEngine: SilicaTextEngine) {
         for operation in drawing.operations {
             let state: DrawingState
             switch operation {
@@ -123,9 +181,21 @@ package enum Rasterizer {
             let opacity = Float(state.opacity)
             switch operation {
             case var .shape(shape, _):
+                if let gradient = shape.gradient, case let .fill(style) = shape.drawing {
+                    // Gradient fills draw an image of the gradient through
+                    // the path as a clip.
+                    let bounds = shape.path.boundingRect
+                    if !bounds.isEmpty, !bounds.isNull,
+                       let image = gradientImage(gradient.multiplyingOpacity(opacity), in: bounds, scale: scale * max(abs(state.transform.a), abs(state.transform.d), 1)) {
+                        addPath(shape.path, to: context)
+                        context.clip(using: style.isEOFilled ? .evenOdd : .winding)
+                        context.draw(image, in: bounds)
+                    }
+                    continue
+                }
                 shape.color.opacity *= opacity
                 draw(shape, in: context)
-            case var .text(text, rect, _):
+            case .text(var text, let rect, _):
                 for index in text.runs.indices {
                     text.runs[index].color.opacity *= opacity
                 }
@@ -208,14 +278,17 @@ package enum Rasterizer {
         #endif
     }
 
-    /// Decodes an image's PNG data, replacing its color with `tint` if set.
+    /// Decodes an image's PNG data, replacing its color with `tint` if set,
+    /// then transforming its colors by its matrix if set.
     package static func decode(_ content: ImageContent) -> Silica.CGImage? {
         guard let image = CGImageSourcePNG(data: content.source.data)?.createImage(at: 0) else {
             return nil
         }
-        guard let tint = content.tint else {
+        guard content.tint != nil || content.colorMatrix != nil else {
             return image
         }
+        let tint = content.tint
+        let matrix = content.colorMatrix
         // Keep each pixel's alpha, with the tint's premultiplied color.
         var data = image.data
         data.withUnsafeMutableBytes { bytes in
@@ -223,10 +296,28 @@ package enum Rasterizer {
             for row in 0..<image.height {
                 for column in 0..<image.width {
                     let offset = row * image.bytesPerRow + column * 4
-                    let alpha = Float(pixels[offset + 3]) / 255 * tint.opacity
-                    pixels[offset] = UInt8(max(0, min(255, (tint.red * alpha * 255).rounded())))
-                    pixels[offset + 1] = UInt8(max(0, min(255, (tint.green * alpha * 255).rounded())))
-                    pixels[offset + 2] = UInt8(max(0, min(255, (tint.blue * alpha * 255).rounded())))
+                    let storedAlpha = Float(pixels[offset + 3]) / 255
+                    var color: Color.Resolved
+                    if let tint {
+                        color = Color.Resolved(red: tint.red, green: tint.green, blue: tint.blue, opacity: storedAlpha * tint.opacity)
+                    } else if storedAlpha > 0 {
+                        // Straight colors from premultiplied pixels.
+                        color = Color.Resolved(
+                            red: Float(pixels[offset]) / 255 / storedAlpha,
+                            green: Float(pixels[offset + 1]) / 255 / storedAlpha,
+                            blue: Float(pixels[offset + 2]) / 255 / storedAlpha,
+                            opacity: storedAlpha
+                        )
+                    } else {
+                        color = Color.Resolved(red: 0, green: 0, blue: 0, opacity: 0)
+                    }
+                    if let matrix {
+                        color = matrix.apply(color)
+                    }
+                    let alpha = color.opacity
+                    pixels[offset] = UInt8(max(0, min(255, (color.red * alpha * 255).rounded())))
+                    pixels[offset + 1] = UInt8(max(0, min(255, (color.green * alpha * 255).rounded())))
+                    pixels[offset + 2] = UInt8(max(0, min(255, (color.blue * alpha * 255).rounded())))
                     pixels[offset + 3] = UInt8(max(0, min(255, (alpha * 255).rounded())))
                 }
             }
