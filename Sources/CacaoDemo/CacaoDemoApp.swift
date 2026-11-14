@@ -16,6 +16,47 @@ struct CacaoDemoApp: App {
             ContentView()
         }
         .defaultSize(width: 900, height: 720)
+        .commands {
+            CommandMenu("Catalog") {
+                OpenSettingsButton(title: "Demo Settings")
+                    .keyboardShortcut("d", modifiers: [.command, .shift])
+            }
+        }
+        Settings {
+            SettingsView()
+        }
+        MenuBarExtra("Cacao", systemImage: "bolt.fill") {
+            OpenSettingsButton(title: "Settings…")
+        }
+    }
+}
+
+/// A button that opens the settings window.
+struct OpenSettingsButton: View {
+
+    let title: String
+
+    @Environment(\.openSettings) private var openSettings
+
+    var body: some View {
+        Button(title) { openSettings() }
+    }
+}
+
+/// The demo's settings window.
+struct SettingsView: View {
+
+    @AppStorage("demo.accent") private var accent = 0
+
+    var body: some View {
+        Form {
+            Picker("Accent", selection: $accent) {
+                Text("Blue").tag(0)
+                Text("Orange").tag(1)
+            }
+        }
+        .padding()
+        .frame(width: 320, height: 120)
     }
 }
 
@@ -270,6 +311,15 @@ struct EffectsScreen: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
+                Section("Symbols") {
+                    let names = ["chevron.left", "plus", "xmark.circle.fill", "checkmark.circle", "star.fill", "heart", "magnifyingglass", "gearshape", "house.fill", "person", "trash", "folder", "envelope", "bell.fill", "info.circle", "exclamationmark.triangle.fill", "ellipsis", "arrow.clockwise", "play.fill", "square.and.arrow.up", "calendar", "clock", "pencil", "photo", "globe", "lock.fill", "sun.max", "moon.fill", "bolt.fill", "eye"]
+                    LazyVGrid(columns: Array(repeating: GridItem(.fixed(36)), count: 15), spacing: 10) {
+                        ForEach(names, id: \.self) { name in
+                            Image(systemName: name).imageScale(.large)
+                        }
+                    }
+                    .foregroundStyle(.tint)
+                }
                 Section("Gradients") {
                     HStack(spacing: 16) {
                         RoundedRectangle(cornerRadius: 12)
