@@ -189,6 +189,10 @@ internal struct DropTarget {
 
     /// Called when a drag enters or leaves the view.
     let targeted: (Bool) -> Void
+
+    /// Called as a drag over the target moves, with its location in the
+    /// target's frame.
+    var updated: ((CGPoint) -> Void)? = nil
 }
 
 /// Converts a dragged item to a type the destination asks for: as itself,
@@ -277,6 +281,10 @@ extension ViewGraph {
             session.target?.attributes.dropTarget?.targeted(false)
             session.target = target
             target?.attributes.dropTarget?.targeted(true)
+        }
+        if let target, let updated = target.attributes.dropTarget?.updated {
+            let frame = target.windowFrame
+            updated(CGPoint(x: point.x - frame.minX, y: point.y - frame.minY))
         }
         setNeedsDisplay()
     }
