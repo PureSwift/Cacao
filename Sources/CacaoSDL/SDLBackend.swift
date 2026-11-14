@@ -122,6 +122,16 @@ final class SDLBackend: CompositorBackend {
         SDL_RenderGeometry(renderer, texture, &vertices, Int32(vertices.count), &indices, Int32(indices.count))
     }
 
+    func drawLayer(_ layer: TextureID, in rect: CGRect, tint: Color.Resolved) {
+        guard let texture = textures[layer.rawValue] else { return }
+        // Premultiplied: the color scales by the tint's opacity.
+        let alpha = tint.opacity
+        SDL_SetTextureColorModFloat(texture, tint.red * alpha, tint.green * alpha, tint.blue * alpha)
+        SDL_SetTextureAlphaModFloat(texture, alpha)
+        var frame = SDL_FRect(rect)
+        SDL_RenderTexture(renderer, texture, nil, &frame)
+    }
+
     func drawLayer(_ layer: TextureID, corners: [CGPoint], opacity: Double) {
         guard let texture = textures[layer.rawValue], corners.count == 4 else { return }
         SDL_SetTextureColorModFloat(texture, 1, 1, 1)
