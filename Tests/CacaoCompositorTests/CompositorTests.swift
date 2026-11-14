@@ -18,7 +18,7 @@ final class RecordingBackend: CompositorBackend {
         case endLayer
         case drawLayer(TextureID, CGRect, Double, masked: Bool)
         case drawTransformedLayer(TextureID, [CGPoint], Double)
-        case drawTintedLayer(TextureID, CGRect, Color.Resolved)
+        case mask(TextureID, CGRect)
     }
 
     var commands: [Command] = []
@@ -57,8 +57,8 @@ final class RecordingBackend: CompositorBackend {
         commands.append(.drawLayer(layer, rect, opacity, masked: mask != nil))
     }
 
-    func drawLayer(_ layer: TextureID, in rect: CGRect, tint: Color.Resolved) {
-        commands.append(.drawTintedLayer(layer, rect, tint))
+    func mask(with layer: TextureID, in rect: CGRect) {
+        commands.append(.mask(layer, rect))
     }
 
     func drawLayer(_ layer: TextureID, corners: [CGPoint], opacity: Double) {
@@ -294,12 +294,70 @@ func rect(_ x: CGFloat, _ y: CGFloat, _ width: CGFloat, _ height: CGFloat) -> CG
         compositor.render(graph.displayList(), size: graph.size, scale: 1)
         let draws = backend.commands.compactMap { command -> String? in
             switch command {
-            case let .drawTintedLayer(_, rect, _): "shadow \(Int(rect.minX)),\(Int(rect.minY))"
+            case .mask: "mask"
             case let .drawLayer(_, rect, _, _): "layer \(Int(rect.minX)),\(Int(rect.minY))"
             default: nil
             }
         }
-        #expect(draws == ["shadow 74,76", "layer 70,70"])
+        // The silhouette is the shadow's color masked by the content, then
+        // drawn moved, under the content.
+        #expect(draws == ["mask", "layer 74,76", "layer 70,70"])
+    }
+
+    @Test func blurredShadowSpreadsAndDownsamples() {
+        let (graph, compositor, backend) = make(
+            Color.red.frame(width: 60, height: 60).shadow(color: .black, radius: 8, x: 0, y: 0)
+        )
+        compositor.render(graph.displayList(), size: graph.size, scale: 1)
+        let layerDraws = backend.commands.compactMap { command -> CGRect? in
+            if case let .drawLayer(_, rect, _, _) = command { return rect }
+            return nil
+        }
+        // Three halvings for a radius of 8, two steps back up, then the
+        // shadow and the content, both spread by twice the radius.
+        #expect(layerDraws.count == 3 + 2 + 2)
+        #expect(layerDraws.first == CGRect(x: 0, y: 0, width: 46, height: 46))
+        let spread = CGRect(x: 54, y: 54, width: 92, height: 92)
+        #expect(Array(layerDraws.suffix(2)) == [spread, spread])
+    }
+
+    @Test func blurDrawsADownsampledLayer() {
+        let (graph, compositor, backend) = make(
+            Color.red.frame(width: 60, height: 60).blur(radius: 4)
+        )
+        compositor.render(graph.displayList(), size: graph.size, scale: 1)
+        let layerDraws = backend.commands.compactMap { command -> CGRect? in
+            if case let .drawLayer(_, rect, _, _) = command { return rect }
+            return nil
+        }
+        // Two halvings, one step back up, then the blurred layer.
+        #expect(layerDraws.count == 4)
+        #expect(layerDraws.last == CGRect(x: 62, y: 62, width: 76, height: 76))
+        // An opaque blur stays in the view's bounds.
+        let (opaqueGraph, opaqueCompositor, opaqueBackend) = make(
+            Color.red.frame(width: 60, height: 60).blur(radius: 4, opaque: true)
+        )
+        opaqueCompositor.render(opaqueGraph.displayList(), size: opaqueGraph.size, scale: 1)
+        #expect(opaqueBackend.commands.contains(.clip(CGRect(x: 70, y: 70, width: 60, height: 60))))
+    }
+
+    @Test func colorEffectsTransformDrawnColors() {
+        let graph = ViewGraph(
+            rootView: Color(red: 1, green: 0, blue: 0).frame(width: 10, height: 10).colorInvert(),
+            textEngine: SilicaTextEngine()
+        )
+        graph.layout(in: CGSize(width: 10, height: 10))
+        let list = graph.displayList()
+        guard case let .effect(.colorMatrix(matrix), nested) = list.items.first?.value else {
+            Issue.record("Expected a color matrix effect")
+            return
+        }
+        #expect(nested.items.first?.applying(matrix).value == .content(.color(Color.Resolved(red: 0, green: 1, blue: 1))))
+        let gray = ColorMatrix.saturation(0).apply(Color.Resolved(red: 0, green: 0, blue: 1))
+        #expect(abs(gray.red - 0.0722) < 0.001 && gray.red == gray.green && gray.green == gray.blue)
+        // Matrices compose in order.
+        let both = ColorMatrix.brightness(0.5).then(.invert)
+        #expect(both.apply(Color.Resolved(red: 0, green: 0, blue: 0)) == Color.Resolved(red: 0.5, green: 0.5, blue: 0.5))
     }
 
     @Test func singleItemOpacityNeedsNoLayer() {
