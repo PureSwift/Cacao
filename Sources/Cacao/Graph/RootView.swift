@@ -66,13 +66,21 @@ internal struct _GraphRoot: View, PrimitiveView {
                     .onTapGesture { [weak graph] in
                         if !isModal { graph?.dismissPresentation(id) }
                     }
+                    .transition(.opacity)
             ))
             var environment = presentation.environment ?? context.environment
             environment.dismissPopup = DismissAction { [weak graph] in graph?.dismissPresentation(id) }
             environment.dismiss = environment.dismissPopup!
+            // Sheets slide up; dialogs and popups fade.
+            let transition: AnyTransition
+            switch presentation.style {
+            case .sheet: transition = .move(edge: .bottom)
+            case .alert, .popup: transition = .opacity
+            }
             children.append(ChildView(
                 key: "presentation \(id)",
-                view: _PresentationContainer(style: presentation.style, content: presentation.content),
+                view: _PresentationContainer(style: presentation.style, content: presentation.content)
+                    .transition(transition),
                 environment: environment
             ))
         }
@@ -83,6 +91,13 @@ internal struct _GraphRoot: View, PrimitiveView {
         // Presenting or dismissing doesn't change the content; a new root
         // view does.
         resolution.keepsExistingChildren = !context.node.wasUpdatedByParent
+        // Presentations come and go animated.
+        let ids = graph.presentations.map(\.id)
+        let storage = context.node.dynamicStorage["presentationIDs"] as? StorageBox<[Int]>
+        if let storage, storage.value != ids {
+            resolution.transaction = { $0.animateByDefault() }
+        }
+        context.node.dynamicStorage["presentationIDs"] = StorageBox(ids)
         return resolution
     }
 
@@ -123,9 +138,18 @@ internal struct RootBehavior: NodeBehavior {
 
     func placeChildren(in bounds: CGRect, proposal: ProposedViewSize, node: ViewNode) {
         if let content = LayoutProxy.combining(node.layoutChildren(ofChildAt: 0)) {
+            // Content stays inside the window's safe area.
+            let insets = node.graph.safeAreaInsets
+            let safe = CGRect(
+                x: bounds.minX + insets.leading,
+                y: bounds.minY + insets.top,
+                width: max(bounds.width - insets.leading - insets.trailing, 0),
+                height: max(bounds.height - insets.top - insets.bottom, 0)
+            )
+            let proposal = ProposedViewSize(safe.size)
             let size = content.size(in: proposal)
             content.place(
-                at: CGPoint(x: bounds.minX + (bounds.width - size.width) / 2, y: bounds.minY + (bounds.height - size.height) / 2),
+                at: CGPoint(x: safe.minX + (safe.width - size.width) / 2, y: safe.minY + (safe.height - size.height) / 2),
                 proposal: proposal
             )
         }
