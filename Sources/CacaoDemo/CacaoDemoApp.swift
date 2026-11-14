@@ -24,6 +24,7 @@ enum Screen: String, CaseIterable, Hashable {
     case controls = "Controls"
     case list = "List"
     case shapes = "Shapes"
+    case effects = "Effects"
     case animation = "Animation"
     case gestures = "Gestures"
     case grids = "Grids"
@@ -64,6 +65,7 @@ struct ScreenView: View {
             case .controls: ControlsScreen()
             case .list: ListScreen()
             case .shapes: ShapesScreen()
+            case .effects: EffectsScreen()
             case .animation: AnimationScreen()
             case .gestures: GesturesScreen()
             case .grids: GridsScreen()
@@ -92,6 +94,8 @@ struct ControlsScreen: View {
     @State private var shipping = "Standard"
     @State private var lastAction = "None"
     @State private var showDetails = false
+    @State private var due = Date()
+    @State private var tint = Color.orange
 
     var body: some View {
         Form {
@@ -125,6 +129,28 @@ struct ControlsScreen: View {
                     SecureField("Password", text: $password)
                     TextEditor(text: $notes)
                         .frame(height: 70)
+                }
+                Section("Dates, colors and gauges") {
+                    DatePicker("Due", selection: $due)
+                    ColorPicker("Tint", selection: $tint)
+                    HStack(spacing: 20) {
+                        Gauge(value: volume) {
+                            Text("Volume")
+                        } currentValueLabel: {
+                            Text("\(Int(volume * 100))%")
+                        } minimumValueLabel: {
+                            Text("0")
+                        } maximumValueLabel: {
+                            Text("100")
+                        }
+                        Gauge(value: volume) {
+                            Text("Volume")
+                        } currentValueLabel: {
+                            Text("\(Int(volume * 100))")
+                        }
+                        .gaugeStyle(.accessoryCircular)
+                        .tint(tint)
+                    }
                 }
                 Section("Pickers") {
                     Picker("Flavor", selection: $flavor) {
@@ -226,6 +252,73 @@ struct ShapesScreen: View {
                             Slider(value: $opacity)
                         }
                     }
+                }
+            }
+            .padding()
+        }
+    }
+}
+
+// MARK: - Effects
+
+struct EffectsScreen: View {
+
+    @State private var radius = 4.0
+
+    @State private var saturation = 1.0
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Section("Gradients") {
+                    HStack(spacing: 16) {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(LinearGradient(colors: [.orange, .pink], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        Circle()
+                            .fill(RadialGradient(colors: [.yellow, .red], center: .center, startRadius: 0, endRadius: 35))
+                        Circle()
+                            .stroke(AngularGradient(colors: [.blue, .purple, .pink, .blue], center: .center), lineWidth: 8)
+                        Capsule()
+                            .fill(Color.green.gradient)
+                    }
+                    .frame(height: 70)
+                }
+                Section("Shadows") {
+                    HStack(spacing: 30) {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(.white)
+                            .frame(width: 80, height: 60)
+                            .shadow(radius: 6, y: 3)
+                        Circle()
+                            .fill(.blue)
+                            .frame(width: 60, height: 60)
+                            .shadow(color: .blue.opacity(0.6), radius: 12)
+                        Text("Shadowed")
+                            .font(.title)
+                            .shadow(color: .red, radius: 2, x: 2, y: 2)
+                    }
+                    .padding(12)
+                }
+                Section("Blur") {
+                    HStack(spacing: 24) {
+                        Swatches()
+                            .frame(width: 90, height: 90)
+                            .blur(radius: radius)
+                        VStack(alignment: .leading) {
+                            Text("Radius \(Int(radius))").font(.caption)
+                            Slider(value: $radius, in: 0...20)
+                        }
+                    }
+                }
+                Section("Color effects") {
+                    HStack(spacing: 12) {
+                        Swatches().frame(width: 60, height: 60).saturation(saturation)
+                        Swatches().frame(width: 60, height: 60).grayscale(1)
+                        Swatches().frame(width: 60, height: 60).hueRotation(.degrees(90))
+                        Swatches().frame(width: 60, height: 60).colorInvert()
+                        Swatches().frame(width: 60, height: 60).brightness(0.3)
+                    }
+                    Slider(value: $saturation, in: 0...2)
                 }
             }
             .padding()
