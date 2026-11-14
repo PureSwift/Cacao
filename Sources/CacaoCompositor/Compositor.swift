@@ -56,8 +56,9 @@ package protocol CompositorBackend: AnyObject {
     /// Draws a layer in a rectangle, inside a convex polygon if given.
     func drawLayer(_ layer: TextureID, in rect: CGRect, opacity: Double, mask: [CGPoint]?)
 
-    /// Draws a layer as a silhouette in a color, for shadows.
-    func drawLayer(_ layer: TextureID, in rect: CGRect, tint: Color.Resolved)
+    /// Keeps the target's pixels inside a rectangle only as much as a
+    /// layer drawn there is opaque (destination-in), for silhouettes.
+    func mask(with layer: TextureID, in rect: CGRect)
 
     /// Draws a layer stretched to a quadrilateral: its top-leading,
     /// top-trailing, bottom-trailing and bottom-leading corners.
@@ -142,6 +143,13 @@ package final class Compositor {
     private struct ImageKey: Hashable {
         let source: ImageSource
         let tint: Color.Resolved?
+        let colorMatrix: ColorMatrix?
+
+        init(_ image: ImageContent) {
+            self.source = image.source
+            self.tint = image.tint
+            self.colorMatrix = image.colorMatrix
+        }
     }
 
     private struct Offscreen {
@@ -154,7 +162,14 @@ package final class Compositor {
 
     private var images: [ImageKey: TextureID?] = [:]
 
-    private var offscreens: [Int: Offscreen] = [:]
+    /// An offscreen layer of an item: its content, at level 0, or a
+    /// step of blurring it.
+    private struct OffscreenKey: Hashable {
+        let identity: Int
+        let level: Int
+    }
+
+    private var offscreens: [OffscreenKey: Offscreen] = [:]
 
     private var scale: CGFloat = 1
 
@@ -164,7 +179,7 @@ package final class Compositor {
 
     private var presentImages: Set<ImageKey> = []
 
-    private var presentOffscreens: Set<Int> = []
+    private var presentOffscreens: Set<OffscreenKey> = []
 
     /// The pixel origin of each target, the window first.
     private var targetOrigins: [CGPoint] = [CGPoint(x: 0, y: 0)]
@@ -215,7 +230,7 @@ package final class Compositor {
             case let .content(content):
                 presentLayers.insert(item.identity)
                 if case let .image(image) = content {
-                    presentImages.insert(ImageKey(source: image.source, tint: image.tint))
+                    presentImages.insert(ImageKey(image))
                 }
                 let frame = item.frame.offsetBy(dx: -translation.x, dy: -translation.y)
                 let outset = Rasterizer.outset(of: content)
@@ -235,6 +250,14 @@ package final class Compositor {
                 }
             case let .effect(.shadow(effect), nested):
                 drawShadowed(nested.items, identity: item.identity, shadow: effect, translation: translation, clip: clip, opacity: opacity)
+            case let .effect(.blur(effect), nested):
+                if effect.radius > 0 {
+                    drawBlurred(nested.items, identity: item.identity, effect: effect, translation: translation, clip: clip, opacity: opacity)
+                } else {
+                    draw(nested.items, translation: translation, clip: clip, opacity: opacity)
+                }
+            case let .effect(.colorMatrix(matrix), nested):
+                draw(nested.items.map { $0.applying(matrix) }, translation: translation, clip: clip, opacity: opacity)
             case let .effect(.compositingGroup, nested):
                 let bounds = Self.bounds(of: nested.items).offsetBy(dx: -translation.x, dy: -translation.y)
                 drawGroup(nested.items, identity: item.identity, bounds: bounds, translation: translation, clip: clip, opacity: opacity, mask: nil)
@@ -320,8 +343,9 @@ package final class Compositor {
         frameStatistics.draws += 1
     }
 
-    /// Draws items into an offscreen layer, then the layer twice: as a
-    /// silhouette in the shadow's color, moved by its offset, and over it.
+    /// Draws items into an offscreen layer, then its silhouette in the
+    /// shadow's color, blurred and moved by the shadow's offset, then the
+    /// layer over it.
     private func drawShadowed(
         _ items: [DisplayList.Item],
         identity: Int,
@@ -330,10 +354,60 @@ package final class Compositor {
         clip: CGRect,
         opacity: Double
     ) {
-        let bounds = Self.bounds(of: items).offsetBy(dx: -translation.x, dy: -translation.y)
-        // What shows of the content, or of its moved shadow.
+        let spread = Self.blurExtent(shadow.radius)
+        let content = Self.bounds(of: items).offsetBy(dx: -translation.x, dy: -translation.y)
+        // What shows of the content, or of its moved, blurred shadow.
         let reach = clip.union(clip.offsetBy(dx: -shadow.offset.width, dy: -shadow.offset.height))
-        let visible = bounds.intersection(reach)
+            .insetBy(dx: -spread, dy: -spread)
+        let visible = content.insetBy(dx: -spread, dy: -spread).intersection(reach)
+        guard !visible.isNull, !visible.isEmpty, opacity > 0 else {
+            markPresent(items)
+            return
+        }
+        let pixels = absolutePixelRect(visible)
+        let width = Int(pixels.width), height = Int(pixels.height)
+        guard width > 0, height > 0, width <= 8192, height <= 8192,
+              let layer = offscreen(identity: identity, width: width, height: height),
+              let silhouette = offscreen(identity: identity, level: 1, width: width, height: height) else {
+            markPresent(items)
+            return
+        }
+        let full = CGRect(x: 0, y: 0, width: width, height: height)
+        backend.beginLayer(layer)
+        targetOrigins.append(pixels.origin)
+        draw(items, translation: translation, clip: visible, opacity: 1)
+        backend.setClip(nil)
+        targetOrigins.removeLast()
+        backend.endLayer()
+        // The shadow's color, where the content is.
+        backend.beginLayer(silhouette)
+        var tint = shadow.color
+        tint.opacity *= Float(opacity)
+        backend.fill(full, color: tint)
+        backend.mask(with: layer, in: full)
+        backend.endLayer()
+        let blurred = blur(silhouette, identity: identity, firstLevel: 2, width: width, height: height, radius: shadow.radius * scale)
+        setClip(clip)
+        let shadowRect = relative(pixels.offsetBy(dx: shadow.offset.width * scale, dy: shadow.offset.height * scale))
+        backend.drawLayer(blurred, in: shadowRect, opacity: 1, mask: nil)
+        backend.drawLayer(layer, in: relative(pixels), opacity: opacity, mask: nil)
+        frameStatistics.layers += 2
+        frameStatistics.draws += 2
+    }
+
+    /// Draws items into an offscreen layer, blurs it, then draws it.
+    private func drawBlurred(
+        _ items: [DisplayList.Item],
+        identity: Int,
+        effect: BlurEffect,
+        translation: CGPoint,
+        clip: CGRect,
+        opacity: Double
+    ) {
+        let spread = effect.isOpaque ? 0 : Self.blurExtent(effect.radius)
+        let content = Self.bounds(of: items).offsetBy(dx: -translation.x, dy: -translation.y)
+        let visible = content.insetBy(dx: -spread, dy: -spread)
+            .intersection(clip.insetBy(dx: -spread, dy: -spread))
         guard !visible.isNull, !visible.isEmpty, opacity > 0 else {
             markPresent(items)
             return
@@ -351,14 +425,58 @@ package final class Compositor {
         backend.setClip(nil)
         targetOrigins.removeLast()
         backend.endLayer()
-        setClip(clip)
-        var tint = shadow.color
-        tint.opacity *= Float(opacity)
-        let shadowRect = relative(pixels.offsetBy(dx: shadow.offset.width * scale, dy: shadow.offset.height * scale))
-        backend.drawLayer(layer, in: shadowRect, tint: tint)
-        backend.drawLayer(layer, in: relative(pixels), opacity: opacity, mask: nil)
+        let blurred = blur(layer, identity: identity, firstLevel: 1, width: width, height: height, radius: effect.radius * scale)
+        setClip(effect.isOpaque ? clip.intersection(content) : clip)
+        backend.drawLayer(blurred, in: relative(pixels), opacity: opacity, mask: nil)
+        if effect.isOpaque {
+            setClip(clip)
+        }
         frameStatistics.layers += 1
-        frameStatistics.draws += 2
+        frameStatistics.draws += 1
+    }
+
+    /// How far a blur of a radius spreads content, in points.
+    package static func blurExtent(_ radius: CGFloat) -> CGFloat {
+        radius > 0 ? (radius * 2).rounded(.up) : 0
+    }
+
+    /// Blurs a layer on the GPU: draws it at half its size again and
+    /// again, each step averaging pixels by linear filtering, then back up
+    /// through the same steps. Returns the layer that ends a step at half
+    /// the size, to draw stretched, or the layer itself for no blur.
+    private func blur(_ layer: TextureID, identity: Int, firstLevel: Int, width: Int, height: Int, radius: CGFloat) -> TextureID {
+        // Each halving widens the blur about twofold.
+        var steps = 0
+        var reach = radius
+        while reach > 1, steps < 7 {
+            reach /= 2
+            steps += 1
+        }
+        guard steps > 0 else { return layer }
+        var sizes: [(width: Int, height: Int)] = [(width, height)]
+        var chain: [TextureID] = [layer]
+        for step in 1...steps {
+            let size = (width: max(1, (sizes[step - 1].width + 1) / 2), height: max(1, (sizes[step - 1].height + 1) / 2))
+            guard let next = offscreen(identity: identity, level: firstLevel + step - 1, width: size.width, height: size.height) else {
+                break
+            }
+            backend.beginLayer(next)
+            backend.drawLayer(chain[step - 1], in: CGRect(x: 0, y: 0, width: size.width, height: size.height), opacity: 1, mask: nil)
+            backend.endLayer()
+            sizes.append(size)
+            chain.append(next)
+        }
+        // Back up to half the size, smoothing the blocks of each step.
+        var index = chain.count - 1
+        while index > 1 {
+            let target = chain[index - 1], size = sizes[index - 1]
+            backend.beginLayer(target)
+            backend.drawLayer(chain[index], in: CGRect(x: 0, y: 0, width: size.width, height: size.height), opacity: 1, mask: nil)
+            backend.endLayer()
+            index -= 1
+        }
+        frameStatistics.layers += 2 * (chain.count - 1) - 1
+        return chain.count > 1 ? chain[1] : layer
     }
 
     /// Draws items into an offscreen layer, untransformed, then draws the
@@ -418,7 +536,7 @@ package final class Compositor {
             switch item.value {
             case let .content(.image(image)):
                 presentLayers.insert(item.identity)
-                presentImages.insert(ImageKey(source: image.source, tint: image.tint))
+                presentImages.insert(ImageKey(image))
             case .content:
                 presentLayers.insert(item.identity)
             case let .effect(_, nested):
@@ -437,7 +555,7 @@ package final class Compositor {
         case .text, .shape, .drawing:
             drawRasterized(content, identity: identity, frame: frame, clip: clip, opacity: opacity)
         case let .image(image):
-            let key = ImageKey(source: image.source, tint: image.tint)
+            let key = ImageKey(image)
             guard let texture = imageTexture(key, content: image) else {
                 return
             }
@@ -563,19 +681,20 @@ package final class Compositor {
         )
     }
 
-    private func offscreen(identity: Int, width: Int, height: Int) -> TextureID? {
-        presentOffscreens.insert(identity)
-        if let existing = offscreens[identity], existing.width == width, existing.height == height {
+    private func offscreen(identity: Int, level: Int = 0, width: Int, height: Int) -> TextureID? {
+        let key = OffscreenKey(identity: identity, level: level)
+        presentOffscreens.insert(key)
+        if let existing = offscreens[key], existing.width == width, existing.height == height {
             return existing.texture
         }
-        if let existing = offscreens[identity] {
+        if let existing = offscreens[key] {
             backend.destroyTexture(existing.texture)
         }
         guard let texture = backend.makeLayer(width: width, height: height) else {
-            offscreens[identity] = nil
+            offscreens[key] = nil
             return nil
         }
-        offscreens[identity] = Offscreen(texture: texture, width: width, height: height)
+        offscreens[key] = Offscreen(texture: texture, width: width, height: height)
         return texture
     }
 
@@ -590,9 +709,9 @@ package final class Compositor {
             if let texture { backend.destroyTexture(texture) }
             images[key] = nil
         }
-        for (identity, offscreen) in offscreens where !presentOffscreens.contains(identity) {
+        for (key, offscreen) in offscreens where !presentOffscreens.contains(key) {
             backend.destroyTexture(offscreen.texture)
-            offscreens[identity] = nil
+            offscreens[key] = nil
         }
     }
 
@@ -657,7 +776,11 @@ package final class Compositor {
                 result = result.union(item.frame)
             case let .effect(.shadow(shadow), nested):
                 let content = bounds(of: nested.items)
-                result = result.union(content).union(content.offsetBy(dx: shadow.offset.width, dy: shadow.offset.height))
+                let spread = blurExtent(shadow.radius)
+                result = result.union(content).union(content.offsetBy(dx: shadow.offset.width, dy: shadow.offset.height).insetBy(dx: -spread, dy: -spread))
+            case let .effect(.blur(effect), nested):
+                let spread = effect.isOpaque ? 0 : blurExtent(effect.radius)
+                result = result.union(bounds(of: nested.items).insetBy(dx: -spread, dy: -spread))
             case let .effect(_, nested):
                 result = result.union(bounds(of: nested.items))
             }
