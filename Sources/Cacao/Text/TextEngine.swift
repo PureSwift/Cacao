@@ -111,6 +111,10 @@ package struct FixedTextEngine: TextEngine {
         }
         if lines.count > maxLines {
             lines = Array(lines.prefix(maxLines))
+            // The last line ends in an ellipsis, in the space it had.
+            let last = lines[lines.count - 1]
+            let fits = maxWidth.isFinite ? max(Int(maxWidth / advance) - 1, 0) : max(last.count - 1, 0)
+            lines[lines.count - 1] = Substring(String(last.prefix(fits)) + "\u{2026}")
         }
         let measured = lines.map { min(width($0), maxWidth) }.max() ?? 0
         let lineWidth = max(measured, min(advance, maxWidth == .infinity ? advance : maxWidth))
