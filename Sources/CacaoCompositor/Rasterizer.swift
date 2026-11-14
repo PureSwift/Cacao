@@ -432,13 +432,6 @@ private extension Silica.CGLineJoin {
 extension Silica.CGAffineTransform {
 
     init(_ transform: Transform2D) {
-        #if canImport(SilicaCairo)
-        // Silica's Cairo backend puts `b` in Cairo's `xy` and `c` in `yx`,
-        // transposing the matrix; transpose it here so rotations and shears
-        // come out right.
-        self.init(a: transform.a, b: transform.c, c: transform.b, d: transform.d, tx: transform.tx, ty: transform.ty)
-        #else
         self.init(a: transform.a, b: transform.b, c: transform.c, d: transform.d, tx: transform.tx, ty: transform.ty)
-        #endif
     }
 }
