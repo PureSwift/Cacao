@@ -12,9 +12,17 @@ import CoreGraphics
 
 // MARK: - Opacity
 
-internal struct OpacityBehavior: UnaryLayoutBehavior {
+internal struct OpacityBehavior: UnaryLayoutBehavior, AnimatableBehavior {
 
     let opacity: Double
+
+    var animatableValues: [Double] {
+        [opacity]
+    }
+
+    func applying(_ values: [Double]) -> any NodeBehavior {
+        OpacityBehavior(opacity: values[0])
+    }
 
     func sizeThatFits(_ proposal: ProposedViewSize, child: LayoutProxy) -> CGSize {
         child.size(in: proposal)
