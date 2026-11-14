@@ -21,6 +21,18 @@ public struct Text: Equatable, Sendable {
         var isItalic = false
         var isMonospacedDigit = false
         var color: Color?
+        var underline: Text.Decoration?
+        var strikethrough: Text.Decoration?
+        var kerning: CGFloat?
+        var tracking: CGFloat?
+        var baselineOffset: CGFloat?
+    }
+
+    /// A line drawn under or through text, and its color.
+    internal struct Decoration: Hashable, Sendable {
+        var isActive: Bool
+        var pattern: LineStyle.Pattern
+        var color: Color?
     }
 
     internal var runs: [Run]
@@ -136,14 +148,28 @@ extension Text: View, PrimitiveView {
                 case .lowercase: string = run.string.lowercased()
                 case nil: string = run.string
                 }
+                let color = run.color?.resolve(in: environment) ?? foreground
+                let attributes = environment.textAttributes
+                func line(_ decoration: Text.Decoration?) -> ResolvedText.Line? {
+                    guard let decoration, decoration.isActive else { return nil }
+                    return ResolvedText.Line(
+                        color: decoration.color?.resolve(in: environment) ?? color,
+                        pattern: decoration.pattern
+                    )
+                }
                 return ResolvedText.Run(
                     string: string,
                     font: font.resolve(),
-                    color: run.color?.resolve(in: environment) ?? foreground
+                    color: color,
+                    underline: line(run.underline ?? attributes.underline),
+                    strikethrough: line(run.strikethrough ?? attributes.strikethrough),
+                    tracking: (run.kerning ?? attributes.kerning ?? 0) + (run.tracking ?? attributes.tracking ?? 0),
+                    baselineOffset: run.baselineOffset ?? attributes.baselineOffset ?? 0
                 )
             },
             alignment: environment.multilineTextAlignment,
-            lineLimit: environment.lineLimit
+            lineLimit: environment.lineLimit,
+            lineSpacing: environment.lineSpacing
         )
     }
 }
@@ -184,6 +210,38 @@ package struct ResolvedText: Hashable, Sendable {
         package var font: Font.Resolved
 
         package var color: Color.Resolved
+
+        /// A line under the run.
+        package var underline: Line? = nil
+
+        /// A line through the run.
+        package var strikethrough: Line? = nil
+
+        /// Extra space after each character.
+        package var tracking: CGFloat = 0
+
+        /// How far the run is raised above the baseline.
+        package var baselineOffset: CGFloat = 0
+    }
+
+    /// A line drawn under or through a run.
+    package struct Line: Hashable, Sendable {
+
+        package var color: Color.Resolved
+
+        package var pattern: Text.LineStyle.Pattern
+
+        /// The lengths of dashes and gaps for a line of a thickness.
+        package func dashes(thickness: CGFloat) -> [CGFloat] {
+            let unit = max(thickness, 1)
+            switch pattern {
+            case .solid: return []
+            case .dot: return [unit, unit * 2]
+            case .dash: return [unit * 4, unit * 2]
+            case .dashDot: return [unit * 4, unit * 2, unit, unit * 2]
+            case .dashDotDot: return [unit * 4, unit * 2, unit, unit * 2, unit, unit * 2]
+            }
+        }
     }
 
     package var runs: [Run]
@@ -191,6 +249,9 @@ package struct ResolvedText: Hashable, Sendable {
     package var alignment: TextAlignment
 
     package var lineLimit: Int?
+
+    /// Extra space between lines.
+    package var lineSpacing: CGFloat = 0
 
     /// The text of all runs.
     package var string: String {
