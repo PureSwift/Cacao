@@ -145,6 +145,51 @@ public struct GraphicsContext {
 
         let style: any ShapeStyle
 
+        /// A gradient with its geometry in the context's coordinates.
+        var absoluteGradient: (Gradient, GradientPaint.Geometry)? = nil
+
+        init(style: any ShapeStyle) {
+            self.style = style
+        }
+
+        /// Options that affect the rendering of color gradients.
+        public struct GradientOptions: OptionSet, Sendable {
+            public let rawValue: UInt32
+            public init(rawValue: UInt32) { self.rawValue = rawValue }
+            public static let `repeat` = GradientOptions(rawValue: 1 << 0)
+            public static let mirror = GradientOptions(rawValue: 1 << 1)
+            public static let linearColor = GradientOptions(rawValue: 1 << 2)
+        }
+
+        /// Returns a shading instance that fills a linear (axial) gradient.
+        public static func linearGradient(_ gradient: Gradient, startPoint: CGPoint, endPoint: CGPoint, options: GradientOptions = GradientOptions()) -> Shading {
+            var shading = Shading(style: AnyGradient(gradient))
+            shading.absoluteGradient = (gradient, .axial(start: startPoint, end: endPoint))
+            return shading
+        }
+
+        /// Returns a shading instance that fills a radial gradient.
+        public static func radialGradient(_ gradient: Gradient, center: CGPoint, startRadius: CGFloat, endRadius: CGFloat, options: GradientOptions = GradientOptions()) -> Shading {
+            var shading = Shading(style: AnyGradient(gradient))
+            shading.absoluteGradient = (gradient, .radial(center: center, startRadius: startRadius, endRadius: endRadius, scaleY: 1))
+            return shading
+        }
+
+        /// Returns a shading instance that fills a conic (angular) gradient.
+        public static func conicGradient(_ gradient: Gradient, center: CGPoint, angle: Angle = Angle(), options: GradientOptions = GradientOptions()) -> Shading {
+            var shading = Shading(style: AnyGradient(gradient))
+            shading.absoluteGradient = (gradient, .conic(center: center, startAngle: angle.radians, endAngle: angle.radians + 2 * .pi))
+            return shading
+        }
+
+        /// The gradient to paint a path with, if the shading is one.
+        func resolveGradient(for path: Path, in environment: EnvironmentValues) -> GradientPaint? {
+            if let (gradient, geometry) = absoluteGradient {
+                return GradientPaint(stops: gradient.resolve(in: environment), geometry: geometry)
+            }
+            return (style as? ResolvableShapeStyle)?.resolveGradient(in: environment)?.paint(in: path.boundingRect)
+        }
+
         /// A shading instance that draws a copy of the current background.
         public static var backdrop: Shading { Shading(style: Color.clear) }
 
@@ -179,13 +224,13 @@ public struct GraphicsContext {
 
     /// Draws a path into the context and fills the outlined region.
     public func fill(_ path: Path, with shading: Shading, style: FillStyle = FillStyle()) {
-        let content = ShapeContent(path: path, color: shading.resolve(in: environment), drawing: .fill(style))
+        let content = ShapeContent(path: path, color: shading.resolve(in: environment), drawing: .fill(style), gradient: shading.resolveGradient(for: path, in: environment))
         recorder.operations.append(.shape(content, state))
     }
 
     /// Draws a path into the context with a specified stroke style.
     public func stroke(_ path: Path, with shading: Shading, style: StrokeStyle) {
-        let content = ShapeContent(path: path, color: shading.resolve(in: environment), drawing: .stroke(style))
+        let content = ShapeContent(path: path, color: shading.resolve(in: environment), drawing: .stroke(style), gradient: shading.resolveGradient(for: path, in: environment))
         recorder.operations.append(.shape(content, state))
     }
 
