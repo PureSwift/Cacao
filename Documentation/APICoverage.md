@@ -97,7 +97,7 @@ tests.
 | `List` (selection, sections), `Form`, `Section`, `ForEach` | ✅ | |
 | `listStyle`, `listRowBackground`, `listRowInsets`, `listRowSeparator` | ○ | One list style. |
 | `NavigationStack`, `NavigationPath`, `NavigationLink`, `navigationDestination` | ✅ | Pushes slide in; pops slide out. |
-| `NavigationSplitView` | ◐ | Fixed column widths. |
+| `NavigationSplitView` | ◐ | Column widths and visibility; columns aren't resizable by dragging, and there's no sidebar toggle. |
 | `TabView`, `Tab`, `tabItem` | ✅ | |
 | `toolbar`, `ToolbarItem`, `ToolbarItemGroup`, `navigationTitle`, `searchable` | ✅ | |
 | `sheet`, `fullScreenCover`, `alert`, `confirmationDialog`, `popover`, `contextMenu` | ✅ | Presentations animate in and out. |
@@ -121,7 +121,7 @@ tests.
 | Curves: linear, ease, timing curve, springs, `delay`, `speed`, `repeat` | ✅ | |
 | `Animatable`, `AnimatablePair`, `VectorArithmetic` | ✅ | |
 | Transitions: opacity, scale, offset, move, slide, push, asymmetric, combined | ✅ | |
-| `matchedGeometryEffect` | ◐ | Frames only. |
+| `matchedGeometryEffect` | ✅ | |
 | `scaleEffect`, `rotationEffect` | ✅ | Drawn on the GPU. |
 | `PhaseAnimator`, `phaseAnimator`, `KeyframeAnimator`, `keyframeAnimator`, `KeyframeTimeline` | ✅ | Linear, spring, cubic and move keyframes. |
 | `contentTransition` | ○ | |
@@ -138,7 +138,7 @@ tests.
 | `onHover`, `onContinuousHover` | ✅ | |
 | `keyboardShortcut`, `onKeyPress`, `focusable`, `focused`, `onSubmit` | ✅ | |
 | `draggable`, `dropDestination` | ✅ | Between views, and files and text dropped from the system. `Transferable` is Apple's on macOS and Cacao's own elsewhere. |
-| `onDrag`, `onDrop` (item providers) | ✗ | |
+| `onDrag`, `onDrop` (item providers), `DropDelegate` | ◐ | On Linux, Cacao's `NSItemProvider` loads data, strings and URLs. Drop proposals don't change the drag's operation. |
 
 ## Effects
 
