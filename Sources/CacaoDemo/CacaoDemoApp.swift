@@ -320,6 +320,47 @@ struct EffectsScreen: View {
                     }
                     .foregroundStyle(.tint)
                 }
+                Section("Canvas") {
+                    Canvas { context, size in
+                        // Additive color circles.
+                        var circles = context
+                        circles.blendMode = .screen
+                        for (index, color) in [Color.red, Color.green, Color.blue].enumerated() {
+                            let angle = Double(index) * 2 * .pi / 3 - .pi / 2
+                            let center = CGPoint(x: 60 + 18 * cos(angle), y: 60 + 18 * sin(angle))
+                            circles.fill(Path(ellipseIn: CGRect(x: center.x - 32, y: center.y - 32, width: 64, height: 64)), with: .color(color))
+                        }
+                        // A symbol with a shadow.
+                        var shadowed = context
+                        shadowed.addFilter(.shadow(color: .black.opacity(0.6), radius: 4, x: 3, y: 4))
+                        shadowed.draw(Image(systemName: "star.fill"), in: CGRect(x: 140, y: 20, width: 80, height: 80))
+                        // Tagged views drawn as symbols, rotated.
+                        if let badge = context.resolveSymbol(id: 0) {
+                            for index in 0..<6 {
+                                var rotated = context
+                                rotated.translateBy(x: 310, y: 60)
+                                rotated.rotate(by: .degrees(Double(index) * 60))
+                                rotated.opacity = 0.4 + Double(index) * 0.1
+                                rotated.draw(badge, at: CGPoint(x: 0, y: -36))
+                            }
+                        }
+                        // Text cut out of a blurred layer.
+                        var layered = context
+                        layered.clipToLayer { mask in
+                            mask.draw(Text("Canvas").font(.system(size: 40, weight: .heavy)), at: CGPoint(x: 470, y: 60))
+                        }
+                        layered.addFilter(.blur(radius: 1))
+                        layered.fill(Path(CGRect(x: 380, y: 20, width: 180, height: 80)), with: .linearGradient(Gradient(colors: [.orange, .pink]), startPoint: CGPoint(x: 380, y: 0), endPoint: CGPoint(x: 560, y: 0)))
+                    } symbols: {
+                        Text("Hi")
+                            .font(.headline)
+                            .padding(6)
+                            .background(Capsule().fill(.tint))
+                            .foregroundStyle(.white)
+                            .tag(0)
+                    }
+                    .frame(height: 120)
+                }
                 Section("Gradients") {
                     HStack(spacing: 16) {
                         RoundedRectangle(cornerRadius: 12)
