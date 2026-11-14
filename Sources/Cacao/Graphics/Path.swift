@@ -197,6 +197,22 @@ public struct Path: Equatable, Sendable {
 
     // MARK: Geometry
 
+    /// The path with every point transformed.
+    package func applying(_ transform: Transform2D) -> Path {
+        let move = transform.apply
+        var path = Path()
+        path.elements = elements.map { element in
+            switch element {
+            case let .move(to): .move(to: move(to))
+            case let .line(to): .line(to: move(to))
+            case let .quadCurve(to, control): .quadCurve(to: move(to), control: move(control))
+            case let .curve(to, control1, control2): .curve(to: move(to), control1: move(control1), control2: move(control2))
+            case .closeSubpath: .closeSubpath
+            }
+        }
+        return path
+    }
+
     /// Returns a path constructed by translating all its points.
     public func offsetBy(dx: CGFloat, dy: CGFloat) -> Path {
         func move(_ point: CGPoint) -> CGPoint {
