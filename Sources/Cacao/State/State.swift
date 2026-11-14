@@ -90,7 +90,7 @@ internal final class StateBox<Value>: @unchecked Sendable {
                 target.value = newValue
             } else {
                 storedValue = newValue
-                queue?.enqueue(node)
+                queue?.enqueue(node, transaction: Transaction.current)
             }
         }
     }
