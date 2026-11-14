@@ -1,7 +1,8 @@
 # Cacao: SwiftUI for Linux and macOS — Plan
 
-Status: **Phase 9 done** (symbol images, drag and drop, menu commands,
-`Settings`, `MenuBarExtra`, a VoiceOver bridge on macOS). What's implemented is in [API coverage](APICoverage.md).
+Status: **Phase 10 done** (modifiers applied per view, complete
+`matchedGeometryEffect`, split view column widths and visibility, item
+provider drag and drop). What's implemented is in [API coverage](APICoverage.md).
 
 Notes:
 - Phase 1: 26 layout cases match Apple's SwiftUI frame for frame on macOS
@@ -83,6 +84,16 @@ Notes:
   Rotating a canvas found that Silica's Cairo backend transposed affine
   matrices (`b` and `c` swapped), so rotations turned the wrong way on
   Linux; that is fixed in Silica (PureSwift/Silica#22).
+- Phase 10: a built-in modifier that lays out or draws applies to each of
+  several views, as in SwiftUI, when its content's structure (tuples,
+  groups, conditionals, `ForEach`, a custom modifier's content, other
+  built-in modifiers) holds them. Views that aren't the source of a matched
+  geometry group are placed in the source's frame after each layout: each
+  lines up its own anchor with the source's, and without `.position` keeps
+  its origin, as Apple's SwiftUI does (33 layout cases now match). Column
+  widths reach the split view through a preference, and hidden columns keep
+  their state without being drawn. `onDrag` and `onDrop` carry item
+  providers; on Linux, Cacao provides the part of `NSItemProvider` they use.
 - Known gaps, for later phases:
   - Tab switches don't animate (nor do they in SwiftUI by default).
   - No AT-SPI bridge on Linux yet.
@@ -92,13 +103,14 @@ Notes:
     snapping scroll views settle after it ends; paging moves at most a page.
   - `Canvas` composites blend modes and filters in software, at a cost
     for large canvases that use them.
-  - `matchedGeometryEffect` moves frames only; `properties`, `anchor` and
-    `isSource` are ignored.
   - Toolbar items are found from the structure of toolbar content, as picker
     options are; `bottomBar` items show in the navigation bar.
-  - `NavigationSplitView` has fixed column widths and no column visibility.
-  - A unary modifier applied to several views lays them out as one implicit
-    `VStack`; SwiftUI applies the modifier to each view.
+  - `NavigationSplitView` columns can't be resized by dragging, and there's
+    no sidebar toggle button.
+  - A modifier applied to a custom view whose body is several views lays
+    them out as one implicit `VStack`; SwiftUI applies it to each view.
+  - On Linux, `NSItemProvider` loads data and strings and URLs, not other
+    object types.
   - Text input has no spell checking.
   - `Picker` reads its options from the structure of its content (tags,
     `ForEach`), not from evaluated views.
@@ -421,6 +433,7 @@ Each phase ends green on macOS and Linux CI.
 | **7. Completeness** ✅ | Gradients, blur and blurred shadows, color effects, text decorations and spacing, `onReceive` (with publishers where there's no Combine), `containerRelativeFrame`, phase and keyframe animators, `DatePicker`, `ColorPicker`, `Gauge`, `@Entry` | Effects demo screen draws them through the GPU compositor on macOS and Linux |
 | **8. Fidelity** ✅ | Masks by any view, anti-aliased concave clips, gradient text, truncation and shrinking text, gradient strokes in `Canvas`, editing by characters and words, undo, caret blink | Effects demo screen shows them on macOS and Linux |
 | **9. Desktop integration** ✅ | Symbol images, drag and drop, menu commands, `Settings`, `MenuBarExtra`, NSAccessibility bridge | Demo shows symbols, menus, settings and a tray item on macOS; Linux builds and tests |
+| **10. Fidelity II** ✅ | Modifiers applied per view, `matchedGeometryEffect` properties, anchors and sources, `NavigationSplitView` column widths and visibility, `onDrag`/`onDrop` with item providers and `DropDelegate` | Layout cases match Apple's SwiftUI; tests pass on macOS and Linux |
 
 ---
 
