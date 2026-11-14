@@ -80,9 +80,9 @@ Notes:
   commands still draw together with Silica in one pass, so canvases without
   these features cost what they did. Symbols are the canvas's tagged
   children, laid out but not shown, whose drawings become commands.
-  Rotating a canvas found that Silica's Cairo backend transposes affine
+  Rotating a canvas found that Silica's Cairo backend transposed affine
   matrices (`b` and `c` swapped), so rotations turned the wrong way on
-  Linux; Cacao transposes them back until Silica is fixed.
+  Linux; that is fixed in Silica (PureSwift/Silica#22).
 - Known gaps, for later phases:
   - Tab switches don't animate (nor do they in SwiftUI by default).
   - No AT-SPI bridge on Linux yet.
