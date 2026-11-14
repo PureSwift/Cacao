@@ -116,18 +116,21 @@ extension ViewGraph {
         let time = self.time
         // Insertions and resolved transactions belong to the update's first
         // layout; later layouts only animate frames the update moved.
-        let isNewUpdate = committedGeneration != updateGeneration
+        // Updates since the last commit, which may be several when layout
+        // updated views.
+        let since = committedGeneration
+        let isNewUpdate = since != updateGeneration
         committedGeneration = updateGeneration
         var matched: [AnyHashable: (frame: CGRect, node: Int)] = [:]
         func visit(_ node: ViewNode, inherited: Transaction) {
-            let transaction = isNewUpdate && node.resolvedGeneration == updateGeneration ? node.transaction : inherited
+            let transaction = isNewUpdate && node.resolvedGeneration > since ? node.transaction : inherited
             let animation = transaction.disablesAnimations ? nil : transaction.animation
             let state = animations(of: node)
             if node.behavior != nil {
                 commitFrame(node, state: state, animation: animation, time: time)
                 commitValues(node, state: state, animation: animation, time: time)
             }
-            if isNewUpdate, node.insertedGeneration == updateGeneration, let animation, node.parent?.insertedGeneration != updateGeneration {
+            if isNewUpdate, node.insertedGeneration > since, let animation, !((node.parent?.insertedGeneration ?? -1) > since) {
                 let transition = node.transitionAttribute ?? .opacity
                 state.transition = (transition, PropertyAnimation(from: [0], to: [1], animation: animation, start: time))
             }
