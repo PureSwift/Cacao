@@ -39,7 +39,7 @@ public struct ScrollView<Content: View>: View, PrimitiveView {
         var environment = context.environment
         environment.stackOrientation = nil
         return Resolution(
-            behavior: ScrollBehavior(axes: axes, showsIndicators: showsIndicators),
+            behavior: ScrollBehavior(axes: axes, showsIndicators: showsIndicators, targetBehavior: context.environment.scrollTargetBehavior),
             children: [ChildView(key: 0, view: content, environment: environment)]
         )
     }
@@ -74,6 +74,12 @@ package final class ScrollState {
 
     /// Called when the offset changes.
     var onChange: (() -> Void)?
+
+    /// How the scroll view settles after a scroll.
+    var targetBehavior: (any ScrollTargetBehavior)?
+
+    /// The frames of the scroll target layout's views, in the content.
+    var targetLayout: (() -> [CGRect])?
 
     init(axes: Axis.Set) {
         self.axes = axes
@@ -124,6 +130,8 @@ internal struct ScrollBehavior: NodeBehavior {
 
     let showsIndicators: Bool
 
+    var targetBehavior: (any ScrollTargetBehavior)? = nil
+
     func state(of node: ViewNode) -> ScrollState {
         if let state = node.dynamicStorage["scroll"] as? ScrollState, state.axes == axes {
             return state
@@ -156,6 +164,13 @@ internal struct ScrollBehavior: NodeBehavior {
 
     func placeChildren(in bounds: CGRect, proposal: ProposedViewSize, node: ViewNode) {
         let state = state(of: node)
+        state.targetBehavior = targetBehavior
+        if targetBehavior != nil {
+            state.targetLayout = { [weak node] in
+                guard let node else { return [] }
+                return node.scrollTargetFrames(origin: node.frame.origin) ?? []
+            }
+        }
         guard let content = LayoutProxy.combining(node.layoutChildren) else {
             state.contentSize = .zero
             state.viewportSize = bounds.size
