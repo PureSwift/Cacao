@@ -12,6 +12,16 @@ public protocol ShapeStyle: Sendable { }
 internal protocol ResolvableShapeStyle {
 
     func resolveColor(in environment: EnvironmentValues) -> Color.Resolved
+
+    /// The style's gradient, if it's one.
+    func resolveGradient(in environment: EnvironmentValues) -> GradientStyle?
+}
+
+extension ResolvableShapeStyle {
+
+    func resolveGradient(in environment: EnvironmentValues) -> GradientStyle? {
+        nil
+    }
 }
 
 extension Color: ShapeStyle, ResolvableShapeStyle {
@@ -40,6 +50,10 @@ extension AnyShapeStyle: ResolvableShapeStyle {
 
     func resolveColor(in environment: EnvironmentValues) -> Color.Resolved {
         (style as? any ResolvableShapeStyle)?.resolveColor(in: environment) ?? Color.primary.resolve(in: environment)
+    }
+
+    func resolveGradient(in environment: EnvironmentValues) -> GradientStyle? {
+        (style as? any ResolvableShapeStyle)?.resolveGradient(in: environment)
     }
 }
 
@@ -143,6 +157,14 @@ internal struct _OpacityShapeStyle: ShapeStyle, ResolvableShapeStyle {
         color.opacity *= Float(opacity)
         return color
     }
+
+    func resolveGradient(in environment: EnvironmentValues) -> GradientStyle? {
+        guard var gradient = style.resolveGradient(in: environment) else { return nil }
+        for index in gradient.stops.indices {
+            gradient.stops[index].color.opacity *= Float(opacity)
+        }
+        return gradient
+    }
 }
 
 extension EnvironmentValues {
@@ -155,6 +177,11 @@ extension EnvironmentValues {
         }
         return (foregroundColor ?? .primary).resolve(in: self)
     }
+
+    /// The gradient of foreground content, if its style is one.
+    internal var resolvedForegroundGradient: GradientStyle? {
+        foregroundStyle?.resolveGradient(in: self)
+    }
 }
 
 /// A view that fills the space it's offered with a shape style.
@@ -163,7 +190,11 @@ internal struct _ShapeStyleView: View, PrimitiveView {
     let style: any ShapeStyle
 
     func resolve(in context: ResolveContext) -> Resolution {
-        let color = AnyShapeStyle(style).resolveColor(in: context.environment)
+        let style = AnyShapeStyle(style)
+        let color = style.resolveColor(in: context.environment)
+        if let gradient = style.resolveGradient(in: context.environment) {
+            return Resolution(behavior: ShapeBehavior(shape: Rectangle(), color: color, gradient: gradient, drawing: .fill(FillStyle())))
+        }
         return Resolution(behavior: FillBehavior(color: color))
     }
 
