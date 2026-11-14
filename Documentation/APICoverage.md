@@ -68,14 +68,15 @@ tests.
 |---|---|---|
 | `Text` (fonts, weight, italic, monospaced digits, `textCase`) | ✅ | |
 | `underline`, `strikethrough` (with patterns), `kerning`, `tracking`, `baselineOffset`, `lineSpacing` | ✅ | On `Text` and on views. |
-| `truncationMode`, `minimumScaleFactor`, `allowsTightening` | ○ | |
+| `lineLimit`, `truncationMode`, `minimumScaleFactor` | ✅ | Truncated lines end in an ellipsis; head and middle truncation for single lines. |
+| `allowsTightening` | ○ | |
 | `Image` (resources, data, resizing, template rendering) | ✅ | |
 | `Image(systemName:)` | ○ | Sized like a symbol; draws nothing yet. |
 | `Shape`s, `Path`, fills and strokes, `strokeBorder` | ✅ | |
 | `Color`, `ShapeStyle`, `foregroundStyle`, `tint`, `Color.mix` | ✅ | |
-| `LinearGradient`, `RadialGradient`, `EllipticalGradient`, `AngularGradient`, `Color.gradient` | ✅ | As views and as fills and strokes of shapes; text in a gradient style draws in its average color. |
+| `LinearGradient`, `RadialGradient`, `EllipticalGradient`, `AngularGradient`, `Color.gradient` | ✅ | As views, fills and strokes of shapes, and text styles. |
 | `Button` and styles, `Toggle` and styles, `Slider`, `Stepper` | ✅ | |
-| `TextField`, `SecureField`, `TextEditor` | ✅ | |
+| `TextField`, `SecureField`, `TextEditor` | ✅ | Moves and deletes by characters and words; undo and redo; the caret blinks. |
 | `Picker` (menu, segmented, inline), `Menu` | ✅ | |
 | `ProgressView`, `Label`, `Link`, `DisclosureGroup` | ✅ | |
 | `LabeledContent`, `ContentUnavailableView` | ✅ | |
@@ -83,7 +84,7 @@ tests.
 | `ColorPicker` | ◐ | A palette with hue, saturation, brightness and opacity sliders; no `CGColor` binding. |
 | `Gauge` | ✅ | Linear and circular styles. |
 | `ShareLink` | ✗ | |
-| `Canvas`, `GraphicsContext` | ◐ | Paths, text, images, transforms, opacity, clips and gradient fills; gradient strokes draw in a color; no symbols or blend modes. |
+| `Canvas`, `GraphicsContext` | ◐ | Paths, text, images, transforms, opacity, clips and gradients; no symbols or blend modes. |
 | `TimelineView` | ✅ | |
 
 ## Lists and navigation
@@ -139,9 +140,9 @@ tests.
 
 | API | | Notes |
 |---|---|---|
-| `opacity`, `clipShape`, `clipped`, `cornerRadius`, `compositingGroup`, `drawingGroup` | ✅ | |
+| `opacity`, `clipShape`, `clipped`, `cornerRadius`, `compositingGroup`, `drawingGroup` | ✅ | Shape clips are anti-aliased, and may be concave. |
 | `shadow` | ✅ | Blurred on the GPU. |
-| `mask` | ◐ | Shape masks. |
+| `mask` | ✅ | Any view, by its alpha. |
 | `border` | ✅ | |
 | `blur` | ✅ | On the GPU, by downsampling. |
 | `brightness`, `contrast`, `saturation`, `grayscale`, `hueRotation`, `colorInvert`, `colorMultiply`, `luminanceToAlpha` | ✅ | Applied to colors and images as they're drawn. |
