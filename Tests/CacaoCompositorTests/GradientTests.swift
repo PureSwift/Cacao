@@ -84,3 +84,49 @@ import Silica
         #expect(Self.pixel(image, 10, 15)[3] == 0)
     }
 }
+
+extension GradientTests {
+
+    @Test func canvasStrokesAndVerticalFillsWithAGradient() throws {
+        let topToBottom = GradientPaint(stops: Self.redToBlue, geometry: .axial(start: CGPoint(x: 0, y: 0), end: CGPoint(x: 0, y: 40)))
+        let drawing = DrawingContent(operations: [
+            .shape(ShapeContent(
+                path: Path(CGRect(x: 0, y: 0, width: 10, height: 40)),
+                color: Color.Resolved(red: 0, green: 0, blue: 0),
+                drawing: .fill(FillStyle()),
+                gradient: topToBottom
+            ), DrawingState()),
+            .shape(ShapeContent(
+                path: Path { $0.move(to: CGPoint(x: 30, y: 0)); $0.addLine(to: CGPoint(x: 30, y: 40)) },
+                color: Color.Resolved(red: 0, green: 0, blue: 0),
+                drawing: .stroke(StrokeStyle(lineWidth: 4)),
+                gradient: topToBottom
+            ), DrawingState()),
+        ])
+        let image = try #require(Rasterizer.rasterize(.drawing(drawing), size: CGSize(width: 40, height: 40), scale: 1, textEngine: SilicaTextEngine()))
+        // Red at the top and blue at the bottom, for both: not flipped.
+        let fillTop = Self.pixel(image, 5, 2), fillBottom = Self.pixel(image, 5, 37)
+        #expect(fillTop[0] > 200 && fillBottom[2] > 200)
+        let strokeTop = Self.pixel(image, 30, 2), strokeBottom = Self.pixel(image, 30, 37)
+        #expect(strokeTop[0] > 200 && strokeTop[3] > 200)
+        #expect(strokeBottom[2] > 200)
+        // Only the stroke's width is drawn.
+        #expect(Self.pixel(image, 36, 20)[3] == 0)
+    }
+}
+
+extension GradientTests {
+
+    @Test func canvasDrawsImagesUpright() throws {
+        // Two pixels: red above blue.
+        let pixels = Data([255, 0, 0, 255, 0, 0, 255, 255])
+        let png = try #require(Rasterizer.encodePNG(width: 1, height: 2, bytesPerRow: 4, pixels: pixels))
+        let source = ImageSource(data: png, scale: 1)
+        let drawing = DrawingContent(operations: [
+            .image(ImageContent(source: source, tint: nil, interpolation: .none), CGRect(x: 0, y: 0, width: 10, height: 20), DrawingState())
+        ])
+        let image = try #require(Rasterizer.rasterize(.drawing(drawing), size: CGSize(width: 10, height: 20), scale: 1, textEngine: SilicaTextEngine()))
+        #expect(Self.pixel(image, 5, 2)[0] > 200)
+        #expect(Self.pixel(image, 5, 17)[2] > 200)
+    }
+}
