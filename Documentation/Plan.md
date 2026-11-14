@@ -1,9 +1,7 @@
 # Cacao: SwiftUI for Linux and macOS — Plan
 
-Status: **Phase 8 done** (masks by any view, anti-aliased and concave
-clips, gradient text, truncation with ellipses, text that shrinks to fit,
-gradient strokes in `Canvas`, editing by characters and words with undo, a
-blinking caret). What's implemented is in [API coverage](APICoverage.md).
+Status: **Phase 9 done** (symbol images, drag and drop, menu commands,
+`Settings`, `MenuBarExtra`, a VoiceOver bridge on macOS). What's implemented is in [API coverage](APICoverage.md).
 
 Notes:
 - Phase 1: 26 layout cases match Apple's SwiftUI frame for frame on macOS
@@ -66,12 +64,19 @@ Notes:
   moves by grapheme clusters (an emoji flag or an accented letter is one
   step), by words with option (control on Linux), and joins typing in one
   undo step.
+- Phase 9: `Image(systemName:)` draws Cacao's own vector versions of
+  common symbols (SF Symbols aren't available on Linux, nor licensed for
+  redistribution). Command menus live in each window's graph as an unseen
+  layer, so their shortcuts work everywhere, and the host reads their items
+  from there; on macOS they fill the menu bar when opened. Menu bar extras
+  are SDL tray icons whose menus come from a graph of their content. Drags
+  within a window move values; drops from the system arrive as file URLs
+  and text, converted to what the destination takes. On macOS, each window
+  shows its accessibility tree to VoiceOver as NSAccessibility elements.
 - Known gaps, for later phases:
   - Tab switches don't animate (nor do they in SwiftUI by default).
-  - No accessibility bridge yet: `ViewGraph.accessibilityTree()` is what an
-    AT-SPI or NSAccessibility bridge would expose.
-  - No drag and drop, `ShareLink`, `Settings`, `MenuBarExtra`, `commands`
-    or `DocumentGroup`.
+  - No AT-SPI bridge on Linux yet.
+  - No `ShareLink` or `DocumentGroup`; menu bar extras have no window style.
   - `RotateGesture` has no input yet: SDL reports pinches but not rotations.
   - On macOS, the system's trackpad momentum arrives as more scrolling, so
     snapping scroll views settle after it ends; paging moves at most a page.
@@ -86,7 +91,7 @@ Notes:
   - Text input has no spell checking.
   - `Picker` reads its options from the structure of its content (tags,
     `ForEach`), not from evaluated views.
-  - `Image(systemName:)` draws nothing yet (Q6).
+  - `Image(systemName:)` draws about 60 common symbols (Q6).
   - Trackpad and wheel scrolling, and input methods, haven't been tried by
     hand on Linux.
 
@@ -404,6 +409,7 @@ Each phase ends green on macOS and Linux CI.
 | **6. Polish** ✅ | GeometryReader/coordinate spaces edge cases, ViewThatFits, safe area, accessibility hooks (AT‑SPI later), multi‑window, `SwiftUI` alias module, docs | API coverage table published; sample apps compile unchanged |
 | **7. Completeness** ✅ | Gradients, blur and blurred shadows, color effects, text decorations and spacing, `onReceive` (with publishers where there's no Combine), `containerRelativeFrame`, phase and keyframe animators, `DatePicker`, `ColorPicker`, `Gauge`, `@Entry` | Effects demo screen draws them through the GPU compositor on macOS and Linux |
 | **8. Fidelity** ✅ | Masks by any view, anti-aliased concave clips, gradient text, truncation and shrinking text, gradient strokes in `Canvas`, editing by characters and words, undo, caret blink | Effects demo screen shows them on macOS and Linux |
+| **9. Desktop integration** ✅ | Symbol images, drag and drop, menu commands, `Settings`, `MenuBarExtra`, NSAccessibility bridge | Demo shows symbols, menus, settings and a tray item on macOS; Linux builds and tests |
 
 ---
 
