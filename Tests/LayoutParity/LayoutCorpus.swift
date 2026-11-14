@@ -242,6 +242,38 @@ public enum LayoutCorpus {
                     Color.blue.frame(width: 30, height: 10).probe("b")
                 }
             },
+            LayoutCase("geometry-reader", width: 300, height: 200) {
+                VStack(spacing: 0) {
+                    GeometryReader { proxy in
+                        Color.red
+                            .frame(width: proxy.size.width / 2, height: proxy.size.height / 2)
+                            .probe("half")
+                    }
+                    .probe("reader")
+                    Color.blue.frame(height: 50).probe("bar")
+                }
+            },
+            LayoutCase("view-that-fits", width: 120, height: 100) {
+                ViewThatFits {
+                    Color.red.frame(width: 200, height: 20).probe("wide")
+                    Color.blue.frame(width: 100, height: 20).probe("narrow")
+                    Color.green.frame(width: 50, height: 20).probe("small")
+                }
+                .probe("fits")
+            },
+            LayoutCase("position", width: 200, height: 100) {
+                Color.red.frame(width: 20, height: 10)
+                    .probe("dot")
+                    .position(x: 50, y: 30)
+                    .probe("positioned")
+            },
+            LayoutCase("safe-area-inset", width: 200, height: 200) {
+                Color.red
+                    .probe("content")
+                    .safeAreaInset(edge: .bottom, spacing: 10) {
+                        Color.blue.frame(height: 40).probe("inset")
+                    }
+            },
         ]
     }
 }
