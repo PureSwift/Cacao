@@ -22,16 +22,17 @@ internal final class InvalidationQueue: @unchecked Sendable {
 
     private struct WeakNode {
         weak var node: ViewNode?
+        var transaction: Transaction?
     }
 
     /// The graph to wake, read and written only on the main actor.
     nonisolated(unsafe) weak var graph: ViewGraph?
 
-    func enqueue(_ node: ViewNode?) {
+    func enqueue(_ node: ViewNode?, transaction: Transaction? = nil) {
         guard let node else { return }
         lock.lock()
         let wasEmpty = nodes.isEmpty
-        nodes.append(WeakNode(node: node))
+        nodes.append(WeakNode(node: node, transaction: transaction))
         lock.unlock()
         guard wasEmpty else { return }
         let queue = UncheckedSendable(self)
@@ -40,12 +41,13 @@ internal final class InvalidationQueue: @unchecked Sendable {
         }
     }
 
-    /// Removes and returns the queued nodes that still exist.
-    func drain() -> [ViewNode] {
+    /// Removes and returns the queued nodes that still exist, with the
+    /// transactions they were invalidated in.
+    func drain() -> [(node: ViewNode, transaction: Transaction?)] {
         lock.lock()
         let drained = nodes
         nodes.removeAll()
         lock.unlock()
-        return drained.compactMap(\.node)
+        return drained.compactMap { entry in entry.node.map { ($0, entry.transaction) } }
     }
 }
