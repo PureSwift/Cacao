@@ -152,3 +152,46 @@ extension TextRenderingTests {
         #expect(spaced.lastBaseline == plain.lastBaseline + 6)
     }
 }
+
+extension TextRenderingTests {
+
+    @Test func truncatesWithAnEllipsis() {
+        let engine = SilicaTextEngine()
+        var text = Self.text("Hello wonderful world", size: 20)
+        text.lineLimit = 1
+        let tail = engine.layout(text, in: ProposedViewSize(width: 100, height: nil))
+        #expect(tail.lines.count == 1)
+        #expect(tail.lines[0].hasSuffix("\u{2026}"))
+        #expect(tail.lines[0].hasPrefix("Hello"))
+        #expect(tail.size.width <= 100)
+        text.truncationMode = .head
+        let head = engine.layout(text, in: ProposedViewSize(width: 100, height: nil))
+        #expect(head.lines[0].hasPrefix("\u{2026}"))
+        #expect(head.lines[0].hasSuffix("world"))
+        text.truncationMode = .middle
+        let middle = engine.layout(text, in: ProposedViewSize(width: 120, height: nil))
+        let line = middle.lines[0]
+        #expect(line.hasPrefix("Hel") && line.hasSuffix("rld") && line.contains("\u{2026}"))
+        // Drawn, it fits its frame.
+        text.truncationMode = .tail
+        let image = Rasterizer.rasterize(.text(text), size: tail.size, scale: 1, textEngine: engine)
+        #expect(image.flatMap(Self.inkBounds).map { $0.maxX <= tail.size.width } == true)
+    }
+
+    @Test func shrinksTextToFit() {
+        let engine = SilicaTextEngine()
+        var text = Self.text("Shrinking text", size: 20)
+        text.lineLimit = 1
+        let natural = engine.layout(text, in: .unspecified)
+        let width = (natural.size.width * 0.75).rounded()
+        text.minimumScaleFactor = 0.5
+        let fitted = engine.layout(text, in: ProposedViewSize(width: width, height: nil))
+        #expect(fitted.lines == ["Shrinking text"])
+        #expect(fitted.size.width <= width)
+        #expect(fitted.size.height < natural.size.height)
+        // Not past the minimum: then it truncates.
+        text.minimumScaleFactor = 0.9
+        let truncated = engine.layout(text, in: ProposedViewSize(width: width, height: nil))
+        #expect(truncated.lines[0].hasSuffix("\u{2026}"))
+    }
+}
