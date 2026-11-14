@@ -310,6 +310,25 @@ struct EffectsScreen: View {
                         }
                     }
                 }
+                Section("Masks and text") {
+                    HStack(spacing: 20) {
+                        Swatches()
+                            .frame(width: 70, height: 70)
+                            .mask { Text("Ab").font(.system(size: 40, weight: .bold)).fixedSize() }
+                        Swatches()
+                            .frame(width: 70, height: 70)
+                            .clipShape(Star())
+                        Text("Gradient text")
+                            .font(.title)
+                            .foregroundStyle(LinearGradient(colors: [.purple, .orange], startPoint: .leading, endPoint: .trailing))
+                        VStack(alignment: .leading) {
+                            Text("Truncated at the tail of a long line").lineLimit(1)
+                            Text("Truncated in the middle of a long line").lineLimit(1).truncationMode(.middle)
+                            Text("Shrinks to fit before truncating").lineLimit(1).minimumScaleFactor(0.5)
+                        }
+                        .frame(width: 150)
+                    }
+                }
                 Section("Color effects") {
                     HStack(spacing: 12) {
                         Swatches().frame(width: 60, height: 60).saturation(saturation)
@@ -322,6 +341,23 @@ struct EffectsScreen: View {
                 }
             }
             .padding()
+        }
+    }
+}
+
+/// A five-pointed star: a concave shape.
+struct Star: Shape {
+    func path(in rect: CGRect) -> Path {
+        Path { path in
+            let center = CGPoint(x: rect.midX, y: rect.midY)
+            let outer = min(rect.width, rect.height) / 2, inner = outer * 0.45
+            for index in 0..<10 {
+                let angle = Double(index) * .pi / 5 - .pi / 2
+                let radius = index % 2 == 0 ? outer : inner
+                let point = CGPoint(x: center.x + radius * CGFloat(cos(angle)), y: center.y + radius * CGFloat(sin(angle)))
+                if index == 0 { path.move(to: point) } else { path.addLine(to: point) }
+            }
+            path.closeSubpath()
         }
     }
 }
