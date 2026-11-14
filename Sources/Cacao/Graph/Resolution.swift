@@ -115,8 +115,8 @@ internal struct NodeAttributes {
     /// How the node animates in and out.
     var transition: AnyTransition?
 
-    /// The node's matched geometry group.
-    var matchedGeometry: AnyHashable?
+    /// The node's matched geometry group, and how it takes part.
+    var matchedGeometry: MatchedGeometry?
 
     /// Gestures attached to the node's views.
     var gestures: [GestureAttachment] = []
