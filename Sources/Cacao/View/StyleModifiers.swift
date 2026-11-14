@@ -124,16 +124,6 @@ extension View {
     public func shadow(color: Color = Color.black.opacity(0.33), radius: CGFloat, x: CGFloat = 0, y: CGFloat = 0) -> some View {
         modifier(_ShadowModifier(color: color, radius: radius, offset: CGSize(width: x, height: y)))
     }
-
-    /// Masks this view using the alpha channel of the given shape.
-    public func mask<Mask: Shape>(alignment: Alignment = .center, _ mask: () -> Mask) -> some View {
-        clipShape(mask())
-    }
-
-    /// Masks this view using the given shape.
-    public func mask<Mask: Shape>(_ mask: Mask) -> some View {
-        clipShape(mask)
-    }
 }
 
 // MARK: - Hover
@@ -495,6 +485,38 @@ public enum TruncationMode: Hashable, Sendable {
     case middle
 }
 
+extension Text {
+
+    /// The type of truncation to apply to a line of text when it's too long
+    /// to fit in the available space.
+    public typealias TruncationMode = Cacao.TruncationMode
+}
+
+private struct TruncationModeKey: EnvironmentKey {
+    static let defaultValue = TruncationMode.tail
+}
+
+private struct MinimumScaleFactorKey: EnvironmentKey {
+    static let defaultValue: CGFloat = 1
+}
+
+extension EnvironmentValues {
+
+    /// A value that indicates how the layout truncates the last line of
+    /// text to fit into the available space.
+    public var truncationMode: TruncationMode {
+        get { self[TruncationModeKey.self] }
+        set { self[TruncationModeKey.self] = newValue }
+    }
+
+    /// The minimum permissible proportion to shrink the font size to fit
+    /// the text into the available space.
+    public var minimumScaleFactor: CGFloat {
+        get { self[MinimumScaleFactorKey.self] }
+        set { self[MinimumScaleFactorKey.self] = newValue }
+    }
+}
+
 private struct TextCaseKey: EnvironmentKey {
     static let defaultValue: TextCase? = nil
 }
@@ -517,12 +539,16 @@ extension View {
     }
 
     /// Sets the truncation mode for lines of text that are too long to fit
-    /// in the available space. Cacao truncates at the tail.
-    public func truncationMode(_ mode: TruncationMode) -> some View { self }
+    /// in the available space.
+    public func truncationMode(_ mode: TruncationMode) -> some View {
+        environment(\.truncationMode, mode)
+    }
 
     /// Sets the minimum amount that text in this view scales down to fit in
-    /// the available space. Cacao doesn't scale text yet.
-    public func minimumScaleFactor(_ factor: CGFloat) -> some View { self }
+    /// the available space.
+    public func minimumScaleFactor(_ factor: CGFloat) -> some View {
+        environment(\.minimumScaleFactor, min(max(factor, 0.01), 1))
+    }
 
     /// Sets the amount of space between lines of text in this view.
     public func lineSpacing(_ lineSpacing: CGFloat) -> some View {
