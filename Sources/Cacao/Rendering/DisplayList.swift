@@ -118,7 +118,7 @@ extension ViewGraph {
     /// The display list for the last layout.
     package func displayList() -> DisplayList {
         needsDisplay = false
-        return DisplayList(items: root.displayItems())
+        return DisplayList(items: root.displayItems() + dragPreviewItems())
     }
 }
 
