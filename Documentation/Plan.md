@@ -1,9 +1,9 @@
 # Cacao: SwiftUI for Linux and macOS — Plan
 
-Status: **Phase 6 done** (geometry readers, anchors, `ViewThatFits`, safe
-area, `ObservableObject` and storage, common modifiers, animated navigation
-and presentations, accessibility, multiple windows). What's implemented is in
-[API coverage](APICoverage.md).
+Status: **Phase 7 done** (gradients, blurred shadows and `blur`, color
+effects, text decorations, `onReceive`, `containerRelativeFrame`, phase and
+keyframe animators, `DatePicker`, `ColorPicker`, `Gauge`, `@Entry`). What's
+implemented is in [API coverage](APICoverage.md).
 
 Notes:
 - Phase 1: 26 layout cases match Apple's SwiftUI frame for frame on macOS
@@ -45,17 +45,28 @@ Notes:
   Combine's on Apple platforms and Cacao's own on Linux. Navigation pushes,
   sheets, dialogs and popups animate by default, unless a transaction
   disables animations.
+- Phase 7: gradients are drawn by Silica as pixels masked by the shape, so
+  strokes and fills get them alike. Blur runs on the GPU: the layer is
+  halved again and again with linear filtering, then drawn back up, about
+  one halving per doubling of the radius. Shadows blur the view's
+  silhouette, which is now the shadow's color exactly (it was the view's
+  colors tinted). Color effects (saturation, hue rotation and the like) are
+  matrices applied to the colors of what's drawn and to images as they're
+  decoded, so they cost nothing per frame. Phase and keyframe animators run
+  on the graph's clock through wakeups, like `TimelineView`, so tests drive
+  them with simulated time. Without Combine, Cacao provides the publishers
+  `onReceive` takes. `@Entry` is a macro target on swift-syntax.
 - Known gaps, for later phases:
   - Tab switches don't animate (nor do they in SwiftUI by default).
   - No accessibility bridge yet: `ViewGraph.accessibilityTree()` is what an
     AT-SPI or NSAccessibility bridge would expose.
-  - Shadows aren't blurred, and `blur` has no effect.
-  - Text decorations (underline, strikethrough, kerning) compile but don't
-    draw.
+  - Text drawn in a gradient style uses the gradient's average color.
+  - No drag and drop, `ShareLink`, `Settings`, `MenuBarExtra`, `commands`
+    or `DocumentGroup`.
   - `RotateGesture` has no input yet: SDL reports pinches but not rotations.
   - On macOS, the system's trackpad momentum arrives as more scrolling, so
     snapping scroll views settle after it ends; paging moves at most a page.
-  - `Canvas` resolves gradient shading to a color, ignores blend modes and
+  - `Canvas` strokes gradient shading in a color, ignores blend modes and
     has no symbols.
   - `matchedGeometryEffect` moves frames only; `properties`, `anchor` and
     `isSource` are ignored.
@@ -67,14 +78,12 @@ Notes:
   - Shape clips draw through a triangle fan, which is exact for convex
     shapes only.
   - Text editing works on Unicode scalars, not grapheme clusters, and has
-    no word movement or undo; the caret doesn't blink and spinners don't
-    spin yet.
+    no word movement or undo; the caret doesn't blink.
   - `Picker` reads its options from the structure of its content (tags,
     `ForEach`), not from evaluated views.
   - `Image(systemName:)` draws nothing yet (Q6).
   - Trackpad and wheel scrolling, and input methods, haven't been tried by
     hand on Linux.
-  - No `@Entry` macro (it needs a macro target and swift-syntax).
 
 Replace Cacao's 2017 UIKit clone (≈70 `UI*` files, SDL2 + Cairo) with a
 pure‑Swift implementation of the SwiftUI API. App code written against Apple's
@@ -388,6 +397,7 @@ Each phase ends green on macOS and Linux CI.
 | **4. Containers & navigation** ✅ | Form/Section, lazy grids, Grid, NavigationStack/SplitView, TabView, toolbar, searchable, sheets/alerts/dialogs/popovers/context menus | Catalog navigation + list screens |
 | **5. Animation & gestures** ✅ | Animatable, transactions, transitions (run as compositor‑side property animations where possible), matchedGeometryEffect, full gesture set, TimelineView, Canvas, scroll target behaviors | Animated catalog screens hold refresh rate on a mid‑range Linux box |
 | **6. Polish** ✅ | GeometryReader/coordinate spaces edge cases, ViewThatFits, safe area, accessibility hooks (AT‑SPI later), multi‑window, `SwiftUI` alias module, docs | API coverage table published; sample apps compile unchanged |
+| **7. Completeness** ✅ | Gradients, blur and blurred shadows, color effects, text decorations and spacing, `onReceive` (with publishers where there's no Combine), `containerRelativeFrame`, phase and keyframe animators, `DatePicker`, `ColorPicker`, `Gauge`, `@Entry` | Effects demo screen draws them through the GPU compositor on macOS and Linux |
 
 ---
 
