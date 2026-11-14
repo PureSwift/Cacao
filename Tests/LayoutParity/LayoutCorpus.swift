@@ -56,6 +56,48 @@ struct DiagonalLayout: Layout {
     }
 }
 
+/// A custom modifier whose body pads its content.
+struct Inset: ViewModifier {
+
+    func body(content: Content) -> some View {
+        content.padding(.leading, 8).frame(width: 60, alignment: .leading)
+    }
+}
+
+/// Views that take their frames from a matched geometry source.
+struct MatchedGeometryCase: View {
+
+    @Namespace private var namespace
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Color.red.frame(width: 40, height: 20)
+                .probe("source")
+                .matchedGeometryEffect(id: "box", in: namespace)
+            Color.blue
+                .probe("follower")
+                .matchedGeometryEffect(id: "box", in: namespace, isSource: false)
+                .frame(width: 30, height: 30)
+            Color.green.frame(width: 10, height: 10)
+                .probe("corner")
+                .matchedGeometryEffect(id: "box", in: namespace, properties: .position, anchor: .topLeading, isSource: false)
+                .frame(width: 30, height: 30)
+            Color.green.frame(width: 10, height: 10)
+                .probe("trailing")
+                .matchedGeometryEffect(id: "box", in: namespace, properties: .position, anchor: .bottomTrailing, isSource: false)
+                .frame(width: 30, height: 30)
+            Color.green
+                .probe("sized")
+                .matchedGeometryEffect(id: "box", in: namespace, properties: .size, anchor: .topLeading, isSource: false)
+                .frame(width: 30, height: 30)
+            Color.green
+                .probe("sized-center")
+                .matchedGeometryEffect(id: "box", in: namespace, properties: .size, isSource: false)
+                .frame(width: 30, height: 30)
+        }
+    }
+}
+
 @MainActor
 public enum LayoutCorpus {
 
@@ -273,6 +315,36 @@ public enum LayoutCorpus {
                     .safeAreaInset(edge: .bottom, spacing: 10) {
                         Color.blue.frame(height: 40).probe("inset")
                     }
+            },
+            LayoutCase("modifier-per-view", width: 200, height: 100) {
+                HStack(spacing: 0) {
+                    Group {
+                        Color.red.frame(width: 20, height: 20).probe("a")
+                        if true {
+                            Color.blue.frame(width: 30, height: 20).probe("b")
+                        }
+                    }
+                    .padding(5)
+                    .frame(width: 50)
+                    ForEach(0..<2, id: \.self) { index in
+                        Color.green.frame(width: 10, height: 10).probe("f\(index)")
+                    }
+                    .frame(width: 25, height: 30)
+                }
+                .probe("stack")
+            },
+            LayoutCase("custom-modifier-per-view", width: 200, height: 100) {
+                VStack(spacing: 0) {
+                    Group {
+                        Color.red.frame(width: 20, height: 10).probe("a")
+                        Color.blue.frame(width: 40, height: 10).probe("b")
+                    }
+                    .modifier(Inset())
+                }
+                .probe("stack")
+            },
+            LayoutCase("matched-geometry", width: 200, height: 100) {
+                MatchedGeometryCase()
             },
         ]
     }
