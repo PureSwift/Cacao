@@ -13,10 +13,12 @@ on macOS) only when it changes, and composited every frame by the
 [SDL3](https://github.com/PureSwift/SDL) renderer (Metal, Vulkan or OpenGL),
 so scrolling and animation never repaint.
 
-> **Status:** early development (Phase 5: views, layout, controls, text input,
+> **Status:** early development (Phase 6: views, layout, controls, text input,
 > lazy lists, forms, grids, navigation, tabs, presentations, animations,
-> transitions, gestures, `TimelineView` and `Canvas`, drawn by a GPU
-> compositor on Linux and macOS). See
+> transitions, gestures, `TimelineView`, `Canvas`, geometry readers,
+> `ObservableObject` and storage, accessibility and multiple windows, drawn
+> by a GPU compositor on Linux and macOS). See
+> [API coverage](Documentation/APICoverage.md) for what's implemented. See
 > [the plan](Documentation/Plan.md) for the architecture and roadmap. The
 > previous UIKit implementation is preserved at the
 > [`uikit-legacy`](https://github.com/PureSwift/Cacao/tree/uikit-legacy) tag.
