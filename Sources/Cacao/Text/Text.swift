@@ -123,7 +123,17 @@ extension Text: View, PrimitiveView {
     public typealias Body = Never
 
     func resolve(in context: ResolveContext) -> Resolution {
-        Resolution(behavior: TextBehavior(text: resolve(in: context.environment)))
+        // Text in a gradient: the gradient, masked by the text's glyphs.
+        if let style = context.environment.foregroundStyle,
+           style.resolveGradient(in: context.environment) != nil,
+           runs.contains(where: { $0.color == nil }) {
+            let glyphs = foregroundColor(.white)
+            return Resolution(children: [ChildView(key: 0, view: glyphs
+                .overlay(_ShapeStyleView(style: style))
+                .mask { glyphs }
+            )])
+        }
+        return Resolution(behavior: TextBehavior(text: resolve(in: context.environment)))
     }
 
     /// The text's runs with fonts and colors resolved in an environment.
@@ -169,7 +179,9 @@ extension Text: View, PrimitiveView {
             },
             alignment: environment.multilineTextAlignment,
             lineLimit: environment.lineLimit,
-            lineSpacing: environment.lineSpacing
+            lineSpacing: environment.lineSpacing,
+            truncationMode: environment.truncationMode,
+            minimumScaleFactor: environment.minimumScaleFactor
         )
     }
 }
@@ -252,6 +264,25 @@ package struct ResolvedText: Hashable, Sendable {
 
     /// Extra space between lines.
     package var lineSpacing: CGFloat = 0
+
+    /// Where text that doesn't fit is cut for an ellipsis.
+    package var truncationMode: TruncationMode = .tail
+
+    /// How far fonts may shrink to fit before text is truncated.
+    package var minimumScaleFactor: CGFloat = 1
+
+    /// The text with every font and spacing scaled.
+    package func scaled(by factor: CGFloat) -> ResolvedText {
+        var text = self
+        text.minimumScaleFactor = 1
+        for index in text.runs.indices {
+            text.runs[index].font.size *= factor
+            text.runs[index].tracking *= factor
+            text.runs[index].baselineOffset *= factor
+        }
+        text.lineSpacing *= factor
+        return text
+    }
 
     /// The text of all runs.
     package var string: String {
