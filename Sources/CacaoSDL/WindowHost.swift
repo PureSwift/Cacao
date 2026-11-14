@@ -12,6 +12,9 @@ import CoreGraphics
 import Cacao
 import CacaoCompositor
 import CSDL3
+#if os(macOS)
+import AppKit
+#endif
 
 /// One window: its view graph, compositor and input.
 @MainActor
@@ -24,6 +27,11 @@ final class WindowHost {
     let id: SDL_WindowID
 
     let graph: ViewGraph
+
+    /// Whether the window has keyboard focus.
+    var isKey: Bool {
+        SDL_GetKeyboardFocus() == window
+    }
 
     let compositor: Compositor
 
@@ -146,6 +154,9 @@ final class WindowHost {
 
     // MARK: Events
 
+    /// Files and text dropped from the system so far, in one drop.
+    private var droppedItems: [Any] = []
+
     func handle(_ event: SDL_Event, now: Double) {
         switch SDL_EventType(event.type) {
         case SDL_EVENT_WINDOW_RESIZED, SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED, SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED:
@@ -201,6 +212,22 @@ final class WindowHost {
             if let key = Self.keyCode(event.key.key, modifiers: event.key.mod) {
                 graph.keyDown(key, modifiers: Self.modifiers(event.key.mod))
             }
+        case SDL_EVENT_DROP_BEGIN:
+            droppedItems = []
+        case SDL_EVENT_DROP_POSITION:
+            graph.systemDrop(.moved, items: droppedItems, at: CGPoint(x: CGFloat(event.drop.x), y: CGFloat(event.drop.y)))
+        case SDL_EVENT_DROP_FILE:
+            if let data = event.drop.data {
+                droppedItems.append(URL(fileURLWithPath: String(cString: data)))
+            }
+        case SDL_EVENT_DROP_TEXT:
+            if let data = event.drop.data {
+                droppedItems.append(String(cString: data))
+            }
+        case SDL_EVENT_DROP_COMPLETE:
+            graph.systemDrop(.dropped, items: droppedItems, at: CGPoint(x: CGFloat(event.drop.x), y: CGFloat(event.drop.y)))
+            droppedItems = []
+            needsRender = true
         case SDL_EVENT_TEXT_INPUT:
             if let text = event.text.text {
                 graph.insertText(String(cString: text))
@@ -279,6 +306,34 @@ final class WindowHost {
         }
     }
 
+    // MARK: Accessibility
+
+    #if os(macOS)
+    /// The window's elements for VoiceOver, made when first needed.
+    private var accessibility: AccessibilityBridge?
+
+    private var lastAccessibilityUpdate: Double = -1
+
+    /// Shows the accessibility tree to macOS, at most four times a second.
+    private func updateAccessibility(now: Double) {
+        guard now - lastAccessibilityUpdate >= 0.25 else { return }
+        lastAccessibilityUpdate = now
+        if accessibility == nil {
+            let properties = SDL_GetWindowProperties(window)
+            guard let pointer = SDL_GetPointerProperty(properties, SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nil) else { return }
+            let nsWindow = Unmanaged<NSWindow>.fromOpaque(pointer).takeUnretainedValue()
+            guard let view = nsWindow.contentView else { return }
+            let graph = self.graph
+            accessibility = AccessibilityBridge(view: view) { [weak self] name, frame in
+                let performed = graph.performAccessibilityAction(name, at: frame)
+                self?.needsRender = true
+                return performed
+            }
+        }
+        accessibility?.update(graph.accessibilityTree())
+    }
+    #endif
+
     // MARK: Frames
 
     /// Steps animations, updates, lays out and draws if anything changed.
@@ -319,6 +374,9 @@ final class WindowHost {
         needsRender = false
         let start = SDLHost.now
         compositor.render(graph.displayList(), size: size, scale: scale)
+        #if os(macOS)
+        updateAccessibility(now: start)
+        #endif
         if showsStatistics {
             drawStatistics(renderTime: SDLHost.now - start, now: now)
         }
