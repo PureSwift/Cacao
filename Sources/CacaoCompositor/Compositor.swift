@@ -273,9 +273,12 @@ package final class Compositor {
                     draw(nested.items, translation: translation, clip: innerClip, opacity: opacity)
                     setClip(clip)
                 } else {
-                    let mask = Self.polygon(effect.path).map { CGPoint(x: $0.x + frame.minX, y: $0.y + frame.minY) }
-                    drawGroup(nested.items, identity: item.identity, bounds: frame, translation: translation, clip: clip, opacity: opacity, mask: mask)
+                    // The clip shape, drawn anti-aliased, masks the content.
+                    let mask = DisplayList.Item(frame: item.frame, identity: Self.maskIdentity(item.identity), version: 0, value: .content(effect.mask))
+                    drawMasked(nested.items, identity: item.identity, mask: [mask], translation: translation, clip: clip.intersection(frame), outerClip: clip, opacity: opacity)
                 }
+            case let .effect(.mask(mask), nested):
+                drawMasked(nested.items, identity: item.identity, mask: mask.items, translation: translation, clip: clip, outerClip: clip, opacity: opacity)
             case let .effect(.transform(transform), nested):
                 if transform.isTranslation {
                     // Moving only shifts the drawing.
@@ -341,6 +344,58 @@ package final class Compositor {
         backend.drawLayer(layer, in: relative(pixels), opacity: opacity, mask: maskPixels)
         frameStatistics.layers += 1
         frameStatistics.draws += 1
+    }
+
+    /// The identity of the drawing of a clip's shape, apart from any node's.
+    package static func maskIdentity(_ identity: Int) -> Int {
+        -identity - 1
+    }
+
+    /// Draws the mask's items into one offscreen layer and the items into
+    /// another, keeps the items' layer only where the mask's is opaque,
+    /// then draws it.
+    private func drawMasked(
+        _ items: [DisplayList.Item],
+        identity: Int,
+        mask: [DisplayList.Item],
+        translation: CGPoint,
+        clip: CGRect,
+        outerClip: CGRect,
+        opacity: Double
+    ) {
+        let content = Self.bounds(of: items).offsetBy(dx: -translation.x, dy: -translation.y)
+        let maskBounds = Self.bounds(of: mask).offsetBy(dx: -translation.x, dy: -translation.y)
+        let visible = content.intersection(maskBounds).intersection(clip)
+        guard !visible.isNull, !visible.isEmpty, opacity > 0 else {
+            markPresent(items)
+            markPresent(mask)
+            return
+        }
+        let pixels = absolutePixelRect(visible)
+        let width = Int(pixels.width), height = Int(pixels.height)
+        guard width > 0, height > 0, width <= 8192, height <= 8192,
+              let layer = offscreen(identity: identity, width: width, height: height),
+              let maskLayer = offscreen(identity: identity, level: 1, width: width, height: height) else {
+            markPresent(items)
+            markPresent(mask)
+            return
+        }
+        let full = CGRect(x: 0, y: 0, width: width, height: height)
+        targetOrigins.append(pixels.origin)
+        backend.beginLayer(maskLayer)
+        draw(mask, translation: translation, clip: visible, opacity: 1)
+        backend.setClip(nil)
+        backend.endLayer()
+        backend.beginLayer(layer)
+        draw(items, translation: translation, clip: visible, opacity: 1)
+        backend.setClip(nil)
+        backend.mask(with: maskLayer, in: full)
+        backend.endLayer()
+        targetOrigins.removeLast()
+        setClip(outerClip)
+        backend.drawLayer(layer, in: relative(pixels), opacity: opacity, mask: nil)
+        frameStatistics.layers += 2
+        frameStatistics.draws += 2
     }
 
     /// Draws items into an offscreen layer, then its silhouette in the
@@ -539,6 +594,14 @@ package final class Compositor {
                 presentImages.insert(ImageKey(image))
             case .content:
                 presentLayers.insert(item.identity)
+            case let .effect(.clip(effect), nested):
+                if !effect.isRectangle {
+                    presentLayers.insert(Self.maskIdentity(item.identity))
+                }
+                markPresent(nested.items)
+            case let .effect(.mask(mask), nested):
+                markPresent(mask.items)
+                markPresent(nested.items)
             case let .effect(_, nested):
                 markPresent(nested.items)
             }
