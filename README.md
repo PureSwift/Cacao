@@ -13,7 +13,7 @@ on macOS) only when it changes, and composited every frame by the
 [SDL3](https://github.com/PureSwift/SDL) renderer (Metal, Vulkan or OpenGL),
 so scrolling and animation never repaint.
 
-> **Status:** early development (Phase 7: views, layout, controls, text input,
+> **Status:** early development (Phase 8: views, layout, controls, text input,
 > lazy lists, forms, grids, navigation, tabs, presentations, animations,
 > transitions, gestures, `TimelineView`, `Canvas`, geometry readers,
 > `ObservableObject` and storage, accessibility, multiple windows, gradients,
