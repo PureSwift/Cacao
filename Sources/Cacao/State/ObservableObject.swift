@@ -137,9 +137,24 @@ public struct Published<Value> {
 
     private var value: Value
 
+    /// What `$property` publishes to, made when first asked for.
+    private var subject: CurrentValueSubject<Value, Never>?
+
     /// Creates the published instance with an initial wrapped value.
     public init(wrappedValue: Value) {
         self.value = wrappedValue
+    }
+
+    /// A publisher of the property's values.
+    public var projectedValue: Publisher {
+        mutating get {
+            if let subject {
+                return Publisher(subject: subject)
+            }
+            let subject = CurrentValueSubject<Value, Never>(value)
+            self.subject = subject
+            return Publisher(subject: subject)
+        }
     }
 
     /// Creates the published instance with an initial value.
@@ -163,6 +178,7 @@ public struct Published<Value> {
         }
         set {
             (object.objectWillChange as? ObservableObjectPublisher)?.send()
+            object[keyPath: storageKeyPath].subject?.send(newValue)
             object[keyPath: storageKeyPath].value = newValue
         }
     }
