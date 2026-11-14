@@ -87,7 +87,7 @@ tests.
 | `ColorPicker` | ◐ | A palette with hue, saturation, brightness and opacity sliders; no `CGColor` binding. |
 | `Gauge` | ✅ | Linear and circular styles. |
 | `ShareLink` | ✗ | |
-| `Canvas`, `GraphicsContext` | ◐ | Paths, text, images, transforms, opacity, clips and gradients; no symbols or blend modes. |
+| `Canvas`, `GraphicsContext` | ✅ | Paths, text, images and system images, gradients and tiled images, transforms, clips (inverse too), layers, `clipToLayer`, blend modes, filters (shadow, blur, color), resolved text, images and symbols. No `withCGContext`. |
 | `TimelineView` | ✅ | |
 
 ## Lists and navigation
