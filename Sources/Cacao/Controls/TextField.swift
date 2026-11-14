@@ -215,6 +215,18 @@ internal final class TextEditorState {
         head
     }
 
+    /// When the caret last moved, from which it blinks.
+    var blinkStart: Double = 0
+
+    /// Text and selections to go back to, and forward again.
+    var undoStack: [(text: String, selection: Range<Int>)] = []
+
+    var redoStack: [(text: String, selection: Range<Int>)] = []
+
+    /// Whether the last edit was typing at the caret, which further typing
+    /// joins in one undo step.
+    var isTyping = false
+
     func select(_ index: Int, extending: Bool) {
         head = index
         if extending {
@@ -423,7 +435,15 @@ internal struct _TextInput: View, PrimitiveView {
         let graph = node.graph
         weak let weakNode = node
 
-        @MainActor func replace(_ range: Range<Int>, with replacement: String) {
+        @MainActor func replace(_ range: Range<Int>, with replacement: String, typing: Bool = false) {
+            // Typing joins the previous typing in one undo step.
+            if !(typing && state.isTyping && range.isEmpty) {
+                state.undoStack.append((text.wrappedValue, state.selection))
+                if state.undoStack.count > 100 { state.undoStack.removeFirst() }
+            }
+            state.redoStack.removeAll()
+            state.isTyping = typing
+            state.blinkStart = graph.time
             var scalars = Array(text.wrappedValue.unicodeScalars)
             let range = min(range.lowerBound, scalars.count)..<min(range.upperBound, scalars.count)
             let inserted = Array(replacement.unicodeScalars)
@@ -435,7 +455,23 @@ internal struct _TextInput: View, PrimitiveView {
         }
 
         @MainActor func move(_ index: Int, extending: Bool) {
-            state.select(min(max(index, 0), text.wrappedValue.unicodeScalars.count), extending: extending)
+            let index = TextBoundaries(text.wrappedValue).clusterStart(atOrBefore: index)
+            state.select(index, extending: extending)
+            state.isTyping = false
+            state.blinkStart = graph.time
+            weakNode?.invalidate()
+        }
+
+        /// Restores the text and selection from one stack, saving the
+        /// current ones on the other.
+        @MainActor func restore(from source: inout [(text: String, selection: Range<Int>)], to destination: inout [(text: String, selection: Range<Int>)]) {
+            guard let entry = source.popLast() else { return }
+            destination.append((text.wrappedValue, state.selection))
+            state.isTyping = false
+            text.wrappedValue = entry.text
+            state.anchor = entry.selection.lowerBound
+            state.head = entry.selection.upperBound
+            state.selection = entry.selection
             weakNode?.invalidate()
         }
 
@@ -446,17 +482,38 @@ internal struct _TextInput: View, PrimitiveView {
                 let count = text.wrappedValue.unicodeScalars.count
                 let selection = state.selection
                 let lines = content.lineRanges(width: state.width)
+                let boundaries = TextBoundaries(isSecure ? String(repeating: "x", count: count) : text.wrappedValue)
+                let byWord = modifiers.contains(.wordMovement)
+                let byLine = modifiers.contains(.lineMovement)
                 switch key {
-                case .left:
-                    move(selection.isEmpty || extending ? state.caret - 1 : selection.lowerBound, extending: extending)
-                case .right:
-                    move(selection.isEmpty || extending ? state.caret + 1 : selection.upperBound, extending: extending)
-                case .home:
+                case .left where byLine, .home:
                     let line = content.position(of: state.caret, lines: lines).line
                     move(lines[line].lowerBound, extending: extending)
-                case .end:
+                case .right where byLine, .end:
                     let line = content.position(of: state.caret, lines: lines).line
                     move(lines[line].upperBound, extending: extending)
+                case .up where byLine:
+                    move(0, extending: extending)
+                case .down where byLine:
+                    move(count, extending: extending)
+                case .left:
+                    if byWord {
+                        move(boundaries.wordStart(before: state.caret), extending: extending)
+                    } else {
+                        move(selection.isEmpty || extending ? boundaries.clusterStart(before: state.caret) : selection.lowerBound, extending: extending)
+                    }
+                case .right:
+                    if byWord {
+                        move(boundaries.wordEnd(after: state.caret), extending: extending)
+                    } else {
+                        move(selection.isEmpty || extending ? boundaries.clusterEnd(after: state.caret) : selection.upperBound, extending: extending)
+                    }
+                case .character("z") where modifiers.contains(.shortcut) && modifiers.contains(.shift),
+                     .character("Z") where modifiers.contains(.shortcut),
+                     .character("y") where modifiers.contains(.shortcut) && !modifiers.contains(.shift):
+                    restore(from: &state.redoStack, to: &state.undoStack)
+                case .character("z") where modifiers.contains(.shortcut):
+                    restore(from: &state.undoStack, to: &state.redoStack)
                 case .up, .down:
                     guard isMultiline else {
                         move(key == .up ? 0 : count, extending: extending)
@@ -473,13 +530,17 @@ internal struct _TextInput: View, PrimitiveView {
                     if !selection.isEmpty {
                         replace(selection, with: "")
                     } else if state.caret > 0 {
-                        replace((state.caret - 1)..<state.caret, with: "")
+                        let start = byWord ? boundaries.wordStart(before: state.caret)
+                            : byLine ? lines[content.position(of: state.caret, lines: lines).line].lowerBound
+                            : boundaries.clusterStart(before: state.caret)
+                        replace(start..<state.caret, with: "")
                     }
                 case .delete:
                     if !selection.isEmpty {
                         replace(selection, with: "")
                     } else if state.caret < count {
-                        replace(state.caret..<(state.caret + 1), with: "")
+                        let end = byWord ? boundaries.wordEnd(after: state.caret) : boundaries.clusterEnd(after: state.caret)
+                        replace(state.caret..<end, with: "")
                     }
                 case .returnKey:
                     if isMultiline, !modifiers.contains(.shortcut) {
@@ -517,10 +578,12 @@ internal struct _TextInput: View, PrimitiveView {
                 if !isMultiline {
                     string = string.replacingOccurrences(of: "\n", with: " ")
                 }
-                replace(state.selection, with: string)
+                replace(state.selection, with: string, typing: true)
             },
             focusChanged: { isFocused in
                 state.isFocused = isFocused
+                state.blinkStart = graph.time
+                state.isTyping = false
                 if !isFocused {
                     state.select(state.caret, extending: false)
                 }
@@ -615,11 +678,23 @@ internal struct _TextOverlay: View, PrimitiveView {
 
     let insets: EdgeInsets
 
+    /// How long the caret shows, then hides, as it blinks.
+    static let blinkInterval = 0.5
+
     func resolve(in context: ResolveContext) -> Resolution {
         let color = kind == .caret
             ? Color.accentColor.resolve(in: context.environment)
             : Color.accentColor.opacity(0.3).resolve(in: context.environment)
-        return Resolution(behavior: TextOverlayBehavior(kind: kind, content: content, state: state, color: color))
+        var isVisible = true
+        if kind == .caret {
+            // Solid after each edit or move, then blinking.
+            let graph = context.node.graph
+            let elapsed = max(graph.time - state.blinkStart, 0)
+            let phase = Int(elapsed / Self.blinkInterval)
+            isVisible = phase % 2 == 0
+            graph.scheduleWakeup(context.node, after: Double(phase + 1) * Self.blinkInterval - elapsed)
+        }
+        return Resolution(behavior: TextOverlayBehavior(kind: kind, content: content, state: state, color: color, isVisible: isVisible))
     }
 
     typealias Body = Never
@@ -635,11 +710,14 @@ internal struct TextOverlayBehavior: NodeBehavior {
 
     let color: Color.Resolved
 
+    var isVisible = true
+
     func sizeThatFits(_ proposal: ProposedViewSize, node: ViewNode) -> CGSize {
         proposal.replacingUnspecifiedDimensions(by: .zero)
     }
 
     func displayContent(node: ViewNode) -> DisplayList.Content? {
+        guard isVisible else { return nil }
         let lines = content.lineRanges(width: node.frame.width)
         let lineHeight = content.lineHeight
         var path = Path()
@@ -666,5 +744,70 @@ internal struct TextOverlayBehavior: NodeBehavior {
 
     func hitTest(_ point: CGPoint, node: ViewNode) -> Bool {
         false
+    }
+}
+
+// MARK: - Boundaries
+
+/// Where characters (grapheme clusters) and words start and end in text,
+/// as offsets in its Unicode scalars.
+internal struct TextBoundaries {
+
+    /// The scalar offset where each character starts, then the end.
+    let clusters: [Int]
+
+    /// Whether each character is part of a word.
+    let isWord: [Bool]
+
+    init(_ string: String) {
+        var clusters = [0], isWord: [Bool] = []
+        var offset = 0
+        for character in string {
+            offset += character.unicodeScalars.count
+            clusters.append(offset)
+            isWord.append(character.isLetter || character.isNumber || character == "_" || character == "'")
+        }
+        self.clusters = clusters
+        self.isWord = isWord
+    }
+
+    /// The character containing or starting at an offset.
+    private func cluster(at offset: Int) -> Int {
+        var low = 0, high = clusters.count - 1
+        while low < high {
+            let middle = (low + high + 1) / 2
+            if clusters[middle] <= offset { low = middle } else { high = middle - 1 }
+        }
+        return low
+    }
+
+    func clusterStart(atOrBefore offset: Int) -> Int {
+        clusters[cluster(at: max(0, min(offset, clusters.last!)))]
+    }
+
+    func clusterStart(before offset: Int) -> Int {
+        let index = cluster(at: offset)
+        return clusters[clusters[index] == offset ? max(index - 1, 0) : index]
+    }
+
+    func clusterEnd(after offset: Int) -> Int {
+        clusters[min(cluster(at: offset) + 1, clusters.count - 1)]
+    }
+
+    /// The start of the word before an offset, skipping what isn't words.
+    func wordStart(before offset: Int) -> Int {
+        var index = cluster(at: offset)
+        if clusters[index] == offset { index -= 1 } else if index >= isWord.count { index = isWord.count - 1 }
+        while index >= 0, !isWord[index] { index -= 1 }
+        while index > 0, isWord[index - 1] { index -= 1 }
+        return clusters[max(index, 0)]
+    }
+
+    /// The end of the word after an offset, skipping what isn't words.
+    func wordEnd(after offset: Int) -> Int {
+        var index = cluster(at: offset)
+        while index < isWord.count, !isWord[index] { index += 1 }
+        while index < isWord.count, isWord[index] { index += 1 }
+        return clusters[index]
     }
 }
