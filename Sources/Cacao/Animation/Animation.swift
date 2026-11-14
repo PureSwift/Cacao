@@ -345,3 +345,14 @@ extension View {
         modifier(_TransactionModifier(transform: transform))
     }
 }
+
+extension Transaction {
+
+    /// Adds an animation where the change has none and doesn't disable
+    /// them, as for navigation and presentations, which animate by default.
+    mutating func animateByDefault(_ animation: Animation = .smooth(duration: 0.3)) {
+        if self.animation == nil, !disablesAnimations {
+            self.animation = animation
+        }
+    }
+}
