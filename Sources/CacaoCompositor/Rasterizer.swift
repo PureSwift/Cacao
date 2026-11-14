@@ -79,6 +79,19 @@ package enum Rasterizer {
             height: max(1, ((size.height + 2 * outset) * scale).rounded(.up))
         )
         let pixels = region?.size ?? full
+        if case let .drawing(drawing) = content {
+            let flattened = drawing.flattened()
+            if flattened.needsCompositing {
+                // Blend modes, filters, layers and masks composite in software.
+                return composite(flattened, pixels: pixels, scale: scale, textEngine: textEngine) { context in
+                    if let region {
+                        context.translateBy(x: -region.minX, y: -region.minY)
+                    }
+                    context.scaleBy(x: scale, y: scale)
+                    context.translateBy(x: outset, y: outset)
+                }
+            }
+        }
         if case let .shape(shape) = content, let gradient = shape.gradient {
             // The shape drawn in white is the mask for the gradient's colors.
             var mask = shape
@@ -107,7 +120,7 @@ package enum Rasterizer {
             case let .shape(shape):
                 draw(shape, in: context)
             case let .drawing(drawing):
-                draw(drawing, in: context, scale: scale, textEngine: textEngine)
+                draw(drawing.flattened(), in: context, scale: scale, textEngine: textEngine)
             case .color, .image:
                 break
             }
@@ -168,13 +181,9 @@ package enum Rasterizer {
 
     /// Draws a canvas's commands, each with its transform, opacity and clips.
     @MainActor
-    private static func draw(_ drawing: DrawingContent, in context: Silica.CGContext, scale: CGFloat, textEngine: SilicaTextEngine) {
+    static func draw(_ drawing: DrawingContent, in context: Silica.CGContext, scale: CGFloat, textEngine: SilicaTextEngine) {
         for operation in drawing.operations {
-            let state: DrawingState
-            switch operation {
-            case let .shape(_, operationState), let .text(_, _, operationState), let .image(_, _, operationState):
-                state = operationState
-            }
+            let state = operation.state
             guard state.opacity > 0 else { continue }
             context.saveGState()
             defer { context.restoreGState() }
@@ -182,8 +191,12 @@ package enum Rasterizer {
                 context.saveGState()
                 context.concatenate(Silica.CGAffineTransform(clip.transform))
                 addPath(clip.path, to: context)
+                if clip.isInverse {
+                    // Outside the path: the path within a very large rectangle.
+                    context.addRect(CGRect(x: -1e5, y: -1e5, width: 2e5, height: 2e5))
+                }
                 context.restoreGState()
-                context.clip(using: clip.isEOFilled ? .evenOdd : .winding)
+                context.clip(using: clip.isEOFilled || clip.isInverse ? .evenOdd : .winding)
             }
             context.concatenate(Silica.CGAffineTransform(state.transform))
             // Opacity goes into colors: not every backend applies a
@@ -244,6 +257,28 @@ package enum Rasterizer {
                 if let decoded = decode(image) {
                     drawUpright(decoded, in: rect, context: context)
                 }
+            case let .tiledImage(path, isEOFilled, image, origin, tileScale, _):
+                guard let decoded = decode(image) else { continue }
+                let tile = CGSize(width: image.source.size.width * tileScale, height: image.source.size.height * tileScale)
+                let bounds = path.boundingRect
+                guard tile.width > 0.5, tile.height > 0.5, !bounds.isNull else { continue }
+                addPath(path, to: context)
+                context.clip(using: isEOFilled ? .evenOdd : .winding)
+                context.alpha = CGFloat(opacity)
+                let firstColumn = Int(((bounds.minX - origin.x) / tile.width).rounded(.down))
+                let firstRow = Int(((bounds.minY - origin.y) / tile.height).rounded(.down))
+                let columns = Int(((bounds.maxX - origin.x) / tile.width).rounded(.up))
+                let rows = Int(((bounds.maxY - origin.y) / tile.height).rounded(.up))
+                guard (columns - firstColumn) * (rows - firstRow) <= 10_000 else { continue }
+                for row in firstRow..<max(rows, firstRow + 1) {
+                    for column in firstColumn..<max(columns, firstColumn + 1) {
+                        let rect = CGRect(x: origin.x + CGFloat(column) * tile.width, y: origin.y + CGFloat(row) * tile.height, width: tile.width, height: tile.height)
+                        drawUpright(decoded, in: rect, context: context)
+                    }
+                }
+            case .items, .layer:
+                // Flattened, or composited, before drawing.
+                break
             }
         }
     }
@@ -397,6 +432,13 @@ private extension Silica.CGLineJoin {
 extension Silica.CGAffineTransform {
 
     init(_ transform: Transform2D) {
+        #if canImport(SilicaCairo)
+        // Silica's Cairo backend puts `b` in Cairo's `xy` and `c` in `yx`,
+        // transposing the matrix; transpose it here so rotations and shears
+        // come out right.
+        self.init(a: transform.a, b: transform.c, c: transform.b, d: transform.d, tx: transform.tx, ty: transform.ty)
+        #else
         self.init(a: transform.a, b: transform.b, c: transform.c, d: transform.d, tx: transform.tx, ty: transform.ty)
+        #endif
     }
 }
