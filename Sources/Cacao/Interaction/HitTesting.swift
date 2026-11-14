@@ -53,11 +53,6 @@ internal struct _ContentShapeModifier<S: Shape>: ViewModifier, PrimitiveViewModi
 
 extension View {
 
-    /// Adds an action to perform when this view recognizes a tap gesture.
-    public func onTapGesture(count: Int = 1, perform action: @escaping () -> Void) -> some View {
-        modifier(_TapGestureModifier(handler: TapHandler(action: { action() })))
-    }
-
     /// Defines the content shape for hit testing.
     public func contentShape<S: Shape>(_ shape: S, eoFill: Bool = false) -> some View {
         modifier(_ContentShapeModifier(shape: shape))
@@ -159,65 +154,5 @@ extension ViewGraph {
     /// `point`, in the root's coordinate space.
     package func hitTest(_ point: CGPoint) -> [Int]? {
         root.hitTest(point)?.map(\.id)
-    }
-
-    /// Delivers a pointer press to the tap gesture under it: the innermost
-    /// one at the start of the press, which fires if the press ends on it.
-    package func pointer(_ phase: PointerPhase, at point: CGPoint) {
-        switch phase {
-        case .began:
-            if let active = activeTap {
-                active.attributes.tap?.onPressChanged?(false)
-            }
-            let path = root.hitTest(point) ?? []
-            // Focus follows clicks: the innermost focusable view, or none.
-            focus(path.last { $0.attributes.focus != nil })
-            // The innermost drag or tap gesture takes the press.
-            let dragIndex = path.lastIndex { $0.attributes.drag != nil }
-            let tapIndex = path.lastIndex { $0.attributes.tap != nil }
-            if let dragIndex, dragIndex >= (tapIndex ?? -1) {
-                let node = path[dragIndex]
-                activeDrag = node
-                activeDragStart = point
-                activeDragFrame = node.windowFrame
-                activeTap = nil
-                node.attributes.drag?.onChanged(point, point, activeDragFrame)
-                return
-            }
-            activeTap = tapIndex.map { path[$0] }
-            activeTapIsInside = true
-            activeTap?.attributes.tap?.onPressChanged?(true)
-        case .moved:
-            if let drag = activeDrag {
-                drag.attributes.drag?.onChanged(activeDragStart, point, activeDragFrame)
-                return
-            }
-            guard let target = activeTap else { return }
-            let inside = target.isAttached && (root.hitTest(point)?.contains { $0 === target } ?? false)
-            if inside != activeTapIsInside {
-                activeTapIsInside = inside
-                target.attributes.tap?.onPressChanged?(inside)
-            }
-        case .ended:
-            if let drag = activeDrag {
-                activeDrag = nil
-                drag.attributes.drag?.onEnded(activeDragStart, point, activeDragFrame)
-                return
-            }
-            guard let target = activeTap else { return }
-            activeTap = nil
-            let inside = target.isAttached && (root.hitTest(point)?.contains { $0 === target } ?? false)
-            target.attributes.tap?.onPressChanged?(false)
-            if inside {
-                target.attributes.tap?.action()
-            }
-        case .cancelled:
-            activeTap?.attributes.tap?.onPressChanged?(false)
-            activeTap = nil
-            if let drag = activeDrag {
-                activeDrag = nil
-                drag.attributes.drag?.onEnded(activeDragStart, activeDragStart, activeDragFrame)
-            }
-        }
     }
 }
