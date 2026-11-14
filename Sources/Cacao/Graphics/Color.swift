@@ -117,6 +117,15 @@ extension Color {
             return "#\(hex(red))\(hex(green))\(hex(blue))\(hex(opacity))"
         }
 
+        /// The components as numbers, for animating.
+        internal var components: [Double] {
+            [Double(red), Double(green), Double(blue), Double(opacity)]
+        }
+
+        internal init(components: [Double]) {
+            self.init(red: Float(components[0]), green: Float(components[1]), blue: Float(components[2]), opacity: Float(components[3]))
+        }
+
         internal init(_ r: Int, _ g: Int, _ b: Int, _ opacity: Float = 1) {
             self.init(red: Float(r) / 255, green: Float(g) / 255, blue: Float(b) / 255, opacity: opacity)
         }
@@ -208,9 +217,17 @@ extension Color: View, PrimitiveView {
 ///
 /// Like SwiftUI's shapes, it takes the proposed size, and 10 points along
 /// any dimension left unspecified.
-internal struct FillBehavior: NodeBehavior {
+internal struct FillBehavior: AnimatableBehavior {
 
-    let color: Color.Resolved
+    var color: Color.Resolved
+
+    var animatableValues: [Double] {
+        color.components
+    }
+
+    func applying(_ values: [Double]) -> any NodeBehavior {
+        FillBehavior(color: Color.Resolved(components: values))
+    }
 
     func sizeThatFits(_ proposal: ProposedViewSize, node: ViewNode) -> CGSize {
         proposal.replacingUnspecifiedDimensions()
