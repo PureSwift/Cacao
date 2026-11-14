@@ -18,6 +18,7 @@ final class RecordingBackend: CompositorBackend {
         case endLayer
         case drawLayer(TextureID, CGRect, Double, masked: Bool)
         case drawTransformedLayer(TextureID, [CGPoint], Double)
+        case drawTintedLayer(TextureID, CGRect, Color.Resolved)
     }
 
     var commands: [Command] = []
@@ -54,6 +55,10 @@ final class RecordingBackend: CompositorBackend {
 
     func drawLayer(_ layer: TextureID, in rect: CGRect, opacity: Double, mask: [CGPoint]?) {
         commands.append(.drawLayer(layer, rect, opacity, masked: mask != nil))
+    }
+
+    func drawLayer(_ layer: TextureID, in rect: CGRect, tint: Color.Resolved) {
+        commands.append(.drawTintedLayer(layer, rect, tint))
     }
 
     func drawLayer(_ layer: TextureID, corners: [CGPoint], opacity: Double) {
@@ -280,6 +285,21 @@ func rect(_ x: CGFloat, _ y: CGFloat, _ width: CGFloat, _ height: CGFloat) -> CG
         if let first = corners.first {
             #expect(abs(first.x - 130) < 0.001 && abs(first.y - 70) < 0.001)
         }
+    }
+
+    @Test func shadowDrawsTintedSilhouetteThenContent() {
+        let (graph, compositor, backend) = make(
+            Color.red.frame(width: 60, height: 60).shadow(color: .black, radius: 0, x: 4, y: 6)
+        )
+        compositor.render(graph.displayList(), size: graph.size, scale: 1)
+        let draws = backend.commands.compactMap { command -> String? in
+            switch command {
+            case let .drawTintedLayer(_, rect, _): "shadow \(Int(rect.minX)),\(Int(rect.minY))"
+            case let .drawLayer(_, rect, _, _): "layer \(Int(rect.minX)),\(Int(rect.minY))"
+            default: nil
+            }
+        }
+        #expect(draws == ["shadow 74,76", "layer 70,70"])
     }
 
     @Test func singleItemOpacityNeedsNoLayer() {
