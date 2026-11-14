@@ -107,3 +107,48 @@ import Silica
         #expect(abs(Int(half[3]) - 128) <= 2)
     }
 }
+
+extension TextRenderingTests {
+
+    @Test func drawsUnderlineAndStrikethrough() throws {
+        let engine = SilicaTextEngine()
+        var text = Self.text("ace", size: 40)
+        let layout = engine.layout(text, in: .unspecified)
+        func ink(_ text: ResolvedText) throws -> (bounds: CGRect, count: Int) {
+            let image = try #require(Rasterizer.rasterize(.text(text), size: layout.size, scale: 1, textEngine: engine))
+            var count = 0
+            image.data.withUnsafeBytes { bytes in
+                for y in 0..<image.height {
+                    for x in 0..<image.width where bytes[y * image.bytesPerRow + x * 4 + 3] > 64 { count += 1 }
+                }
+            }
+            return (try #require(Self.inkBounds(image)), count)
+        }
+        let plain = try ink(text)
+        let black = Color.Resolved(red: 0, green: 0, blue: 0)
+        text.runs[0].underline = ResolvedText.Line(color: black, pattern: .solid)
+        let underlined = try ink(text)
+        // A line across the run, under the letters, which have no descenders.
+        #expect(underlined.bounds.maxY > plain.bounds.maxY)
+        #expect(underlined.bounds.minY == plain.bounds.minY)
+        #expect(underlined.bounds.width >= plain.bounds.width)
+        text.runs[0].underline = nil
+        text.runs[0].strikethrough = ResolvedText.Line(color: black, pattern: .solid)
+        let struck = try ink(text)
+        // Through the letters: no taller, but more ink.
+        #expect(struck.bounds.maxY == plain.bounds.maxY)
+        #expect(struck.count > plain.count + 20)
+    }
+
+    @Test func trackingAndLineSpacingChangeLayout() {
+        let engine = SilicaTextEngine()
+        var text = Self.text("abc\ndef", size: 20)
+        let plain = engine.layout(text, in: .unspecified)
+        text.runs[0].tracking = 4
+        text.lineSpacing = 6
+        let spaced = engine.layout(text, in: .unspecified)
+        #expect(abs(spaced.size.width - (plain.size.width + 12)) <= 1)
+        #expect(spaced.size.height == plain.size.height + 6)
+        #expect(spaced.lastBaseline == plain.lastBaseline + 6)
+    }
+}
