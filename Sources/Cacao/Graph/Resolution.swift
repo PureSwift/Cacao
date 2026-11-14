@@ -117,6 +117,22 @@ internal struct NodeAttributes {
 
     /// Whether the node's layout's views are where scroll views settle.
     var isScrollTargetLayout = false
+
+    /// What the node tells assistive technologies.
+    var accessibility: AccessibilityAttributes?
+
+    /// What the node does when the pointer hovers over it.
+    var hover: HoverHandler?
+
+    /// A keyboard shortcut that presses the node's control.
+    var keyboardShortcut: KeyboardShortcut?
+
+    /// Handlers of keys pressed while the node or a descendant has focus.
+    var keyPress: [KeyPressHandler] = []
+
+    /// Whether preference readers in the node's overlay or background read
+    /// from the node's views.
+    var isPreferenceSource = false
 }
 
 // MARK: - ResolveContext
