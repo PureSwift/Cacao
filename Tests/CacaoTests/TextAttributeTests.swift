@@ -62,3 +62,36 @@ import Testing
         #expect(spaced.frame("text").height == plain.frame("text").height + 10)
     }
 }
+
+extension TextAttributeTests {
+
+    @Test func gradientTextIsMaskedGradient() {
+        let graph = layout(
+            Text("Hi").foregroundStyle(LinearGradient(colors: [.red, .blue], startPoint: .leading, endPoint: .trailing))
+                .fixedSize()
+                .probe("text")
+        )
+        let plain = layout(Text("Hi").fixedSize().probe("text"))
+        #expect(graph.frame("text") == plain.frame("text"))
+        let masks = graph.displayList().items.flatMap { item -> [DisplayList.Item] in
+            func collect(_ item: DisplayList.Item) -> [DisplayList.Item] {
+                guard case let .effect(effect, nested) = item.value else { return [] }
+                if case .mask = effect { return [item] }
+                return nested.items.flatMap(collect)
+            }
+            return collect(item)
+        }
+        #expect(masks.count == 1)
+        // Shown once to accessibility.
+        #expect(graph.texts.count == 1)
+    }
+
+    @Test func truncatedLinesEndInAnEllipsis() {
+        let layout = FixedTextEngine().layout(
+            ResolvedText(runs: [ResolvedText.Run(string: "abcdefghij", font: Font.body.resolve(), color: Color.Resolved(red: 0, green: 0, blue: 0))], alignment: .leading, lineLimit: 1),
+            in: ProposedViewSize(width: 50, height: nil)
+        )
+        #expect(layout.lines.count == 1)
+        #expect(layout.lines[0].hasSuffix("\u{2026}"))
+    }
+}
