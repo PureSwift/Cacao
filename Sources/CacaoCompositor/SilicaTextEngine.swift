@@ -93,6 +93,8 @@ package final class SilicaTextEngine: TextEngine {
         var ascent: CGFloat = 0
         /// A line's height.
         var lineHeight: CGFloat = 0
+        /// The distance from one line's top to the next's.
+        var pitch: CGFloat = 0
     }
 
     /// A line: a range of glyphs and its width.
@@ -124,10 +126,11 @@ package final class SilicaTextEngine: TextEngine {
                 shaped.glyphs.append(glyph)
                 shaped.runs.append(runIndex)
                 let advance = font?.advances(for: [glyph], fontSize: size).first?.width ?? size * 0.5
-                shaped.advances.append(scalar == "\n" ? 0 : advance)
+                shaped.advances.append(scalar == "\n" ? 0 : advance + run.tracking)
             }
         }
         shaped.lineHeight = (shaped.ascent + descent).rounded(.up)
+        shaped.pitch = shaped.lineHeight + text.lineSpacing
         if shapedCache.count > 512 {
             shapedCache.removeAll()
         }
@@ -190,8 +193,8 @@ package final class SilicaTextEngine: TextEngine {
     private func visibleLines(_ text: ResolvedText, _ shaped: Shaped, in proposal: ProposedViewSize) -> [Line] {
         var lines = lines(shaped, maxWidth: proposal.width ?? .infinity)
         var maxLines = text.lineLimit ?? .max
-        if let height = proposal.height, height.isFinite, shaped.lineHeight > 0 {
-            maxLines = min(maxLines, max(1, Int((height / shaped.lineHeight).rounded(.down))))
+        if let height = proposal.height, height.isFinite, shaped.pitch > 0 {
+            maxLines = min(maxLines, max(1, Int(((height + text.lineSpacing) / shaped.pitch).rounded(.down))))
         }
         if lines.count > maxLines {
             lines = Array(lines.prefix(maxLines))
@@ -209,9 +212,9 @@ package final class SilicaTextEngine: TextEngine {
         let lines = visibleLines(text, shaped, in: proposal)
         let width = lines.map(\.width).max() ?? 0
         return TextLayout(
-            size: CGSize(width: width.rounded(.up), height: CGFloat(lines.count) * shaped.lineHeight),
+            size: CGSize(width: width.rounded(.up), height: CGFloat(lines.count) * shaped.pitch - text.lineSpacing),
             firstBaseline: shaped.ascent,
-            lastBaseline: CGFloat(lines.count - 1) * shaped.lineHeight + shaped.ascent,
+            lastBaseline: CGFloat(lines.count - 1) * shaped.pitch + shaped.ascent,
             lines: lines.map { line in
                 String(String.UnicodeScalarView(shaped.scalars[line.range]))
             }
@@ -231,21 +234,33 @@ package final class SilicaTextEngine: TextEngine {
             case .center: (size.width - line.width) / 2
             case .trailing: size.width - line.width
             }
-            let baseline = CGFloat(lineIndex) * shaped.lineHeight + shaped.ascent
+            let baseline = CGFloat(lineIndex) * shaped.pitch + shaped.ascent
             var position = x
             var index = line.range.lowerBound
             // Draw each run's glyphs on the line with its font and color.
             while index < line.range.upperBound {
                 let runIndex = shaped.runs[index]
+                let run = text.runs[runIndex]
+                let runBaseline = baseline - run.baselineOffset
+                let start = position
                 var glyphs: [(glyph: CGGlyph, position: CGPoint)] = []
                 while index < line.range.upperBound, shaped.runs[index] == runIndex {
                     if shaped.scalars[index] != " " {
-                        glyphs.append((shaped.glyphs[index], CGPoint(x: position, y: baseline)))
+                        glyphs.append((shaped.glyphs[index], CGPoint(x: position, y: runBaseline)))
                     }
                     position += shaped.advances[index]
                     index += 1
                 }
-                let run = text.runs[runIndex]
+                // Lines under and through the run, without its last
+                // character's tracking.
+                let end = position - run.tracking
+                let thickness = max(1, (run.font.size / 14).rounded())
+                if let underline = run.underline {
+                    drawLine(underline, from: start, to: end, y: runBaseline + max(thickness, run.font.size * 0.1), thickness: thickness, in: context)
+                }
+                if let strikethrough = run.strikethrough {
+                    drawLine(strikethrough, from: start, to: end, y: runBaseline - run.font.size * 0.3, thickness: thickness, in: context)
+                }
                 guard let font = shaped.fonts[runIndex], !glyphs.isEmpty else { continue }
                 context.setFont(font)
                 context.fontSize = run.font.size
@@ -258,5 +273,25 @@ package final class SilicaTextEngine: TextEngine {
                 context.draw(glyphs: glyphs)
             }
         }
+    }
+
+    /// Strokes an underline or strikethrough.
+    private func drawLine(_ line: ResolvedText.Line, from start: CGFloat, to end: CGFloat, y: CGFloat, thickness: CGFloat, in context: Silica.CGContext) {
+        guard end > start else { return }
+        context.saveGState()
+        context.beginPath()
+        context.move(to: CGPoint(x: start, y: y))
+        context.addLine(to: CGPoint(x: end, y: y))
+        context.setStrokeColor(
+            red: CGFloat(line.color.red),
+            green: CGFloat(line.color.green),
+            blue: CGFloat(line.color.blue),
+            alpha: CGFloat(line.color.opacity)
+        )
+        context.lineWidth = thickness
+        context.lineCap = .butt
+        context.lineDash = (0, line.dashes(thickness: thickness))
+        context.strokePath()
+        context.restoreGState()
     }
 }
