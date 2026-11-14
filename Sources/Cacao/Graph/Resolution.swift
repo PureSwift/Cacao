@@ -85,6 +85,9 @@ internal struct NodeAttributes {
     /// A tap gesture on the node's views.
     var tap: TapHandler?
 
+    /// The tap of a disabled control, which menus show as a disabled item.
+    var disabledTap: TapHandler?
+
     /// The shape, in the subtree's frame, that takes hits for the node.
     var contentShape: ((CGRect) -> Path)?
 
@@ -99,6 +102,12 @@ internal struct NodeAttributes {
 
     /// A drag gesture on the node's views.
     var drag: DragHandler?
+
+    /// What the node does with items dropped on it.
+    var dropTarget: DropTarget?
+
+    /// The name of the command menu the node's subtree holds the items of.
+    var commandMenu: String?
 
     /// Menu items shown on a secondary click.
     var contextMenu: AnyView?
