@@ -13,8 +13,9 @@ on macOS) only when it changes, and composited every frame by the
 [SDL3](https://github.com/PureSwift/SDL) renderer (Metal, Vulkan or OpenGL),
 so scrolling and animation never repaint.
 
-> **Status:** early development (Phase 4: views, layout, controls, text input,
-> lazy lists, forms, grids, navigation, tabs and presentations, drawn by a GPU
+> **Status:** early development (Phase 5: views, layout, controls, text input,
+> lazy lists, forms, grids, navigation, tabs, presentations, animations,
+> transitions, gestures, `TimelineView` and `Canvas`, drawn by a GPU
 > compositor on Linux and macOS). See
 > [the plan](Documentation/Plan.md) for the architecture and roadmap. The
 > previous UIKit implementation is preserved at the
