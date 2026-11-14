@@ -54,7 +54,11 @@ public enum SDLHost {
         do {
             try withVideo {
                 let textEngine = SilicaTextEngine()
-                var windows = app.body.windowDescriptions().compactMap {
+                // The first scene's window opens at launch; the others open
+                // with `openWindow`.
+                descriptions = app.body.windowDescriptions()
+                self.textEngine = textEngine
+                var windows = descriptions.prefix(1).compactMap {
                     WindowHost(description: $0, textEngine: textEngine)
                 }
                 guard !windows.isEmpty else {
@@ -85,12 +89,61 @@ public enum SDLHost {
                 } while SDL_PollEvent(&event)
             }
             drainMainQueue()
+            handleWindowRequests(&windows)
             let now = now
             for window in windows {
                 window.frame(now: now)
             }
             if windows.contains(where: \.didSaveScreenshot) {
                 return
+            }
+        }
+    }
+
+    /// A request from views to open or close windows.
+    enum WindowRequest {
+        case open(id: String?, value: AnyHashable?)
+        case close(SDL_WindowID)
+        case closeScene(String)
+    }
+
+    /// Requests from `openWindow` and `dismissWindow`, handled each loop.
+    static var windowRequests: [WindowRequest] = []
+
+    /// The app's scenes' windows.
+    private static var descriptions: [WindowDescription] = []
+
+    private static var textEngine: SilicaTextEngine?
+
+    private static func handleWindowRequests(_ windows: inout [WindowHost]) {
+        let requests = windowRequests
+        windowRequests.removeAll()
+        for request in requests {
+            switch request {
+            case let .open(id, value):
+                let description = descriptions.first { candidate in
+                    if let id { return candidate.id == id }
+                    return value != nil && candidate.makeRootView != nil
+                }
+                guard let description, let textEngine else { continue }
+                // A unique window shows again instead of opening twice.
+                if description.isUnique, let existing = windows.first(where: { $0.sceneID == description.id && $0.sceneID != nil }) {
+                    existing.raise()
+                    continue
+                }
+                if let window = WindowHost(description: description, value: value, textEngine: textEngine) {
+                    windows.append(window)
+                }
+            case let .close(id):
+                if let index = windows.firstIndex(where: { $0.id == id }) {
+                    windows[index].close()
+                    windows.remove(at: index)
+                }
+            case let .closeScene(sceneID):
+                for window in windows where window.sceneID == sceneID {
+                    window.close()
+                }
+                windows.removeAll { $0.sceneID == sceneID }
             }
         }
     }
