@@ -34,6 +34,9 @@ final class WindowHost {
     /// Where the mouse is, for pinches.
     private var mouseLocation = CGPoint(x: 0, y: 0)
 
+    /// The color scheme the views last preferred.
+    private var lastPreferredColorScheme: ColorScheme?
+
     /// A pinch's total scale since it began.
     private var pinchScale = 1.0
 
@@ -54,7 +57,10 @@ final class WindowHost {
 
     private static let highPixelDensity: SDL_WindowFlags = 0x0000_0000_0000_2000
 
-    init?(description: WindowDescription, textEngine: SilicaTextEngine) {
+    /// The scene the window shows, if it has an identifier.
+    let sceneID: String?
+
+    init?(description: WindowDescription, value: AnyHashable? = nil, textEngine: SilicaTextEngine) {
         let size = description.defaultSize ?? CGSize(width: 800, height: 600)
         guard let window = SDL_CreateWindow(
             description.title,
@@ -72,6 +78,7 @@ final class WindowHost {
         self.window = window
         self.renderer = renderer
         self.id = SDL_GetWindowID(window)
+        self.sceneID = description.id
         self.backend = SDLBackend(renderer: renderer)
         self.compositor = Compositor(backend: backend, textEngine: textEngine)
         var environment = EnvironmentValues()
@@ -80,7 +87,15 @@ final class WindowHost {
         }
         environment.displayScale = CGFloat(SDL_GetWindowPixelDensity(window))
         environment.colorScheme = SDL_GetSystemTheme() == SDL_SYSTEM_THEME_DARK ? .dark : .light
-        self.graph = ViewGraph(rootView: description.rootView, environment: environment, textEngine: textEngine)
+        let windowID = self.id
+        environment.openWindow = OpenWindowAction { id, value in
+            SDLHost.windowRequests.append(.open(id: id, value: value))
+        }
+        environment.dismissWindow = DismissWindowAction { id in
+            SDLHost.windowRequests.append(id.map { .closeScene($0) } ?? .close(windowID))
+        }
+        let rootView = description.makeRootView?(value) ?? description.rootView
+        self.graph = ViewGraph(rootView: rootView, environment: environment, textEngine: textEngine)
         updateBackground()
         graph.onNeedsDisplay = { [weak self] in
             self?.needsRender = true
@@ -93,6 +108,11 @@ final class WindowHost {
             },
             write: { _ = SDL_SetClipboardText($0) }
         )
+    }
+
+    /// Brings the window to the front.
+    func raise() {
+        SDL_RaiseWindow(window)
     }
 
     func close() {
@@ -146,7 +166,11 @@ final class WindowHost {
             mouseLocation = CGPoint(x: CGFloat(event.motion.x), y: CGFloat(event.motion.y))
             if event.motion.state & 0x1 != 0 {
                 graph.pointer(.moved, at: mouseLocation, time: now)
+            } else {
+                graph.hover(at: mouseLocation)
             }
+        case SDL_EVENT_WINDOW_MOUSE_LEAVE:
+            graph.hover(at: nil)
         case SDL_EVENT_PINCH_BEGIN:
             // SDL reports each change; gestures see the total.
             pinchScale = 1
@@ -246,7 +270,9 @@ final class WindowHost {
     private var isTextInputActive = false
 
     func systemThemeChanged() {
-        let colorScheme: ColorScheme = SDL_GetSystemTheme() == SDL_SYSTEM_THEME_DARK ? .dark : .light
+        let system: ColorScheme = SDL_GetSystemTheme() == SDL_SYSTEM_THEME_DARK ? .dark : .light
+        // Views may prefer a scheme over the system's.
+        let colorScheme = graph.preferredColorScheme ?? system
         if graph.environment.colorScheme != colorScheme {
             graph.environment.colorScheme = colorScheme
             updateBackground()
@@ -263,9 +289,14 @@ final class WindowHost {
         if graph.needsUpdate {
             graph.update()
             needsLayout = true
+            if graph.preferredColorScheme != lastPreferredColorScheme {
+                lastPreferredColorScheme = graph.preferredColorScheme
+                systemThemeChanged()
+            }
         }
         updateTextInput()
         let size = size
+        updateSafeArea(size: size)
         if needsLayout || graph.size != size {
             graph.layout(in: size)
             needsLayout = false
@@ -296,6 +327,22 @@ final class WindowHost {
             saveScreenshot(to: path)
         }
         SDL_RenderPresent(renderer)
+    }
+
+    /// Keeps content out of the parts of the window the system covers.
+    private func updateSafeArea(size: CGSize) {
+        var rect = SDL_Rect()
+        guard SDL_GetWindowSafeArea(window, &rect), rect.w > 0, rect.h > 0 else { return }
+        let insets = EdgeInsets(
+            top: CGFloat(rect.y),
+            leading: CGFloat(rect.x),
+            bottom: max(size.height - CGFloat(rect.y + rect.h), 0),
+            trailing: max(size.width - CGFloat(rect.x + rect.w), 0)
+        )
+        if insets != graph.safeAreaInsets {
+            graph.safeAreaInsets = insets
+            needsLayout = true
+        }
     }
 
     /// Where to save the first frame as a PNG, then quit; from the
