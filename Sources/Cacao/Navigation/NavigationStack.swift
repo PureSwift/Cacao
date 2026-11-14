@@ -163,6 +163,9 @@ internal final class NavigationContext {
 internal final class SplitLink {
     weak var sidebar: NavigationContext?
     weak var detail: NavigationContext?
+
+    /// The widths that columns' views set, by column.
+    var widths: [String: SplitColumnWidth] = [:]
 }
 
 /// What the views of one screen set for its navigation bar.
@@ -906,6 +909,42 @@ internal func toolbarItems(in view: any View) -> [ToolbarItemEntry] {
 
 // MARK: - NavigationSplitView
 
+/// The visibility of the leading columns in a navigation split view.
+public struct NavigationSplitViewVisibility: Equatable, Codable, Sendable {
+
+    private enum Value: String, Codable {
+        case detailOnly, doubleColumn, all, automatic
+    }
+
+    private let value: Value
+
+    /// Hide the leading columns, showing only the detail.
+    public static var detailOnly: NavigationSplitViewVisibility { .init(value: .detailOnly) }
+
+    /// Show the content and detail columns of a three-column view, or the
+    /// sidebar and detail of a two-column one.
+    public static var doubleColumn: NavigationSplitViewVisibility { .init(value: .doubleColumn) }
+
+    /// Show all the columns.
+    public static var all: NavigationSplitViewVisibility { .init(value: .all) }
+
+    /// The default for the platform: all the columns.
+    public static var automatic: NavigationSplitViewVisibility { .init(value: .automatic) }
+
+    /// Whether each column shows: the sidebar, the content if there is
+    /// one, then the detail.
+    func showsColumns(hasContent: Bool) -> [Bool] {
+        switch value {
+        case .detailOnly:
+            hasContent ? [false, false, true] : [false, true]
+        case .doubleColumn:
+            hasContent ? [false, true, true] : [true, true]
+        case .all, .automatic:
+            hasContent ? [true, true, true] : [true, true]
+        }
+    }
+}
+
 /// A view that presents views in two or three columns, where selections in
 /// leading columns control presentations in subsequent columns.
 public struct NavigationSplitView<Sidebar: View, Content: View, Detail: View>: View {
@@ -916,18 +955,36 @@ public struct NavigationSplitView<Sidebar: View, Content: View, Detail: View>: V
 
     internal let detail: Detail
 
+    internal let columnVisibility: Binding<NavigationSplitViewVisibility>?
+
     /// Creates a three-column navigation split view.
     public init(@ViewBuilder sidebar: () -> Sidebar, @ViewBuilder content: () -> Content, @ViewBuilder detail: () -> Detail) {
         self.sidebar = sidebar()
         self.content = content()
         self.detail = detail()
+        self.columnVisibility = nil
+    }
+
+    /// Creates a three-column navigation split view that shows the columns
+    /// that `columnVisibility` says.
+    public init(
+        columnVisibility: Binding<NavigationSplitViewVisibility>,
+        @ViewBuilder sidebar: () -> Sidebar,
+        @ViewBuilder content: () -> Content,
+        @ViewBuilder detail: () -> Detail
+    ) {
+        self.sidebar = sidebar()
+        self.content = content()
+        self.detail = detail()
+        self.columnVisibility = columnVisibility
     }
 
     public var body: some View {
         _NavigationSplit(
             sidebar: AnyView(sidebar),
             content: content.map { AnyView($0) },
-            detail: AnyView(detail)
+            detail: AnyView(detail),
+            visibility: columnVisibility?.wrappedValue ?? .automatic
         )
     }
 }
@@ -939,6 +996,64 @@ extension NavigationSplitView where Content == EmptyView {
         self.sidebar = sidebar()
         self.content = nil
         self.detail = detail()
+        self.columnVisibility = nil
+    }
+
+    /// Creates a two-column navigation split view that shows the columns
+    /// that `columnVisibility` says.
+    public init(
+        columnVisibility: Binding<NavigationSplitViewVisibility>,
+        @ViewBuilder sidebar: () -> Sidebar,
+        @ViewBuilder detail: () -> Detail
+    ) {
+        self.sidebar = sidebar()
+        self.content = nil
+        self.detail = detail()
+        self.columnVisibility = columnVisibility
+    }
+}
+
+/// The width a column's views ask for.
+internal struct SplitColumnWidth: Equatable {
+
+    var min: CGFloat?
+
+    var ideal: CGFloat
+
+    var max: CGFloat?
+
+    /// The ideal width, within the bounds.
+    var width: CGFloat {
+        var width = ideal
+        if let max { width = Swift.min(width, max) }
+        if let min { width = Swift.max(width, min) }
+        return width
+    }
+}
+
+/// The column width set by the views of a split view's column.
+internal enum SplitColumnWidthKey: PreferenceKey {
+
+    static var defaultValue: SplitColumnWidth? { nil }
+
+    static func reduce(value: inout SplitColumnWidth?, nextValue: () -> SplitColumnWidth?) {
+        if value == nil {
+            value = nextValue()
+        }
+    }
+}
+
+extension View {
+
+    /// Sets a fixed width for the column containing this view.
+    public func navigationSplitViewColumnWidth(_ width: CGFloat) -> some View {
+        preference(key: SplitColumnWidthKey.self, value: SplitColumnWidth(min: width, ideal: width, max: width))
+    }
+
+    /// Sets the width of the column containing this view: its ideal width,
+    /// kept within `min` and `max`.
+    public func navigationSplitViewColumnWidth(min: CGFloat? = nil, ideal: CGFloat, max: CGFloat? = nil) -> some View {
+        preference(key: SplitColumnWidthKey.self, value: SplitColumnWidth(min: min, ideal: ideal, max: max))
     }
 }
 
@@ -952,6 +1067,8 @@ private struct _NavigationSplit: View, PrimitiveView {
 
     let detail: AnyView
 
+    let visibility: NavigationSplitViewVisibility
+
     func resolve(in context: ResolveContext) -> Resolution {
         let node = context.node
         let link: SplitLink
@@ -961,27 +1078,44 @@ private struct _NavigationSplit: View, PrimitiveView {
             link = SplitLink()
             node.dynamicStorage["split"] = link
         }
+        // A column's width comes from its views, through a preference.
+        func column(_ key: String, _ view: some View, width: CGFloat?) -> some View {
+            view
+                .onPreferenceChange(SplitColumnWidthKey.self) { [weak node] value in
+                    guard link.widths[key] != value else { return }
+                    link.widths[key] = value
+                    node?.invalidate()
+                }
+                .frame(width: link.widths[key]?.width ?? width)
+        }
         let colorScheme = context.environment.colorScheme
         var children = [
             ChildView(
                 key: "sidebar",
-                view: _NavigationStack(path: nil, root: sidebar, column: (link, false))
-                    .frame(width: 240)
+                view: column("sidebar", _NavigationStack(path: nil, root: sidebar, column: (link, false)), width: 240)
                     .background(Color.barBackground(colorScheme))
             )
         ]
         if let content {
-            children.append(ChildView(key: "content", view: NavigationStack { content }.frame(width: 280)))
+            children.append(ChildView(key: "content", view: column("content", NavigationStack { content }, width: 280)))
         }
-        children.append(ChildView(key: "detail", view: _NavigationStack(path: nil, root: detail, column: (link, true))))
-        return Resolution(behavior: _SplitBehavior(), children: children)
+        children.append(ChildView(
+            key: "detail",
+            view: column("detail", _NavigationStack(path: nil, root: detail, column: (link, true)), width: nil)
+        ))
+        let shows = visibility.showsColumns(hasContent: content != nil)
+        return Resolution(behavior: _SplitBehavior(shows: shows), children: children)
     }
 
     typealias Body = Never
 }
 
-/// Fixed-width columns with dividers, the detail taking the rest.
+/// Columns at their widths with dividers, the detail taking the rest.
+/// Hidden columns keep their views, placed before the leading edge, and
+/// aren't drawn.
 private struct _SplitBehavior: NodeBehavior {
+
+    let shows: [Bool]
 
     func sizeThatFits(_ proposal: ProposedViewSize, node: ViewNode) -> CGSize {
         proposal.replacingUnspecifiedDimensions(by: CGSize(width: 800, height: 600))
@@ -994,12 +1128,25 @@ private struct _SplitBehavior: NodeBehavior {
             guard let proxy = LayoutProxy.combining(node.layoutChildren(ofChildAt: index)) else { continue }
             if index < count - 1 {
                 let width = proxy.size(in: ProposedViewSize(width: nil, height: bounds.height)).width
-                proxy.place(at: CGPoint(x: x, y: bounds.minY), proposal: ProposedViewSize(width: width, height: bounds.height))
+                let proposal = ProposedViewSize(width: width, height: bounds.height)
+                guard shows(index) else {
+                    proxy.place(at: CGPoint(x: bounds.minX - width, y: bounds.minY), proposal: proposal)
+                    continue
+                }
+                proxy.place(at: CGPoint(x: x, y: bounds.minY), proposal: proposal)
                 x += width + 1
             } else {
                 proxy.place(at: CGPoint(x: x, y: bounds.minY), proposal: ProposedViewSize(width: max(bounds.maxX - x, 0), height: bounds.height))
             }
         }
+    }
+
+    private func shows(_ index: Int) -> Bool {
+        shows.indices.contains(index) ? shows[index] : true
+    }
+
+    func displayOrder(of children: [ViewNode]) -> [ViewNode] {
+        children.enumerated().filter { shows($0.offset) }.map(\.element)
     }
 
     func displayContent(node: ViewNode) -> DisplayList.Content? {
