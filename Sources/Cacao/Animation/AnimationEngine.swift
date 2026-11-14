@@ -134,11 +134,15 @@ extension ViewGraph {
                 let transition = node.transitionAttribute ?? .opacity
                 state.transition = (transition, PropertyAnimation(from: [0], to: [1], animation: animation, start: time))
             }
-            if let key = node.attributes.matchedGeometry {
+            // A source that replaces another moves from where the other was;
+            // views that aren't sources follow the source's frame.
+            if let geometry = node.attributes.matchedGeometry, geometry.isSource, !geometry.properties.isEmpty {
+                let key = geometry.key
                 let frame = node.subtreeFrame
                 matched[key] = (frame, node.id)
                 if isNewUpdate, let previous = matchedFrames[key], previous.node != node.id, let animation, !frame.isNull, !previous.frame.isNull {
-                    state.geometry = (previous.frame, PropertyAnimation(from: [0], to: [1], animation: animation, start: time))
+                    let start = geometry.frame(at: frame, matching: previous.frame.size, point: geometry.anchorPoint(in: previous.frame))
+                    state.geometry = (start, PropertyAnimation(from: [0], to: [1], animation: animation, start: time))
                     state.transition = nil
                 }
             }
