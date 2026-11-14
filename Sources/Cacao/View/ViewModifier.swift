@@ -88,6 +88,8 @@ extension ModifiedContent: PrimitiveView where Content: View, Modifier: ViewModi
         }
         // A custom modifier: like a composite view, its dynamic properties
         // live in this node and its body is this node's only child.
+        // An animatable modifier evaluates partway through its animation.
+        let modifier = context.animatedValue(self.modifier)
         let body = context.evaluate {
             modifier.body(content: _ViewModifier_Content(content: content))
         } installing: {
