@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Observation
 #if canImport(CoreGraphics)
 import CoreGraphics
 #endif
@@ -126,6 +127,18 @@ internal final class ViewNode {
     /// last resolved, rather than only being invalidated itself.
     private(set) var wasUpdatedByParent = false
 
+    /// The transaction the node was last resolved in.
+    private(set) var transaction = Transaction()
+
+    /// The update the node was last resolved in.
+    private(set) var resolvedGeneration = -1
+
+    /// The update that created the node.
+    var insertedGeneration = -1
+
+    /// Whether the next resolve shows an animatable view's in-between value.
+    var isAnimationFrame = false
+
     // MARK: Resolving
 
     /// Resolves the node's view and, recursively, its children.
@@ -135,26 +148,50 @@ internal final class ViewNode {
         isDirty = false
         version += 1
         cachedLayoutChildren = nil
+        transaction = graph.currentTransaction
+        resolvedGeneration = graph.updateGeneration
         let context = ResolveContext(node: self)
         let resolution: Resolution
         if let primitive = view as? any PrimitiveView {
-            resolution = primitive.resolve(in: context)
+            // Primitives read observable values too, like a ForEach's
+            // content closure.
+            let token = observationToken
+            resolution = withObservationTracking {
+                primitive.resolve(in: context)
+            } onChange: {
+                token.invalidate()
+            }
         } else {
             resolution = resolveComposite(view, in: context)
         }
         behavior = resolution.behavior
         attributes = resolution.attributes
         wasUpdatedByParent = false
-        reconcile(resolution.children, keepingExisting: resolution.keepsExistingChildren)
+        isAnimationFrame = false
+        // A modifier like animation(_:value:) changes the transaction of
+        // its subtree.
+        if let transform = resolution.transaction {
+            let previous = graph.currentTransaction
+            transform(&graph.currentTransaction)
+            transaction = graph.currentTransaction
+            reconcile(resolution.children, keepingExisting: resolution.keepsExistingChildren)
+            graph.currentTransaction = previous
+        } else {
+            reconcile(resolution.children, keepingExisting: resolution.keepsExistingChildren)
+        }
     }
 
     private func resolveComposite<V: View>(_ view: V, in context: ResolveContext) -> Resolution {
-        let body = context.evaluate {
+        let shown = context.animatedValue(view)
+        return Resolution(children: [ChildView(key: 0, view: evaluateBody(shown, in: context))])
+    }
+
+    private func evaluateBody<V: View>(_ view: V, in context: ResolveContext) -> any View {
+        context.evaluate {
             view.body
         } installing: {
             view
         }
-        return Resolution(children: [ChildView(key: 0, view: body)])
     }
 
     /// Matches child views to existing child nodes by key and type, creating
@@ -194,13 +231,20 @@ internal final class ViewNode {
                     view: childView.view,
                     environment: environment
                 )
+                node.insertedGeneration = graph.updateGeneration
                 graph.nodeDidAppear(node)
             }
             node.resolve()
             newChildren.append(node)
         }
+        let previous = children
         children = newChildren
         for removed in existing.values {
+            // Removed with an animation, a view keeps drawing as it
+            // transitions out.
+            if graph.currentAnimation != nil, let index = previous.firstIndex(where: { $0 === removed }) {
+                graph.addGhost(for: removed, index: index, in: self)
+            }
             removed.tearDown()
         }
     }
