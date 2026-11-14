@@ -66,15 +66,25 @@ package struct ShadowEffect: Equatable, Sendable {
     package var offset: CGSize
 }
 
-internal struct ShadowBehavior: UnaryLayoutBehavior {
+internal struct ShadowBehavior: UnaryLayoutBehavior, AnimatableBehavior {
 
-    let color: Color
+    let color: Color.Resolved
 
     let radius: CGFloat
 
     let offset: CGSize
 
-    let environment: EnvironmentValues
+    var animatableValues: [Double] {
+        color.components + [Double(radius), Double(offset.width), Double(offset.height)]
+    }
+
+    func applying(_ values: [Double]) -> any NodeBehavior {
+        ShadowBehavior(
+            color: Color.Resolved(components: Array(values.prefix(4))),
+            radius: CGFloat(values[4]),
+            offset: CGSize(width: values[5], height: values[6])
+        )
+    }
 
     func sizeThatFits(_ proposal: ProposedViewSize, child: LayoutProxy) -> CGSize {
         child.size(in: proposal)
@@ -85,7 +95,7 @@ internal struct ShadowBehavior: UnaryLayoutBehavior {
     }
 
     func displayEffect(node: ViewNode) -> DisplayList.Effect? {
-        .shadow(ShadowEffect(color: color.resolve(in: environment), radius: radius, offset: offset))
+        .shadow(ShadowEffect(color: color, radius: max(0, radius), offset: offset))
     }
 }
 
@@ -99,7 +109,7 @@ internal struct _ShadowModifier: ViewModifier, PrimitiveViewModifier {
 
     func resolve(content: any View, in context: ResolveContext) -> Resolution {
         Resolution(
-            behavior: ShadowBehavior(color: color, radius: radius, offset: offset, environment: context.environment),
+            behavior: ShadowBehavior(color: color.resolve(in: context.environment), radius: radius, offset: offset),
             children: [ChildView(key: 0, view: content)]
         )
     }
@@ -109,17 +119,10 @@ internal struct _ShadowModifier: ViewModifier, PrimitiveViewModifier {
 
 extension View {
 
-    /// Adds a shadow to this view.
-    ///
-    /// Cacao draws the shadow as the view's silhouette in the color, without
-    /// blurring it.
+    /// Adds a shadow to this view: its silhouette in the color, blurred by
+    /// the radius and moved by the offset.
     public func shadow(color: Color = Color.black.opacity(0.33), radius: CGFloat, x: CGFloat = 0, y: CGFloat = 0) -> some View {
         modifier(_ShadowModifier(color: color, radius: radius, offset: CGSize(width: x, height: y)))
-    }
-
-    /// Applies a Gaussian blur to this view. Cacao doesn't blur yet.
-    public func blur(radius: CGFloat, opaque: Bool = false) -> some View {
-        self
     }
 
     /// Masks this view using the alpha channel of the given shape.
@@ -521,9 +524,10 @@ extension View {
     /// the available space. Cacao doesn't scale text yet.
     public func minimumScaleFactor(_ factor: CGFloat) -> some View { self }
 
-    /// Sets the amount of space between lines of text in this view. Cacao
-    /// uses the font's line height.
-    public func lineSpacing(_ lineSpacing: CGFloat) -> some View { self }
+    /// Sets the amount of space between lines of text in this view.
+    public func lineSpacing(_ lineSpacing: CGFloat) -> some View {
+        environment(\.lineSpacing, lineSpacing)
+    }
 
     /// Sets whether text in this view can compress the space between
     /// characters when necessary to fit text in a line.
@@ -558,20 +562,122 @@ extension View {
 
 extension Text {
 
-    /// Applies an underline to the text. Cacao doesn't draw it yet.
-    public func underline(_ isActive: Bool = true, color: Color? = nil) -> Text { self }
+    /// A line style for underlines and strikethroughs.
+    public struct LineStyle: Hashable, Sendable {
 
-    /// Applies a strikethrough to the text. Cacao doesn't draw it yet.
-    public func strikethrough(_ isActive: Bool = true, color: Color? = nil) -> Text { self }
+        /// The pattern of a line.
+        public enum Pattern: Hashable, Sendable {
+            case solid
+            case dot
+            case dash
+            case dashDot
+            case dashDotDot
+        }
+
+        internal let pattern: Pattern
+
+        internal let color: Color?
+
+        public init(pattern: Pattern = .solid, color: Color? = nil) {
+            self.pattern = pattern
+            self.color = color
+        }
+
+        public static let single = LineStyle()
+    }
+
+    private func modifyingRuns(_ body: (inout Run) -> Void) -> Text {
+        var text = self
+        for index in text.runs.indices {
+            body(&text.runs[index])
+        }
+        return text
+    }
+
+    /// Applies an underline to the text.
+    public func underline(_ isActive: Bool = true, pattern: LineStyle.Pattern = .solid, color: Color? = nil) -> Text {
+        modifyingRuns { $0.underline = $0.underline ?? Decoration(isActive: isActive, pattern: pattern, color: color) }
+    }
+
+    /// Applies a strikethrough to the text.
+    public func strikethrough(_ isActive: Bool = true, pattern: LineStyle.Pattern = .solid, color: Color? = nil) -> Text {
+        modifyingRuns { $0.strikethrough = $0.strikethrough ?? Decoration(isActive: isActive, pattern: pattern, color: color) }
+    }
 
     /// Sets the spacing, or kerning, between characters.
-    public func kerning(_ kerning: CGFloat) -> Text { self }
+    public func kerning(_ kerning: CGFloat) -> Text {
+        modifyingRuns { $0.kerning = $0.kerning ?? kerning }
+    }
 
     /// Sets the tracking for the text.
-    public func tracking(_ tracking: CGFloat) -> Text { self }
+    public func tracking(_ tracking: CGFloat) -> Text {
+        modifyingRuns { $0.tracking = $0.tracking ?? tracking }
+    }
 
     /// Sets the vertical offset for the text relative to its baseline.
-    public func baselineOffset(_ baselineOffset: CGFloat) -> Text { self }
+    public func baselineOffset(_ baselineOffset: CGFloat) -> Text {
+        modifyingRuns { $0.baselineOffset = $0.baselineOffset ?? baselineOffset }
+    }
+}
+
+/// Text attributes set on views, for the text inside them.
+internal struct TextAttributes: Hashable, Sendable {
+    var underline: Text.Decoration?
+    var strikethrough: Text.Decoration?
+    var kerning: CGFloat?
+    var tracking: CGFloat?
+    var baselineOffset: CGFloat?
+}
+
+private struct TextAttributesKey: EnvironmentKey {
+    static let defaultValue = TextAttributes()
+}
+
+private struct LineSpacingKey: EnvironmentKey {
+    static let defaultValue: CGFloat = 0
+}
+
+extension EnvironmentValues {
+
+    internal var textAttributes: TextAttributes {
+        get { self[TextAttributesKey.self] }
+        set { self[TextAttributesKey.self] = newValue }
+    }
+
+    /// The distance in points between the bottom of one line fragment and
+    /// the top of the next.
+    public var lineSpacing: CGFloat {
+        get { self[LineSpacingKey.self] }
+        set { self[LineSpacingKey.self] = newValue }
+    }
+}
+
+extension View {
+
+    /// Applies an underline to the text in this view.
+    public func underline(_ isActive: Bool = true, pattern: Text.LineStyle.Pattern = .solid, color: Color? = nil) -> some View {
+        transformEnvironment(\.textAttributes) { $0.underline = Text.Decoration(isActive: isActive, pattern: pattern, color: color) }
+    }
+
+    /// Applies a strikethrough to the text in this view.
+    public func strikethrough(_ isActive: Bool = true, pattern: Text.LineStyle.Pattern = .solid, color: Color? = nil) -> some View {
+        transformEnvironment(\.textAttributes) { $0.strikethrough = Text.Decoration(isActive: isActive, pattern: pattern, color: color) }
+    }
+
+    /// Sets the spacing, or kerning, between characters for the text in this view.
+    public func kerning(_ kerning: CGFloat) -> some View {
+        transformEnvironment(\.textAttributes) { $0.kerning = kerning }
+    }
+
+    /// Sets the tracking for the text in this view.
+    public func tracking(_ tracking: CGFloat) -> some View {
+        transformEnvironment(\.textAttributes) { $0.tracking = tracking }
+    }
+
+    /// Sets the vertical offset for the text relative to its baseline in this view.
+    public func baselineOffset(_ baselineOffset: CGFloat) -> some View {
+        transformEnvironment(\.textAttributes) { $0.baselineOffset = baselineOffset }
+    }
 }
 
 // MARK: - Scrolling
