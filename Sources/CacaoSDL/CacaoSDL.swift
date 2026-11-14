@@ -58,15 +58,25 @@ public enum SDLHost {
                 // with `openWindow`.
                 descriptions = app.body.windowDescriptions()
                 self.textEngine = textEngine
-                var windows = descriptions.prefix(1).compactMap {
+                statusItems = app.body.statusItemDescriptions().compactMap {
+                    StatusItemHost(description: $0, textEngine: textEngine)
+                }
+                var windows = descriptions.filter(\.opensAtLaunch).prefix(1).compactMap {
                     WindowHost(description: $0, textEngine: textEngine)
                 }
-                guard !windows.isEmpty else {
+                guard !windows.isEmpty || !statusItems.isEmpty else {
                     print("Cacao: no windows to show: \(String(cString: SDL_GetError()))")
                     return
                 }
+                #if os(macOS)
+                MainMenu.launchGraph = windows.first?.graph
+                MainMenu.install { windows in
+                    windows.first(where: { $0.isKey })?.graph ?? windows.first?.graph
+                }
+                #endif
                 runLoop(&windows)
                 windows.forEach { $0.close() }
+                statusItems.forEach { $0.close() }
             }
         } catch {
             print("Cacao: \(error)")
@@ -77,7 +87,10 @@ public enum SDLHost {
     /// while anything animates; frames wait for vsync when presented.
     private static func runLoop(_ windows: inout [WindowHost]) {
         var event = SDL_Event()
-        while !windows.isEmpty {
+        while !windows.isEmpty || !statusItems.isEmpty {
+            #if os(macOS)
+            MainMenu.windows = windows
+            #endif
             let animating = windows.contains { $0.isAnimating }
             // Idle: sleep until an event, waking periodically to run main
             // actor work (tasks, timers) scheduled outside of SDL.
@@ -93,6 +106,9 @@ public enum SDLHost {
             let now = now
             for window in windows {
                 window.frame(now: now)
+            }
+            for item in statusItems {
+                item.update()
             }
             if windows.contains(where: \.didSaveScreenshot) {
                 return
@@ -112,6 +128,9 @@ public enum SDLHost {
 
     /// The app's scenes' windows.
     private static var descriptions: [WindowDescription] = []
+
+    /// The app's menu bar extras.
+    private static var statusItems: [StatusItemHost] = []
 
     private static var textEngine: SilicaTextEngine?
 
@@ -159,7 +178,8 @@ public enum SDLHost {
                 windows[index].close()
                 windows.remove(at: index)
             }
-            return !windows.isEmpty
+            // A menu bar app keeps running without windows.
+            return !windows.isEmpty || !statusItems.isEmpty
         case SDL_EVENT_SYSTEM_THEME_CHANGED:
             windows.forEach { $0.systemThemeChanged() }
         default:
@@ -182,6 +202,8 @@ public enum SDLHost {
             event.pinch.windowID
         case SDL_EVENT_KEY_DOWN, SDL_EVENT_KEY_UP:
             event.key.windowID
+        case SDL_EVENT_DROP_BEGIN, SDL_EVENT_DROP_POSITION, SDL_EVENT_DROP_FILE, SDL_EVENT_DROP_TEXT, SDL_EVENT_DROP_COMPLETE:
+            event.drop.windowID
         default:
             event.type >= SDL_EVENT_WINDOW_FIRST.rawValue && event.type <= SDL_EVENT_WINDOW_LAST.rawValue
                 ? event.window.windowID : nil
