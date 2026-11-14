@@ -44,8 +44,9 @@ public struct Image: Equatable, Sendable {
 
     /// Creates a system symbol image.
     ///
-    /// Symbols aren't available yet; the image is empty, sized like a glyph
-    /// of the current font.
+    /// Cacao draws its own versions of common symbols, in the foreground
+    /// style at the size of the current font; others are empty, sized like
+    /// a glyph.
     public init(systemName: String) {
         self.source = .systemName(systemName)
     }
@@ -190,6 +191,23 @@ extension Image: View, PrimitiveView {
 
     func resolve(in context: ResolveContext) -> Resolution {
         let environment = context.environment
+        if case let .systemName(name) = self.source {
+            let font = (environment.font ?? .body).resolve()
+            let scale: CGFloat = switch environment.imageScale {
+            case .small: 0.8
+            case .medium: 1
+            case .large: 1.3
+            }
+            let original = renderingMode == .original
+            return Resolution(behavior: SymbolBehavior(
+                parts: Symbols.parts(name),
+                isResizable: isResizable,
+                size: (font.size * scale).rounded(),
+                color: original ? Color.primary.resolve(in: environment) : environment.resolvedForeground,
+                gradient: original ? nil : environment.resolvedForegroundGradient,
+                weight: font.weight
+            ))
+        }
         let source: ImageSource?
         switch self.source {
         case let .named(name, bundlePath):
