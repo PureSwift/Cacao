@@ -13,11 +13,13 @@ on macOS) only when it changes, and composited every frame by the
 [SDL3](https://github.com/PureSwift/SDL) renderer (Metal, Vulkan or OpenGL),
 so scrolling and animation never repaint.
 
-> **Status:** early development (Phase 6: views, layout, controls, text input,
+> **Status:** early development (Phase 7: views, layout, controls, text input,
 > lazy lists, forms, grids, navigation, tabs, presentations, animations,
 > transitions, gestures, `TimelineView`, `Canvas`, geometry readers,
-> `ObservableObject` and storage, accessibility and multiple windows, drawn
-> by a GPU compositor on Linux and macOS). See
+> `ObservableObject` and storage, accessibility, multiple windows, gradients,
+> blur, shadows and color effects, phase and keyframe animators, date and
+> color pickers, gauges and `@Entry`, drawn by a GPU compositor on Linux and
+> macOS). See
 > [API coverage](Documentation/APICoverage.md) for what's implemented. See
 > [the plan](Documentation/Plan.md) for the architecture and roadmap. The
 > previous UIKit implementation is preserved at the
@@ -28,6 +30,7 @@ so scrolling and animation never repaint.
 | Module | |
 |---|---|
 | `Cacao` | The SwiftUI API: views, state, environment, layout and the display list. Platform-neutral, builds headless. |
+| `CacaoMacros` | The `@Entry` macro. |
 | `CacaoSDL` | Windows, the main loop, input and the SDL3 GPU compositor backend. |
 | `CacaoScrollPhysics` | Velocity tracking, deceleration, rubber band and spring-back. |
 | `SwiftUI` (Linux only) | Re-exports Cacao, so sources that `import SwiftUI` compile unchanged. |
