@@ -68,6 +68,11 @@ public struct Color: Hashable, Sendable, CustomStringConvertible {
         switch storage {
         case let .resolved(resolved):
             return resolved
+        case .system(.accent):
+            if let tint = environment.tint, tint.storage != .system(.accent) {
+                return tint.resolve(in: environment)
+            }
+            return SystemColor.blue.resolve(in: environment.colorScheme)
         case let .system(color):
             return color.resolve(in: environment.colorScheme)
         case let .opacity(color, opacity):
@@ -137,6 +142,8 @@ extension Color {
 internal enum SystemColor: String, Hashable, Sendable {
     case red, orange, yellow, green, mint, teal, cyan, blue, indigo, purple, pink, brown, gray
     case primary, secondary, separator
+    /// The tint from the environment, or blue.
+    case accent
 
     func resolve(in colorScheme: ColorScheme) -> Color.Resolved {
         let isDark = colorScheme == .dark
@@ -157,6 +164,7 @@ internal enum SystemColor: String, Hashable, Sendable {
         case .primary: return isDark ? .init(255, 255, 255) : .init(0, 0, 0)
         case .secondary: return isDark ? .init(235, 235, 245, 0.6) : .init(60, 60, 67, 0.6)
         case .separator: return isDark ? .init(84, 84, 88, 0.6) : .init(60, 60, 67, 0.29)
+        case .accent: return SystemColor.blue.resolve(in: colorScheme)
         }
     }
 }
@@ -187,7 +195,7 @@ extension Color {
     public static let secondary = Color(storage: .system(.secondary))
 
     /// A color that reflects the accent color of the system or app.
-    public static var accentColor: Color { .blue }
+    public static var accentColor: Color { Color(storage: .system(.accent)) }
 
     internal static let separator = Color(storage: .system(.separator))
 }
