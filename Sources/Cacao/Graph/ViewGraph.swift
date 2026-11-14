@@ -329,7 +329,22 @@ package final class ViewGraph {
             layoutGeneration += 1
             statistics.layouts += 1
             root.place(at: CGPoint(x: 0, y: 0), proposal: ProposedViewSize(size))
-            root.forEachNode { $0.isLayoutValid = true }
+            var sources: [AnyHashable: (size: CGSize, point: CGPoint)] = [:]
+            var followers: [(ViewNode, MatchedGeometry)] = []
+            root.forEachNode { node in
+                node.isLayoutValid = true
+                if let geometry = node.attributes.matchedGeometry {
+                    if geometry.isSource {
+                        let frame = node.subtreeFrame
+                        if !frame.isNull {
+                            sources[geometry.key] = (frame.size, geometry.anchorPoint(in: frame))
+                        }
+                    } else {
+                        followers.append((node, geometry))
+                    }
+                }
+            }
+            placeMatchedGeometry(followers, sources: sources)
             let actions = afterLayoutActions
             afterLayoutActions.removeAll()
             for action in actions {
@@ -344,6 +359,25 @@ package final class ViewGraph {
             update()
         }
         commitAnimations()
+    }
+
+    /// Places views that aren't the source of their matched geometry group
+    /// in the source's frame: proposed its size and lined up at the anchor.
+    private func placeMatchedGeometry(_ followers: [(ViewNode, MatchedGeometry)], sources: [AnyHashable: (size: CGSize, point: CGPoint)]) {
+        for (node, geometry) in followers {
+            guard let source = sources[geometry.key],
+                  let proxy = LayoutProxy.combining(node.layoutChildren) else {
+                continue
+            }
+            let current = node.subtreeFrame
+            let proposal = geometry.properties.contains(.size)
+                ? ProposedViewSize(source.size)
+                : ProposedViewSize(current.size)
+            let size = proxy.size(in: proposal)
+            let frame = geometry.frame(at: CGRect(origin: current.origin, size: size), matching: size, point: source.point)
+            proxy.place(at: frame.origin, proposal: proposal)
+            node.forEachNode { $0.isLayoutValid = true }
+        }
     }
 
     // MARK: Queries
