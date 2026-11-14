@@ -114,6 +114,16 @@ package enum Rasterizer {
         }
     }
 
+    /// Draws an image with its first row at the top of a rectangle: Silica
+    /// draws images y-up, as Quartz does.
+    private static func drawUpright(_ image: Silica.CGImage, in rect: CGRect, context: Silica.CGContext) {
+        context.saveGState()
+        context.translateBy(x: rect.minX, y: rect.maxY)
+        context.scaleBy(x: 1, y: -1)
+        context.draw(image, in: CGRect(x: 0, y: 0, width: rect.width, height: rect.height))
+        context.restoreGState()
+    }
+
     /// The gradient's colors at each pixel, at the coverage's alpha.
     /// `point` gives the point in the gradient's space of a pixel's center.
     package static func paint(
@@ -189,7 +199,35 @@ package enum Rasterizer {
                        let image = gradientImage(gradient.multiplyingOpacity(opacity), in: bounds, scale: scale * max(abs(state.transform.a), abs(state.transform.d), 1)) {
                         addPath(shape.path, to: context)
                         context.clip(using: style.isEOFilled ? .evenOdd : .winding)
-                        context.draw(image, in: bounds)
+                        drawUpright(image, in: bounds, context: context)
+                    }
+                    continue
+                }
+                if let gradient = shape.gradient, case let .stroke(style) = shape.drawing {
+                    // Gradient strokes: the stroke drawn in white over its
+                    // bounds, painted with the gradient, drawn there.
+                    let outset = style.lineWidth / 2 * (style.lineJoin == .miter ? 2 : 1) + 1
+                    let bounds = shape.path.boundingRect.insetBy(dx: -outset, dy: -outset)
+                    let pixelScale = scale * max(abs(state.transform.a), abs(state.transform.d), 1)
+                    var mask = shape
+                    mask.gradient = nil
+                    mask.color = Color.Resolved(red: 1, green: 1, blue: 1)
+                    let size = CGSize(
+                        width: min(4096, max(1, (bounds.width * pixelScale).rounded(.up))),
+                        height: min(4096, max(1, (bounds.height * pixelScale).rounded(.up)))
+                    )
+                    if !bounds.isNull, let coverage = try? Rasterizer.draw(size: size, { maskContext in
+                        maskContext.scaleBy(x: size.width / bounds.width, y: size.height / bounds.height)
+                        maskContext.translateBy(x: -bounds.minX, y: -bounds.minY)
+                        draw(mask, in: maskContext)
+                    }) {
+                        let painted = paint(gradient.multiplyingOpacity(opacity), through: coverage) { column, row in
+                            CGPoint(
+                                x: bounds.minX + (CGFloat(column) + 0.5) * bounds.width / size.width,
+                                y: bounds.minY + (CGFloat(row) + 0.5) * bounds.height / size.height
+                            )
+                        }
+                        drawUpright(painted, in: bounds, context: context)
                     }
                     continue
                 }
@@ -204,7 +242,7 @@ package enum Rasterizer {
             case let .image(image, rect, _):
                 context.alpha = CGFloat(opacity)
                 if let decoded = decode(image) {
-                    context.draw(decoded, in: rect)
+                    drawUpright(decoded, in: rect, context: context)
                 }
             }
         }
