@@ -75,6 +75,12 @@ package struct WindowDescription {
 
     /// The window's root view.
     package var rootView: AnyView
+
+    /// The root view for a value, for window groups that present values.
+    package var makeRootView: ((AnyHashable?) -> AnyView)? = nil
+
+    /// Whether only one window of the scene may be open.
+    package var isUnique = false
 }
 
 extension Scene {
@@ -210,13 +216,53 @@ public struct WindowGroup<Content: View>: Scene, PrimitiveScene {
         fatalError("WindowGroup is a primitive scene")
     }
 
+    /// Makes the root view for a presented value.
+    internal var makeContent: ((AnyHashable?) -> AnyView)? = nil
+
     func windows(modifiers: SceneModifiers) -> [WindowDescription] {
         [WindowDescription(
             title: title ?? (Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String) ?? ProcessInfo.processInfo.processName,
             id: id,
             defaultSize: modifiers.defaultSize,
-            rootView: AnyView(content)
+            rootView: AnyView(content),
+            makeRootView: makeContent
         )]
+    }
+}
+
+extension WindowGroup {
+
+    /// Creates a window group that presents values of a type, which
+    /// `openWindow(value:)` opens windows for.
+    public init<D: Hashable & Codable, C: View>(
+        _ title: String? = nil,
+        id: String? = nil,
+        for type: D.Type,
+        @ViewBuilder content: @escaping (Binding<D?>) -> C
+    ) where Content == _ValueWindowContent<D, C> {
+        self.title = title
+        self.id = id
+        self.content = _ValueWindowContent(value: nil, content: content)
+        self.makeContent = { value in
+            AnyView(_ValueWindowContent(value: value?.base as? D, content: content))
+        }
+    }
+}
+
+/// The content of a window presenting a value, with the value as state.
+public struct _ValueWindowContent<Value: Hashable, Content: View>: View {
+
+    @State private var value: Value?
+
+    let content: (Binding<Value?>) -> Content
+
+    init(value: Value?, content: @escaping (Binding<Value?>) -> Content) {
+        self._value = State(initialValue: value)
+        self.content = content
+    }
+
+    public var body: some View {
+        content($value)
     }
 }
 
@@ -243,7 +289,7 @@ public struct Window<Content: View>: Scene, PrimitiveScene {
     }
 
     func windows(modifiers: SceneModifiers) -> [WindowDescription] {
-        [WindowDescription(title: title, id: id, defaultSize: modifiers.defaultSize, rootView: AnyView(content))]
+        [WindowDescription(title: title, id: id, defaultSize: modifiers.defaultSize, rootView: AnyView(content), isUnique: true)]
     }
 }
 
