@@ -335,6 +335,38 @@ final class AnimationModel {
         let point = moving.first?.transforms.reduce(CGPoint(x: 25, y: 175)) { $1.apply($0) }
         #expect(point.map { abs($0.y - 100) < 0.5 } == true)
     }
+
+    @Test func matchedGeometryFollowerTracksSource() {
+        struct Tabs: View {
+            let model: AnimationModel
+            let namespace: Namespace.ID
+            var body: some View {
+                HStack(spacing: 0) {
+                    ForEach(0..<2) { index in
+                        Color.clear.frame(width: 50, height: 20)
+                            .matchedGeometryEffect(id: index, in: namespace)
+                    }
+                }
+                .overlay {
+                    Color.blue
+                        .matchedGeometryEffect(id: model.flag ? 1 : 0, in: namespace, isSource: false)
+                }
+            }
+        }
+        let model = AnimationModel()
+        let graph = layout(Tabs(model: model, namespace: Namespace().wrappedValue), width: 100, height: 20)
+        // The indicator takes the first tab's frame, not the overlay's.
+        func indicator() -> CGRect? {
+            graph.colorItems.last { $0.color == Color.blue.resolve(in: EnvironmentValues()) }?.frame
+        }
+        #expect(indicator() == CGRect(x: 0, y: 0, width: 50, height: 20))
+        withAnimation(.linear(duration: 1)) { model.flag = true }
+        graph.settle()
+        graph.advance(to: 0.5)
+        #expect(indicator()?.minX == 25)
+        graph.advance(to: 1)
+        #expect(indicator() == CGRect(x: 50, y: 0, width: 50, height: 20))
+    }
 }
 
 @MainActor
