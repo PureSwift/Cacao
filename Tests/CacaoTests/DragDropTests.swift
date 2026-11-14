@@ -72,4 +72,123 @@ import Testing
         #expect(convertDropItem(URL(string: "https://example.com")!, to: String.self) == "https://example.com")
         #expect(convertDropItem("text", to: Int.self) == nil)
     }
+
+    // MARK: Item providers
+
+    final class ProviderLog {
+        var providers: [NSItemProvider] = []
+        var location: CGPoint?
+        var events: [String] = []
+    }
+
+    struct Delegate: DropDelegate {
+        let log: ProviderLog
+        var accepts = true
+        func validateDrop(info: DropInfo) -> Bool { accepts }
+        func dropEntered(info: DropInfo) { log.events.append("entered") }
+        func dropUpdated(info: DropInfo) -> DropProposal? {
+            log.events.append("updated \(Int(info.location.x))")
+            return DropProposal(operation: .copy)
+        }
+        func dropExited(info: DropInfo) { log.events.append("exited") }
+        func performDrop(info: DropInfo) -> Bool {
+            log.events.append("perform")
+            log.providers = info.itemProviders(for: [.plainText])
+            return true
+        }
+    }
+
+    func providerScene(_ log: ProviderLog, delegate: Delegate? = nil) -> some View {
+        HStack(spacing: 20) {
+            Color.red
+                .frame(width: 60, height: 60)
+                .onDrag {
+                    let provider = NSItemProvider()
+                    provider.registerDataRepresentation(forTypeIdentifier: UTType.utf8PlainText.identifier, visibility: .all) { completion in
+                        completion(Data("dragged".utf8), nil)
+                        return nil
+                    }
+                    return provider
+                }
+                .probe("source")
+            Group {
+                if let delegate {
+                    Color.blue.onDrop(of: [.plainText], delegate: delegate)
+                } else {
+                    Color.blue.onDrop(of: [.plainText], isTargeted: nil) { providers, location in
+                        log.providers = providers
+                        log.location = location
+                        return true
+                    }
+                }
+            }
+            .frame(width: 100, height: 100)
+            .probe("destination")
+        }
+    }
+
+    func text(of provider: NSItemProvider?) async -> String? {
+        guard let provider else { return nil }
+        return await withCheckedContinuation { continuation in
+            provider.loadDataRepresentation(forTypeIdentifier: UTType.plainText.identifier) { data, _ in
+                continuation.resume(returning: data.flatMap { String(data: $0, encoding: .utf8) })
+            }
+        }
+    }
+
+    func drag(in graph: ViewGraph, to end: CGPoint, through points: [CGPoint] = []) {
+        let source = graph.frame("source")
+        let start = CGPoint(x: source.midX, y: source.midY)
+        graph.pointer(.began, at: start, time: 0)
+        graph.pointer(.moved, at: CGPoint(x: start.x + 10, y: start.y), time: 0.05)
+        for (index, point) in points.enumerated() {
+            graph.pointer(.moved, at: point, time: 0.1 + Double(index) * 0.05)
+        }
+        graph.pointer(.moved, at: end, time: 0.5)
+        graph.pointer(.ended, at: end, time: 0.55)
+    }
+
+    @Test func dragsItemProvidersBetweenViews() async {
+        let log = ProviderLog()
+        let graph = layout(providerScene(log))
+        let destination = graph.frame("destination")
+        drag(in: graph, to: CGPoint(x: destination.minX + 30, y: destination.minY + 40))
+        #expect(log.location == CGPoint(x: 30, y: 40))
+        #expect(log.providers.count == 1)
+        #expect(await text(of: log.providers.first) == "dragged")
+    }
+
+    @Test func dropDelegateFollowsTheDrag() {
+        let log = ProviderLog()
+        let graph = layout(providerScene(log, delegate: Delegate(log: log)))
+        let destination = graph.frame("destination")
+        let inside = CGPoint(x: destination.minX + 10, y: destination.midY)
+        let outside = CGPoint(x: destination.maxX + 50, y: destination.midY)
+        drag(in: graph, to: CGPoint(x: destination.minX + 20, y: destination.midY), through: [inside, outside])
+        #expect(log.events == ["entered", "updated 10", "exited", "entered", "updated 20", "perform"])
+        #expect(log.providers.count == 1)
+    }
+
+    @Test func dropDelegateCanRefuseDrops() {
+        let log = ProviderLog()
+        let graph = layout(providerScene(log, delegate: Delegate(log: log, accepts: false)))
+        let destination = graph.frame("destination")
+        drag(in: graph, to: CGPoint(x: destination.midX, y: destination.midY))
+        #expect(log.events.isEmpty)
+        #expect(log.providers.isEmpty)
+    }
+
+    @Test func systemDropsArriveAsProviders() async {
+        let log = ProviderLog()
+        let graph = layout(providerScene(log))
+        let destination = graph.frame("destination")
+        let point = CGPoint(x: destination.midX, y: destination.midY)
+        graph.systemDrop(.moved, items: [], at: point)
+        #expect(graph.systemDrop(.dropped, items: ["from the system"], at: point))
+        #expect(await text(of: log.providers.first) == "from the system")
+        // Items of other types aren't taken.
+        log.providers = []
+        #expect(!graph.systemDrop(.dropped, items: [Data([1, 2])], at: point))
+        #expect(log.providers.isEmpty)
+    }
 }
