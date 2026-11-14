@@ -24,7 +24,10 @@ tests.
 | `Window` | ✅ | Unique: opening it again brings it to the front. |
 | `openWindow`, `dismissWindow` | ✅ | |
 | `defaultSize` | ✅ | |
-| `Settings`, `MenuBarExtra`, `DocumentGroup`, `commands` | ✗ | |
+| `commands`, `CommandMenu`, `CommandGroup` | ◐ | Shortcuts work in every window; macOS shows the menus in the menu bar. Group placements pick the menu, not the position in it. |
+| `Settings`, `SettingsLink`, `openSettings` | ✅ | The settings shortcut opens it. |
+| `MenuBarExtra` | ◐ | A tray icon with a menu of the content's buttons; the menu style only. |
+| `DocumentGroup` | ✗ | |
 
 ## State and data flow
 
@@ -71,9 +74,9 @@ tests.
 | `lineLimit`, `truncationMode`, `minimumScaleFactor` | ✅ | Truncated lines end in an ellipsis; head and middle truncation for single lines. |
 | `allowsTightening` | ○ | |
 | `Image` (resources, data, resizing, template rendering) | ✅ | |
-| `Image(systemName:)` | ○ | Sized like a symbol; draws nothing yet. |
+| `Image(systemName:)`, `imageScale` | ◐ | Cacao's own drawings of about 60 common symbols, in the foreground style; others are empty. |
 | `Shape`s, `Path`, fills and strokes, `strokeBorder` | ✅ | |
-| `Color`, `ShapeStyle`, `foregroundStyle`, `tint`, `Color.mix` | ✅ | |
+| `Color`, `ShapeStyle`, `foregroundStyle`, `tint`, `.tint` style, `Color.mix` | ✅ | |
 | `LinearGradient`, `RadialGradient`, `EllipticalGradient`, `AngularGradient`, `Color.gradient` | ✅ | As views, fills and strokes of shapes, and text styles. |
 | `Button` and styles, `Toggle` and styles, `Slider`, `Stepper` | ✅ | |
 | `TextField`, `SecureField`, `TextEditor` | ✅ | Moves and deletes by characters and words; undo and redo; the caret blinks. |
@@ -134,7 +137,8 @@ tests.
 | `onTapGesture(count:)`, `onLongPressGesture` | ✅ | |
 | `onHover`, `onContinuousHover` | ✅ | |
 | `keyboardShortcut`, `onKeyPress`, `focusable`, `focused`, `onSubmit` | ✅ | |
-| `onDrag`, `onDrop`, `draggable`, `dropDestination` | ✗ | |
+| `draggable`, `dropDestination` | ✅ | Between views, and files and text dropped from the system. `Transferable` is Apple's on macOS and Cacao's own elsewhere. |
+| `onDrag`, `onDrop` (item providers) | ✗ | |
 
 ## Effects
 
@@ -155,7 +159,8 @@ tests.
 | `accessibilityAddTraits`, `accessibilityRemoveTraits`, `accessibilityHidden` | ✅ | |
 | `accessibilityElement(children:)`, `accessibilityAction` | ✅ | |
 | `accessibilityIdentifier` | ✅ | |
-| Platform bridge (AT-SPI, NSAccessibility) | ✗ | `ViewGraph.accessibilityTree()` gives a bridge what to expose. |
+| NSAccessibility bridge (macOS) | ✅ | Windows show their elements to VoiceOver, with press actions. |
+| AT-SPI bridge (Linux) | ✗ | |
 
 ## Other
 
