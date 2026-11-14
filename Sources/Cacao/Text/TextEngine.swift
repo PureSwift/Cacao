@@ -71,8 +71,9 @@ package struct FixedTextEngine: TextEngine {
         guard !string.isEmpty, fontSize > 0 else {
             return TextLayout(size: .zero, firstBaseline: 0, lastBaseline: 0, lines: [])
         }
-        let advance = fontSize * characterWidth
+        let advance = fontSize * characterWidth + (text.runs.map(\.tracking).max() ?? 0)
         let lineHeight = fontSize * self.lineHeight
+        let pitch = lineHeight + text.lineSpacing
         let maxWidth = proposal.width ?? .infinity
         func width(_ line: Substring) -> CGFloat {
             CGFloat(line.count) * advance
@@ -106,7 +107,7 @@ package struct FixedTextEngine: TextEngine {
 
         var maxLines = text.lineLimit ?? .max
         if let height = proposal.height, height.isFinite {
-            maxLines = min(maxLines, max(1, Int((height / lineHeight).rounded(.down))))
+            maxLines = min(maxLines, max(1, Int(((height + text.lineSpacing) / pitch).rounded(.down))))
         }
         if lines.count > maxLines {
             lines = Array(lines.prefix(maxLines))
@@ -114,9 +115,9 @@ package struct FixedTextEngine: TextEngine {
         let measured = lines.map { min(width($0), maxWidth) }.max() ?? 0
         let lineWidth = max(measured, min(advance, maxWidth == .infinity ? advance : maxWidth))
         return TextLayout(
-            size: CGSize(width: lineWidth, height: CGFloat(lines.count) * lineHeight),
+            size: CGSize(width: lineWidth, height: CGFloat(lines.count) * pitch - text.lineSpacing),
             firstBaseline: fontSize * ascent,
-            lastBaseline: CGFloat(lines.count - 1) * lineHeight + fontSize * ascent,
+            lastBaseline: CGFloat(lines.count - 1) * pitch + fontSize * ascent,
             lines: lines.map(String.init)
         )
     }
