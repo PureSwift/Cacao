@@ -21,6 +21,12 @@ extension ViewGraph {
         layout(in: size)
     }
 
+    /// Settles, then lets running animations and transitions finish.
+    func finish() {
+        settle()
+        advance(to: time + 10)
+    }
+
     /// Updates and lays out until nothing changes.
     func settle() {
         var passes = 0
@@ -70,7 +76,7 @@ extension ViewGraph {
         let graph = layout(Root(), width: 400, height: 500)
         graph.settle()
         graph.tapText("Apple")
-        graph.settle()
+        graph.finish()
         #expect(graph.texts.contains("Detail of Apple"))
         // The bar shows the new title, a back button titled with the
         // previous screen's, and the toolbar item.
@@ -80,7 +86,7 @@ extension ViewGraph {
         // Only the top screen draws.
         #expect(!graph.texts.contains("Settings"))
         graph.tapText("Fruits")
-        graph.settle()
+        graph.finish()
         #expect(!graph.texts.contains("Detail of Apple"))
         #expect(graph.texts.contains("Settings"))
     }
@@ -106,7 +112,7 @@ extension ViewGraph {
         let graph = layout(Bound(), width: 400, height: 500)
         graph.settle()
         graph.tapText("Push two")
-        graph.settle()
+        graph.finish()
         #expect(graph.texts.contains("Screen 2"))
         #expect(!graph.texts.contains("Screen 1"))
         graph.tapText("Back")
@@ -160,7 +166,7 @@ extension ViewGraph {
         graph.settle()
         #expect(graph.texts.contains("Detail of Pear"))
         graph.tapText("Apple")
-        graph.settle()
+        graph.finish()
         #expect(graph.texts.contains("Detail of Apple"))
         #expect(!graph.texts.contains("Detail of Pear"))
         #expect(!graph.texts.contains("Back"))
@@ -246,7 +252,7 @@ extension ViewGraph {
         graph.settle()
         #expect(graph.isPresenting)
         graph.tapText("Done")
-        graph.settle()
+        graph.finish()
         #expect(!graph.isPresenting)
         #expect(!graph.texts.contains("In the sheet"))
     }
@@ -445,5 +451,80 @@ extension ViewGraph {
         #expect(abs(graph.frame("cell 3").minX - 306) < 0.01)
         #expect(graph.frame("cell 4").minY == 60)
         #expect(graph.frame(forIdentifier: "cell 900") == nil)
+    }
+}
+
+@MainActor
+@Suite struct NavigationAnimationTests {
+
+    @Test func pushSlidesInOverThePreviousScreen() {
+        struct Stack: View {
+            @State var path: [Int] = []
+            var body: some View {
+                NavigationStack(path: $path) {
+                    Button("Push") { path = [1] }
+                        .navigationDestination(for: Int.self) { Text("Screen \($0)") }
+                }
+            }
+        }
+        let graph = layout(Stack(), width: 400, height: 500)
+        graph.settle()
+        graph.tapText("Push")
+        graph.settle()
+        // Both screens draw while the new one slides in from the trailing edge.
+        #expect(graph.texts.contains("Push"))
+        #expect(graph.texts.contains("Screen 1"))
+        #expect(graph.hasActiveAnimations)
+        graph.advance(to: graph.time + 0.1)
+        let offset = graph.drawnItems.first { drawn in
+            if case let .content(.text(text)) = drawn.item.value { return text.string == "Screen 1" }
+            return false
+        }?.transforms.first?.tx ?? 0
+        #expect(offset > 0 && offset < 400)
+        graph.advance(to: graph.time + 2)
+        #expect(!graph.texts.contains("Push"))
+        #expect(!graph.hasActiveAnimations)
+    }
+
+    @Test func disabledAnimationsPushInstantly() {
+        struct Stack: View {
+            @State var path: [Int] = []
+            var body: some View {
+                NavigationStack(path: $path) {
+                    Button("Push") {
+                        var transaction = Transaction()
+                        transaction.disablesAnimations = true
+                        withTransaction(transaction) { path = [1] }
+                    }
+                    .navigationDestination(for: Int.self) { Text("Screen \($0)") }
+                }
+            }
+        }
+        let graph = layout(Stack(), width: 400, height: 500)
+        graph.settle()
+        graph.tapText("Push")
+        graph.settle()
+        #expect(!graph.texts.contains("Push"))
+        #expect(!graph.hasActiveAnimations)
+    }
+
+    @Test func sheetSlidesUp() {
+        struct Root: View {
+            @State var isPresented = false
+            var body: some View {
+                Button("Show") { isPresented = true }
+                    .sheet(isPresented: $isPresented) { Text("Sheet") }
+            }
+        }
+        let graph = layout(Root(), width: 400, height: 400)
+        graph.tapText("Show")
+        graph.settle()
+        #expect(graph.hasActiveAnimations)
+        graph.advance(to: graph.time + 0.05)
+        let offset = graph.drawnItems.first { drawn in
+            if case let .content(.text(text)) = drawn.item.value { return text.string == "Sheet" }
+            return false
+        }?.transforms.first?.ty ?? 0
+        #expect(offset > 0)
     }
 }
