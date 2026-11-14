@@ -850,6 +850,19 @@ extension Image {
     }
 }
 
+private struct ImageScaleKey: EnvironmentKey {
+    static let defaultValue = Image.Scale.medium
+}
+
+extension EnvironmentValues {
+
+    /// The image scale for this environment.
+    public var imageScale: Image.Scale {
+        get { self[ImageScaleKey.self] }
+        set { self[ImageScaleKey.self] = newValue }
+    }
+}
+
 /// A symbol rendering mode.
 public struct SymbolRenderingMode: Sendable, Equatable {
     let id: Int
@@ -925,7 +938,9 @@ extension View {
 
     /// Scales images within the view according to one of the relative sizes
     /// available including small, medium, and large images sizes.
-    public func imageScale(_ scale: Image.Scale) -> some View { self }
+    public func imageScale(_ scale: Image.Scale) -> some View {
+        environment(\.imageScale, scale)
+    }
 
     /// Sets the rendering mode for symbol images within this view.
     public func symbolRenderingMode(_ mode: SymbolRenderingMode?) -> some View { self }
