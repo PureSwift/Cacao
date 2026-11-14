@@ -66,6 +66,12 @@ package final class ViewGraph {
     /// The views the pointer hovers over.
     var hoveredNodes: [Int: WeakNodeReference] = [:]
 
+    /// A drag of a view's value in progress.
+    var dragSession: DragSession?
+
+    /// A drag from the system over the window in progress.
+    var systemDragSession: DragSession?
+
     /// The window's insets that content stays inside of, like a notch's.
     package var safeAreaInsets = EdgeInsets()
 
