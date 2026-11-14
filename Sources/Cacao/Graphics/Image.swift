@@ -220,6 +220,9 @@ package struct ImageContent: Equatable, Sendable {
     package var tint: Color.Resolved?
 
     package var interpolation: Image.Interpolation
+
+    /// A transformation of the image's colors, after the tint.
+    package var colorMatrix: ColorMatrix? = nil
 }
 
 internal struct ImageBehavior: NodeBehavior {
