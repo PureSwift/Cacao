@@ -80,7 +80,7 @@ import Silica
         var faded = DrawingState()
         faded.opacity = 0.5
         var clipped = DrawingState()
-        clipped.clips = [(Path(CGRect(x: 0, y: 0, width: 5, height: 20)), .identity, false)]
+        clipped.clips = [DrawingClip(path: Path(CGRect(x: 0, y: 0, width: 5, height: 20)), transform: .identity, isEOFilled: false)]
         let drawing = DrawingContent(operations: [
             .shape(ShapeContent(path: Path(CGRect(x: 0, y: 0, width: 10, height: 10)), color: red, drawing: .fill(FillStyle())), moved),
             .shape(ShapeContent(path: Path(CGRect(x: 0, y: 10, width: 10, height: 10)), color: red, drawing: .fill(FillStyle())), faded),
