@@ -373,11 +373,28 @@ func rect(_ x: CGFloat, _ y: CGFloat, _ width: CGFloat, _ height: CGFloat) -> CG
         compositor.render(graph.displayList(), size: graph.size, scale: 1)
         let layers = layerDraws(backend)
         #expect(layers.count == 1)
-        #expect(layers.first?.2 == true)
+        // The clip shape is drawn as a mask over the content's layer.
+        #expect(backend.commands.contains { if case .mask = $0 { true } else { false } })
         // Drawing again reuses the layer and rasterizes nothing.
         compositor.render(graph.displayList(), size: graph.size, scale: 1)
         #expect(compositor.lastFrame.rasterizations == 0)
         #expect(compositor.lastFrame.uploads == 0)
+    }
+
+    @Test func maskViewMasksContent() {
+        let (graph, compositor, backend) = make(
+            Color.red.frame(width: 80, height: 80)
+                .mask { Circle().frame(width: 40, height: 40) }
+        )
+        compositor.render(graph.displayList(), size: graph.size, scale: 1)
+        // The visible part is where the content and the mask overlap.
+        let layers = layerDraws(backend)
+        #expect(layers.count == 1)
+        #expect(layers.first?.0 == CGRect(x: 80, y: 80, width: 40, height: 40))
+        let masks = backend.commands.filter { if case .mask = $0 { true } else { false } }
+        #expect(masks.count == 1)
+        // The mask isn't hit tested.
+        #expect(graph.hitTest(CGPoint(x: 100, y: 100)) != nil)
     }
 
     @Test func rectangularClipUsesTheClipRect() {
