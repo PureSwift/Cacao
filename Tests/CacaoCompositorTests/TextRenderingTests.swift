@@ -71,4 +71,39 @@ import Silica
         #expect(abs(ink.maxY - layout.firstBaseline) <= 2, "ink \(ink), baseline \(layout.firstBaseline)")
         #expect(ink.height > 20)
     }
+
+    /// A canvas's drawing, with its transforms, opacity and clips, in pixels.
+    @Test func rasterizesCanvasDrawing() throws {
+        let red = Color.Resolved(red: 1, green: 0, blue: 0)
+        var moved = DrawingState()
+        moved.transform = .translation(10, 0)
+        var faded = DrawingState()
+        faded.opacity = 0.5
+        var clipped = DrawingState()
+        clipped.clips = [(Path(CGRect(x: 0, y: 0, width: 5, height: 20)), .identity, false)]
+        let drawing = DrawingContent(operations: [
+            .shape(ShapeContent(path: Path(CGRect(x: 0, y: 0, width: 10, height: 10)), color: red, drawing: .fill(FillStyle())), moved),
+            .shape(ShapeContent(path: Path(CGRect(x: 0, y: 10, width: 10, height: 10)), color: red, drawing: .fill(FillStyle())), faded),
+            .shape(ShapeContent(path: Path(CGRect(x: 0, y: 0, width: 10, height: 10)), color: red, drawing: .fill(FillStyle())), clipped),
+        ])
+        let image = try #require(Rasterizer.rasterize(
+            .drawing(drawing),
+            size: CGSize(width: 20, height: 20),
+            scale: 1,
+            textEngine: SilicaTextEngine()
+        ))
+        func pixel(_ x: Int, _ y: Int) -> [UInt8] {
+            image.data.withUnsafeBytes { bytes in
+                (0..<4).map { bytes[y * image.bytesPerRow + x * 4 + $0] }
+            }
+        }
+        // Moved right by 10 points.
+        #expect(pixel(15, 5) == [255, 0, 0, 255])
+        // Clipped to the leading 5 points.
+        #expect(pixel(2, 5) == [255, 0, 0, 255])
+        #expect(pixel(7, 5)[3] == 0)
+        // Half opacity, premultiplied.
+        let half = pixel(5, 15)
+        #expect(abs(Int(half[3]) - 128) <= 2)
+    }
 }
