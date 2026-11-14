@@ -130,8 +130,14 @@ extension Text: View, PrimitiveView {
                 if run.isMonospacedDigit {
                     font = font.monospacedDigit()
                 }
+                let string: String
+                switch environment.textCase {
+                case .uppercase: string = run.string.uppercased()
+                case .lowercase: string = run.string.lowercased()
+                case nil: string = run.string
+                }
                 return ResolvedText.Run(
-                    string: run.string,
+                    string: string,
                     font: font.resolve(),
                     color: run.color?.resolve(in: environment) ?? foreground
                 )
