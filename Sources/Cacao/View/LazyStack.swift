@@ -157,6 +157,10 @@ internal final class LazyStackState {
     /// The identity of each row, by index.
     private(set) var ids: [AnyHashable] = []
 
+    /// Each row's identity as its content knows it, like a `ForEach`
+    /// element's, for scrolling to it.
+    var elementIDs: [AnyHashable] = []
+
     /// Measured lengths along the stack's axis, by row identity, which
     /// follow rows when the data changes.
     private var lengthsByID: [AnyHashable: CGFloat] = [:]
@@ -258,6 +262,7 @@ internal struct LazyStack {
         // The data can only change when the parent passes a new view.
         if !keepsExisting || state.ids.count != count {
             state.setIDs((0..<count).map { source.id(at: $0) })
+            state.elementIDs = (0..<count).map { source.elementID(at: $0) }
         }
         var environment = context.environment
         environment.stackOrientation = axis
