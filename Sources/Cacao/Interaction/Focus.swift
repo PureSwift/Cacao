@@ -47,6 +47,26 @@ package struct KeyModifiers: OptionSet, Hashable, Sendable {
     package static let option = KeyModifiers(rawValue: 1 << 2)
     package static let command = KeyModifiers(rawValue: 1 << 3)
 
+    /// The modifier that moves the caret by words: option on macOS,
+    /// control elsewhere.
+    package static var wordMovement: KeyModifiers {
+        #if os(macOS)
+        return .option
+        #else
+        return .control
+        #endif
+    }
+
+    /// The modifier that moves the caret to the ends of lines and text:
+    /// command on macOS, none elsewhere (which has home and end keys).
+    package static var lineMovement: KeyModifiers {
+        #if os(macOS)
+        return .command
+        #else
+        return KeyModifiers(rawValue: 1 << 30)
+        #endif
+    }
+
     /// The platform's shortcut modifier: command on macOS, control elsewhere.
     package static var shortcut: KeyModifiers {
         #if os(macOS)
