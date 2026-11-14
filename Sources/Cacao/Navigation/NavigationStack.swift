@@ -90,6 +90,9 @@ internal final class NavigationContext {
 
     private var nextViewID = 0
 
+    /// The number of screens above the root at the last update.
+    var lastDepth: Int?
+
     var entries: [NavigationEntry] {
         (path?.wrappedValue.map { .value($0) } ?? []) + ownEntries
     }
@@ -302,14 +305,22 @@ internal struct _NavigationStack: View, PrimitiveView {
                 content = view
                 key = AnyHashable("\(depth) view \(id)")
             }
+            // Pushed screens slide in from the trailing edge, over the last.
             children.append(ChildView(
                 key: key,
-                view: _NavigationScreen(content: content, depth: depth, navigation: navigation, isDetailRoot: false),
+                view: _NavigationScreen(content: content, depth: depth, navigation: navigation, isDetailRoot: false)
+                    .transition(.move(edge: .trailing)),
                 environment: environment
             ))
         }
         navigation.screens = navigation.screens.filter { $0.key <= entries.count }
-        return Resolution(behavior: NavigationStackBehavior(), children: children)
+        var resolution = Resolution(behavior: NavigationStackBehavior(), children: children)
+        // Pushing and popping animate, except a split view's detail.
+        if let last = navigation.lastDepth, last != entries.count, column?.isDetail != true {
+            resolution.transaction = { $0.animateByDefault(.smooth(duration: 0.35)) }
+        }
+        navigation.lastDepth = entries.count
+        return resolution
     }
 
     typealias Body = Never
@@ -348,8 +359,13 @@ internal struct NavigationStackBehavior: NodeBehavior {
         }
     }
 
+    /// The top screen, over the one below while it slides in.
     func displayOrder(of children: [ViewNode]) -> [ViewNode] {
-        children.last.map { [$0] } ?? []
+        guard let top = children.last else { return [] }
+        if children.count > 1, top.graph.nodeAnimations[top.id]?.transition != nil {
+            return [children[children.count - 2], top]
+        }
+        return [top]
     }
 }
 
