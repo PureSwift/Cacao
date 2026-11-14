@@ -96,16 +96,31 @@ extension ProgressView where Label == Text, CurrentValueLabel == EmptyView {
     }
 }
 
-/// A ring, partly drawn: the completed fraction, or a fixed arc when
-/// indeterminate. (It doesn't spin until Cacao has animations.)
+/// A ring, partly drawn: the completed fraction, or a spinning arc when
+/// indeterminate.
 private struct _Spinner: View {
 
     let fraction: Double?
 
     var body: some View {
+        if let fraction {
+            ring(fraction)
+        } else {
+            ring(0.3)
+                .keyframeAnimator(initialValue: 0.0) { content, turn in
+                    content.rotationEffect(.degrees(turn))
+                } keyframes: { _ in
+                    KeyframeTrack {
+                        LinearKeyframe(360.0, duration: 1)
+                    }
+                }
+        }
+    }
+
+    private func ring(_ end: Double) -> some View {
         ZStack {
             Circle().stroke(Color.controlFill, lineWidth: 3)
-            _ArcShape(start: 0, end: fraction ?? 0.3)
+            _ArcShape(start: 0, end: end)
                 .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
         }
         .frame(width: 20, height: 20)
