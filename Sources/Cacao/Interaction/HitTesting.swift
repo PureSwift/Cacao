@@ -98,8 +98,7 @@ extension ViewNode {
             let offset = scroll.state(of: self).offset
             childPoint = CGPoint(x: point.x + offset.x, y: point.y + offset.y)
         }
-        let ordered = behavior?.displayOrder(of: children) ?? children
-        for child in ordered.reversed() {
+        for child in orderedChildren.reversed() {
             if let path = child.hitTest(childPoint) {
                 return [self] + path
             }
