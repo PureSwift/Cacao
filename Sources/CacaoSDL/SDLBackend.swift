@@ -122,6 +122,24 @@ final class SDLBackend: CompositorBackend {
         SDL_RenderGeometry(renderer, texture, &vertices, Int32(vertices.count), &indices, Int32(indices.count))
     }
 
+    func drawLayer(_ layer: TextureID, corners: [CGPoint], opacity: Double) {
+        guard let texture = textures[layer.rawValue], corners.count == 4 else { return }
+        SDL_SetTextureColorModFloat(texture, 1, 1, 1)
+        SDL_SetTextureAlphaModFloat(texture, 1)
+        SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_LINEAR)
+        let alpha = Float(opacity)
+        let coordinates = [(0, 0), (1, 0), (1, 1), (0, 1)]
+        var vertices = zip(corners, coordinates).map { corner, coordinate in
+            SDL_Vertex(
+                position: SDL_FPoint(x: Float(corner.x), y: Float(corner.y)),
+                color: SDL_FColor(r: alpha, g: alpha, b: alpha, a: alpha),
+                tex_coord: SDL_FPoint(x: Float(coordinate.0), y: Float(coordinate.1))
+            )
+        }
+        var indices: [Int32] = [0, 1, 2, 0, 2, 3]
+        SDL_RenderGeometry(renderer, texture, &vertices, 4, &indices, 6)
+    }
+
     func destroyTexture(_ texture: TextureID) {
         if let pointer = textures.removeValue(forKey: texture.rawValue) {
             SDL_DestroyTexture(pointer)
