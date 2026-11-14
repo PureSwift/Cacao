@@ -1,9 +1,9 @@
 # Cacao: SwiftUI for Linux and macOS — Plan
 
-Status: **Phase 7 done** (gradients, blurred shadows and `blur`, color
-effects, text decorations, `onReceive`, `containerRelativeFrame`, phase and
-keyframe animators, `DatePicker`, `ColorPicker`, `Gauge`, `@Entry`). What's
-implemented is in [API coverage](APICoverage.md).
+Status: **Phase 8 done** (masks by any view, anti-aliased and concave
+clips, gradient text, truncation with ellipses, text that shrinks to fit,
+gradient strokes in `Canvas`, editing by characters and words with undo, a
+blinking caret). What's implemented is in [API coverage](APICoverage.md).
 
 Notes:
 - Phase 1: 26 layout cases match Apple's SwiftUI frame for frame on macOS
@@ -56,18 +56,26 @@ Notes:
   on the graph's clock through wakeups, like `TimelineView`, so tests drive
   them with simulated time. Without Combine, Cacao provides the publishers
   `onReceive` takes. `@Entry` is a macro target on swift-syntax.
+- Phase 8: masks draw the mask into one offscreen layer and the content
+  into another, and keep the content only where the mask is opaque
+  (destination-in blending), so a view's alpha masks any content. Shape
+  clips draw their shape as such a mask, anti-aliased and right for
+  concave shapes, instead of a triangle fan. Text in a gradient style is
+  the gradient masked by the text. Silica draws images y-up, so `Canvas`
+  images had been upside down; they're drawn upright now. Text editing
+  moves by grapheme clusters (an emoji flag or an accented letter is one
+  step), by words with option (control on Linux), and joins typing in one
+  undo step.
 - Known gaps, for later phases:
   - Tab switches don't animate (nor do they in SwiftUI by default).
   - No accessibility bridge yet: `ViewGraph.accessibilityTree()` is what an
     AT-SPI or NSAccessibility bridge would expose.
-  - Text drawn in a gradient style uses the gradient's average color.
   - No drag and drop, `ShareLink`, `Settings`, `MenuBarExtra`, `commands`
     or `DocumentGroup`.
   - `RotateGesture` has no input yet: SDL reports pinches but not rotations.
   - On macOS, the system's trackpad momentum arrives as more scrolling, so
     snapping scroll views settle after it ends; paging moves at most a page.
-  - `Canvas` strokes gradient shading in a color, ignores blend modes and
-    has no symbols.
+  - `Canvas` ignores blend modes and has no symbols.
   - `matchedGeometryEffect` moves frames only; `properties`, `anchor` and
     `isSource` are ignored.
   - Toolbar items are found from the structure of toolbar content, as picker
@@ -75,10 +83,7 @@ Notes:
   - `NavigationSplitView` has fixed column widths and no column visibility.
   - A unary modifier applied to several views lays them out as one implicit
     `VStack`; SwiftUI applies the modifier to each view.
-  - Shape clips draw through a triangle fan, which is exact for convex
-    shapes only.
-  - Text editing works on Unicode scalars, not grapheme clusters, and has
-    no word movement or undo; the caret doesn't blink.
+  - Text input has no spell checking.
   - `Picker` reads its options from the structure of its content (tags,
     `ForEach`), not from evaluated views.
   - `Image(systemName:)` draws nothing yet (Q6).
@@ -398,6 +403,7 @@ Each phase ends green on macOS and Linux CI.
 | **5. Animation & gestures** ✅ | Animatable, transactions, transitions (run as compositor‑side property animations where possible), matchedGeometryEffect, full gesture set, TimelineView, Canvas, scroll target behaviors | Animated catalog screens hold refresh rate on a mid‑range Linux box |
 | **6. Polish** ✅ | GeometryReader/coordinate spaces edge cases, ViewThatFits, safe area, accessibility hooks (AT‑SPI later), multi‑window, `SwiftUI` alias module, docs | API coverage table published; sample apps compile unchanged |
 | **7. Completeness** ✅ | Gradients, blur and blurred shadows, color effects, text decorations and spacing, `onReceive` (with publishers where there's no Combine), `containerRelativeFrame`, phase and keyframe animators, `DatePicker`, `ColorPicker`, `Gauge`, `@Entry` | Effects demo screen draws them through the GPU compositor on macOS and Linux |
+| **8. Fidelity** ✅ | Masks by any view, anti-aliased concave clips, gradient text, truncation and shrinking text, gradient strokes in `Canvas`, editing by characters and words, undo, caret blink | Effects demo screen shows them on macOS and Linux |
 
 ---
 
