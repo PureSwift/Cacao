@@ -127,6 +127,27 @@ extension RoundedRectangle: Animatable {
     }
 }
 
+extension Double: Animatable {
+    public var animatableData: Double {
+        get { self }
+        set { self = newValue }
+    }
+}
+
+extension Float: Animatable {
+    public var animatableData: Float {
+        get { self }
+        set { self = newValue }
+    }
+}
+
+extension CGFloat: Animatable {
+    public var animatableData: CGFloat {
+        get { self }
+        set { self = newValue }
+    }
+}
+
 extension Rectangle: Animatable { }
 extension Circle: Animatable { }
 extension Ellipse: Animatable { }
