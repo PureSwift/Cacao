@@ -84,7 +84,15 @@ extension ModifiedContent: PrimitiveView where Content: View, Modifier: ViewModi
 
     func resolve(in context: ResolveContext) -> Resolution {
         if let primitive = modifier as? any PrimitiveViewModifier {
-            return primitive.resolve(content: content, in: context)
+            let resolution = primitive.resolve(content: content, in: context)
+            // A modifier that lays out or draws applies to each of several
+            // views, as in SwiftUI, rather than to all of them as one.
+            if resolution.behavior != nil, let views = ContentViews(content), views.items.count != 1 {
+                return Resolution(children: views.items.map { item in
+                    ChildView(key: item.id, view: applying(to: item.view))
+                })
+            }
+            return resolution
         }
         // A custom modifier: like a composite view, its dynamic properties
         // live in this node and its body is this node's only child.
@@ -109,6 +117,94 @@ extension ModifiedContent: ViewModifier where Content: ViewModifier, Modifier: V
 }
 
 extension ModifiedContent: Equatable where Content: Equatable, Modifier: Equatable { }
+
+// MARK: - Views of content
+
+/// The views that content is made of, from its structure: tuples, groups,
+/// conditionals, `ForEach` and a modifier's content are flattened.
+@MainActor
+internal struct ContentViews {
+
+    private(set) var items: [(id: AnyHashable, view: any View)] = []
+
+    /// The views of `content`, or `nil` if it's a single view by its type.
+    init?(_ content: any View) {
+        guard Self.isStructural(content) else {
+            return nil
+        }
+        append(content, path: "")
+    }
+
+    private static func isStructural(_ view: any View) -> Bool {
+        if let modified = view as? any _ModifiedViews {
+            return modified.isPrimitive && isStructural(modified.modifiedContent)
+        }
+        return view is any _TupleContent || view is any _StructuralWrapper || view is any LazyRowSource
+            || view is any _ModifierContentProtocol || view is EmptyView
+    }
+
+    /// Adds the views of `view`, each wrapped by `wrap`: the modifiers
+    /// applied over the structure the view was found in.
+    private mutating func append(_ view: any View, path: String, wrap: (any View) -> any View = { $0 }) {
+        switch view {
+        case is EmptyView:
+            break
+        case let modified as any _ModifiedViews where modified.isPrimitive:
+            if Self.isStructural(modified.modifiedContent) {
+                append(modified.modifiedContent, path: path) { wrap(modified.applying(to: $0)) }
+            } else {
+                items.append((AnyHashable(path), wrap(view)))
+            }
+        case let tuple as any _TupleContent:
+            for (index, child) in tuple.tupleChildren.enumerated() {
+                append(child, path: path + "/\(index)", wrap: wrap)
+            }
+        case let content as any _ModifierContentProtocol:
+            append(content.wrappedView, path: path, wrap: wrap)
+        case let wrapper as any _StructuralWrapper:
+            if let inner = wrapper.wrappedContent {
+                append(inner, path: path + "/" + wrapper.structuralKey, wrap: wrap)
+            }
+        case let source as any LazyRowSource:
+            for index in 0..<source.rowCount {
+                let row = source.row(at: index)
+                append(row.view, path: path + "/#\(row.id)", wrap: wrap)
+            }
+        default:
+            items.append((AnyHashable(path), wrap(view)))
+        }
+    }
+}
+
+/// Content with a modifier, which flattening applies to each of the
+/// content's views when the modifier is a built-in one.
+@MainActor
+internal protocol _ModifiedViews {
+    var modifiedContent: any View { get }
+    var isPrimitive: Bool { get }
+    func applying(to view: any View) -> any View
+}
+
+extension ModifiedContent: _ModifiedViews where Content: View, Modifier: ViewModifier {
+
+    var modifiedContent: any View { content }
+
+    var isPrimitive: Bool { modifier is any PrimitiveViewModifier }
+
+    func applying(to view: any View) -> any View {
+        ModifiedContent<AnyView, Modifier>(content: AnyView(_fromValue: view)!, modifier: modifier)
+    }
+}
+
+/// A modifier's content, which is flattened through to the views it holds.
+@MainActor
+internal protocol _ModifierContentProtocol {
+    var wrappedView: any View { get }
+}
+
+extension _ViewModifier_Content: _ModifierContentProtocol {
+    var wrappedView: any View { content }
+}
 
 // MARK: - EmptyModifier
 
