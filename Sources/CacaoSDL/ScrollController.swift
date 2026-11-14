@@ -27,6 +27,9 @@ final class ScrollController {
     /// Points per unit of a precise delta.
     static let preciseScale: CGFloat = 10
 
+    /// Seconds of a gesture's velocity to where it would come to rest.
+    static let projection: CGFloat = 0.35
+
     /// Seconds without precise events before the gesture counts as ended.
     static let gestureEnd = 0.06
 
@@ -39,6 +42,8 @@ final class ScrollController {
     #endif
 
     private struct Gesture {
+        /// The offset when the gesture began.
+        var start: CGPoint
         var raw: CGPoint
         var position: CGPoint
         var tracker = VelocityTracker()
@@ -86,6 +91,8 @@ final class ScrollController {
         } else {
             return
         }
+        // The user takes over from a programmatic scroll.
+        graph.cancelScrollAnimation(of: state)
         let scroller = scrollers[ObjectIdentifier(state)] ?? Scroller(state: state)
         scrollers[ObjectIdentifier(state)] = scroller
         if isPrecise {
@@ -102,7 +109,7 @@ final class ScrollController {
 
     private func precise(_ scroller: Scroller, delta: CGSize, now: Double) {
         let state = scroller.state
-        var gesture = scroller.gesture ?? Gesture(raw: state.offset, position: .zero, lastEvent: now)
+        var gesture = scroller.gesture ?? Gesture(start: state.offset, raw: state.offset, position: .zero, lastEvent: now)
         if scroller.gesture == nil {
             gesture.tracker.reset(x: 0, y: 0, time: now)
         }
@@ -113,6 +120,11 @@ final class ScrollController {
         gesture.position.y += delta.height
         gesture.tracker.add(x: gesture.position.x, y: gesture.position.y, time: now)
         gesture.lastEvent = now
+        // Paging scroll views move at most a page per gesture.
+        if let limit = state.gestureLimit {
+            gesture.raw.x = min(max(gesture.raw.x, gesture.start.x - limit.width), gesture.start.x + limit.width)
+            gesture.raw.y = min(max(gesture.raw.y, gesture.start.y - limit.height), gesture.start.y + limit.height)
+        }
         scroller.gesture = gesture
         state.offset = banded(gesture.raw, state: state)
     }
@@ -124,6 +136,14 @@ final class ScrollController {
             target = CGPoint(x: x.to, y: y.to)
         }
         target = state.clamped(CGPoint(x: target.x + delta.width, y: target.y + delta.height))
+        // A notch moves snapping scroll views to their next target.
+        if let snapped = state.snappedOffset(
+            projected: target,
+            from: state.offset,
+            velocity: CGSize(width: delta.width * 100, height: delta.height * 100)
+        ) {
+            target = snapped
+        }
         scroller.gesture = nil
         scroller.motion = .eased(
             x: EasedScroll(from: state.offset.x, to: target.x, time: now),
@@ -177,6 +197,24 @@ final class ScrollController {
     private func endGesture(_ scroller: Scroller, gesture: Gesture, now: Double) {
         let state = scroller.state
         let clamped = state.clamped(state.offset)
+        // Snapping scroll views settle where their behavior says, from where
+        // the gesture would have come to rest.
+        let velocity = gesture.tracker.velocity
+        let projected = CGPoint(
+            x: state.offset.x + CGFloat(velocity.x) * Self.projection,
+            y: state.offset.y + CGFloat(velocity.y) * Self.projection
+        )
+        if let target = state.snappedOffset(
+            projected: projected,
+            from: gesture.start,
+            velocity: CGSize(width: velocity.x, height: velocity.y)
+        ), target != state.offset {
+            scroller.motion = .springing(
+                x: SpringBack(from: state.offset.x, to: target.x, time: now),
+                y: SpringBack(from: state.offset.y, to: target.y, time: now)
+            )
+            return
+        }
         if clamped != state.offset {
             scroller.motion = .springing(
                 x: SpringBack(from: state.offset.x, to: clamped.x, time: now),
