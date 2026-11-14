@@ -125,6 +125,8 @@ public enum SDLHost {
             event.motion.windowID
         case SDL_EVENT_MOUSE_WHEEL:
             event.wheel.windowID
+        case SDL_EVENT_PINCH_BEGIN, SDL_EVENT_PINCH_UPDATE, SDL_EVENT_PINCH_END:
+            event.pinch.windowID
         case SDL_EVENT_KEY_DOWN, SDL_EVENT_KEY_UP:
             event.key.windowID
         default:
