@@ -30,6 +30,8 @@ internal struct _TapGestureModifier: ViewModifier, PrimitiveViewModifier {
         var attributes = NodeAttributes()
         if context.environment.isEnabled {
             attributes.tap = handler
+        } else {
+            attributes.disabledTap = handler
         }
         return Resolution(children: [ChildView(key: 0, view: content)], attributes: attributes)
     }
