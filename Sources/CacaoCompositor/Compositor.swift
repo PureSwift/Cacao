@@ -56,6 +56,10 @@ package protocol CompositorBackend: AnyObject {
     /// Draws a layer in a rectangle, inside a convex polygon if given.
     func drawLayer(_ layer: TextureID, in rect: CGRect, opacity: Double, mask: [CGPoint]?)
 
+    /// Draws a layer stretched to a quadrilateral: its top-leading,
+    /// top-trailing, bottom-trailing and bottom-leading corners.
+    func drawLayer(_ layer: TextureID, corners: [CGPoint], opacity: Double)
+
     /// Limits drawing to a rectangle, or removes the limit.
     func setClip(_ rect: CGRect?)
 
@@ -244,6 +248,13 @@ package final class Compositor {
                     let mask = Self.polygon(effect.path).map { CGPoint(x: $0.x + frame.minX, y: $0.y + frame.minY) }
                     drawGroup(nested.items, identity: item.identity, bounds: frame, translation: translation, clip: clip, opacity: opacity, mask: mask)
                 }
+            case let .effect(.transform(transform), nested):
+                if transform.isTranslation {
+                    // Moving only shifts the drawing.
+                    draw(nested.items, translation: CGPoint(x: translation.x - transform.tx, y: translation.y - transform.ty), clip: clip, opacity: opacity)
+                } else {
+                    drawTransformed(nested.items, identity: item.identity, transform: transform, translation: translation, clip: clip, opacity: opacity)
+                }
             case let .effect(.scroll(effect), nested):
                 let viewport = effect.viewport.offsetBy(dx: -translation.x, dy: -translation.y)
                 let innerClip = clip.intersection(viewport)
@@ -304,6 +315,57 @@ package final class Compositor {
         frameStatistics.draws += 1
     }
 
+    /// Draws items into an offscreen layer, untransformed, then draws the
+    /// layer through the transform.
+    private func drawTransformed(
+        _ items: [DisplayList.Item],
+        identity: Int,
+        transform: Transform2D,
+        translation: CGPoint,
+        clip: CGRect,
+        opacity: Double
+    ) {
+        let rootBounds = Self.bounds(of: items)
+        guard !rootBounds.isNull, !rootBounds.isEmpty, opacity > 0 else {
+            markPresent(items)
+            return
+        }
+        let bounds = rootBounds.offsetBy(dx: -translation.x, dy: -translation.y)
+        let pixels = absolutePixelRect(bounds)
+        let width = Int(pixels.width), height = Int(pixels.height)
+        guard width > 0, height > 0, width <= 8192, height <= 8192,
+              let layer = offscreen(identity: identity, width: width, height: height) else {
+            markPresent(items)
+            return
+        }
+        backend.beginLayer(layer)
+        targetOrigins.append(pixels.origin)
+        draw(items, translation: translation, clip: bounds, opacity: 1)
+        backend.setClip(nil)
+        targetOrigins.removeLast()
+        backend.endLayer()
+        setClip(clip)
+        // The layer's corners, transformed in the root's space, on screen.
+        let rootPixels = CGRect(
+            x: pixels.minX / scale + translation.x,
+            y: pixels.minY / scale + translation.y,
+            width: pixels.width / scale,
+            height: pixels.height / scale
+        )
+        let corners = [
+            CGPoint(x: rootPixels.minX, y: rootPixels.minY),
+            CGPoint(x: rootPixels.maxX, y: rootPixels.minY),
+            CGPoint(x: rootPixels.maxX, y: rootPixels.maxY),
+            CGPoint(x: rootPixels.minX, y: rootPixels.maxY),
+        ].map { corner -> CGPoint in
+            let moved = transform.apply(corner)
+            return relative(CGPoint(x: (moved.x - translation.x) * scale, y: (moved.y - translation.y) * scale))
+        }
+        backend.drawLayer(layer, corners: corners, opacity: opacity)
+        frameStatistics.layers += 1
+        frameStatistics.draws += 1
+    }
+
     /// Keeps the textures of items that are present but not drawn.
     private func markPresent(_ items: [DisplayList.Item]) {
         for item in items {
@@ -326,7 +388,7 @@ package final class Compositor {
             color.opacity *= Float(opacity)
             backend.fill(pixelRect(frame), color: color)
             frameStatistics.draws += 1
-        case .text, .shape:
+        case .text, .shape, .drawing:
             drawRasterized(content, identity: identity, frame: frame, clip: clip, opacity: opacity)
         case let .image(image):
             let key = ImageKey(source: image.source, tint: image.tint)
