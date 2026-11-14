@@ -17,6 +17,7 @@ final class RecordingBackend: CompositorBackend {
         case beginLayer(TextureID)
         case endLayer
         case drawLayer(TextureID, CGRect, Double, masked: Bool)
+        case drawTransformedLayer(TextureID, [CGPoint], Double)
     }
 
     var commands: [Command] = []
@@ -53,6 +54,10 @@ final class RecordingBackend: CompositorBackend {
 
     func drawLayer(_ layer: TextureID, in rect: CGRect, opacity: Double, mask: [CGPoint]?) {
         commands.append(.drawLayer(layer, rect, opacity, masked: mask != nil))
+    }
+
+    func drawLayer(_ layer: TextureID, corners: [CGPoint], opacity: Double) {
+        commands.append(.drawTransformedLayer(layer, corners, opacity))
     }
 
     func beginFrame(width: Int, height: Int, clearColor: Color.Resolved) {
@@ -244,6 +249,37 @@ func rect(_ x: CGFloat, _ y: CGFloat, _ width: CGFloat, _ height: CGFloat) -> CG
         #expect(layers.count == 1)
         #expect(layers.first?.0 == rect(70, 70, 60, 60))
         #expect(layers.first?.1 == 0.5)
+    }
+
+    @Test func scaledContentDrawsATransformedLayer() {
+        let (graph, compositor, backend) = make(Color.red.frame(width: 60, height: 60).scaleEffect(2))
+        compositor.render(graph.displayList(), size: graph.size, scale: 1)
+        let quads = backend.commands.compactMap { command -> [CGPoint]? in
+            if case let .drawTransformedLayer(_, corners, _) = command { return corners }
+            return nil
+        }
+        // 60 points centered in 200 by 200, scaled twice around its center.
+        #expect(quads == [[
+            CGPoint(x: 40, y: 40), CGPoint(x: 160, y: 40),
+            CGPoint(x: 160, y: 160), CGPoint(x: 40, y: 160),
+        ]])
+        // Drawing again reuses the layer's content.
+        compositor.render(graph.displayList(), size: graph.size, scale: 1)
+        #expect(compositor.lastFrame.rasterizations == 0)
+    }
+
+    @Test func rotatedContentDrawsARotatedQuad() {
+        let (graph, compositor, backend) = make(Color.red.frame(width: 60, height: 60).rotationEffect(.degrees(90)))
+        compositor.render(graph.displayList(), size: graph.size, scale: 1)
+        let corners = backend.commands.compactMap { command -> [CGPoint]? in
+            if case let .drawTransformedLayer(_, corners, _) = command { return corners }
+            return nil
+        }.first ?? []
+        // A quarter turn moves the top-leading corner to the top-trailing.
+        #expect(corners.count == 4)
+        if let first = corners.first {
+            #expect(abs(first.x - 130) < 0.001 && abs(first.y - 70) < 0.001)
+        }
     }
 
     @Test func singleItemOpacityNeedsNoLayer() {
