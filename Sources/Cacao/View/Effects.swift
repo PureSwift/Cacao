@@ -377,22 +377,39 @@ extension DisplayList.Content {
         case var .image(image):
             image.colorMatrix = image.colorMatrix.map { $0.then(matrix) } ?? matrix
             return .image(image)
-        case var .drawing(drawing):
-            drawing.operations = drawing.operations.map { operation in
-                switch operation {
-                case .shape(var shape, let state):
-                    shape.applying(matrix)
-                    return .shape(shape, state)
-                case .text(var text, let rect, let state):
-                    text.applying(matrix)
-                    return .text(text, rect, state)
-                case .image(var image, let rect, let state):
-                    image.colorMatrix = image.colorMatrix.map { $0.then(matrix) } ?? matrix
-                    return .image(image, rect, state)
-                }
-            }
-            return .drawing(drawing)
+        case let .drawing(drawing):
+            return .drawing(drawing.applying(matrix))
         }
+    }
+}
+
+extension DrawingContent {
+
+    /// The drawing with its colors transformed.
+    package func applying(_ matrix: ColorMatrix) -> DrawingContent {
+        func image(_ image: ImageContent) -> ImageContent {
+            var image = image
+            image.colorMatrix = image.colorMatrix.map { $0.then(matrix) } ?? matrix
+            return image
+        }
+        return DrawingContent(operations: operations.map { operation in
+            switch operation {
+            case .shape(var shape, let state):
+                shape.applying(matrix)
+                return .shape(shape, state)
+            case .text(var text, let rect, let state):
+                text.applying(matrix)
+                return .text(text, rect, state)
+            case let .image(content, rect, state):
+                return .image(image(content), rect, state)
+            case let .tiledImage(path, isEOFilled, content, origin, scale, state):
+                return .tiledImage(path, isEOFilled: isEOFilled, image(content), origin: origin, scale: scale, state)
+            case let .items(items, state):
+                return .items(items.map { $0.applying(matrix) }, state)
+            case let .layer(content, state):
+                return .layer(content.applying(matrix), state)
+            }
+        })
     }
 }
 
