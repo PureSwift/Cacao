@@ -1,8 +1,8 @@
 # Cacao: SwiftUI for Linux and macOS — Plan
 
-Status: **Phase 10 done** (modifiers applied per view, complete
-`matchedGeometryEffect`, split view column widths and visibility, item
-provider drag and drop). What's implemented is in [API coverage](APICoverage.md).
+Status: **Phase 11 done** (modifiers applied to each view of a custom
+view's body, resizable split view columns and a sidebar toggle,
+`ShareLink`). What's implemented is in [API coverage](APICoverage.md).
 
 Notes:
 - Phase 1: 26 layout cases match Apple's SwiftUI frame for frame on macOS
@@ -94,10 +94,22 @@ Notes:
   widths reach the split view through a preference, and hidden columns keep
   their state without being drawn. `onDrag` and `onDrop` carry item
   providers; on Linux, Cacao provides the part of `NSItemProvider` they use.
+- Phase 11: a modifier over a custom view whose body is several views
+  passes down to that view, which applies it to each; the custom view keeps
+  its node and state, and modifiers switch back when its body becomes one
+  view (34 layout cases match Apple's SwiftUI). This found that a node
+  turning transparent, or a transparent node resolved alone, left its
+  layout parent's list of children stale; it's now cleared. Split view
+  dividers resize the column before them, within its width range, and the
+  detail's bar has a sidebar toggle. `ShareLink` opens AppKit's share
+  picker on macOS, through the host, and elsewhere shows a menu that copies
+  the items and opens URLs.
 - Known gaps, for later phases:
   - Tab switches don't animate (nor do they in SwiftUI by default).
   - No AT-SPI bridge on Linux yet.
-  - No `ShareLink` or `DocumentGroup`; menu bar extras have no window style.
+  - No `DocumentGroup`; menu bar extras have no window style.
+  - `ShareLink` on Linux copies and opens; there's no system share sheet.
+    Previews aren't shown.
   - `RotateGesture` has no input yet: SDL reports pinches but not rotations.
   - On macOS, the system's trackpad momentum arrives as more scrolling, so
     snapping scroll views settle after it ends; paging moves at most a page.
@@ -105,10 +117,8 @@ Notes:
     for large canvases that use them.
   - Toolbar items are found from the structure of toolbar content, as picker
     options are; `bottomBar` items show in the navigation bar.
-  - `NavigationSplitView` columns can't be resized by dragging, and there's
-    no sidebar toggle button.
-  - A modifier applied to a custom view whose body is several views lays
-    them out as one implicit `VStack`; SwiftUI applies it to each view.
+  - The sidebar toggle is in the detail column's bar, not the window's
+    toolbar; dividers don't change the pointer.
   - On Linux, `NSItemProvider` loads data and strings and URLs, not other
     object types.
   - Text input has no spell checking.
@@ -434,6 +444,7 @@ Each phase ends green on macOS and Linux CI.
 | **8. Fidelity** ✅ | Masks by any view, anti-aliased concave clips, gradient text, truncation and shrinking text, gradient strokes in `Canvas`, editing by characters and words, undo, caret blink | Effects demo screen shows them on macOS and Linux |
 | **9. Desktop integration** ✅ | Symbol images, drag and drop, menu commands, `Settings`, `MenuBarExtra`, NSAccessibility bridge | Demo shows symbols, menus, settings and a tray item on macOS; Linux builds and tests |
 | **10. Fidelity II** ✅ | Modifiers applied per view, `matchedGeometryEffect` properties, anchors and sources, `NavigationSplitView` column widths and visibility, `onDrag`/`onDrop` with item providers and `DropDelegate` | Layout cases match Apple's SwiftUI; tests pass on macOS and Linux |
+| **11. Fidelity III** ✅ | Modifiers over custom views of several views, resizable split view columns, sidebar toggle and `toolbar(removing:)`, `ShareLink` | Layout cases match Apple's SwiftUI; tests pass on macOS and Linux |
 
 ---
 
