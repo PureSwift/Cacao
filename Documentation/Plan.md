@@ -113,6 +113,10 @@ Notes:
   their own types' with `UTType.declareFilenameExtension`. The view under
   the pointer picks the pointer, the innermost style winning: text fields
   show a text pointer, links a hand, split view dividers a resize pointer.
+- Rotation input: `RotateGesture` gets trackpad rotations on macOS from
+  AppKit, which the host watches for, and two-finger turns on touch
+  screens everywhere, which the host follows from SDL's touches; the angle
+  keeps counting past a half turn.
 - Known gaps, for later phases:
   - Tab switches don't animate (nor do they in SwiftUI by default).
   - No AT-SPI bridge on Linux yet.
@@ -121,7 +125,8 @@ Notes:
     keep a list of recent documents; there's no undo manager for them.
   - `ShareLink` on Linux copies and opens; there's no system share sheet.
     Previews aren't shown.
-  - `RotateGesture` has no input yet: SDL reports pinches but not rotations.
+  - Touchpads on Linux don't rotate: SDL reports their pinches' scale
+    but not their rotation.
   - On macOS, the system's trackpad momentum arrives as more scrolling, so
     snapping scroll views settle after it ends; paging moves at most a page.
   - `Canvas` composites blend modes and filters in software, at a cost
