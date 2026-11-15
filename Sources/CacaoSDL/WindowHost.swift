@@ -48,6 +48,9 @@ final class WindowHost {
     /// A pinch's total scale since it began.
     private var pinchScale = 1.0
 
+    /// Two-finger rotations on touch screens.
+    private var touchRotation = TouchRotationTracker()
+
     /// Whether the next frame must be drawn.
     private var needsRender = true
 
@@ -124,6 +127,7 @@ final class WindowHost {
         )
         graph.fileDialogs = SDLFileDialogs.dialogs(for: window)
         #if os(macOS)
+        installRotationMonitor()
         graph.share = { [weak self] request in
             self?.showSharePicker(request) ?? false
         }
@@ -136,6 +140,11 @@ final class WindowHost {
     }
 
     func close() {
+        #if os(macOS)
+        if let rotationMonitor {
+            NSEvent.removeMonitor(rotationMonitor)
+        }
+        #endif
         backend.destroyAllTextures()
         SDL_DestroyRenderer(renderer)
         SDL_DestroyWindow(window)
@@ -203,6 +212,20 @@ final class WindowHost {
             graph.magnify(.moved, scale: pinchScale, at: mouseLocation, time: now)
         case SDL_EVENT_PINCH_END:
             graph.magnify(.ended, scale: pinchScale, at: mouseLocation, time: now)
+        case SDL_EVENT_FINGER_DOWN, SDL_EVENT_FINGER_MOTION, SDL_EVENT_FINGER_UP, SDL_EVENT_FINGER_CANCELED:
+            // Touch screens only: trackpads' rotations come from the system.
+            guard SDL_GetTouchDeviceType(event.tfinger.touchID) == SDL_TOUCH_DEVICE_DIRECT else { break }
+            let size = size
+            let location = CGPoint(x: CGFloat(event.tfinger.x) * size.width, y: CGFloat(event.tfinger.y) * size.height)
+            let finger = UInt64(event.tfinger.fingerID)
+            let update: TouchRotationTracker.Update? = switch SDL_EventType(event.type) {
+            case SDL_EVENT_FINGER_DOWN: touchRotation.fingerDown(finger, at: location)
+            case SDL_EVENT_FINGER_MOTION: touchRotation.fingerMoved(finger, to: location)
+            default: touchRotation.fingerUp(finger, cancelled: event.type == SDL_EVENT_FINGER_CANCELED.rawValue)
+            }
+            if let update {
+                graph.rotate(update.phase, angle: update.angle, at: update.location, time: now)
+            }
         case SDL_EVENT_MOUSE_WHEEL:
             var x = event.wheel.x
             var y = event.wheel.y
@@ -321,6 +344,42 @@ final class WindowHost {
     // MARK: Accessibility
 
     #if os(macOS)
+    /// Watches for trackpad rotations, which SDL doesn't report.
+    private var rotationMonitor: Any?
+
+    /// The rotation so far, in radians, clockwise.
+    private var trackpadRotation = 0.0
+
+    /// Delivers the window's trackpad rotations to its gestures. AppKit
+    /// reports each change, counterclockwise in degrees; gestures see the
+    /// total, clockwise in radians.
+    private func installRotationMonitor() {
+        rotationMonitor = NSEvent.addLocalMonitorForEvents(matching: .rotate) { [weak self] event in
+            MainActor.assumeIsolated {
+                guard let self, let view = self.contentView, event.window === view.window else { return }
+                let point = view.convert(event.locationInWindow, from: nil)
+                let location = CGPoint(x: point.x, y: view.isFlipped ? point.y : view.bounds.height - point.y)
+                let now = SDLHost.now
+                switch event.phase {
+                case .began:
+                    self.trackpadRotation = 0
+                    self.graph.rotate(.began, angle: 0, at: location, time: now)
+                case .changed:
+                    self.trackpadRotation -= Double(event.rotation) * .pi / 180
+                    self.graph.rotate(.moved, angle: self.trackpadRotation, at: location, time: now)
+                case .ended:
+                    self.graph.rotate(.ended, angle: self.trackpadRotation, at: location, time: now)
+                case .cancelled:
+                    self.graph.rotate(.cancelled, angle: self.trackpadRotation, at: location, time: now)
+                default:
+                    break
+                }
+                self.needsRender = true
+            }
+            return event
+        }
+    }
+
     /// The share picker shown, kept while it's open.
     private var sharePicker: NSSharingServicePicker?
 
