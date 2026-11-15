@@ -170,6 +170,7 @@ extension ViewGraph {
     /// hovering, and the others stop. `nil` when the pointer leaves the window.
     package func hover(at point: CGPoint?) {
         let path = point.flatMap { root.hitTest($0) } ?? []
+        pointerStyle = Self.pointerStyle(along: path)
         let hovering = path.filter { $0.attributes.hover != nil }
         let ids = Set(hovering.map(\.id))
         for (id, reference) in hoveredNodes where !ids.contains(id) {
