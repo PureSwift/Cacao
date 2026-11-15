@@ -139,10 +139,25 @@ internal final class ViewNode {
     /// Whether the next resolve shows an animatable view's in-between value.
     var isAnimationFrame = false
 
+    /// Modifiers from ancestors that this node applies to each of its views,
+    /// innermost first.
+    var pushedModifiers: [(any View) -> any View] = []
+
+    /// Whether this modifier's node passes it down to a custom view below,
+    /// whose body has several views, rather than applying it itself.
+    var pushesModifier = false
+
+    /// For a custom view: how many views its body is made of.
+    private(set) var bodyViewCount = 1
+
     // MARK: Resolving
 
     /// Resolves the node's view and, recursively, its children.
     func resolve() {
+        resolve(isRetry: false)
+    }
+
+    private func resolve(isRetry: Bool) {
         graph.statistics.resolves += 1
         invalidateLayout()
         isDirty = false
@@ -164,6 +179,16 @@ internal final class ViewNode {
         } else {
             resolution = resolveComposite(view, in: context)
         }
+        // A transparent node's children are its layout parent's: that
+        // parent's list of layout children changes with them.
+        if behavior == nil || resolution.behavior == nil {
+            var node = parent
+            while let current = node {
+                current.cachedLayoutChildren = nil
+                if current.behavior != nil { break }
+                node = current.parent
+            }
+        }
         behavior = resolution.behavior
         attributes = resolution.attributes
         wasUpdatedByParent = false
@@ -179,11 +204,81 @@ internal final class ViewNode {
         } else {
             reconcile(resolution.children, keepingExisting: resolution.keepsExistingChildren)
         }
+        // A modifier over a custom view applies to each view of its body
+        // when the body, now resolved, has several.
+        if resolution.canPushModifier || pushesModifier, !isRetry {
+            let needed = resolution.canPushModifier && hasMultiViewBody
+            if needed != pushesModifier {
+                pushesModifier = needed
+                resolve(isRetry: true)
+            }
+        }
     }
 
     private func resolveComposite<V: View>(_ view: V, in context: ResolveContext) -> Resolution {
         let shown = context.animatedValue(view)
-        return Resolution(children: [ChildView(key: 0, view: evaluateBody(shown, in: context))])
+        let body = evaluateBody(shown, in: context)
+        let items = ContentViews(body)?.items
+        let count = items?.count ?? 1
+        if count != bodyViewCount {
+            bodyViewCount = count
+            if version > 1 {
+                modifiersAboveNeedUpdate()
+            }
+        }
+        guard !pushedModifiers.isEmpty else {
+            return Resolution(children: [ChildView(key: 0, view: body)])
+        }
+        // Modifiers from above apply to each view of the body, or pass on
+        // to the custom view it is.
+        let modifiers = pushedModifiers
+        let views = items ?? [(AnyHashable(0), body)]
+        if views.count == 1, ContentViews.canPushModifiers(into: views[0].view) {
+            return Resolution(children: [ChildView(key: views[0].id, view: views[0].view, modifiers: modifiers)])
+        }
+        return Resolution(children: views.map { item in
+            ChildView(key: item.id, view: modifiers.reduce(item.view) { $1($0) })
+        })
+    }
+
+    /// Whether the custom view below this modifier, through other built-in
+    /// modifiers, groups and custom views of one view, has a body of several.
+    private var hasMultiViewBody: Bool {
+        var node = contentChild
+        while let current = node {
+            if !(current.view is any PrimitiveView) {
+                if current.bodyViewCount != 1 {
+                    return true
+                }
+            } else if current.view is any _StructuralWrapper, current.children.count == 1 {
+                node = current.children[0]
+                continue
+            } else if !((current.view as? any _ModifiedViews)?.isPrimitive ?? false) {
+                return false
+            }
+            node = current.contentChild
+        }
+        return false
+    }
+
+    /// Updates the modifiers whose content leads, through custom views of
+    /// one view, to this custom view, whose body changed how many views it is.
+    private func modifiersAboveNeedUpdate() {
+        var child = self
+        while let current = child.parent,
+              current.contentChild === child || (current.view is any _StructuralWrapper && current.children.count == 1) {
+            if (current.view as? any _ModifiedViews)?.isPrimitive ?? false {
+                current.invalidate()
+            } else if current.view is any PrimitiveView {
+                return
+            }
+            child = current
+        }
+    }
+
+    /// The child holding a modifier's content or a custom view's body.
+    private var contentChild: ViewNode? {
+        children.first { $0.key == AnyHashable(0) }
     }
 
     private func evaluateBody<V: View>(_ view: V, in context: ResolveContext) -> any View {
@@ -222,6 +317,7 @@ internal final class ViewNode {
                     continue
                 }
                 match.update(view: childView.view, environment: environment)
+                match.pushedModifiers = childView.modifiers
                 node = match
             } else {
                 node = ViewNode(
@@ -232,6 +328,7 @@ internal final class ViewNode {
                     environment: environment
                 )
                 node.insertedGeneration = graph.updateGeneration
+                node.pushedModifiers = childView.modifiers
                 graph.nodeDidAppear(node)
             }
             node.resolve()
