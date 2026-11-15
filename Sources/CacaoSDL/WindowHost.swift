@@ -48,6 +48,26 @@ final class WindowHost {
     /// A pinch's total scale since it began.
     private var pinchScale = 1.0
 
+    /// The rotation so far of a trackpad pinch the system reports, in
+    /// radians, clockwise.
+    private var systemRotationAngle = 0.0
+
+    /// Delivers a change to a trackpad rotation from the system, which
+    /// reports each change; gestures see the total, in radians.
+    func systemRotation(_ phase: PointerPhase, clockwiseDegrees delta: Double, at location: CGPoint? = nil) {
+        if phase == .began {
+            systemRotationAngle = 0
+        }
+        systemRotationAngle += delta * .pi / 180
+        graph.rotate(phase, angle: systemRotationAngle, at: location ?? mouseLocation, time: SDLHost.now)
+        needsRender = true
+    }
+
+    /// The window's Wayland surface, when SDL uses Wayland.
+    var waylandSurface: UnsafeMutableRawPointer? {
+        SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, nil)
+    }
+
     /// Two-finger rotations on touch screens.
     private var touchRotation = TouchRotationTracker()
 
@@ -347,34 +367,24 @@ final class WindowHost {
     /// Watches for trackpad rotations, which SDL doesn't report.
     private var rotationMonitor: Any?
 
-    /// The rotation so far, in radians, clockwise.
-    private var trackpadRotation = 0.0
-
     /// Delivers the window's trackpad rotations to its gestures. AppKit
-    /// reports each change, counterclockwise in degrees; gestures see the
-    /// total, clockwise in radians.
+    /// reports each change, counterclockwise in degrees.
     private func installRotationMonitor() {
         rotationMonitor = NSEvent.addLocalMonitorForEvents(matching: .rotate) { [weak self] event in
             MainActor.assumeIsolated {
                 guard let self, let view = self.contentView, event.window === view.window else { return }
                 let point = view.convert(event.locationInWindow, from: nil)
                 let location = CGPoint(x: point.x, y: view.isFlipped ? point.y : view.bounds.height - point.y)
-                let now = SDLHost.now
-                switch event.phase {
-                case .began:
-                    self.trackpadRotation = 0
-                    self.graph.rotate(.began, angle: 0, at: location, time: now)
-                case .changed:
-                    self.trackpadRotation -= Double(event.rotation) * .pi / 180
-                    self.graph.rotate(.moved, angle: self.trackpadRotation, at: location, time: now)
-                case .ended:
-                    self.graph.rotate(.ended, angle: self.trackpadRotation, at: location, time: now)
-                case .cancelled:
-                    self.graph.rotate(.cancelled, angle: self.trackpadRotation, at: location, time: now)
-                default:
-                    break
+                let phase: PointerPhase? = switch event.phase {
+                case .began: .began
+                case .changed: .moved
+                case .ended: .ended
+                case .cancelled: .cancelled
+                default: nil
                 }
-                self.needsRender = true
+                if let phase {
+                    self.systemRotation(phase, clockwiseDegrees: phase == .moved ? -Double(event.rotation) : 0, at: location)
+                }
             }
             return event
         }
