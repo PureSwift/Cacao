@@ -1238,6 +1238,7 @@ private struct _SplitDivider: View {
             .frame(width: 1)
             .frame(width: _SplitBehavior.dividerHitWidth)
             .contentShape(Rectangle())
+            .pointerStyle(.columnResize)
             .gesture(
                 DragGesture(minimumDistance: 1, coordinateSpace: .global)
                     .onChanged { value in
