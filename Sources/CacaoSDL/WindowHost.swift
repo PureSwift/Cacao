@@ -116,6 +116,11 @@ final class WindowHost {
             },
             write: { _ = SDL_SetClipboardText($0) }
         )
+        #if os(macOS)
+        graph.share = { [weak self] request in
+            self?.showSharePicker(request) ?? false
+        }
+        #endif
     }
 
     /// Brings the window to the front.
@@ -309,6 +314,29 @@ final class WindowHost {
     // MARK: Accessibility
 
     #if os(macOS)
+    /// The share picker shown, kept while it's open.
+    private var sharePicker: NSSharingServicePicker?
+
+    /// The window's AppKit content view.
+    private var contentView: NSView? {
+        let properties = SDL_GetWindowProperties(window)
+        guard let pointer = SDL_GetPointerProperty(properties, SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nil) else { return nil }
+        return Unmanaged<NSWindow>.fromOpaque(pointer).takeUnretainedValue().contentView
+    }
+
+    /// Shows the system's share picker below a share link.
+    private func showSharePicker(_ request: ShareRequest) -> Bool {
+        guard let view = contentView, !request.items.isEmpty else { return false }
+        let anchor = request.anchor
+        let rect = view.isFlipped
+            ? anchor
+            : CGRect(x: anchor.minX, y: view.bounds.height - anchor.maxY, width: anchor.width, height: anchor.height)
+        let picker = NSSharingServicePicker(items: request.items)
+        sharePicker = picker
+        picker.show(relativeTo: rect, of: view, preferredEdge: .minY)
+        return true
+    }
+
     /// The window's elements for VoiceOver, made when first needed.
     private var accessibility: AccessibilityBridge?
 
@@ -319,10 +347,7 @@ final class WindowHost {
         guard now - lastAccessibilityUpdate >= 0.25 else { return }
         lastAccessibilityUpdate = now
         if accessibility == nil {
-            let properties = SDL_GetWindowProperties(window)
-            guard let pointer = SDL_GetPointerProperty(properties, SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nil) else { return }
-            let nsWindow = Unmanaged<NSWindow>.fromOpaque(pointer).takeUnretainedValue()
-            guard let view = nsWindow.contentView else { return }
+            guard let view = contentView else { return }
             let graph = self.graph
             accessibility = AccessibilityBridge(view: view) { [weak self] name, frame in
                 let performed = graph.performAccessibilityAction(name, at: frame)
