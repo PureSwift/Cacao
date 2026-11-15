@@ -127,6 +127,19 @@ package final class ViewGraph {
     /// The system clipboard, provided by the host.
     package var clipboard: Clipboard?
 
+    /// Shows the system's share picker, where the host has one; returns
+    /// whether it did. Share links update when it's set.
+    package var share: ((ShareRequest) -> Bool)? {
+        didSet {
+            for reference in shareLinks.values {
+                reference.node?.invalidate()
+            }
+        }
+    }
+
+    /// The share links in the graph, by node.
+    var shareLinks: [Int: WeakNodeReference] = [:]
+
     /// Whether the drawing changed without an update, as when scrolling.
     package internal(set) var needsDisplay = true
 
