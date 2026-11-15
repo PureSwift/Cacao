@@ -64,6 +64,32 @@ struct Inset: ViewModifier {
     }
 }
 
+/// A custom view whose body is two views.
+struct Pair: View {
+
+    var body: some View {
+        Color.red.frame(width: 20, height: 20).probe("pair-a")
+        Color.blue.frame(width: 30, height: 10).probe("pair-b")
+    }
+}
+
+/// A custom view whose body is one custom view of two.
+struct Wrapper: View {
+
+    var body: some View {
+        Group {
+            Inner()
+        }
+    }
+
+    struct Inner: View {
+        var body: some View {
+            Color.green.frame(width: 10, height: 10).probe("inner-a")
+            Color.orange.frame(width: 10, height: 10).probe("inner-b")
+        }
+    }
+}
+
 /// Views that take their frames from a matched geometry source.
 struct MatchedGeometryCase: View {
 
@@ -345,6 +371,17 @@ public enum LayoutCorpus {
             },
             LayoutCase("matched-geometry", width: 200, height: 100) {
                 MatchedGeometryCase()
+            },
+            LayoutCase("custom-view-per-view", width: 300, height: 100) {
+                HStack(spacing: 0) {
+                    Pair()
+                        .padding(5)
+                        .border(Color.black)
+                        .frame(width: 60)
+                    Wrapper()
+                        .frame(width: 40, height: 40)
+                }
+                .probe("stack")
             },
         ]
     }
