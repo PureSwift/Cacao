@@ -86,7 +86,7 @@ tests.
 | `DatePicker` | ◐ | Compact (popovers) and graphical styles; other styles show as one of these. |
 | `ColorPicker` | ◐ | A palette with hue, saturation, brightness and opacity sliders; no `CGColor` binding. |
 | `Gauge` | ✅ | Linear and circular styles. |
-| `ShareLink` | ✗ | |
+| `ShareLink`, `SharePreview` | ◐ | AppKit's share picker on macOS; elsewhere a menu that copies and opens URLs. Previews aren't shown. |
 | `Canvas`, `GraphicsContext` | ✅ | Paths, text, images and system images, gradients and tiled images, transforms, clips (inverse too), layers, `clipToLayer`, blend modes, filters (shadow, blur, color), resolved text, images and symbols. No `withCGContext`. |
 | `TimelineView` | ✅ | |
 
@@ -97,9 +97,10 @@ tests.
 | `List` (selection, sections), `Form`, `Section`, `ForEach` | ✅ | |
 | `listStyle`, `listRowBackground`, `listRowInsets`, `listRowSeparator` | ○ | One list style. |
 | `NavigationStack`, `NavigationPath`, `NavigationLink`, `navigationDestination` | ✅ | Pushes slide in; pops slide out. |
-| `NavigationSplitView` | ◐ | Column widths and visibility; columns aren't resizable by dragging, and there's no sidebar toggle. |
+| `NavigationSplitView` | ◐ | Column widths, visibility and dragging dividers; the sidebar toggle is in the detail's bar. |
 | `TabView`, `Tab`, `tabItem` | ✅ | |
 | `toolbar`, `ToolbarItem`, `ToolbarItemGroup`, `navigationTitle`, `searchable` | ✅ | |
+| `toolbar(removing:)` | ◐ | Removes the sidebar toggle; `.title` has no effect. |
 | `sheet`, `fullScreenCover`, `alert`, `confirmationDialog`, `popover`, `contextMenu` | ✅ | Presentations animate in and out. |
 | `presentationDetents`, `interactiveDismissDisabled` | ○ | |
 
