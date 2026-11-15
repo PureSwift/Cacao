@@ -346,6 +346,7 @@ public struct Link<Label: View>: View {
         let destination = self.destination
         Button { openURL(destination) } label: { label }
             .buttonStyle(.borderless)
+            .pointerStyle(.link)
     }
 }
 
