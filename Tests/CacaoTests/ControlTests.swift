@@ -370,6 +370,46 @@ extension ViewGraph {
         }
         #expect(clips.count == 1)
     }
+
+    @Test func shareLinkUsesTheHostsPicker() {
+        let shared = Box<[ShareRequest]>([])
+        let graph = layout(ShareLink(item: URL(string: "https://example.com")!, subject: Text("Look")).probe("link"))
+        // Set by the host after the graph is made.
+        graph.share = { request in
+            shared.value.append(request)
+            return true
+        }
+        graph.layout(in: CGSize(width: 400, height: 300))
+        let label = graph.textFrames["Share"] ?? .zero
+        graph.tap(at: CGPoint(x: label.midX, y: label.midY))
+        #expect(shared.value.count == 1)
+        #expect(shared.value.first?.items.first as? URL == URL(string: "https://example.com"))
+        #expect(shared.value.first?.subject == "Look")
+        #expect(shared.value.first?.anchor == graph.frame("link"))
+    }
+
+    @Test func shareLinkMenuCopiesAndOpens() {
+        let copied = Box<[String]>([])
+        let opened = Box<[URL]>([])
+        let graph = layout(
+            ShareLink("Send", item: URL(string: "https://example.com/page")!)
+                .environment(\.openURL, OpenURLAction { opened.value.append($0) }),
+            width: 400, height: 300
+        )
+        graph.clipboard = Clipboard(read: { nil }, write: { copied.value.append($0) })
+        let label = graph.textFrames["Send"] ?? .zero
+        graph.tap(at: CGPoint(x: label.midX, y: label.midY))
+        #expect(graph.isPresentingPopup)
+        let copy = graph.textFrames["Copy"] ?? .zero
+        graph.tap(at: CGPoint(x: copy.midX, y: copy.midY))
+        graph.update()
+        #expect(copied.value == ["https://example.com/page"])
+        graph.tap(at: CGPoint(x: label.midX, y: label.midY))
+        let open = graph.textFrames["Open"] ?? .zero
+        graph.tap(at: CGPoint(x: open.midX, y: open.midY))
+        graph.update()
+        #expect(opened.value == [URL(string: "https://example.com/page")!])
+    }
 }
 
 extension ViewGraph {
