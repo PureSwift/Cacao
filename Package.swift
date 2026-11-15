@@ -13,6 +13,8 @@ import CompilerPluginSupport
 /// - `CacaoCompositor`: the layer tree, drawn with Silica only when content
 ///   changes and composited on the GPU every frame.
 /// - `CacaoSDL`: windows, the main loop, input and the SDL3 renderer backend.
+/// - `CacaoWayland` (Linux): touchpad pinch rotations from Wayland, which SDL
+///   doesn't report.
 /// - `SwiftUI` (Linux only): re-exports Cacao so `import SwiftUI` compiles.
 let package = Package(
     name: "Cacao",
@@ -93,10 +95,23 @@ let package = Package(
                 "Cacao",
                 "CacaoCompositor",
                 "CacaoScrollPhysics",
+                .target(
+                    name: "CacaoWayland",
+                    condition: .when(platforms: [.linux])
+                ),
                 .product(
                     name: "SDL3Swift",
                     package: "SDL"
                 )
+            ]
+        ),
+        // Touchpad pinch rotations from Wayland compositors, which SDL
+        // doesn't report.
+        .target(
+            name: "CacaoWayland",
+            exclude: ["protocol"],
+            linkerSettings: [
+                .linkedLibrary("wayland-client", .when(platforms: [.linux]))
             ]
         ),
         .executableTarget(
@@ -122,7 +137,7 @@ let package = Package(
             name: "CacaoSDLTests",
             dependencies: ["CacaoSDL"]
         )
-    ] + swiftUITargets + layoutParityTargets
+    ] + swiftUITargets + waylandTestTargets + layoutParityTargets
 )
 
 // MARK: - SwiftUI alias module
@@ -139,6 +154,30 @@ var swiftUITargets: [Target] {
 #else
 var swiftUIProducts: [Product] { [] }
 var swiftUITargets: [Target] { [] }
+#endif
+
+// MARK: - Wayland tests
+
+// On Linux, Cacao's Wayland gestures are tested against a minimal
+// compositor made with libwayland-server.
+#if os(Linux)
+var waylandTestTargets: [Target] {
+    [
+        .target(
+            name: "CacaoWaylandTestServer",
+            dependencies: ["CacaoWayland"],
+            path: "Tests/CacaoWaylandTestServer",
+            exclude: ["protocol"],
+            linkerSettings: [.linkedLibrary("wayland-server"), .linkedLibrary("wayland-client")]
+        ),
+        .testTarget(
+            name: "CacaoWaylandTests",
+            dependencies: ["CacaoWayland", "CacaoWaylandTestServer"]
+        ),
+    ]
+}
+#else
+var waylandTestTargets: [Target] { [] }
 #endif
 
 // MARK: - Layout parity
