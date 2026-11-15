@@ -436,3 +436,53 @@ extension ViewGraph {
         return result
     }
 }
+
+@MainActor
+@Suite struct PointerStyleTests {
+
+    @Test func innermostStyleUnderThePointerWins() {
+        let graph = layout(
+            VStack(spacing: 0) {
+                Color.red.frame(width: 100, height: 40)
+                    .pointerStyle(.grabIdle)
+                    .probe("grab")
+                Color.blue.frame(width: 100, height: 40)
+                    .overlay { Color.green.frame(width: 20, height: 20).pointerStyle(.zoomIn).probe("zoom") }
+                    .pointerStyle(.rowResize)
+                    .probe("row")
+                TextField("Name", text: .constant("")).frame(width: 100).probe("field")
+                Link("Docs", destination: URL(string: "https://example.com")!).probe("link")
+                Color.gray.frame(width: 100, height: 40).probe("plain")
+            }
+        )
+        func style(at identifier: String, dx: CGFloat = 0) -> PointerStyle? {
+            let frame = graph.frame(identifier)
+            graph.hover(at: CGPoint(x: frame.midX + dx, y: frame.midY))
+            return graph.pointerStyle
+        }
+        #expect(style(at: "grab") == .grabIdle)
+        #expect(style(at: "zoom") == .zoomIn)
+        #expect(style(at: "row", dx: 30) == .rowResize)
+        #expect(style(at: "field") == .horizontalText)
+        #expect(style(at: "link") == .link)
+        #expect(style(at: "plain") == nil)
+        graph.hover(at: CGPoint(x: 5, y: 5))
+        #expect(graph.pointerStyle == nil)
+    }
+
+    @Test func splitViewDividersShowResizePointers() {
+        let graph = layout(
+            NavigationSplitView {
+                Color.red
+            } detail: {
+                Color.blue
+            },
+            width: 800, height: 400
+        )
+        graph.hover(at: CGPoint(x: 240.5, y: 200))
+        #expect(graph.pointerStyle == .columnResize)
+        graph.hover(at: CGPoint(x: 400, y: 200))
+        #expect(graph.pointerStyle == nil)
+    }
+}
+
