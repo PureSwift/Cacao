@@ -209,8 +209,79 @@ extension ViewGraph {
         model.visibility = .detailOnly
         graph.settle()
         frames = graph.identifiedFrames()
-        #expect(frames["detail"] == CGRect(x: 0, y: 0, width: 800, height: 400))
-        #expect(graph.colorItems.count == 1)
+        // Below the detail's bar, which holds the sidebar toggle.
+        #expect(frames["detail"]?.minX == 0)
+        #expect(frames["detail"]?.width == 800)
+        #expect(frames["detail"]?.maxY == 400)
+        let colors = [Color.red, .green, .blue].map { $0.resolve(in: EnvironmentValues()) }
+        #expect(graph.colorItems.filter { colors.contains($0.color) }.map(\.color) == [colors[2]])
+    }
+
+    @Test func splitViewDividersResizeColumns() {
+        struct Split: View {
+            var body: some View {
+                NavigationSplitView {
+                    Color.red.accessibilityIdentifier("sidebar")
+                        .navigationSplitViewColumnWidth(min: 100, ideal: 150, max: 300)
+                } detail: {
+                    Color.blue.accessibilityIdentifier("detail")
+                }
+            }
+        }
+        let graph = layout(Split(), width: 800, height: 400)
+        graph.settle()
+        #expect(graph.frame("sidebar").width == 150)
+        // Drag the divider, past the column's widest.
+        graph.pointer(.began, at: CGPoint(x: 152, y: 200), time: 0)
+        graph.pointer(.moved, at: CGPoint(x: 212, y: 200), time: 0.05)
+        graph.settle()
+        #expect(graph.frame("sidebar").width == 210)
+        #expect(graph.frame("detail").minX == 211)
+        graph.pointer(.moved, at: CGPoint(x: 600, y: 200), time: 0.1)
+        graph.pointer(.ended, at: CGPoint(x: 600, y: 200), time: 0.15)
+        graph.settle()
+        #expect(graph.frame("sidebar").width == 300)
+    }
+
+    @Test func sidebarToggleHidesAndShowsTheSidebar() {
+        struct Split: View {
+            var removesToggle = false
+            var body: some View {
+                NavigationSplitView {
+                    Color.red.accessibilityIdentifier("sidebar")
+                        .toolbar(removing: removesToggle ? .sidebarToggle : nil)
+                } detail: {
+                    Color.blue.accessibilityIdentifier("detail")
+                }
+            }
+        }
+        func toggle(in graph: ViewGraph) -> CGRect? {
+            func find(_ element: AccessibilityElement) -> CGRect? {
+                if element.label == "Toggle Sidebar" { return element.frame }
+                return element.children.lazy.compactMap(find).first
+            }
+            return find(graph.accessibilityTree())
+        }
+        let graph = layout(Split(), width: 800, height: 400)
+        graph.settle()
+        guard let button = toggle(in: graph) else {
+            Issue.record("no sidebar toggle")
+            return
+        }
+        #expect(graph.frame("detail").minX == 241)
+        graph.pointer(.began, at: CGPoint(x: button.midX, y: button.midY), time: 0)
+        graph.pointer(.ended, at: CGPoint(x: button.midX, y: button.midY), time: 0.05)
+        graph.finish()
+        #expect(graph.frame("detail").minX == 0)
+        let shown = toggle(in: graph)
+        graph.pointer(.began, at: CGPoint(x: shown!.midX, y: shown!.midY), time: 1)
+        graph.pointer(.ended, at: CGPoint(x: shown!.midX, y: shown!.midY), time: 1.05)
+        graph.finish()
+        #expect(graph.frame("detail").minX == 241)
+
+        let removed = layout(Split(removesToggle: true), width: 800, height: 400)
+        removed.settle()
+        #expect(toggle(in: removed) == nil)
     }
 
     // MARK: Tabs
