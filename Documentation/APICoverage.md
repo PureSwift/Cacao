@@ -27,7 +27,7 @@ tests.
 | `commands`, `CommandMenu`, `CommandGroup` | ◐ | Shortcuts work in every window; macOS shows the menus in the menu bar. Group placements pick the menu, not the position in it. |
 | `Settings`, `SettingsLink`, `openSettings` | ✅ | The settings shortcut opens it. |
 | `MenuBarExtra` | ◐ | A tray icon with a menu of the content's buttons; the menu style only. |
-| `DocumentGroup` | ✗ | |
+| `DocumentGroup`, `FileDocument`, `ReferenceFileDocument` | ◐ | New, Open…, Save and Save As… in the File menu, through the system's dialogs; the window's title shows the file and whether it's edited. No autosave, prompt to save on close, recent documents or undo. |
 
 ## State and data flow
 
@@ -137,6 +137,8 @@ tests.
 | `gesture`, `highPriorityGesture`, `simultaneousGesture`, `GestureMask` | ✅ | |
 | `onTapGesture(count:)`, `onLongPressGesture` | ✅ | |
 | `onHover`, `onContinuousHover` | ✅ | |
+| `pointerStyle` | ◐ | The system pointer closest to each style; no custom images. |
+| `fileImporter`, `fileExporter` | ◐ | The system's open and save dialogs; cancelling calls nothing. |
 | `keyboardShortcut`, `onKeyPress`, `focusable`, `focused`, `onSubmit` | ✅ | |
 | `draggable`, `dropDestination` | ✅ | Between views, and files and text dropped from the system. `Transferable` is Apple's on macOS and Cacao's own elsewhere. |
 | `onDrag`, `onDrop` (item providers), `DropDelegate` | ◐ | On Linux, Cacao's `NSItemProvider` loads data, strings and URLs. Drop proposals don't change the drag's operation. |
