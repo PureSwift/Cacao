@@ -140,6 +140,20 @@ package final class ViewGraph {
     /// The share links in the graph, by node.
     var shareLinks: [Int: WeakNodeReference] = [:]
 
+    /// The pointer style of the view under the pointer, which the host
+    /// shows; `nil` for the default.
+    package internal(set) var pointerStyle: PointerStyle?
+
+    /// The host's open and save dialogs.
+    package var fileDialogs: FileDialogs?
+
+    /// The title the window's content asks for, like a document's name;
+    /// the host shows it.
+    package internal(set) var windowTitle: String?
+
+    /// The document the window shows, if it's a document window.
+    var documentController: DocumentController?
+
     /// Whether the drawing changed without an update, as when scrolling.
     package internal(set) var needsDisplay = true
 
