@@ -166,6 +166,52 @@ internal final class SplitLink {
 
     /// The widths that columns' views set, by column.
     var widths: [String: SplitColumnWidth] = [:]
+
+    /// The widths columns were dragged to, by column.
+    var draggedWidths: [String: CGFloat] = [:]
+
+    /// The visibility shown when there's no binding to it.
+    var visibility = NavigationSplitViewVisibility.automatic
+
+    /// Sets the visibility: through the binding if there is one.
+    var setVisibility: (NavigationSplitViewVisibility) -> Void = { _ in }
+
+    /// The visibility shown now.
+    var currentVisibility = NavigationSplitViewVisibility.automatic
+
+    var hasContentColumn = false
+
+    /// Whether a column's views removed the sidebar toggle.
+    var removesSidebarToggle = false
+
+    /// The split view's node, to update when its state changes.
+    weak var node: ViewNode?
+
+    /// The width of a column: dragged, or set by its views, or `width`.
+    func width(of column: String, default width: CGFloat?) -> CGFloat? {
+        if let dragged = draggedWidths[column] {
+            return dragged
+        }
+        return widths[column]?.width ?? width
+    }
+
+    /// The narrowest and widest a column can be dragged.
+    func range(of column: String) -> ClosedRange<CGFloat> {
+        let set = widths[column]
+        let lower = set?.min ?? 150
+        return lower...max(lower, set?.max ?? 500)
+    }
+
+    /// Shows the sidebar if it's hidden, or hides it.
+    func toggleSidebar() {
+        let showsSidebar = currentVisibility.showsColumns(hasContent: hasContentColumn)[0]
+        let next: NavigationSplitViewVisibility = showsSidebar
+            ? (hasContentColumn ? .doubleColumn : .detailOnly)
+            : .all
+        withAnimation {
+            setVisibility(next)
+        }
+    }
 }
 
 /// What the views of one screen set for its navigation bar.
@@ -469,7 +515,16 @@ internal struct _NavigationBar: View, PrimitiveView {
 
     func resolve(in context: ResolveContext) -> Resolution {
         screen.barNode = context.node
-        let items = screen.toolbars.sorted { $0.key < $1.key }.flatMap { toolbarItems(in: $0.value) }
+        var items = screen.toolbars.sorted { $0.key < $1.key }.flatMap { toolbarItems(in: $0.value) }
+        // A split view's detail shows a button that shows or hides the sidebar.
+        if depth == 0, navigation.isDetail, let split = navigation.split, !split.removesSidebarToggle {
+            let toggle = Button(action: { split.toggleSidebar() }) {
+                Image(systemName: "sidebar.left")
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel("Toggle Sidebar")
+            items.insert(ToolbarItemEntry(placement: .navigation, content: AnyView(toggle)), at: 0)
+        }
         let hasContent = !screen.title.isEmpty || !items.isEmpty || screen.search != nil
             || (depth > 0 && !screen.isBackButtonHidden)
         guard hasContent else {
@@ -984,7 +1039,7 @@ public struct NavigationSplitView<Sidebar: View, Content: View, Detail: View>: V
             sidebar: AnyView(sidebar),
             content: content.map { AnyView($0) },
             detail: AnyView(detail),
-            visibility: columnVisibility?.wrappedValue ?? .automatic
+            visibility: columnVisibility
         )
     }
 }
@@ -1057,8 +1112,44 @@ extension View {
     }
 }
 
+/// Kinds of items that toolbars show by default.
+public struct ToolbarDefaultItemKind: Sendable {
+
+    internal enum Kind {
+        case sidebarToggle
+        case title
+    }
+
+    internal let kind: Kind
+
+    /// The button that shows or hides a split view's sidebar.
+    public static let sidebarToggle = ToolbarDefaultItemKind(kind: .sidebarToggle)
+
+    /// The title of a window or navigation bar.
+    public static let title = ToolbarDefaultItemKind(kind: .title)
+}
+
+/// Whether views of a split view's column removed the sidebar toggle.
+internal enum SidebarToggleRemovedKey: PreferenceKey {
+
+    static var defaultValue: Bool { false }
+
+    static func reduce(value: inout Bool, nextValue: () -> Bool) {
+        value = value || nextValue()
+    }
+}
+
+extension View {
+
+    /// Removes a default item from the toolbar: the sidebar toggle of the
+    /// split view this view is in.
+    public func toolbar(removing defaultItemKind: ToolbarDefaultItemKind?) -> some View {
+        preference(key: SidebarToggleRemovedKey.self, value: defaultItemKind?.kind == .sidebarToggle)
+    }
+}
+
 /// The columns of a split view: a sidebar whose links show their
-/// destinations in the detail column.
+/// destinations in the detail column, and dividers that resize them.
 private struct _NavigationSplit: View, PrimitiveView {
 
     let sidebar: AnyView
@@ -1067,7 +1158,7 @@ private struct _NavigationSplit: View, PrimitiveView {
 
     let detail: AnyView
 
-    let visibility: NavigationSplitViewVisibility
+    let visibility: Binding<NavigationSplitViewVisibility>?
 
     func resolve(in context: ResolveContext) -> Resolution {
         let node = context.node
@@ -1078,7 +1169,20 @@ private struct _NavigationSplit: View, PrimitiveView {
             link = SplitLink()
             node.dynamicStorage["split"] = link
         }
-        // A column's width comes from its views, through a preference.
+        link.node = node
+        link.hasContentColumn = content != nil
+        if let visibility {
+            link.currentVisibility = visibility.wrappedValue
+            link.setVisibility = { visibility.wrappedValue = $0 }
+        } else {
+            link.currentVisibility = link.visibility
+            link.setVisibility = { [weak link] value in
+                link?.visibility = value
+                link?.node?.invalidate()
+            }
+        }
+        // A column's width comes from its views, through a preference, or
+        // from dragging its divider.
         func column(_ key: String, _ view: some View, width: CGFloat?) -> some View {
             view
                 .onPreferenceChange(SplitColumnWidthKey.self) { [weak node] value in
@@ -1086,7 +1190,12 @@ private struct _NavigationSplit: View, PrimitiveView {
                     link.widths[key] = value
                     node?.invalidate()
                 }
-                .frame(width: link.widths[key]?.width ?? width)
+                .onPreferenceChange(SidebarToggleRemovedKey.self) { removes in
+                    guard removes, !link.removesSidebarToggle else { return }
+                    link.removesSidebarToggle = true
+                    link.detail?.screens[0]?.barNeedsUpdate()
+                }
+                .frame(width: link.width(of: key, default: width))
         }
         let colorScheme = context.environment.colorScheme
         var children = [
@@ -1094,59 +1203,119 @@ private struct _NavigationSplit: View, PrimitiveView {
                 key: "sidebar",
                 view: column("sidebar", _NavigationStack(path: nil, root: sidebar, column: (link, false)), width: 240)
                     .background(Color.barBackground(colorScheme))
-            )
+            ),
+            ChildView(key: "sidebar-divider", view: _SplitDivider(link: link, column: "sidebar", defaultWidth: 240)),
         ]
         if let content {
             children.append(ChildView(key: "content", view: column("content", NavigationStack { content }, width: 280)))
+            children.append(ChildView(key: "content-divider", view: _SplitDivider(link: link, column: "content", defaultWidth: 280)))
         }
         children.append(ChildView(
             key: "detail",
             view: column("detail", _NavigationStack(path: nil, root: detail, column: (link, true)), width: nil)
         ))
-        let shows = visibility.showsColumns(hasContent: content != nil)
+        let shows = link.currentVisibility.showsColumns(hasContent: content != nil)
         return Resolution(behavior: _SplitBehavior(shows: shows), children: children)
     }
 
     typealias Body = Never
 }
 
-/// Columns at their widths with dividers, the detail taking the rest.
-/// Hidden columns keep their views, placed before the leading edge, and
-/// aren't drawn.
+/// A divider between columns, which resizes the column before it when
+/// dragged.
+private struct _SplitDivider: View {
+
+    let link: SplitLink
+
+    let column: String
+
+    let defaultWidth: CGFloat
+
+    @State private var startWidth: CGFloat?
+
+    var body: some View {
+        Color.separator
+            .frame(width: 1)
+            .frame(width: _SplitBehavior.dividerHitWidth)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 1, coordinateSpace: .global)
+                    .onChanged { value in
+                        let start = startWidth ?? link.width(of: column, default: defaultWidth) ?? defaultWidth
+                        if startWidth == nil { startWidth = start }
+                        let range = link.range(of: column)
+                        let width = min(max(start + value.translation.width, range.lowerBound), range.upperBound)
+                        guard link.draggedWidths[column] != width else { return }
+                        link.draggedWidths[column] = width
+                        link.node?.invalidate()
+                    }
+                    .onEnded { _ in startWidth = nil }
+            )
+            .accessibilityHidden(true)
+    }
+}
+
+/// Columns at their widths, the detail taking the rest, with 1-point
+/// dividers between them. Each divider's view is wider than its line, to be
+/// easy to drag, and centered on it. Hidden columns keep their views,
+/// placed before the leading edge, and aren't drawn, nor their dividers.
 private struct _SplitBehavior: NodeBehavior {
 
+    /// The width of a divider's view, which takes drags.
+    static let dividerHitWidth: CGFloat = 9
+
+    /// Whether each column shows.
     let shows: [Bool]
 
     func sizeThatFits(_ proposal: ProposedViewSize, node: ViewNode) -> CGSize {
         proposal.replacingUnspecifiedDimensions(by: CGSize(width: 800, height: 600))
     }
 
+    /// The column of each child, and whether it's the column's divider.
+    private func role(of index: Int, count: Int) -> (column: Int, isDivider: Bool) {
+        index == count - 1 ? (index / 2, false) : (index / 2, index % 2 == 1)
+    }
+
     func placeChildren(in bounds: CGRect, proposal: ProposedViewSize, node: ViewNode) {
         var x = bounds.minX
         let count = node.children.count
+        let hit = Self.dividerHitWidth
         for index in 0..<count {
             guard let proxy = LayoutProxy.combining(node.layoutChildren(ofChildAt: index)) else { continue }
-            if index < count - 1 {
+            let role = role(of: index, count: count)
+            if index == count - 1 {
+                proxy.place(at: CGPoint(x: x, y: bounds.minY), proposal: ProposedViewSize(width: max(bounds.maxX - x, 0), height: bounds.height))
+            } else if role.isDivider {
+                let proposal = ProposedViewSize(width: hit, height: bounds.height)
+                guard shows(role.column) else {
+                    proxy.place(at: CGPoint(x: bounds.minX - hit, y: bounds.minY), proposal: proposal)
+                    continue
+                }
+                proxy.place(at: CGPoint(x: x + 0.5 - hit / 2, y: bounds.minY), proposal: proposal)
+                x += 1
+            } else {
                 let width = proxy.size(in: ProposedViewSize(width: nil, height: bounds.height)).width
                 let proposal = ProposedViewSize(width: width, height: bounds.height)
-                guard shows(index) else {
+                guard shows(role.column) else {
                     proxy.place(at: CGPoint(x: bounds.minX - width, y: bounds.minY), proposal: proposal)
                     continue
                 }
                 proxy.place(at: CGPoint(x: x, y: bounds.minY), proposal: proposal)
-                x += width + 1
-            } else {
-                proxy.place(at: CGPoint(x: x, y: bounds.minY), proposal: ProposedViewSize(width: max(bounds.maxX - x, 0), height: bounds.height))
+                x += width
             }
         }
     }
 
-    private func shows(_ index: Int) -> Bool {
-        shows.indices.contains(index) ? shows[index] : true
+    private func shows(_ column: Int) -> Bool {
+        shows.indices.contains(column) ? shows[column] : true
     }
 
+    /// Shown columns, then their dividers in front.
     func displayOrder(of children: [ViewNode]) -> [ViewNode] {
-        children.enumerated().filter { shows($0.offset) }.map(\.element)
+        let roles = children.indices.map { role(of: $0, count: children.count) }
+        let columns = children.indices.filter { !roles[$0].isDivider && shows(roles[$0].column) }
+        let dividers = children.indices.filter { roles[$0].isDivider && shows(roles[$0].column) }
+        return (columns + dividers).map { children[$0] }
     }
 
     func displayContent(node: ViewNode) -> DisplayList.Content? {
