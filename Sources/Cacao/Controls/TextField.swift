@@ -390,6 +390,7 @@ internal struct _TextInput: View, PrimitiveView {
 
         var attributes = NodeAttributes()
         if isEnabled {
+            attributes.pointerStyle = .horizontalText
             attributes.focus = focusTarget(node: node, state: state, content: content, environment: environment)
             attributes.drag = DragHandler(
                 onChanged: { [weak node] start, location, frame in
