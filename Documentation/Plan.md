@@ -1,8 +1,7 @@
 # Cacao: SwiftUI for Linux and macOS — Plan
 
-Status: **Phase 11 done** (modifiers applied to each view of a custom
-view's body, resizable split view columns and a sidebar toggle,
-`ShareLink`). What's implemented is in [API coverage](APICoverage.md).
+Status: **Phase 12 done** (`DocumentGroup` with file and reference
+documents, `fileImporter` and `fileExporter`, pointer styles). What's implemented is in [API coverage](APICoverage.md).
 
 Notes:
 - Phase 1: 26 layout cases match Apple's SwiftUI frame for frame on macOS
@@ -104,10 +103,22 @@ Notes:
   detail's bar has a sidebar toggle. `ShareLink` opens AppKit's share
   picker on macOS, through the host, and elsewhere shows a menu that copies
   the items and opens URLs.
+- Phase 12: a document group's windows each keep their document, read
+  once from the file they open, and the window's title shows the file's
+  name and whether it's edited. The File menu gets New, Open…, Save and
+  Save As…; open and save dialogs are the host's, which SDL3 provides on
+  macOS and Linux (through the desktop portal or zenity). File importers
+  and exporters use the same dialogs. On Linux, Cacao provides
+  `FileWrapper`, and file name extensions for common types; apps declare
+  their own types' with `UTType.declareFilenameExtension`. The view under
+  the pointer picks the pointer, the innermost style winning: text fields
+  show a text pointer, links a hand, split view dividers a resize pointer.
 - Known gaps, for later phases:
   - Tab switches don't animate (nor do they in SwiftUI by default).
   - No AT-SPI bridge on Linux yet.
-  - No `DocumentGroup`; menu bar extras have no window style.
+  - Menu bar extras have no window style.
+  - Document windows don't ask to save edits when closed, autosave, or
+    keep a list of recent documents; there's no undo manager for them.
   - `ShareLink` on Linux copies and opens; there's no system share sheet.
     Previews aren't shown.
   - `RotateGesture` has no input yet: SDL reports pinches but not rotations.
@@ -445,6 +456,7 @@ Each phase ends green on macOS and Linux CI.
 | **9. Desktop integration** ✅ | Symbol images, drag and drop, menu commands, `Settings`, `MenuBarExtra`, NSAccessibility bridge | Demo shows symbols, menus, settings and a tray item on macOS; Linux builds and tests |
 | **10. Fidelity II** ✅ | Modifiers applied per view, `matchedGeometryEffect` properties, anchors and sources, `NavigationSplitView` column widths and visibility, `onDrag`/`onDrop` with item providers and `DropDelegate` | Layout cases match Apple's SwiftUI; tests pass on macOS and Linux |
 | **11. Fidelity III** ✅ | Modifiers over custom views of several views, resizable split view columns, sidebar toggle and `toolbar(removing:)`, `ShareLink` | Layout cases match Apple's SwiftUI; tests pass on macOS and Linux |
+| **12. Documents** ✅ | `DocumentGroup`, `FileDocument`, `ReferenceFileDocument`, File menu commands, `fileImporter`/`fileExporter` through SDL's dialogs, window titles, pointer styles | Document tests pass with a fake dialog host on macOS and Linux |
 
 ---
 
