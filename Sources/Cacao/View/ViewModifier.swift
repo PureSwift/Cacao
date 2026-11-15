@@ -84,7 +84,19 @@ extension ModifiedContent: PrimitiveView where Content: View, Modifier: ViewModi
 
     func resolve(in context: ResolveContext) -> Resolution {
         if let primitive = modifier as? any PrimitiveViewModifier {
-            let resolution = primitive.resolve(content: content, in: context)
+            let node = context.node
+            // Passed down to a custom view whose body has several views, or
+            // with modifiers from above to pass on.
+            if node.pushesModifier || !node.pushedModifiers.isEmpty, ContentViews.canPushModifiers(into: content) {
+                var resolution = Resolution(children: [ChildView(key: 0, view: content, modifiers: [applying] + node.pushedModifiers)])
+                resolution.canPushModifier = node.pushedModifiers.isEmpty
+                return resolution
+            }
+            if !node.pushedModifiers.isEmpty {
+                // Modifiers from above that can't pass on apply over this one.
+                return Resolution(children: [ChildView(key: 0, view: node.pushedModifiers.reduce(self as any View) { $1($0) })])
+            }
+            var resolution = primitive.resolve(content: content, in: context)
             // A modifier that lays out or draws applies to each of several
             // views, as in SwiftUI, rather than to all of them as one.
             if resolution.behavior != nil, let views = ContentViews(content), views.items.count != 1 {
@@ -92,6 +104,7 @@ extension ModifiedContent: PrimitiveView where Content: View, Modifier: ViewModi
                     ChildView(key: item.id, view: applying(to: item.view))
                 })
             }
+            resolution.canPushModifier = resolution.behavior != nil && ContentViews.canPushModifiers(into: content)
             return resolution
         }
         // A custom modifier: like a composite view, its dynamic properties
@@ -133,6 +146,15 @@ internal struct ContentViews {
             return nil
         }
         append(content, path: "")
+    }
+
+    /// Whether modifiers can pass down into a view: it's a custom view, or
+    /// built-in modifiers of one.
+    static func canPushModifiers(into view: any View) -> Bool {
+        if let modified = view as? any _ModifiedViews {
+            return modified.isPrimitive && canPushModifiers(into: modified.modifiedContent)
+        }
+        return !(view is any PrimitiveView)
     }
 
     private static func isStructural(_ view: any View) -> Bool {
