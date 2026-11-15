@@ -31,6 +31,10 @@ internal struct Resolution {
     /// Changes the transaction for the node's subtree in this update.
     var transaction: ((inout Transaction) -> Void)?
 
+    /// Whether the node is a modifier that may apply to each view of a
+    /// custom view's body, once its subtree shows that body has several.
+    var canPushModifier = false
+
     init(
         behavior: (any NodeBehavior)? = nil,
         children: [ChildView] = [],
@@ -53,10 +57,15 @@ internal struct ChildView {
     /// The child's environment, or `nil` to inherit the parent's.
     var environment: EnvironmentValues?
 
-    init<Key: Hashable>(key: Key, view: any View, environment: EnvironmentValues? = nil) {
+    /// Modifiers that the child applies to each of its views, innermost
+    /// first: the child is a custom view, or a modifier of one.
+    var modifiers: [(any View) -> any View] = []
+
+    init<Key: Hashable>(key: Key, view: any View, environment: EnvironmentValues? = nil, modifiers: [(any View) -> any View] = []) {
         self.key = AnyHashable(key)
         self.view = view
         self.environment = environment
+        self.modifiers = modifiers
     }
 }
 
