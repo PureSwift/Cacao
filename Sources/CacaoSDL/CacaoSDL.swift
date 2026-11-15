@@ -204,6 +204,8 @@ public enum SDLHost {
             event.key.windowID
         case SDL_EVENT_DROP_BEGIN, SDL_EVENT_DROP_POSITION, SDL_EVENT_DROP_FILE, SDL_EVENT_DROP_TEXT, SDL_EVENT_DROP_COMPLETE:
             event.drop.windowID
+        case SDL_EVENT_FINGER_DOWN, SDL_EVENT_FINGER_MOTION, SDL_EVENT_FINGER_UP, SDL_EVENT_FINGER_CANCELED:
+            event.tfinger.windowID
         default:
             event.type >= SDL_EVENT_WINDOW_FIRST.rawValue && event.type <= SDL_EVENT_WINDOW_LAST.rawValue
                 ? event.window.windowID : nil
