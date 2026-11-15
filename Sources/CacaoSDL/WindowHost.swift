@@ -68,6 +68,12 @@ final class WindowHost {
     /// The scene the window shows, if it has an identifier.
     let sceneID: String?
 
+    /// The title the window's content asked for, last shown.
+    private var shownTitle: String?
+
+    /// The pointer style last shown.
+    private var shownPointerStyle: PointerStyle?
+
     init?(description: WindowDescription, value: AnyHashable? = nil, textEngine: SilicaTextEngine) {
         let size = description.defaultSize ?? CGSize(width: 800, height: 600)
         guard let window = SDL_CreateWindow(
@@ -116,6 +122,7 @@ final class WindowHost {
             },
             write: { _ = SDL_SetClipboardText($0) }
         )
+        graph.fileDialogs = SDLFileDialogs.dialogs(for: window)
         #if os(macOS)
         graph.share = { [weak self] request in
             self?.showSharePicker(request) ?? false
@@ -374,6 +381,14 @@ final class WindowHost {
                 systemThemeChanged()
             }
         }
+        if graph.windowTitle != shownTitle, let title = graph.windowTitle {
+            shownTitle = title
+            SDL_SetWindowTitle(window, title)
+        }
+        if graph.pointerStyle != shownPointerStyle {
+            shownPointerStyle = graph.pointerStyle
+            SDL_SetCursor(SystemCursors.cursor(for: graph.pointerStyle?.kind ?? .default))
+        }
         updateTextInput()
         let size = size
         updateSafeArea(size: size)
@@ -485,5 +500,32 @@ final class WindowHost {
         SDL_SetRenderDrawColorFloat(renderer, 1, 1, 1, 1)
         SDL_RenderDebugText(renderer, 4, 4, text)
         SDL_SetRenderScale(renderer, 1, 1)
+    }
+}
+
+/// The system's pointers, made when first shown.
+@MainActor
+enum SystemCursors {
+
+    private static var cursors: [PointerStyle.Kind: OpaquePointer] = [:]
+
+    static func cursor(for kind: PointerStyle.Kind) -> OpaquePointer? {
+        if let cursor = cursors[kind] {
+            return cursor
+        }
+        let id: SDL_SystemCursor = switch kind {
+        case .default, .zoomIn, .zoomOut: SDL_SYSTEM_CURSOR_DEFAULT
+        case .text: SDL_SYSTEM_CURSOR_TEXT
+        case .link, .grab: SDL_SYSTEM_CURSOR_POINTER
+        case .grabbing, .move: SDL_SYSTEM_CURSOR_MOVE
+        case .crosshair: SDL_SYSTEM_CURSOR_CROSSHAIR
+        case .columnResize: SDL_SYSTEM_CURSOR_EW_RESIZE
+        case .rowResize: SDL_SYSTEM_CURSOR_NS_RESIZE
+        case .diagonalResize: SDL_SYSTEM_CURSOR_NWSE_RESIZE
+        case .antidiagonalResize: SDL_SYSTEM_CURSOR_NESW_RESIZE
+        }
+        let cursor = SDL_CreateSystemCursor(id)
+        cursors[kind] = cursor
+        return cursor
     }
 }
