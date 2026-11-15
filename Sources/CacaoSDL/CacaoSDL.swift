@@ -74,6 +74,10 @@ public enum SDLHost {
                     windows.first(where: { $0.isKey })?.graph ?? windows.first?.graph
                 }
                 #endif
+                #if os(Linux)
+                WaylandGestures.start()
+                defer { WaylandGestures.stop() }
+                #endif
                 runLoop(&windows)
                 windows.forEach { $0.close() }
                 statusItems.forEach { $0.close() }
@@ -91,6 +95,9 @@ public enum SDLHost {
             #if os(macOS)
             MainMenu.windows = windows
             #endif
+            #if os(Linux)
+            WaylandGestures.windows = windows
+            #endif
             let animating = windows.contains { $0.isAnimating }
             // Idle: sleep until an event, waking periodically to run main
             // actor work (tasks, timers) scheduled outside of SDL.
@@ -101,6 +108,9 @@ public enum SDLHost {
                     }
                 } while SDL_PollEvent(&event)
             }
+            #if os(Linux)
+            WaylandGestures.dispatch()
+            #endif
             drainMainQueue()
             handleWindowRequests(&windows)
             let now = now
