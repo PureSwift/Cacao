@@ -142,6 +142,9 @@ internal struct NodeAttributes {
     /// What the node does when the pointer hovers over it.
     var hover: HoverHandler?
 
+    /// The pointer shown over the node.
+    var pointerStyle: PointerStyle?
+
     /// A keyboard shortcut that presses the node's control.
     var keyboardShortcut: KeyboardShortcut?
 
