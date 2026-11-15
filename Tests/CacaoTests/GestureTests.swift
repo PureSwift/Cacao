@@ -347,4 +347,70 @@ extension ViewGraph {
         graph.click(graph.center("box"), at: 1)
         #expect(log.events.isEmpty)
     }
+
+    @Test func rotateGestureFollowsTwoFingerTouches() {
+        let log = self.log
+        let graph = layout(
+            Color.red.frame(width: 200, height: 200).probe("box")
+                .gesture(
+                    RotateGesture()
+                        .onChanged { log.log("angle \(Int(($0.rotation.degrees).rounded()))") }
+                        .onEnded { log.log("ended \(Int(($0.rotation.degrees).rounded()))") }
+                )
+        )
+        let center = graph.center("box")
+        var tracker = TouchRotationTracker()
+        func send(_ update: TouchRotationTracker.Update?, at time: Double) {
+            guard let update else { return }
+            graph.rotate(update.phase, angle: update.angle, at: update.location, time: time)
+        }
+        // Two fingers either side of the center turn a quarter turn clockwise.
+        send(tracker.fingerDown(1, at: CGPoint(x: center.x - 40, y: center.y)), at: 1)
+        send(tracker.fingerDown(2, at: CGPoint(x: center.x + 40, y: center.y)), at: 1)
+        for step in 1...3 {
+            let angle = Double(step) * .pi / 6
+            let offset = CGPoint(x: 40 * cos(angle), y: 40 * sin(angle))
+            send(tracker.fingerMoved(2, to: CGPoint(x: center.x + offset.x, y: center.y + offset.y)), at: 1 + Double(step) * 0.1)
+            send(tracker.fingerMoved(1, to: CGPoint(x: center.x - offset.x, y: center.y - offset.y)), at: 1 + Double(step) * 0.1 + 0.05)
+        }
+        send(tracker.fingerUp(2), at: 2)
+        #expect(log.events.last == "ended 90")
+        #expect(log.events.first?.hasPrefix("angle ") == true)
+        #expect(graph.gestureSession == nil)
+    }
 }
+
+@Suite struct TouchRotationTrackerTests {
+
+    @Test func reportsTheTurnOfTheFirstTwoFingers() {
+        var tracker = TouchRotationTracker()
+        #expect(tracker.fingerDown(1, at: CGPoint(x: 0, y: 0)) == nil)
+        let began = tracker.fingerDown(2, at: CGPoint(x: 10, y: 0))
+        #expect(began == .init(phase: .began, angle: 0, location: CGPoint(x: 5, y: 0)))
+        // Moving the second finger below the first turns clockwise on screen.
+        let moved = tracker.fingerMoved(2, to: CGPoint(x: 0, y: 10))
+        #expect(moved?.phase == .moved)
+        #expect(abs((moved?.angle ?? 0) - .pi / 2) < 1e-9)
+        // A third finger doesn't count.
+        #expect(tracker.fingerDown(3, at: CGPoint(x: 50, y: 50)) == nil)
+        #expect(tracker.fingerMoved(3, to: CGPoint(x: 60, y: 50)) == nil)
+        let ended = tracker.fingerUp(1)
+        #expect(ended?.phase == .ended)
+        #expect(tracker.fingerMoved(2, to: CGPoint(x: 5, y: 5)) == nil)
+    }
+
+    @Test func keepsCountingPastAHalfTurn() {
+        var tracker = TouchRotationTracker()
+        _ = tracker.fingerDown(1, at: .zero)
+        _ = tracker.fingerDown(2, at: CGPoint(x: 10, y: 0))
+        var angle = 0.0
+        for step in 1...12 {
+            let turn = Double(step) * .pi / 4
+            angle = tracker.fingerMoved(2, to: CGPoint(x: 10 * cos(turn), y: 10 * sin(turn)))?.angle ?? angle
+        }
+        // One and a half turns.
+        #expect(abs(angle - 3 * .pi) < 1e-9)
+        #expect(tracker.fingerUp(2, cancelled: true)?.phase == .cancelled)
+    }
+}
+
