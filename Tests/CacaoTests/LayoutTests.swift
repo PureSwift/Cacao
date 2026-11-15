@@ -255,4 +255,41 @@ import Testing
         let small = graph.frame("small")
         #expect(abs((big.minY + 40 * 0.95) - (small.minY + 10 * 0.95)) < 0.001)
     }
+
+    @Test func modifierFollowsACustomViewsBodyAsItChanges() {
+        struct Growing: View {
+            let model: AnimationModel
+            @State private var taps = 0
+            var body: some View {
+                Button("Taps \(taps)") { taps += 1 }
+                    .frame(width: 80, height: 20)
+                    .probe("button")
+                if model.flag {
+                    Color.blue.frame(width: 20, height: 20).probe("extra")
+                }
+            }
+        }
+        let model = AnimationModel()
+        let graph = layout(
+            HStack(spacing: 0) {
+                Growing(model: model).padding(5)
+            }
+            .probe("stack"),
+            width: 300, height: 100
+        )
+        #expect(graph.frame("stack").width == 90)
+        graph.tapText("Taps 0")
+        graph.settle()
+        // A second view gets its own padding, beside the first.
+        model.flag = true
+        graph.settle()
+        #expect(graph.frame("stack").width == 120)
+        #expect(graph.frame("extra").minX == graph.frame("button").maxX + 10)
+        #expect(graph.texts.contains("Taps 1"))
+        // Back to one view, padded once.
+        model.flag = false
+        graph.settle()
+        #expect(graph.frame("stack").width == 90)
+        #expect(graph.texts.contains("Taps 1"))
+    }
 }
