@@ -132,7 +132,7 @@ tests.
 | API | | Notes |
 |---|---|---|
 | `TapGesture`, `SpatialTapGesture`, `LongPressGesture`, `DragGesture`, `MagnifyGesture` | ✅ | Pinches from trackpads. |
-| `RotateGesture` | ◐ | Trackpads on macOS and touch screens; Linux touchpads report no rotations. |
+| `RotateGesture` | ◐ | Trackpads on macOS, touchpads under Wayland, and touch screens. Touchpads under X11 report no rotations. |
 | `simultaneously`, `sequenced`, `exclusively`, `onChanged`, `onEnded`, `updating`, `map` | ✅ | |
 | `gesture`, `highPriorityGesture`, `simultaneousGesture`, `GestureMask` | ✅ | |
 | `onTapGesture(count:)`, `onLongPressGesture` | ✅ | |
