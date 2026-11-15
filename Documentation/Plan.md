@@ -116,7 +116,13 @@ Notes:
 - Rotation input: `RotateGesture` gets trackpad rotations on macOS from
   AppKit, which the host watches for, and two-finger turns on touch
   screens everywhere, which the host follows from SDL's touches; the angle
-  keeps counting past a half turn.
+  keeps counting past a half turn. Under Wayland, SDL reports a touchpad
+  pinch's scale but drops its rotation, so a small C target
+  (`CacaoWayland`) asks the compositor for pinch gestures itself, on SDL's
+  connection but its own event queue, with its own pointer object for the
+  seat; the host dispatches that queue each loop. On Linux, tests bind it
+  against a minimal compositor made with libwayland-server, which sends
+  pinches and checks the rotations arrive.
 - Known gaps, for later phases:
   - Tab switches don't animate (nor do they in SwiftUI by default).
   - No AT-SPI bridge on Linux yet.
@@ -125,8 +131,8 @@ Notes:
     keep a list of recent documents; there's no undo manager for them.
   - `ShareLink` on Linux copies and opens; there's no system share sheet.
     Previews aren't shown.
-  - Touchpads on Linux don't rotate: SDL reports their pinches' scale
-    but not their rotation.
+  - Touchpads rotate on Linux under Wayland only; X11's pinches have no
+    rotation through SDL, which Cacao doesn't read from XInput itself.
   - On macOS, the system's trackpad momentum arrives as more scrolling, so
     snapping scroll views settle after it ends; paging moves at most a page.
   - `Canvas` composites blend modes and filters in software, at a cost
