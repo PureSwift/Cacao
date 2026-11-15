@@ -16,7 +16,7 @@ import Observation
 @_exported import Combine
 
 /// Subscribes to an object's changes, returning what keeps the subscription.
-private func subscribe<T: ObservableObject>(_ object: T, _ action: @escaping @Sendable () -> Void) -> AnyObject {
+internal func subscribe<T: ObservableObject>(_ object: T, _ action: @escaping @Sendable () -> Void) -> AnyObject {
     object.objectWillChange.sink { _ in action() }
 }
 #else
@@ -187,7 +187,7 @@ public struct Published<Value> {
 extension Published: @unchecked Sendable where Value: Sendable { }
 
 /// Subscribes to an object's changes, returning what keeps the subscription.
-private func subscribe<T: ObservableObject>(_ object: T, _ action: @escaping @Sendable () -> Void) -> AnyObject {
+internal func subscribe<T: ObservableObject>(_ object: T, _ action: @escaping @Sendable () -> Void) -> AnyObject {
     object.objectWillChange.subscribe(action)
 }
 #endif
