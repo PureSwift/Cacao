@@ -244,6 +244,12 @@ internal enum Symbols {
             return shape(Path { $0.addRect(CGRect(x: 0.18, y: 0.1, width: 0.22, height: 0.8)); $0.addRect(CGRect(x: 0.6, y: 0.1, width: 0.22, height: 0.8)) })
         case "stop":
             return shape(Path(roundedRect: CGRect(x: 0.14, y: 0.14, width: 0.72, height: 0.72), cornerRadius: 0.08))
+        case "sidebar.left", "sidebar.right":
+            let x: CGFloat = name == "sidebar.left" ? 0.38 : 0.62
+            return [
+                Part(path: Path(roundedRect: CGRect(x: 0.06, y: 0.16, width: 0.88, height: 0.68), cornerRadius: 0.12), isFilled: false),
+                Part(path: lines([(x, 0.16), (x, 0.84)]), isFilled: false),
+            ]
         case "square.and.arrow.up":
             return [
                 Part(path: lines([(0.32, 0.36), (0.16, 0.36), (0.16, 0.94), (0.84, 0.94), (0.84, 0.36), (0.68, 0.36)]), isFilled: false),
