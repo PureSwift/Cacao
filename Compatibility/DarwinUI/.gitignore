@@ -1,0 +1,5 @@
+.build/
+# Copied from DarwinAppRuntime by sync.sh.
+/Sources/DarwinUI/
+/Tests/DarwinUITests/*.swift
+!/Tests/DarwinUITests/RenderingTests.swift
