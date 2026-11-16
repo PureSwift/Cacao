@@ -151,7 +151,7 @@ struct PixelBuffer {
     init?(_ image: Silica.CGImage?, width: Int, height: Int) {
         self.init(width: width, height: height)
         guard let image else { return nil }
-        image.data.withUnsafeBytes { bytes in
+        image.data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
             for row in 0..<min(height, image.height) {
                 for column in 0..<min(width, image.width) {
                     let source = row * image.bytesPerRow + column * 4
@@ -166,7 +166,7 @@ struct PixelBuffer {
 
     var image: Silica.CGImage {
         var data = Data(count: width * height * 4)
-        data.withUnsafeMutableBytes { bytes in
+        data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
             for index in 0..<(width * height * 4) {
                 bytes[index] = UInt8(max(0, min(255, (pixels[index] * 255).rounded())))
             }
