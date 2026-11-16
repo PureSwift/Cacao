@@ -13,7 +13,7 @@ import Silica
     /// The rows and columns that have ink in a premultiplied RGBA image.
     static func inkBounds(_ image: Silica.CGImage) -> CGRect? {
         var minX = Int.max, minY = Int.max, maxX = -1, maxY = -1
-        image.data.withUnsafeBytes { bytes in
+        image.data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
             for y in 0..<image.height {
                 for x in 0..<image.width where bytes[y * image.bytesPerRow + x * 4 + 3] > 64 {
                     minX = min(minX, x); maxX = max(maxX, x)
@@ -93,7 +93,7 @@ import Silica
             textEngine: SilicaTextEngine()
         ))
         func pixel(_ x: Int, _ y: Int) -> [UInt8] {
-            image.data.withUnsafeBytes { bytes in
+            image.data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
                 (0..<4).map { bytes[y * image.bytesPerRow + x * 4 + $0] }
             }
         }
@@ -117,7 +117,7 @@ extension TextRenderingTests {
         func ink(_ text: ResolvedText) throws -> (bounds: CGRect, count: Int) {
             let image = try #require(Rasterizer.rasterize(.text(text), size: layout.size, scale: 1, textEngine: engine))
             var count = 0
-            image.data.withUnsafeBytes { bytes in
+            image.data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
                 for y in 0..<image.height {
                     for x in 0..<image.width where bytes[y * image.bytesPerRow + x * 4 + 3] > 64 { count += 1 }
                 }
