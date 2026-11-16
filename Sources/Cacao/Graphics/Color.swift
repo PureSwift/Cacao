@@ -9,6 +9,9 @@ import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
 #endif
+#if canImport(AppKit)
+import AppKit
+#endif
 
 /// A representation of a color that adapts to a given context.
 public struct Color: Hashable, Sendable, CustomStringConvertible {
@@ -18,6 +21,8 @@ public struct Color: Hashable, Sendable, CustomStringConvertible {
         case system(SystemColor)
         case opacity(Color, Double)
         case mix(Color, Color, Double)
+        /// Different colors in light and dark appearances.
+        case adaptive(light: Resolved, dark: Resolved)
     }
 
     internal let storage: Storage
@@ -31,15 +36,40 @@ public struct Color: Hashable, Sendable, CustomStringConvertible {
         self.init(storage: .resolved(resolved))
     }
 
-    /// Creates a constant color from red, green, and blue component values
-    /// in the sRGB color space.
-    public init(red: Double, green: Double, blue: Double, opacity: Double = 1) {
-        self.init(Resolved(red: Float(red), green: Float(green), blue: Float(blue), opacity: Float(opacity)))
+    /// A profile that specifies how to interpret a color value for display.
+    public enum RGBColorSpace: Hashable, Sendable {
+
+        /// The extended red, green, blue (sRGB) color space.
+        case sRGB
+
+        /// The extended sRGB color space with a linear transfer function.
+        case sRGBLinear
+
+        /// The Display P3 color space, drawn as sRGB.
+        case displayP3
+
+        /// A component in this space, as sRGB.
+        func encoded(_ value: Double) -> Double {
+            guard self == .sRGBLinear else { return value }
+            let magnitude = abs(value)
+            let encoded = magnitude <= 0.0031308 ? magnitude * 12.92 : 1.055 * pow(magnitude, 1 / 2.4) - 0.055
+            return value < 0 ? -encoded : encoded
+        }
+    }
+
+    /// Creates a constant color from red, green, and blue component values.
+    public init(_ colorSpace: RGBColorSpace = .sRGB, red: Double, green: Double, blue: Double, opacity: Double = 1) {
+        self.init(Resolved(
+            red: Float(colorSpace.encoded(red)),
+            green: Float(colorSpace.encoded(green)),
+            blue: Float(colorSpace.encoded(blue)),
+            opacity: Float(opacity)
+        ))
     }
 
     /// Creates a constant grayscale color.
-    public init(white: Double, opacity: Double = 1) {
-        self.init(red: white, green: white, blue: white, opacity: opacity)
+    public init(_ colorSpace: RGBColorSpace = .sRGB, white: Double, opacity: Double = 1) {
+        self.init(colorSpace, red: white, green: white, blue: white, opacity: opacity)
     }
 
     /// Creates a constant color from hue, saturation, and brightness values.
@@ -76,6 +106,8 @@ public struct Color: Hashable, Sendable, CustomStringConvertible {
             return SystemColor.blue.resolve(in: environment.colorScheme)
         case let .system(color):
             return color.resolve(in: environment.colorScheme)
+        case let .adaptive(light, dark):
+            return environment.colorScheme == .dark ? dark : light
         case let .opacity(color, opacity):
             var resolved = color.resolve(in: environment)
             resolved.opacity *= Float(opacity)
@@ -105,6 +137,7 @@ public struct Color: Hashable, Sendable, CustomStringConvertible {
         case let .system(color): color.rawValue
         case let .opacity(color, opacity): "\(Int(opacity * 100))% \(color)"
         case let .mix(base, other, fraction): "\(base) mixed with \(other) by \(fraction)"
+        case let .adaptive(light, dark): "\(light) in light, \(dark) in dark"
         }
     }
 }
@@ -268,3 +301,33 @@ internal struct FillBehavior: AnimatableBehavior {
         color.opacity > 0 && node.frame.contains(point)
     }
 }
+
+#if canImport(AppKit)
+extension Color {
+
+    /// Creates a color from an AppKit color, following its light and dark
+    /// appearances.
+    public init(_ color: NSColor) {
+        func resolved(_ appearance: NSAppearance.Name) -> Resolved {
+            var result = Resolved(red: 0, green: 0, blue: 0, opacity: 1)
+            NSAppearance(named: appearance)?.performAsCurrentDrawingAppearance {
+                guard let rgb = color.usingColorSpace(.sRGB) else { return }
+                result = Resolved(
+                    red: Float(rgb.redComponent),
+                    green: Float(rgb.greenComponent),
+                    blue: Float(rgb.blueComponent),
+                    opacity: Float(rgb.alphaComponent)
+                )
+            }
+            return result
+        }
+        self.init(storage: .adaptive(light: resolved(.aqua), dark: resolved(.darkAqua)))
+    }
+
+    /// Creates a color from an AppKit color.
+    public init(nsColor color: NSColor) {
+        self.init(color)
+    }
+}
+#endif
+
