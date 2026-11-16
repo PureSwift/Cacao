@@ -334,6 +334,119 @@ public struct RoundedRectangle: InsettableShape {
     }
 }
 
+/// Describes the corner radius values of a rounded rectangle with uneven
+/// corners.
+public struct RectangleCornerRadii: Equatable, Animatable, Sendable {
+
+    public var topLeading: CGFloat
+
+    public var bottomLeading: CGFloat
+
+    public var bottomTrailing: CGFloat
+
+    public var topTrailing: CGFloat
+
+    public init(topLeading: CGFloat = 0, bottomLeading: CGFloat = 0, bottomTrailing: CGFloat = 0, topTrailing: CGFloat = 0) {
+        self.topLeading = topLeading
+        self.bottomLeading = bottomLeading
+        self.bottomTrailing = bottomTrailing
+        self.topTrailing = topTrailing
+    }
+
+    public var animatableData: AnimatablePair<AnimatablePair<CGFloat, CGFloat>, AnimatablePair<CGFloat, CGFloat>> {
+        get { AnimatablePair(AnimatablePair(topLeading, bottomLeading), AnimatablePair(bottomTrailing, topTrailing)) }
+        set {
+            topLeading = newValue.first.first
+            bottomLeading = newValue.first.second
+            bottomTrailing = newValue.second.first
+            topTrailing = newValue.second.second
+        }
+    }
+}
+
+/// A rectangular shape with rounded corners with different values, aligned
+/// inside the frame of the view containing it.
+public struct UnevenRoundedRectangle: InsettableShape {
+
+    public var cornerRadii: RectangleCornerRadii
+
+    public var style: RoundedCornerStyle
+
+    internal var insetAmount: CGFloat = 0
+
+    public init(cornerRadii: RectangleCornerRadii, style: RoundedCornerStyle = .continuous) {
+        self.cornerRadii = cornerRadii
+        self.style = style
+    }
+
+    public init(
+        topLeadingRadius: CGFloat = 0,
+        bottomLeadingRadius: CGFloat = 0,
+        bottomTrailingRadius: CGFloat = 0,
+        topTrailingRadius: CGFloat = 0,
+        style: RoundedCornerStyle = .continuous
+    ) {
+        self.init(
+            cornerRadii: RectangleCornerRadii(
+                topLeading: topLeadingRadius,
+                bottomLeading: bottomLeadingRadius,
+                bottomTrailing: bottomTrailingRadius,
+                topTrailing: topTrailingRadius
+            ),
+            style: style
+        )
+    }
+
+    public nonisolated var animatableData: RectangleCornerRadii.AnimatableData {
+        get { cornerRadii.animatableData }
+        set { cornerRadii.animatableData = newValue }
+    }
+
+    public nonisolated func path(in rect: CGRect) -> Path {
+        let rect = rect.insetBy(dx: insetAmount, dy: insetAmount)
+        let limit = min(rect.width, rect.height) / 2
+        func radius(_ value: CGFloat) -> CGFloat { min(max(value - insetAmount, 0), limit) }
+        let topLeading = radius(cornerRadii.topLeading), topTrailing = radius(cornerRadii.topTrailing)
+        let bottomLeading = radius(cornerRadii.bottomLeading), bottomTrailing = radius(cornerRadii.bottomTrailing)
+        // Quarter circles as cubic curves.
+        let k: CGFloat = 0.5523
+        return Path { path in
+            path.move(to: CGPoint(x: rect.minX + topLeading, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX - topTrailing, y: rect.minY))
+            path.addCurve(
+                to: CGPoint(x: rect.maxX, y: rect.minY + topTrailing),
+                control1: CGPoint(x: rect.maxX - topTrailing * (1 - k), y: rect.minY),
+                control2: CGPoint(x: rect.maxX, y: rect.minY + topTrailing * (1 - k))
+            )
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - bottomTrailing))
+            path.addCurve(
+                to: CGPoint(x: rect.maxX - bottomTrailing, y: rect.maxY),
+                control1: CGPoint(x: rect.maxX, y: rect.maxY - bottomTrailing * (1 - k)),
+                control2: CGPoint(x: rect.maxX - bottomTrailing * (1 - k), y: rect.maxY)
+            )
+            path.addLine(to: CGPoint(x: rect.minX + bottomLeading, y: rect.maxY))
+            path.addCurve(
+                to: CGPoint(x: rect.minX, y: rect.maxY - bottomLeading),
+                control1: CGPoint(x: rect.minX + bottomLeading * (1 - k), y: rect.maxY),
+                control2: CGPoint(x: rect.minX, y: rect.maxY - bottomLeading * (1 - k))
+            )
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + topLeading))
+            path.addCurve(
+                to: CGPoint(x: rect.minX + topLeading, y: rect.minY),
+                control1: CGPoint(x: rect.minX, y: rect.minY + topLeading * (1 - k)),
+                control2: CGPoint(x: rect.minX + topLeading * (1 - k), y: rect.minY)
+            )
+            path.closeSubpath()
+        }
+    }
+
+    public nonisolated func inset(by amount: CGFloat) -> UnevenRoundedRectangle {
+        var shape = self
+        shape.insetAmount += amount
+        return shape
+    }
+}
+
 /// A capsule shape aligned inside the frame of the view containing it.
 public struct Capsule: InsettableShape {
 
