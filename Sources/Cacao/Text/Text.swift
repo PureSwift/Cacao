@@ -123,6 +123,22 @@ extension Text: View, PrimitiveView {
     public typealias Body = Never
 
     func resolve(in context: ResolveContext) -> Resolution {
+        // Text that transitions between its strings: one view per string,
+        // which transitions in and out when the string changes.
+        let transition = context.environment.contentTransition
+        if transition != .identity {
+            var environment = context.environment
+            environment.contentTransition = .identity
+            return Resolution(children: [ChildView(
+                key: runs.map(\.string).joined(),
+                view: self.transition(transition.transition),
+                environment: environment
+            )])
+        }
+        // Placeholder text: laid out the same, drawn as a shape.
+        if context.environment.redactionReasons.contains(.placeholder) {
+            return Resolution(children: [redactedPlaceholder(of: self, in: context.environment)])
+        }
         // Text in a gradient: the gradient, masked by the text's glyphs.
         if let style = context.environment.foregroundStyle,
            style.resolveGradient(in: context.environment) != nil,
@@ -344,4 +360,17 @@ public struct LocalizedStringKey: Equatable, Sendable, ExpressibleByStringInterp
             output += text.runs.map(\.string).joined()
         }
     }
+}
+
+/// A view shown as a placeholder for redaction: laid out as itself, drawn
+/// as a rounded shape.
+@MainActor
+internal func redactedPlaceholder(of view: some View, in environment: EnvironmentValues) -> ChildView {
+    var environment = environment
+    environment.redactionReasons = []
+    return ChildView(
+        key: "redacted",
+        view: view.opacity(0).background(RoundedRectangle(cornerRadius: 4).fill(Color.primary.opacity(0.15))),
+        environment: environment
+    )
 }
