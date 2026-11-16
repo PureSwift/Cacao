@@ -146,7 +146,7 @@ package enum Rasterizer {
     ) -> Silica.CGImage {
         var data = coverage.data
         let width = coverage.width, height = coverage.height, bytesPerRow = coverage.bytesPerRow
-        data.withUnsafeMutableBytes { bytes in
+        data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
             let pixels = bytes.bindMemory(to: UInt8.self)
             for row in 0..<height {
                 for column in 0..<width {
@@ -364,7 +364,7 @@ package enum Rasterizer {
         let matrix = content.colorMatrix
         // Keep each pixel's alpha, with the tint's premultiplied color.
         var data = image.data
-        data.withUnsafeMutableBytes { bytes in
+        data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
             let pixels = bytes.bindMemory(to: UInt8.self)
             for row in 0..<image.height {
                 for column in 0..<image.width {
