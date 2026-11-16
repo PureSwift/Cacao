@@ -245,8 +245,9 @@ internal struct LazyStack {
     let spacing: CGFloat?
 
     /// Wraps each row's view, for lists: given the view, its element's
-    /// identity and whether it's a section header, row or footer.
-    let rowTransform: ((any View, AnyHashable, RowKind) -> any View)?
+    /// identity and where it is: a section header, row or footer, and
+    /// whether it's its section's first or last row.
+    let rowTransform: ((any View, AnyHashable, ListRowPosition) -> any View)?
 
     func resolve(content: any View, in context: ResolveContext) -> Resolution {
         let source = FlattenedRows(content)
@@ -268,7 +269,7 @@ internal struct LazyStack {
         environment.stackOrientation = axis
         let children = range.map { index -> ChildView in
             let row = source.row(at: index)
-            let view = rowTransform.map { $0(row.view, source.elementID(at: index), source.kind(at: index)) } ?? row.view
+            let view = rowTransform.map { $0(row.view, source.elementID(at: index), source.position(at: index)) } ?? row.view
             return ChildView(key: row.id, view: view, environment: environment)
         }
         var resolution = Resolution(
