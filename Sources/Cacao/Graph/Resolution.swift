@@ -145,6 +145,10 @@ internal struct NodeAttributes {
     /// The pointer shown over the node.
     var pointerStyle: PointerStyle?
 
+    /// Text describing the node, shown as a tooltip when the pointer rests
+    /// on it.
+    var help: String?
+
     /// A keyboard shortcut that presses the node's control.
     var keyboardShortcut: KeyboardShortcut?
 
