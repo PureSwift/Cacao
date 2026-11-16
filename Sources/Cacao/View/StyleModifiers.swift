@@ -171,6 +171,16 @@ extension ViewGraph {
     package func hover(at point: CGPoint?) {
         let path = point.flatMap { root.hitTest($0) } ?? []
         pointerStyle = Self.pointerStyle(along: path)
+        // Help text shows once the pointer rests on its view.
+        let help = path.reversed().lazy.compactMap(\.attributes.help).first
+        if help != (tooltip?.text ?? pendingTooltip?.text) {
+            hideTooltip()
+            if let help, let point {
+                pendingTooltip = (help, point, time + Self.tooltipDelay)
+            }
+        } else if let point, pendingTooltip != nil {
+            pendingTooltip?.location = point
+        }
         let hovering = path.filter { $0.attributes.hover != nil }
         let ids = Set(hovering.map(\.id))
         for (id, reference) in hoveredNodes where !ids.contains(id) {
@@ -188,6 +198,59 @@ extension ViewGraph {
             let frame = node.windowFrame
             handler.continuous?(.active(CGPoint(x: point.x - frame.minX, y: point.y - frame.minY)))
         }
+    }
+}
+
+// MARK: - Tooltips
+
+extension ViewGraph {
+
+    /// How long the pointer rests on a view before its help shows.
+    static let tooltipDelay = 1.0
+
+    /// Shows help text whose pointer has rested long enough.
+    func showTooltipIfDue() {
+        guard let pending = pendingTooltip, time >= pending.time else { return }
+        pendingTooltip = nil
+        tooltip = (pending.text, pending.location)
+        root.invalidate()
+    }
+
+    /// Hides the tooltip, as when the pointer moves on or presses.
+    func hideTooltip() {
+        pendingTooltip = nil
+        if tooltip != nil {
+            tooltip = nil
+            root.invalidate()
+        }
+    }
+
+    /// Whether a tooltip is showing, and its text.
+    package var tooltipText: String? {
+        tooltip?.text
+    }
+}
+
+/// Help text shown in a small box near the pointer.
+internal struct _Tooltip: View {
+
+    let text: String
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        Text(text)
+            .font(.callout)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .background {
+                RoundedRectangle(cornerRadius: 4).fill(Color.controlBackground(colorScheme))
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 4).strokeBorder(Color.separator, lineWidth: 1)
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
     }
 }
 
@@ -762,12 +825,85 @@ extension View {
 /// A protocol that describes the behavior and appearance of a list.
 public protocol ListStyle { }
 
-public struct DefaultListStyle: ListStyle { public init() { } }
-public struct PlainListStyle: ListStyle { public init() { } }
-public struct InsetListStyle: ListStyle { public init() { } }
-public struct GroupedListStyle: ListStyle { public init() { } }
-public struct InsetGroupedListStyle: ListStyle { public init() { } }
-public struct SidebarListStyle: ListStyle { public init() { } }
+/// A list style that says which of Cacao's list styles it is.
+internal protocol _ListStyleKindProviding {
+    var kind: ListStyleKind { get }
+}
+
+public struct DefaultListStyle: ListStyle, _ListStyleKindProviding { public init() { }; var kind: ListStyleKind { .automatic } }
+public struct PlainListStyle: ListStyle, _ListStyleKindProviding { public init() { }; var kind: ListStyleKind { .plain } }
+public struct InsetListStyle: ListStyle, _ListStyleKindProviding { public init() { }; var kind: ListStyleKind { .inset } }
+public struct GroupedListStyle: ListStyle, _ListStyleKindProviding { public init() { }; var kind: ListStyleKind { .grouped } }
+public struct InsetGroupedListStyle: ListStyle, _ListStyleKindProviding { public init() { }; var kind: ListStyleKind { .insetGrouped } }
+public struct SidebarListStyle: ListStyle, _ListStyleKindProviding { public init() { }; var kind: ListStyleKind { .sidebar } }
+
+private struct ListStyleKindKey: EnvironmentKey {
+    static let defaultValue = ListStyleKind.automatic
+}
+
+private struct ScrollContentBackgroundKey: EnvironmentKey {
+    static let defaultValue = Visibility.automatic
+}
+
+extension EnvironmentValues {
+
+    /// The style of lists in this environment.
+    internal var listStyleKind: ListStyleKind {
+        get { self[ListStyleKindKey.self] }
+        set { self[ListStyleKindKey.self] = newValue }
+    }
+
+    /// Whether scrollable views like grouped lists draw their background.
+    internal var scrollContentBackgroundVisibility: Visibility {
+        get { self[ScrollContentBackgroundKey.self] }
+        set { self[ScrollContentBackgroundKey.self] = newValue }
+    }
+}
+
+extension View {
+
+    /// Sets the style for lists within this view.
+    public func listStyle<S: ListStyle>(_ style: S) -> some View {
+        environment(\.listStyleKind, (style as? any _ListStyleKindProviding)?.kind ?? .automatic)
+    }
+
+    /// Specifies the visibility of the background for scrollable views
+    /// within this view: a grouped list's background.
+    public func scrollContentBackground(_ visibility: Visibility) -> some View {
+        environment(\.scrollContentBackgroundVisibility, visibility)
+    }
+
+    /// Places a custom background view behind a list row item.
+    public func listRowBackground<V: View>(_ view: V?) -> some View {
+        var traits = ListRowTraits()
+        if let view {
+            traits.background = AnyView(view)
+            traits.backgroundIdentity = (view as? any Hashable).map { AnyHashable($0) } ?? AnyHashable(ObjectIdentifier(V.self))
+        }
+        return transformPreference(ListRowTraitsKey.self) { $0 = traits.merging($0) }
+    }
+
+    /// Applies an inset to the rows in a list; `nil` for the default.
+    public func listRowInsets(_ insets: EdgeInsets?) -> some View {
+        var traits = ListRowTraits()
+        traits.insets = insets
+        return transformPreference(ListRowTraitsKey.self) { $0 = traits.merging($0) }
+    }
+
+    /// Sets the display mode for the separator associated with this list row.
+    public func listRowSeparator(_ visibility: Visibility, edges: VerticalEdge.Set = .all) -> some View {
+        var traits = ListRowTraits()
+        traits.hiddenSeparators = visibility == .hidden ? edges : []
+        return transformPreference(ListRowTraitsKey.self) { $0 = traits.merging($0) }
+    }
+
+    /// Sets the tint color associated with a row's separator.
+    public func listRowSeparatorTint(_ color: Color?, edges: VerticalEdge.Set = .all) -> some View {
+        var traits = ListRowTraits()
+        traits.separatorTint = color
+        return transformPreference(ListRowTraitsKey.self) { $0 = traits.merging($0) }
+    }
+}
 
 extension ListStyle where Self == DefaultListStyle { public static var automatic: DefaultListStyle { .init() } }
 extension ListStyle where Self == PlainListStyle { public static var plain: PlainListStyle { .init() } }
@@ -779,6 +915,73 @@ extension ListStyle where Self == SidebarListStyle { public static var sidebar: 
 /// The size classes, like regular or small, that you can apply to controls.
 public enum ControlSize: CaseIterable, Hashable, Sendable {
     case mini, small, regular, large, extraLarge
+}
+
+private struct ControlSizeKey: EnvironmentKey {
+    static let defaultValue = ControlSize.regular
+}
+
+private struct RedactionReasonsKey: EnvironmentKey {
+    static let defaultValue: RedactionReasons = []
+}
+
+extension EnvironmentValues {
+
+    /// The size to apply to controls within a view.
+    public var controlSize: ControlSize {
+        get { self[ControlSizeKey.self] }
+        set { self[ControlSizeKey.self] = newValue }
+    }
+
+    /// The current redaction reasons applied to the view hierarchy.
+    public var redactionReasons: RedactionReasons {
+        get { self[RedactionReasonsKey.self] }
+        set { self[RedactionReasonsKey.self] = newValue }
+    }
+}
+
+extension View {
+
+    /// Sets the size for controls within this view.
+    public func controlSize(_ controlSize: ControlSize) -> some View {
+        environment(\.controlSize, controlSize)
+    }
+
+    /// Adds a reason to apply a redaction to this view hierarchy: with
+    /// `placeholder`, text and images show as placeholder shapes.
+    public func redacted(reason: RedactionReasons) -> some View {
+        transformEnvironment(\.redactionReasons) { $0.formUnion(reason) }
+    }
+
+    /// Removes any reason to apply a redaction to this view hierarchy.
+    public func unredacted() -> some View {
+        environment(\.redactionReasons, [])
+    }
+
+    /// Adds help text to a view: a tooltip shown when the pointer rests on
+    /// it, and the view's accessibility hint.
+    @_disfavoredOverload
+    public func help<S: StringProtocol>(_ text: S) -> some View {
+        let text = String(text)
+        return modifier(_AttributesModifier { attributes in
+            attributes.help = text
+            var accessibility = attributes.accessibility ?? AccessibilityAttributes()
+            if accessibility.hint == nil {
+                accessibility.hint = text
+            }
+            attributes.accessibility = accessibility
+        })
+    }
+
+    /// Adds help text to a view using a localized string key.
+    public func help(_ textKey: LocalizedStringKey) -> some View {
+        help(textKey.key)
+    }
+
+    /// Adds help text to a view using a text view.
+    public func help(_ text: Text) -> some View {
+        help(text.plainString)
+    }
 }
 
 /// The kinds of redaction that you can apply to views.
@@ -874,37 +1077,87 @@ public struct SymbolRenderingMode: Sendable, Equatable {
 }
 
 /// An opaque type that describes how a view's content changes.
+///
+/// Text whose string changes in an animated update fades from the old
+/// string to the new; numeric text also rolls up, or down when counting
+/// down. Interpolation fades too.
 public struct ContentTransition: Equatable, Sendable {
     let id: Int
     public static let identity = ContentTransition(id: 0)
     public static let opacity = ContentTransition(id: 1)
     public static let interpolate = ContentTransition(id: 2)
-    public static func numericText(countsDown: Bool = false) -> ContentTransition { ContentTransition(id: 3) }
+    public static func numericText(countsDown: Bool = false) -> ContentTransition { ContentTransition(id: countsDown ? 4 : 3) }
+
+    /// How the old content leaves and the new arrives.
+    var transition: AnyTransition {
+        switch id {
+        case 3: .asymmetric(insertion: AnyTransition.offset(y: 8).combined(with: .opacity), removal: AnyTransition.offset(y: -8).combined(with: .opacity))
+        case 4: .asymmetric(insertion: AnyTransition.offset(y: -8).combined(with: .opacity), removal: AnyTransition.offset(y: 8).combined(with: .opacity))
+        default: .opacity
+        }
+    }
+}
+
+private struct ContentTransitionKey: EnvironmentKey {
+    static let defaultValue = ContentTransition.identity
+}
+
+/// A badge shown on a list row or tab.
+internal enum BadgeKey: LayoutValueKey {
+    static var defaultValue: Text? { nil }
+}
+
+extension EnvironmentValues {
+
+    /// The current method of animating the contents of views.
+    public var contentTransition: ContentTransition {
+        get { self[ContentTransitionKey.self] }
+        set { self[ContentTransitionKey.self] = newValue }
+    }
 }
 
 extension View {
 
-    /// Sets the style for lists within this view. Cacao draws one list style.
-    public func listStyle<S: ListStyle>(_ style: S) -> some View { self }
+    /// Modifies the view to use a given transition as its method of
+    /// animating changes to the contents of its views.
+    public func contentTransition(_ transition: ContentTransition) -> some View {
+        environment(\.contentTransition, transition)
+    }
 
-    /// Sets the size for controls within this view. Cacao has one size.
-    public func controlSize(_ controlSize: ControlSize) -> some View { self }
+    /// Generates a badge for the view from an integer value; zero shows none.
+    public func badge(_ count: Int) -> some View {
+        badge(count == 0 ? nil : Text("\(count)"))
+    }
 
-    /// Adds a condition that controls whether users can interact with this
-    /// view; shows a tooltip on platforms that have them.
-    public func help(_ text: String) -> some View { self }
+    /// Generates a badge for the view from a string.
+    @_disfavoredOverload
+    public func badge<S: StringProtocol>(_ label: S?) -> some View {
+        badge(label.map { Text($0) })
+    }
 
-    /// Generates a badge for the view. Cacao doesn't draw badges yet.
-    public func badge(_ count: Int) -> some View { self }
+    /// Generates a badge for the view from a localized string key.
+    public func badge(_ key: LocalizedStringKey?) -> some View {
+        badge(key.map { Text($0) })
+    }
 
-    /// Generates a badge for the view. Cacao doesn't draw badges yet.
-    public func badge(_ label: Text?) -> some View { self }
+    /// Generates a badge for the view from a text view: on a list row, at
+    /// its trailing edge, and on a tab, beside its label.
+    public func badge(_ label: Text?) -> some View {
+        var traits = LayoutTraits()
+        traits[BadgeKey.self] = label
+        var rowTraits = ListRowTraits()
+        rowTraits.badge = label
+        return modifier(_TraitWritingModifier(traits: traits))
+            .transformPreference(ListRowTraitsKey.self) { $0 = rowTraits.merging($0) }
+    }
+}
 
-    /// Adds a reason to apply a redaction to this view hierarchy.
-    public func redacted(reason: RedactionReasons) -> some View { self }
+extension View {
 
-    /// Removes any reason to apply a redaction to this view hierarchy.
-    public func unredacted() -> some View { self }
+
+
+
+
 
     /// Sets the header prominence for this view.
     public func headerProminence(_ prominence: Prominence) -> some View { self }
@@ -924,18 +1177,6 @@ extension View {
     /// Sets whether to disable autocorrection for this view.
     public func autocorrectionDisabled(_ disable: Bool = true) -> some View { self }
 
-    /// Places a custom background view behind a list row item.
-    public func listRowBackground<V: View>(_ view: V?) -> some View { self }
-
-    /// Applies an inset to the rows in a list.
-    public func listRowInsets(_ insets: EdgeInsets?) -> some View { self }
-
-    /// Sets the display mode for the separator associated with this list row.
-    public func listRowSeparator(_ visibility: Visibility, edges: VerticalEdge.Set = .all) -> some View { self }
-
-    /// Specifies the visibility of the background for scrollable views
-    /// within this view.
-    public func scrollContentBackground(_ visibility: Visibility) -> some View { self }
 
     /// Scales images within the view according to one of the relative sizes
     /// available including small, medium, and large images sizes.
@@ -946,9 +1187,6 @@ extension View {
     /// Sets the rendering mode for symbol images within this view.
     public func symbolRenderingMode(_ mode: SymbolRenderingMode?) -> some View { self }
 
-    /// Modifies the view to use a given transition as its method of
-    /// animating changes to the contents of its views.
-    public func contentTransition(_ transition: ContentTransition) -> some View { self }
 
     /// Marks this view as refreshable.
     public func refreshable(action: @escaping @Sendable () async -> Void) -> some View {
