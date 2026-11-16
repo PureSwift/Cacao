@@ -32,6 +32,19 @@ public struct Stepper<Label: View>: View {
         self.onDecrement = onDecrement
     }
 
+    /// Creates a stepper instance that performs the closures you provide
+    /// when the user increments or decrements the stepper.
+    public init(
+        onIncrement: (() -> Void)?,
+        onDecrement: (() -> Void)?,
+        onEditingChanged: @escaping (Bool) -> Void = { _ in },
+        @ViewBuilder label: () -> Label
+    ) {
+        self.label = label()
+        self.onIncrement = onIncrement
+        self.onDecrement = onDecrement
+    }
+
     /// Creates a stepper configured to increment or decrement a binding to a
     /// value using a step value and within a range of values.
     public init<V: Strideable>(
