@@ -75,7 +75,7 @@ tests.
 | `allowsTightening` | ○ | |
 | `Image` (resources, data, resizing, template rendering) | ✅ | |
 | `Image(systemName:)`, `imageScale` | ◐ | Cacao's own drawings of about 60 common symbols, in the foreground style; others are empty. |
-| `Shape`s, `Path`, fills and strokes, `strokeBorder` | ✅ | |
+| `Shape`s (`UnevenRoundedRectangle` too), `Path`, fills and strokes, `strokeBorder` | ✅ | |
 | `Color`, `ShapeStyle`, `foregroundStyle`, `tint`, `.tint` style, `Color.mix` | ✅ | |
 | `LinearGradient`, `RadialGradient`, `EllipticalGradient`, `AngularGradient`, `Color.gradient` | ✅ | As views, fills and strokes of shapes, and text styles. |
 | `Button` and styles, `Toggle` and styles, `Slider`, `Stepper` | ✅ | |
@@ -95,7 +95,7 @@ tests.
 | API | | Notes |
 |---|---|---|
 | `List` (selection, sections), `Form`, `Section`, `ForEach` | ✅ | |
-| `listStyle`, `listRowBackground`, `listRowInsets`, `listRowSeparator` | ○ | One list style. |
+| `listStyle`, `listRowBackground`, `listRowInsets`, `listRowSeparator`, `listRowSeparatorTint`, `scrollContentBackground` | ◐ | Plain, inset, grouped, inset grouped and sidebar styles. Row modifiers work inside custom row views. |
 | `NavigationStack`, `NavigationPath`, `NavigationLink`, `navigationDestination` | ✅ | Pushes slide in; pops slide out. |
 | `NavigationSplitView` | ◐ | Column widths, visibility and dragging dividers; the sidebar toggle is in the detail's bar. |
 | `TabView`, `Tab`, `tabItem` | ✅ | |
@@ -112,7 +112,8 @@ tests.
 | `ScrollViewReader`, `scrollTo` (animated) | ✅ | Also for lazy rows not created yet. |
 | `scrollTargetBehavior` (`.paging`, `.viewAligned`), `scrollTargetLayout` | ✅ | |
 | `scrollIndicators`, `scrollDisabled` | ✅ | |
-| `scrollPosition`, `defaultScrollAnchor`, `refreshable` | ○ | `refreshable` sets the environment's action. |
+| `scrollPosition(id:anchor:)`, `defaultScrollAnchor` (and its roles) | ◐ | The position follows a scroll target layout's views; there's no `ScrollPosition` type yet. |
+| `refreshable` | ○ | Sets the environment's action. |
 
 ## Animation
 
@@ -125,7 +126,7 @@ tests.
 | `matchedGeometryEffect` | ✅ | |
 | `scaleEffect`, `rotationEffect` | ✅ | Drawn on the GPU. |
 | `PhaseAnimator`, `phaseAnimator`, `KeyframeAnimator`, `keyframeAnimator`, `KeyframeTimeline` | ✅ | Linear, spring, cubic and move keyframes. |
-| `contentTransition` | ○ | |
+| `contentTransition` | ◐ | Text fades between strings, and numeric text rolls; interpolation fades too. |
 
 ## Input
 
@@ -171,5 +172,9 @@ tests.
 |---|---|---|
 | `preferredColorScheme`, `colorScheme` | ✅ | |
 | `locale`, `calendar`, `timeZone` | ✅ | |
-| `help`, `badge`, `redacted`, `controlSize`, `submitLabel`, `autocorrectionDisabled`, `imageScale`, `symbolRenderingMode` | ○ | |
+| `help` | ✅ | A tooltip after the pointer rests a second, and the accessibility hint. |
+| `badge` | ◐ | On list rows and tabs. |
+| `redacted`, `unredacted`, `redactionReasons` | ◐ | Placeholder redaction draws text and images as shapes; `privacy` has no effect. |
+| `controlSize` | ◐ | Sizes bordered buttons. |
+| `submitLabel`, `autocorrectionDisabled`, `symbolRenderingMode` | ○ | |
 | `import SwiftUI` on Linux | ✅ | The `SwiftUI` module re-exports Cacao. |
