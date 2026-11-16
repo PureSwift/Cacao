@@ -45,7 +45,7 @@ tests.
 | `PreferenceKey`, `preference`, `onPreferenceChange`, `transformPreference` | ✅ | |
 | `anchorPreference`, `Anchor`, `overlayPreferenceValue`, `backgroundPreferenceValue` | ✅ | |
 | `onAppear`, `onDisappear`, `onChange`, `task`, `task(id:)` | ✅ | |
-| `onReceive` | ✅ | Combine's publishers on Apple platforms; elsewhere Cacao's: subjects, `Just`, `Timer.publish`, notifications, `$published`. |
+| `onReceive`, `Publisher.values` | ✅ | Combine's publishers on Apple platforms; elsewhere Cacao's: subjects, `Just`, `Timer.publish`, notifications, `$published`, `objectWillChange`, without demand. |
 
 ## Layout
 
@@ -76,7 +76,7 @@ tests.
 | `Image` (resources, data, resizing, template rendering) | ✅ | |
 | `Image(systemName:)`, `imageScale` | ◐ | Cacao's own drawings of about 60 common symbols, in the foreground style; others are empty. |
 | `Shape`s (`UnevenRoundedRectangle` too), `Path`, fills and strokes, `strokeBorder` | ✅ | |
-| `Color`, `ShapeStyle`, `foregroundStyle`, `tint`, `.tint` style, `Color.mix` | ✅ | |
+| `Color`, `ShapeStyle`, `foregroundStyle`, `tint`, `.tint` style, `Color.mix` | ✅ | Color spaces (linear is converted to sRGB; Display P3 draws as sRGB); `Color(NSColor)` on macOS follows light and dark. |
 | `LinearGradient`, `RadialGradient`, `EllipticalGradient`, `AngularGradient`, `Color.gradient` | ✅ | As views, fills and strokes of shapes, and text styles. |
 | `Button` and styles, `Toggle` and styles, `Slider`, `Stepper` | ✅ | |
 | `TextField`, `SecureField`, `TextEditor` | ✅ | Moves and deletes by characters and words; undo and redo; the caret blinks. |
@@ -98,10 +98,12 @@ tests.
 | `listStyle`, `listRowBackground`, `listRowInsets`, `listRowSeparator`, `listRowSeparatorTint`, `scrollContentBackground` | ◐ | Plain, inset, grouped, inset grouped and sidebar styles. Row modifiers work inside custom row views. |
 | `NavigationStack`, `NavigationPath`, `NavigationLink`, `navigationDestination` | ✅ | Pushes slide in; pops slide out. |
 | `NavigationSplitView` | ◐ | Column widths, visibility and dragging dividers; the sidebar toggle is in the detail's bar. |
-| `TabView`, `Tab`, `tabItem` | ✅ | |
+| `TabView`, `Tab`, `tabItem` | ✅ | Tab items set in custom views' bodies too. |
 | `toolbar`, `ToolbarItem`, `ToolbarItemGroup`, `navigationTitle`, `searchable` | ✅ | |
 | `toolbar(removing:)` | ◐ | Removes the sidebar toggle; `.title` has no effect. |
 | `sheet`, `fullScreenCover`, `alert`, `confirmationDialog`, `popover`, `contextMenu` | ✅ | Presentations animate in and out. |
+| `swipeActions` | ◐ | In the row's context menu, as on the Mac; there's no swipe. |
+| `onExitCommand` | ✅ | Escape while the view or a descendant has focus. |
 | `presentationDetents`, `interactiveDismissDisabled` | ○ | |
 
 ## Scrolling
@@ -177,4 +179,4 @@ tests.
 | `redacted`, `unredacted`, `redactionReasons` | ◐ | Placeholder redaction draws text and images as shapes; `privacy` has no effect. |
 | `controlSize` | ◐ | Sizes bordered buttons. |
 | `submitLabel`, `autocorrectionDisabled`, `symbolRenderingMode` | ○ | |
-| `import SwiftUI` on Linux | ✅ | The `SwiftUI` module re-exports Cacao. |
+| `import SwiftUI`, `import Combine` on Linux | ✅ | The `SwiftUI` and `Combine` modules re-export Cacao and Foundation. |
