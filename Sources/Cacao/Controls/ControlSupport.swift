@@ -209,6 +209,19 @@ internal func options(in view: any View) -> [Option] {
             }
         }
     }
+    // Other built-in modifiers keep their content's traits, applying to
+    // each of several views.
+    if let modified = view as? any _ModifiedViews, modified.isPrimitive {
+        let inner = options(in: modified.modifiedContent)
+        guard inner.count == 1 else {
+            return inner.map { option in
+                var option = option
+                option.label = AnyView(_fromValue: modified.applying(to: option.label))!
+                return option
+            }
+        }
+        return [Option(tag: inner[0].tag, label: AnyView(view), traits: inner[0].traits)]
+    }
     return [Option(tag: nil, label: AnyView(view))]
 }
 
