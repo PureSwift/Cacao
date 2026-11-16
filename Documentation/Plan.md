@@ -1,7 +1,8 @@
 # Cacao: SwiftUI for Linux and macOS — Plan
 
-Status: **Phase 12 done** (`DocumentGroup` with file and reference
-documents, `fileImporter` and `fileExporter`, pointer styles). What's implemented is in [API coverage](APICoverage.md).
+Status: **Phase 13 done** (list styles and row modifiers, scroll
+positions and anchors, tooltips, redaction, control sizes, content
+transitions, badges). What's implemented is in [API coverage](APICoverage.md).
 
 Notes:
 - Phase 1: 26 layout cases match Apple's SwiftUI frame for frame on macOS
@@ -123,6 +124,17 @@ Notes:
   seat; the host dispatches that queue each loop. On Linux, tests bind it
   against a minimal compositor made with libwayland-server, which sends
   pinches and checks the rotations arrive.
+- Phase 13: list rows read what their views set (background, insets,
+  separators, badges) through a preference, so it works inside custom row
+  views, and keep it as state that changes only when it does; rows that
+  set nothing add no views. Grouped styles draw each row's piece of its
+  section's card, rounded at the section's ends, from where the lazy stack
+  says the row is. A lazy list of 10,000 rows still keeps under 600 nodes.
+  Scroll positions follow a scroll target layout's views, found by binary
+  search among a lazy stack's rows. Help shows as a tooltip, in a layer
+  above presentations, after the pointer rests a second. Text with a
+  content transition is a view per string, so a change in an animated
+  update transitions out the old string and in the new.
 - Known gaps, for later phases:
   - Tab switches don't animate (nor do they in SwiftUI by default).
   - No AT-SPI bridge on Linux yet.
@@ -140,7 +152,7 @@ Notes:
   - Toolbar items are found from the structure of toolbar content, as picker
     options are; `bottomBar` items show in the navigation bar.
   - The sidebar toggle is in the detail column's bar, not the window's
-    toolbar; dividers don't change the pointer.
+    toolbar.
   - On Linux, `NSItemProvider` loads data and strings and URLs, not other
     object types.
   - Text input has no spell checking.
@@ -468,6 +480,7 @@ Each phase ends green on macOS and Linux CI.
 | **10. Fidelity II** ✅ | Modifiers applied per view, `matchedGeometryEffect` properties, anchors and sources, `NavigationSplitView` column widths and visibility, `onDrag`/`onDrop` with item providers and `DropDelegate` | Layout cases match Apple's SwiftUI; tests pass on macOS and Linux |
 | **11. Fidelity III** ✅ | Modifiers over custom views of several views, resizable split view columns, sidebar toggle and `toolbar(removing:)`, `ShareLink` | Layout cases match Apple's SwiftUI; tests pass on macOS and Linux |
 | **12. Documents** ✅ | `DocumentGroup`, `FileDocument`, `ReferenceFileDocument`, File menu commands, `fileImporter`/`fileExporter` through SDL's dialogs, window titles, pointer styles | Document tests pass with a fake dialog host on macOS and Linux |
+| **13. Modifiers** ✅ | List styles and row modifiers, `scrollPosition`, `defaultScrollAnchor`, `help` tooltips, `redacted`, `controlSize`, `contentTransition`, `badge`, `UnevenRoundedRectangle` | Tests pass on macOS and Linux; lazy lists stay under their node budget |
 
 ---
 
