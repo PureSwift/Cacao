@@ -38,13 +38,30 @@ public struct ScrollView<Content: View>: View, PrimitiveView {
     func resolve(in context: ResolveContext) -> Resolution {
         var environment = context.environment
         environment.stackOrientation = nil
+        // The position binding and default anchors apply to this scroll
+        // view, not ones in its content.
+        environment.scrollPosition = nil
+        environment.defaultScrollAnchors = [:]
+        let behavior = ScrollBehavior(
+            axes: axes,
+            showsIndicators: showsIndicators && context.environment.showsScrollIndicators,
+            targetBehavior: context.environment.scrollTargetBehavior,
+            isScrollEnabled: context.environment.isScrollEnabled,
+            anchors: context.environment.defaultScrollAnchors
+        )
+        let state = behavior.state(of: context.node)
+        state.position = context.environment.scrollPosition
+        // A position set from outside scrolls to its view, once laid out.
+        if let position = state.position, let id = position.id.wrappedValue, id != state.reportedID {
+            state.reportedID = id
+            weak let node = context.node
+            context.graph.afterLayoutActions.append {
+                guard let node, node.isAttached else { return }
+                node.graph.scroll(to: id, in: node, anchor: position.anchor ?? UnitPoint(x: 0, y: 0))
+            }
+        }
         return Resolution(
-            behavior: ScrollBehavior(
-                axes: axes,
-                showsIndicators: showsIndicators && context.environment.showsScrollIndicators,
-                targetBehavior: context.environment.scrollTargetBehavior,
-                isScrollEnabled: context.environment.isScrollEnabled
-            ),
+            behavior: behavior,
             children: [ChildView(key: 0, view: content, environment: environment)]
         )
     }
@@ -88,6 +105,28 @@ package final class ScrollState {
 
     /// The frames of the scroll target layout's views, in the content.
     var targetLayout: (() -> [CGRect])?
+
+    /// The binding to the identity of the view at an anchor.
+    var position: ScrollPositionBinding?
+
+    /// The identity last reported to, or scrolled to from, the binding.
+    var reportedID: AnyHashable?
+
+    /// Finds the scroll target view at a point of the viewport.
+    var target: ((CGPoint) -> AnyHashable?)?
+
+    /// Whether the scroll view has taken its initial anchored position.
+    var isPositioned = false
+
+    /// Tells the position binding which view is at its anchor.
+    func reportPosition() {
+        guard let position, let target else { return }
+        let anchor = position.anchor ?? UnitPoint(x: 0, y: 0)
+        let point = CGPoint(x: viewportSize.width * anchor.x, y: viewportSize.height * anchor.y)
+        guard let id = target(point), id != reportedID else { return }
+        reportedID = id
+        position.id.wrappedValue = id
+    }
 
     init(axes: Axis.Set) {
         self.axes = axes
@@ -143,14 +182,18 @@ internal struct ScrollBehavior: NodeBehavior {
 
     var isScrollEnabled = true
 
+    /// The default anchors, by role.
+    var anchors: [ScrollAnchorRole: UnitPoint] = [:]
+
     func state(of node: ViewNode) -> ScrollState {
         if let state = node.dynamicStorage["scroll"] as? ScrollState, state.axes == axes {
             return state
         }
         let state = ScrollState(axes: axes)
-        state.onChange = { [weak graph = node.graph] in
+        state.onChange = { [weak graph = node.graph, weak state] in
             graph?.setNeedsDisplay()
             graph?.scrollDidChange()
+            state?.reportPosition()
         }
         node.dynamicStorage["scroll"] = state
         return state
@@ -194,17 +237,40 @@ internal struct ScrollBehavior: NodeBehavior {
             state.viewportSize = bounds.size
             return
         }
+        state.target = { [weak node] point in
+            guard let node else { return nil }
+            let offset = state.offset
+            return node.scrollTarget(at: CGPoint(x: point.x + offset.x, y: point.y + offset.y), origin: node.frame.origin)
+        }
         let childProposal = contentProposal(ProposedViewSize(bounds.size))
         let size = content.size(in: childProposal)
         // Content smaller than the viewport is centered on the axes that
-        // don't scroll, and starts at the top-leading edge on those that do.
+        // don't scroll, and starts at the top-leading edge on those that do,
+        // unless an alignment anchor says where.
+        let alignment = anchors[.alignment]
+        func start(_ scrolls: Bool, _ min: CGFloat, _ space: CGFloat, _ unit: CGFloat?) -> CGFloat {
+            if scrolls { return min + Swift.max(space, 0) * (unit ?? 0) }
+            return min + space / 2
+        }
         let origin = CGPoint(
-            x: axes.contains(.horizontal) ? bounds.minX : bounds.minX + (bounds.width - size.width) / 2,
-            y: axes.contains(.vertical) ? bounds.minY : bounds.minY + (bounds.height - size.height) / 2
+            x: start(axes.contains(.horizontal), bounds.minX, bounds.width - size.width, alignment?.x),
+            y: start(axes.contains(.vertical), bounds.minY, bounds.height - size.height, alignment?.y)
         )
         content.place(at: origin, proposal: childProposal)
+        // Whether it showed its anchor before the sizes changed.
+        let sizeAnchor = anchors[.sizeChanges]
+        let wasAtAnchor = sizeAnchor.map { state.offset == state.offset(anchoredAt: $0) } ?? false
+        let sizesChanged = state.contentSize != size || state.viewportSize != bounds.size
         state.contentSize = size
         state.viewportSize = bounds.size
+        if !state.isPositioned, size != .zero {
+            state.isPositioned = true
+            if let anchor = anchors[.initialOffset] {
+                state.offset = state.offset(anchoredAt: anchor)
+            }
+        } else if sizesChanged, wasAtAnchor, let anchor = sizeAnchor {
+            state.offset = state.offset(anchoredAt: anchor)
+        }
         let clamped = state.clamped(state.offset)
         if clamped != state.offset {
             state.offset = clamped
@@ -243,6 +309,7 @@ extension ViewGraph {
     /// Returns whether a scroll view moved.
     @discardableResult
     package func scroll(by delta: CGSize, at point: CGPoint) -> Bool {
+        hideTooltip()
         guard let state = scrollState(at: point, delta: delta) else {
             return false
         }
