@@ -31,15 +31,6 @@ jobs:
         env:
           SDL_VIDEO_DRIVER: offscreen
         run: swift test
-      - name: Demo screenshot
-        env:
-          SDL_VIDEO_DRIVER: offscreen
-          CACAO_SCREENSHOT: demo-macos.png
-        run: swift run CacaoDemo
-      - uses: actions/upload-artifact@v4
-        with:
-          name: demo-macos
-          path: demo-macos.png
 
   linux:
     name: Linux
