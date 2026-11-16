@@ -84,8 +84,12 @@ internal struct _GraphRoot: View, PrimitiveView {
                 environment: environment
             ))
         }
+        // A tooltip above everything, where the pointer rested.
+        if let tooltip = graph.tooltip {
+            children.append(ChildView(key: "tooltip", view: _Tooltip(text: tooltip.text)))
+        }
         var resolution = Resolution(
-            behavior: RootBehavior(styles: graph.presentations.map(\.style)),
+            behavior: RootBehavior(styles: graph.presentations.map(\.style), tooltipLocation: graph.tooltip?.location),
             children: children
         )
         // Presenting or dismissing doesn't change the content; a new root
@@ -132,6 +136,9 @@ internal struct RootBehavior: NodeBehavior {
     /// The style of each presentation, in order.
     let styles: [PresentationStyle]
 
+    /// Where the pointer rested, when a tooltip shows.
+    var tooltipLocation: CGPoint? = nil
+
     func sizeThatFits(_ proposal: ProposedViewSize, node: ViewNode) -> CGSize {
         proposal.replacingUnspecifiedDimensions(by: .zero)
     }
@@ -152,6 +159,21 @@ internal struct RootBehavior: NodeBehavior {
                 at: CGPoint(x: safe.minX + (safe.width - size.width) / 2, y: safe.minY + (safe.height - size.height) / 2),
                 proposal: proposal
             )
+        }
+        if let location = tooltipLocation, let tooltip = LayoutProxy.combining(node.layoutChildren(ofChildAt: 1 + styles.count * 2)) {
+            // Below and right of the pointer, within the window, at most
+            // 300 points wide.
+            var size = tooltip.size(in: .unspecified)
+            if size.width > 300 {
+                size = tooltip.size(in: ProposedViewSize(width: 300, height: nil))
+            }
+            let margin: CGFloat = 4
+            var origin = CGPoint(x: location.x + 8, y: location.y + 18)
+            if origin.y + size.height > bounds.maxY - margin {
+                origin.y = location.y - 8 - size.height
+            }
+            origin.x = min(max(origin.x, bounds.minX + margin), bounds.maxX - margin - size.width)
+            tooltip.place(at: origin, proposal: ProposedViewSize(size))
         }
         for (index, style) in styles.enumerated() {
             if let backdrop = LayoutProxy.combining(node.layoutChildren(ofChildAt: 1 + index * 2)) {
