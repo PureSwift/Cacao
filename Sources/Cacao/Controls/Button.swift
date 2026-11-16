@@ -275,14 +275,31 @@ private struct _BorderedButton: View {
 
     @Environment(\.isEnabled) private var isEnabled
 
+    @Environment(\.controlSize) private var controlSize
+
+    @Environment(\.font) private var font
+
     var body: some View {
+        let metrics = Self.metrics(controlSize)
         configuration.label
+            .font(font ?? metrics.font)
             .foregroundStyle(foreground)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
+            .padding(.horizontal, metrics.horizontal)
+            .padding(.vertical, metrics.vertical)
             .background {
-                RoundedRectangle(cornerRadius: 6).fill(background)
+                RoundedRectangle(cornerRadius: metrics.radius).fill(background)
             }
+    }
+
+    /// The padding, corner radius and font of a button of a size.
+    static func metrics(_ size: ControlSize) -> (horizontal: CGFloat, vertical: CGFloat, radius: CGFloat, font: Font?) {
+        switch size {
+        case .mini: (6, 2, 4, .system(size: 9))
+        case .small: (8, 3, 5, .system(size: 11))
+        case .regular: (12, 6, 6, nil)
+        case .large: (16, 9, 8, nil)
+        case .extraLarge: (20, 12, 10, .title3)
+        }
     }
 
     private var tint: Color {
