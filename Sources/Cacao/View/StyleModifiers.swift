@@ -436,6 +436,16 @@ extension View {
         modifier(_AttributesModifier { $0.keyboardShortcut = shortcut })
     }
 
+    /// Sets up an action that triggers in response to the system's exit
+    /// command: Escape, while the view or a descendant has focus.
+    public func onExitCommand(perform action: (() -> Void)?) -> some View {
+        onKeyPress(.escape) {
+            guard let action else { return .ignored }
+            action()
+            return .handled
+        }
+    }
+
     /// Performs an action if the user presses a key on a hardware keyboard
     /// while the view has focus.
     public func onKeyPress(_ key: KeyEquivalent, action: @escaping () -> KeyPress.Result) -> some View {
