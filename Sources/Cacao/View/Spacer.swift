@@ -61,14 +61,21 @@ internal struct SpacerBehavior: NodeBehavior {
 /// In a stack it's a line across the stack's axis; elsewhere a horizontal line.
 public struct Divider: View, PrimitiveView {
 
+    /// The line's color, if not the separator color: a list row's tint.
+    internal var tint: Color?
+
     public init() { }
+
+    internal init(tint: Color?) {
+        self.tint = tint
+    }
 
     public typealias Body = Never
 
     func resolve(in context: ResolveContext) -> Resolution {
         Resolution(behavior: DividerBehavior(
             axis: context.environment.stackOrientation == .horizontal ? .vertical : .horizontal,
-            color: Color.separator.resolve(in: context.environment)
+            color: (tint ?? Color.separator).resolve(in: context.environment)
         ))
     }
 }
