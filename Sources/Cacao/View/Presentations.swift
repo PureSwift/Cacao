@@ -155,7 +155,75 @@ extension View {
         alert(Text(title), isPresented: isPresented, actions: actions, message: { EmptyView() })
     }
 
+    /// Presents an alert when a given condition is true, using a text view
+    /// for the title.
+    public func alert<A: View>(
+        _ title: Text,
+        isPresented: Binding<Bool>,
+        @ViewBuilder actions: () -> A
+    ) -> some View {
+        alert(title, isPresented: isPresented, actions: actions, message: { EmptyView() })
+    }
+
+    /// Presents an alert with a message when a given condition is true,
+    /// using a string for the title.
+    @_disfavoredOverload
+    public func alert<S: StringProtocol, A: View, M: View>(
+        _ title: S,
+        isPresented: Binding<Bool>,
+        @ViewBuilder actions: () -> A,
+        @ViewBuilder message: () -> M
+    ) -> some View {
+        alert(Text(title), isPresented: isPresented, actions: actions, message: message)
+    }
+
     // MARK: Confirmation dialogs
+
+    /// Presents a confirmation dialog when a given condition is true, using
+    /// a text view for the title.
+    public func confirmationDialog<A: View, M: View>(
+        _ title: Text,
+        isPresented: Binding<Bool>,
+        titleVisibility: Visibility = .automatic,
+        @ViewBuilder actions: () -> A,
+        @ViewBuilder message: () -> M
+    ) -> some View {
+        modifier(_PresentationModifier(
+            isPresented: isPresented,
+            style: { _ in .alert },
+            presentation: AnyView(_AlertContent(
+                title: titleVisibility == .hidden ? nil : title,
+                message: AnyView(message()),
+                actions: AnyView(actions()),
+                isDialog: true
+            )),
+            onDismiss: nil
+        ))
+    }
+
+    /// Presents a confirmation dialog when a given condition is true, using
+    /// a text view for the title.
+    public func confirmationDialog<A: View>(
+        _ title: Text,
+        isPresented: Binding<Bool>,
+        titleVisibility: Visibility = .automatic,
+        @ViewBuilder actions: () -> A
+    ) -> some View {
+        confirmationDialog(title, isPresented: isPresented, titleVisibility: titleVisibility, actions: actions, message: { EmptyView() })
+    }
+
+    /// Presents a confirmation dialog when a given condition is true, using
+    /// a string for the title.
+    @_disfavoredOverload
+    public func confirmationDialog<S: StringProtocol, A: View, M: View>(
+        _ title: S,
+        isPresented: Binding<Bool>,
+        titleVisibility: Visibility = .automatic,
+        @ViewBuilder actions: () -> A,
+        @ViewBuilder message: () -> M
+    ) -> some View {
+        confirmationDialog(Text(title), isPresented: isPresented, titleVisibility: titleVisibility, actions: actions, message: message)
+    }
 
     /// Presents a confirmation dialog when a given condition is true, using
     /// a localized string key for the title.
@@ -166,17 +234,7 @@ extension View {
         @ViewBuilder actions: () -> A,
         @ViewBuilder message: () -> M
     ) -> some View {
-        modifier(_PresentationModifier(
-            isPresented: isPresented,
-            style: { _ in .alert },
-            presentation: AnyView(_AlertContent(
-                title: titleVisibility == .hidden ? nil : Text(titleKey),
-                message: AnyView(message()),
-                actions: AnyView(actions()),
-                isDialog: true
-            )),
-            onDismiss: nil
-        ))
+        confirmationDialog(Text(titleKey), isPresented: isPresented, titleVisibility: titleVisibility, actions: actions, message: message)
     }
 
     /// Presents a confirmation dialog when a given condition is true.
@@ -211,6 +269,16 @@ extension View {
     /// Adds a context menu to a view, shown on a secondary click.
     public func contextMenu<MenuItems: View>(@ViewBuilder menuItems: () -> MenuItems) -> some View {
         modifier(_ContextMenuModifier(items: AnyView(_MenuContent(content: AnyView(menuItems())))))
+    }
+
+    /// Adds custom swipe actions to a row in a list. With a pointer, there's
+    /// no swipe: the actions show in the row's context menu, as on the Mac.
+    public func swipeActions<T: View>(
+        edge: HorizontalEdge = .trailing,
+        allowsFullSwipe: Bool = true,
+        @ViewBuilder content: () -> T
+    ) -> some View {
+        modifier(_ContextMenuModifier(items: AnyView(_MenuContent(content: AnyView(content())))))
     }
 }
 
