@@ -11,10 +11,16 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
-      # Swift 6.4 ships with the latest Xcode; the default may be older.
+      # The runners' stable Xcode has an older Swift. Xcode provides the
+      # macOS SDK, with the SwiftUI the layout parity tests compare against;
+      # the toolchain comes from swift.org. This action resolves versions
+      # from swift.org's download API, so it knows the latest release.
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
+      - uses: SwiftyLab/setup-swift@latest
+        with:
+          swift-version: "6.4.2"
       - name: Swift version
         run: swift --version
       - name: Install dependencies
@@ -28,12 +34,12 @@ jobs:
       - name: Demo screenshot
         env:
           SDL_VIDEO_DRIVER: offscreen
-          CACAO_SCREENSHOT: demo-linux.png
+          CACAO_SCREENSHOT: demo-macos.png
         run: swift run CacaoDemo
       - uses: actions/upload-artifact@v4
         with:
-          name: demo-linux
-          path: demo-linux.png
+          name: demo-macos
+          path: demo-macos.png
 
   linux:
     name: Linux
