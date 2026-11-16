@@ -135,6 +135,7 @@ extension ViewGraph {
         let time = time ?? self.time
         switch phase {
         case .began:
+            hideTooltip()
             let path = root.hitTest(point) ?? []
             // Focus follows clicks: the innermost focusable view, or none.
             focus(path.last { $0.attributes.focus != nil })
