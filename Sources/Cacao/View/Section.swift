@@ -219,6 +219,15 @@ internal struct FlattenedRows: LazyRowSource {
         }
     }
 
+    /// What a row is, and whether it's the first or last row of its section.
+    func position(at index: Int) -> ListRowPosition {
+        let section = self.section(at: index)
+        func isRow(_ other: Int) -> Bool {
+            other >= 0 && other < rowCount && self.kind(at: other) == .row && self.section(at: other) == section
+        }
+        return ListRowPosition(kind: self.kind(at: index), isFirst: !isRow(index - 1), isLast: !isRow(index + 1))
+    }
+
     func section(at index: Int) -> Int {
         switch locate(index) {
         case let (.single(_, _, _, section), _): section
