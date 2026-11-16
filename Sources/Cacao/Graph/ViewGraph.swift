@@ -140,6 +140,12 @@ package final class ViewGraph {
     /// The share links in the graph, by node.
     var shareLinks: [Int: WeakNodeReference] = [:]
 
+    /// The help text shown as a tooltip, and where the pointer rested.
+    var tooltip: (text: String, location: CGPoint)?
+
+    /// Help text under the pointer, to show as a tooltip once it rests.
+    var pendingTooltip: (text: String, location: CGPoint, time: Double)?
+
     /// The pointer style of the view under the pointer, which the host
     /// shows; `nil` for the default.
     package internal(set) var pointerStyle: PointerStyle?
