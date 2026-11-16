@@ -81,6 +81,51 @@ extension Publisher where Failure == Never {
     }
 }
 
+// MARK: Async sequences
+
+/// A publisher's values as an asynchronous sequence.
+public struct AsyncPublisher<P: Publisher>: AsyncSequence where P.Failure == Never {
+
+    public typealias Element = P.Output
+
+    let publisher: P
+
+    public init(_ publisher: P) {
+        self.publisher = publisher
+    }
+
+    public struct Iterator: AsyncIteratorProtocol {
+
+        var iterator: AsyncStream<Element>.Iterator
+
+        /// Keeps the subscription while the iterator lives.
+        let subscription: AnyCancellable
+
+        public mutating func next() async -> Element? {
+            await iterator.next()
+        }
+    }
+
+    public func makeAsyncIterator() -> Iterator {
+        let (stream, continuation) = AsyncStream<Element>.makeStream()
+        nonisolated(unsafe) let unsafeContinuation = continuation
+        let subscription = publisher._subscribe { value in
+            nonisolated(unsafe) let value = value
+            unsafeContinuation.yield(value)
+        }
+        continuation.onTermination = { _ in subscription.cancel() }
+        return Iterator(iterator: stream.makeAsyncIterator(), subscription: subscription)
+    }
+}
+
+extension Publisher where Failure == Never {
+
+    /// The elements produced by the publisher, as an asynchronous sequence.
+    public var values: AsyncPublisher<Self> {
+        AsyncPublisher(self)
+    }
+}
+
 // MARK: Operators
 
 /// A publisher of another publisher's values, transformed.
@@ -289,17 +334,11 @@ public struct Just<Output>: Publisher {
     }
 }
 
-extension ObservableObjectPublisher: Publisher {
+extension ObservableObjectPublisher {
 
     public typealias Output = Void
 
     public typealias Failure = Never
-
-    public func _subscribe(_ receive: @escaping (()) -> Void) -> AnyCancellable {
-        nonisolated(unsafe) let receive = receive
-        let subscription = subscribe { receive(()) }
-        return AnyCancellable { _ = subscription }
-    }
 }
 
 extension Published {
