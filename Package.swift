@@ -15,7 +15,8 @@ import CompilerPluginSupport
 /// - `CacaoSDL`: windows, the main loop, input and the SDL3 renderer backend.
 /// - `CacaoWayland` (Linux): touchpad pinch rotations from Wayland, which SDL
 ///   doesn't report.
-/// - `SwiftUI` (Linux only): re-exports Cacao so `import SwiftUI` compiles.
+/// - `SwiftUI` and `Combine` (Linux only): re-export Cacao so `import SwiftUI`
+///   and `import Combine` compile.
 let package = Package(
     name: "Cacao",
     platforms: [
@@ -140,16 +141,24 @@ let package = Package(
     ] + swiftUITargets + waylandTestTargets + layoutParityTargets
 )
 
-// MARK: - SwiftUI alias module
+// MARK: - SwiftUI and Combine alias modules
 
-// On Linux, a `SwiftUI` module re-exports Cacao so unmodified sources that
-// `import SwiftUI` compile. On macOS it would clash with Apple's SwiftUI.
+// On Linux, `SwiftUI` and `Combine` modules re-export Cacao so unmodified
+// sources that import them compile. On macOS they would clash with Apple's.
 #if os(Linux)
 var swiftUIProducts: [Product] {
-    [.library(name: "SwiftUI", targets: ["SwiftUI"])]
+    [
+        .library(name: "SwiftUI", targets: ["SwiftUI"]),
+        .library(name: "Combine", targets: ["Combine"]),
+    ]
 }
 var swiftUITargets: [Target] {
-    [.target(name: "SwiftUI", dependencies: ["Cacao", "CacaoSDL"])]
+    [
+        .target(name: "SwiftUI", dependencies: ["Cacao", "CacaoSDL"]),
+        // `import Combine` for `ObservableObject` and publishers, which
+        // Cacao provides where there's no Combine.
+        .target(name: "Combine", dependencies: ["Cacao"]),
+    ]
 }
 #else
 var swiftUIProducts: [Product] { [] }
