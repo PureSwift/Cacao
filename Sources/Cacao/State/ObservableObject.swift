@@ -35,11 +35,21 @@ public protocol ObservableObject: AnyObject {
     var objectWillChange: ObjectWillChangePublisher { get }
 }
 
-/// A publisher that views subscribe to, to update when an object changes.
-public protocol ObjectWillChangePublishing: AnyObject {
+/// A publisher that views subscribe to, to update when an object changes:
+/// a publisher of `Void` that never fails, as Combine's are.
+public protocol ObjectWillChangePublishing: AnyObject, Publisher where Output == Void, Failure == Never {
 
     /// Calls an action before each change, until the subscription goes away.
     func subscribe(_ action: @escaping @Sendable () -> Void) -> ObjectSubscription
+}
+
+extension ObjectWillChangePublishing {
+
+    public func _subscribe(_ receive: @escaping (()) -> Void) -> AnyCancellable {
+        nonisolated(unsafe) let receive = receive
+        let subscription = subscribe { receive(()) }
+        return AnyCancellable { _ = subscription }
+    }
 }
 
 /// A subscription to an object's changes, cancelled when released.
