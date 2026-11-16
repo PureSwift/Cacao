@@ -29,6 +29,14 @@ public struct Section<Parent: View, Content: View, Footer: View>: View {
         self.footer = footer()
     }
 
+    /// Creates a section with the provided section content, header and
+    /// footer views.
+    public init(header: Parent, footer: Footer, @ViewBuilder content: () -> Content) {
+        self.header = header
+        self.content = content()
+        self.footer = footer
+    }
+
     /// Outside of lists and forms, a section stacks its header, content and footer.
     public var body: some View {
         VStack(alignment: .leading, spacing: 8) {
