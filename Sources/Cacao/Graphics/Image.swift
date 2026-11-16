@@ -191,6 +191,9 @@ extension Image: View, PrimitiveView {
 
     func resolve(in context: ResolveContext) -> Resolution {
         let environment = context.environment
+        if environment.redactionReasons.contains(.placeholder) {
+            return Resolution(children: [redactedPlaceholder(of: self, in: environment)])
+        }
         if case let .systemName(name) = self.source {
             let font = (environment.font ?? .body).resolve()
             let scale: CGFloat = switch environment.imageScale {
