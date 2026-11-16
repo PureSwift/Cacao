@@ -44,7 +44,7 @@ final class SDLBackend: CompositorBackend {
         ) else {
             return nil
         }
-        pixels.withUnsafeBytes { bytes in
+        pixels.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
             _ = SDL_UpdateTexture(texture, nil, bytes.baseAddress, Int32(bytesPerRow))
         }
         SDL_SetTextureBlendMode(texture, Self.premultipliedBlend)
