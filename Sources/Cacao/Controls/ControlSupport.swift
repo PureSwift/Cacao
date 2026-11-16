@@ -205,7 +205,7 @@ internal func options(in view: any View) -> [Option] {
         return (0..<forEach.rowCount).flatMap { index -> [Option] in
             let row = forEach.row(at: index)
             return options(in: row.view).map { option in
-                Option(tag: option.tag ?? row.id, label: option.label)
+                Option(tag: option.tag ?? row.id, label: option.label, traits: option.traits)
             }
         }
     }
@@ -222,7 +222,23 @@ internal func options(in view: any View) -> [Option] {
         }
         return [Option(tag: inner[0].tag, label: AnyView(view), traits: inner[0].traits)]
     }
+    // A custom view's traits are those of its body, as in SwiftUI: its
+    // body is read for them, and the view stays the option's label.
+    if !(view is any PrimitiveView) {
+        let inner = options(in: optionBody(of: view))
+        if inner.count == 1 {
+            return [Option(tag: inner[0].tag, label: AnyView(_fromValue: view)!, traits: inner[0].traits)]
+        }
+        return inner
+    }
     return [Option(tag: nil, label: AnyView(view))]
+}
+
+/// A custom view's body, evaluated outside the graph: its dynamic
+/// properties read their initial values.
+@MainActor
+private func optionBody<V: View>(of view: V) -> any View {
+    view.body
 }
 
 extension TupleView: OptionSource {
