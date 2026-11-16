@@ -351,10 +351,20 @@ package enum Rasterizer {
         #endif
     }
 
-    /// Decodes an image's PNG data, replacing its color with `tint` if set,
-    /// then transforming its colors by its matrix if set.
+    /// Decodes an image's PNG data, or takes its pixels, replacing its color
+    /// with `tint` if set, then transforming its colors by its matrix if set.
     package static func decode(_ content: ImageContent) -> Silica.CGImage? {
-        guard let image = CGImageSourcePNG(data: content.source.data)?.createImage(at: 0) else {
+        let image: Silica.CGImage
+        if let pixels = content.source.pixels {
+            image = Silica.CGImage(
+                width: Int(content.source.pixelSize.width),
+                height: Int(content.source.pixelSize.height),
+                bytesPerRow: pixels.bytesPerRow,
+                data: pixels.data
+            )
+        } else if let decoded = CGImageSourcePNG(data: content.source.data)?.createImage(at: 0) {
+            image = decoded
+        } else {
             return nil
         }
         guard content.tint != nil || content.colorMatrix != nil else {

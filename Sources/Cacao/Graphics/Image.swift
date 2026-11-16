@@ -56,6 +56,18 @@ public struct Image: Equatable, Sendable {
         self.source = .data(ImageSource(data: data, scale: scale))
     }
 
+    /// Creates an image from pixels: 8-bit RGBA with premultiplied alpha,
+    /// rows top to bottom, `bytesPerRow` apart.
+    ///
+    /// Each image made this way is new to a renderer, which uploads it
+    /// once, so it suits content that changes every frame, such as video or
+    /// a GL surface read back.
+    public init(pixels data: Data, width: Int, height: Int, bytesPerRow: Int, scale: CGFloat = 1) {
+        precondition(width >= 0 && height >= 0 && bytesPerRow >= width * 4 && data.count >= bytesPerRow * height,
+                     "pixel data too small for \(width) × \(height) at \(bytesPerRow) bytes a row")
+        self.source = .data(ImageSource(pixels: ImageSource.Pixels(data: data, bytesPerRow: bytesPerRow), width: width, height: height, scale: scale))
+    }
+
     /// Sets the mode by which SwiftUI resizes an image to fit its space.
     public func resizable(capInsets: EdgeInsets = EdgeInsets(), resizingMode: ResizingMode = .stretch) -> Image {
         var image = self
@@ -105,14 +117,23 @@ public struct Image: Equatable, Sendable {
 
 // MARK: - ImageSource
 
-/// The encoded data of an image and its size.
+/// The encoded data of an image, or its pixels, and its size.
 ///
 /// Sources are shared by identity: a renderer decodes a source once and
 /// keeps the result for as long as the source is used.
 package final class ImageSource: Hashable, @unchecked Sendable {
 
-    /// The encoded PNG data.
+    /// Decoded pixels: 8-bit RGBA, premultiplied, rows top to bottom.
+    package struct Pixels: Sendable {
+        package var data: Data
+        package var bytesPerRow: Int
+    }
+
+    /// The encoded PNG data; empty for an image made from pixels.
     package let data: Data
+
+    /// The pixels of an image made from them, which needs no decoding.
+    package let pixels: Pixels?
 
     /// The image's size in pixels, read from its header.
     package let pixelSize: CGSize
@@ -122,8 +143,16 @@ package final class ImageSource: Hashable, @unchecked Sendable {
 
     package init(data: Data, scale: CGFloat) {
         self.data = data
+        self.pixels = nil
         self.scale = scale
         self.pixelSize = Self.pngSize(data) ?? .zero
+    }
+
+    package init(pixels: Pixels, width: Int, height: Int, scale: CGFloat) {
+        self.data = Data()
+        self.pixels = pixels
+        self.scale = scale
+        self.pixelSize = CGSize(width: CGFloat(width), height: CGFloat(height))
     }
 
     /// The image's size in points.

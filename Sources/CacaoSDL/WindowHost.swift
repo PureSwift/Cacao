@@ -489,7 +489,7 @@ final class WindowHost {
         if showsStatistics {
             drawStatistics(renderTime: SDLHost.now - start, now: now)
         }
-        if let path = screenshotPath {
+        if let path = screenshotPath, now >= screenshotTime {
             screenshotPath = nil
             saveScreenshot(to: path)
         }
@@ -515,6 +515,13 @@ final class WindowHost {
     /// Where to save the first frame as a PNG, then quit; from the
     /// `CACAO_SCREENSHOT` environment variable.
     private var screenshotPath = ProcessInfo.processInfo.environment["CACAO_SCREENSHOT"]
+
+    /// When the screenshot is taken: the first frame drawn
+    /// `CACAO_SCREENSHOT_DELAY` seconds after the window opened, for content
+    /// that arrives after the first frame. A window draws only when
+    /// something changed, so the frame may come later still.
+    private let screenshotTime = SDLHost.now
+        + (ProcessInfo.processInfo.environment["CACAO_SCREENSHOT_DELAY"].flatMap(Double.init) ?? 0)
 
     /// Whether a screenshot was saved, after which the app quits.
     private(set) var didSaveScreenshot = false

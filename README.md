@@ -65,7 +65,8 @@ struct ContentView: View {
 
 Run the demo with `swift run CacaoDemo`. Press F12 (or set
 `CACAO_SHOW_STATISTICS=1`) for frame times and compositor counts, and set
-`CACAO_SCREENSHOT=path.png` to save the first frame and quit.
+`CACAO_SCREENSHOT=path.png` to save the first frame and quit;
+`CACAO_SCREENSHOT_DELAY=seconds` waits that long first.
 
 ## Building
 
