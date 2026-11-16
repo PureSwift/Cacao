@@ -372,6 +372,41 @@ public enum LayoutCorpus {
             LayoutCase("matched-geometry", width: 200, height: 100) {
                 MatchedGeometryCase()
             },
+            LayoutCase("lazy-stacks-outside-scroll", width: 300, height: 300) {
+                VStack(spacing: 0) {
+                    LazyVStack(spacing: 2) {
+                        ForEach(0..<2, id: \.self) { index in
+                            Color.red.frame(width: 40, height: 20).probe("row \(index)")
+                        }
+                    }
+                    .probe("vertical")
+                    LazyHStack(spacing: 2) {
+                        ForEach(0..<2, id: \.self) { index in
+                            Color.blue.frame(width: 30, height: 20).probe("column \(index)")
+                        }
+                    }
+                    .probe("horizontal")
+                    Color.green.frame(width: 10, height: 10).probe("after")
+                }
+            },
+            LayoutCase("lazy-stacks-crowded", width: 300, height: 100) {
+                VStack(spacing: 0) {
+                    Color.red.frame(width: 50, height: 90).probe("top")
+                    LazyVStack(spacing: 2) {
+                        ForEach(0..<2, id: \.self) { index in
+                            Color.blue.frame(width: 40, height: 20).probe("crowded row \(index)")
+                        }
+                    }
+                    .probe("crowded")
+                    LazyHStack(spacing: 2) {
+                        ForEach(0..<2, id: \.self) { index in
+                            Text("Cell \(index)").probe("crowded cell \(index)")
+                        }
+                    }
+                    .probe("crowded horizontal")
+                    Color.green.frame(width: 10, height: 10).probe("bottom")
+                }
+            },
             LayoutCase("custom-view-per-view", width: 300, height: 100) {
                 HStack(spacing: 0) {
                     Pair()
