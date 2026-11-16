@@ -10,7 +10,7 @@ import Observation
 
 // MARK: - ObservableObject
 
-#if canImport(Combine)
+#if canImport(Darwin) && canImport(Combine)
 // Apple platforms: Combine's ObservableObject and Published, which
 // Foundation also exports.
 @_exported import Combine

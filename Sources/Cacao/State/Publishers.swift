@@ -7,7 +7,7 @@
 
 import Foundation
 
-#if !canImport(Combine)
+#if !(canImport(Darwin) && canImport(Combine))
 
 // Where there's no Combine, Cacao provides the part of it SwiftUI code
 // commonly uses: publishers to receive values from (`onReceive`, `sink`),
@@ -493,7 +493,7 @@ extension NotificationCenter {
 
 // MARK: - onReceive
 
-#if canImport(Combine)
+#if canImport(Darwin) && canImport(Combine)
 import Combine
 #endif
 
