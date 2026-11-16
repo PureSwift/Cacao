@@ -476,6 +476,11 @@ final class WindowHost {
         if graph.needsDisplay {
             needsRender = true
         }
+        // A delayed screenshot is of the first frame after the delay, drawn
+        // even if nothing changed by then.
+        if screenshotPath != nil, now >= screenshotTime {
+            needsRender = true
+        }
         guard needsRender || showsStatistics && isAnimating else {
             lastFrameTime = nil
             return
@@ -516,10 +521,9 @@ final class WindowHost {
     /// `CACAO_SCREENSHOT` environment variable.
     private var screenshotPath = ProcessInfo.processInfo.environment["CACAO_SCREENSHOT"]
 
-    /// When the screenshot is taken: the first frame drawn
+    /// When the screenshot is taken: a frame drawn
     /// `CACAO_SCREENSHOT_DELAY` seconds after the window opened, for content
-    /// that arrives after the first frame. A window draws only when
-    /// something changed, so the frame may come later still.
+    /// that arrives after the first frame.
     private let screenshotTime = SDLHost.now
         + (ProcessInfo.processInfo.environment["CACAO_SCREENSHOT_DELAY"].flatMap(Double.init) ?? 0)
 
