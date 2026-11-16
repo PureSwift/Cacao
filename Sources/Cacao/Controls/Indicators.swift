@@ -94,6 +94,20 @@ extension ProgressView where Label == Text, CurrentValueLabel == EmptyView {
     public init<V: BinaryFloatingPoint>(_ titleKey: LocalizedStringKey, value: V?, total: V = 1.0) {
         self.init(value: value, total: total) { Text(titleKey) }
     }
+
+    /// Creates a progress view for showing indeterminate progress that
+    /// generates its label from a string.
+    @_disfavoredOverload
+    public init<S: StringProtocol>(_ title: S) {
+        self.init { Text(title) }
+    }
+
+    /// Creates a progress view for showing determinate progress that
+    /// generates its label from a string.
+    @_disfavoredOverload
+    public init<S: StringProtocol, V: BinaryFloatingPoint>(_ title: S, value: V?, total: V = 1.0) {
+        self.init(value: value, total: total) { Text(title) }
+    }
 }
 
 /// A ring, partly drawn: the completed fraction, or a spinning arc when
@@ -227,6 +241,20 @@ extension Label where Title == Text, Icon == Image {
     /// localized string.
     public init(_ titleKey: LocalizedStringKey, image name: String) {
         self.init(title: { Text(titleKey) }, icon: { Image(name) })
+    }
+
+    /// Creates a label with a system icon image and a title generated from
+    /// a string.
+    @_disfavoredOverload
+    public init<S: StringProtocol>(_ title: S, systemImage name: String) {
+        self.init(title: { Text(title) }, icon: { Image(systemName: name) })
+    }
+
+    /// Creates a label with an icon image and a title generated from a
+    /// string.
+    @_disfavoredOverload
+    public init<S: StringProtocol>(_ title: S, image name: String) {
+        self.init(title: { Text(title) }, icon: { Image(name) })
     }
 }
 
