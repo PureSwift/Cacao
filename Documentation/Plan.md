@@ -1,8 +1,7 @@
 # Cacao: SwiftUI for Linux and macOS — Plan
 
-Status: **Phase 13 done** (list styles and row modifiers, scroll
-positions and anchors, tooltips, redaction, control sizes, content
-transitions, badges). What's implemented is in [API coverage](APICoverage.md).
+Status: **Phase 14 done** (DarwinAppRuntime's SwiftUI renderer compiles
+and passes its tests on Cacao, on macOS and, unmodified, on Linux). What's implemented is in [API coverage](APICoverage.md).
 
 Notes:
 - Phase 1: 26 layout cases match Apple's SwiftUI frame for frame on macOS
@@ -135,6 +134,24 @@ Notes:
   above presentations, after the pointer rests a second. Text with a
   content transition is a view per string, so a change in an animated
   update transitions out the old string and in the new.
+- Phase 14: DarwinAppRuntime's SwiftUI renderer, `DarwinUI` (2,300 lines
+  written for Apple's SwiftUI), compiles against Cacao and passes its own
+  tests, with its rendering tests hosting it in a Cacao graph instead of an
+  `NSHostingView` (`Compatibility/DarwinUI`). On Linux its sources compile
+  unmodified, through a new `Combine` module beside `SwiftUI`, both
+  re-exporting Foundation as Apple's do. What it needed: string `Label`,
+  `ProgressView` and dialog titles, `Section(header:footer:)`,
+  `Stepper(onIncrement:onDecrement:label:)`, color spaces, `Color(NSColor)`
+  following the appearance, `onExitCommand`, `swipeActions` (as a context
+  menu, as on the Mac), `Publisher.values`, and `objectWillChange` as a
+  publisher on Linux. Its screens found three bugs: tab items set in a
+  custom view's body, and traits of `ForEach` rows, didn't reach
+  `TabView`; and a lazy stack with no room across its axis drew rows
+  outside itself, where SwiftUI shows none (36 layout cases now match).
+  On Linux, one of its tests fails: releasing a renderer removes its scene
+  a turn of the main queue later, since `deinit` there doesn't take its
+  main-actor test for the main thread (`Thread.isMainThread`); it isn't
+  about Cacao.
 - Known gaps, for later phases:
   - Tab switches don't animate (nor do they in SwiftUI by default).
   - No AT-SPI bridge on Linux yet.
@@ -156,8 +173,9 @@ Notes:
   - On Linux, `NSItemProvider` loads data and strings and URLs, not other
     object types.
   - Text input has no spell checking.
-  - `Picker` reads its options from the structure of its content (tags,
-    `ForEach`), not from evaluated views.
+  - `Picker` and `TabView` read their options from the structure of their
+    content, evaluating custom views' bodies outside the graph for their
+    tags and tab items.
   - `Image(systemName:)` draws about 60 common symbols (Q6).
   - Trackpad and wheel scrolling, and input methods, haven't been tried by
     hand on Linux.
@@ -481,6 +499,7 @@ Each phase ends green on macOS and Linux CI.
 | **11. Fidelity III** ✅ | Modifiers over custom views of several views, resizable split view columns, sidebar toggle and `toolbar(removing:)`, `ShareLink` | Layout cases match Apple's SwiftUI; tests pass on macOS and Linux |
 | **12. Documents** ✅ | `DocumentGroup`, `FileDocument`, `ReferenceFileDocument`, File menu commands, `fileImporter`/`fileExporter` through SDL's dialogs, window titles, pointer styles | Document tests pass with a fake dialog host on macOS and Linux |
 | **13. Modifiers** ✅ | List styles and row modifiers, `scrollPosition`, `defaultScrollAnchor`, `help` tooltips, `redacted`, `controlSize`, `contentTransition`, `badge`, `UnevenRoundedRectangle` | Tests pass on macOS and Linux; lazy lists stay under their node budget |
+| **14. A real renderer** ✅ | DarwinAppRuntime's `DarwinUI` on Cacao: the APIs it uses, a Linux `Combine` module, and the bugs its screens showed | Its 43 tests pass against Cacao on macOS; on Linux, all but one, which isn't about Cacao |
 
 ---
 
