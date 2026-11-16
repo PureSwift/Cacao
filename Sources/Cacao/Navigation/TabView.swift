@@ -50,7 +50,16 @@ public struct TabView<SelectionValue: Hashable, Content: View>: View {
                             ownSelection.wrappedValue = tags[index]
                         }
                     } label: {
-                        (tabs[index].traits[TabItemKey.self] ?? AnyView(Text("Tab \(index + 1)")))
+                        HStack(spacing: 6) {
+                            tabs[index].traits[TabItemKey.self] ?? AnyView(Text("Tab \(index + 1)"))
+                            if let badge = tabs[index].traits[BadgeKey.self] {
+                                badge
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 5)
+                                    .background { Capsule().fill(Color.red) }
+                            }
+                        }
                             .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
                             .padding(.horizontal, 14)
                             .padding(.vertical, 6)
