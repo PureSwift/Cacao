@@ -146,6 +146,10 @@ internal final class LazyStackState {
     /// rows keep their views.
     var isRangeOnlyUpdate = false
 
+    /// Whether the stack has no room across its axis, so it shows no rows,
+    /// as in SwiftUI.
+    var isCollapsed = false
+
     /// For a lazy grid: its length across, from the last layout.
     var crossLength: CGFloat?
 
@@ -254,7 +258,8 @@ internal struct LazyStack {
         let node = context.node
         let state = Self.state(of: node)
         let count = source.rowCount
-        var range = state.requested ?? (state.realized.isEmpty ? 0..<min(count, Self.initialRows) : state.realized)
+        var range = state.requested ?? (state.isCollapsed ? 0..<0
+            : state.realized.isEmpty ? 0..<min(count, Self.initialRows) : state.realized)
         range = range.clamped(to: 0..<count)
         state.requested = nil
         state.realized = range
@@ -329,6 +334,10 @@ internal struct LazyStackBehavior: NodeBehavior {
     }
 
     func sizeThatFits(_ proposal: ProposedViewSize, node: ViewNode) -> CGSize {
+        // No room across: no rows show, and it takes no room, as in SwiftUI.
+        if proposal[minorAxis] == 0 {
+            return .zero
+        }
         let state = LazyStack.state(of: node)
         let rows = rows(of: node, minor: proposal[minorAxis])
         let total = offsets(state: state, rows: rows).total
@@ -428,6 +437,16 @@ extension ViewGraph {
     func requestLazyRows(_ node: ViewNode) {
         guard let behavior = node.behavior as? LazyStackBehavior, behavior.count > 0 else { return }
         let state = LazyStack.state(of: node)
+        // Without room across its axis, it shows no rows until it has some.
+        let isCollapsed = node.frame.size[behavior.axis.other] == 0
+        if isCollapsed != state.isCollapsed {
+            state.isCollapsed = isCollapsed
+            state.requested = isCollapsed ? 0..<0 : nil
+            state.isRangeOnlyUpdate = true
+            node.invalidate()
+            return
+        }
+        guard !isCollapsed else { return }
         let offsets = node.lazyOffsets
         guard offsets.count == behavior.count + 1 else { return }
         let axis = behavior.axis
