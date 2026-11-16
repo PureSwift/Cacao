@@ -110,7 +110,7 @@ final class StatusItemHost {
               let surface = SDL_CreateSurface(Int32(image.width), Int32(image.height), SDL_PIXELFORMAT_ABGR8888) else {
             return nil
         }
-        image.data.withUnsafeBytes { bytes in
+        image.data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
             guard let pixels = surface.pointee.pixels, let base = bytes.baseAddress else { return }
             for row in 0..<image.height {
                 memcpy(pixels.advanced(by: row * Int(surface.pointee.pitch)), base.advanced(by: row * image.bytesPerRow), image.width * 4)
