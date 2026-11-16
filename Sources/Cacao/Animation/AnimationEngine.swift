@@ -215,6 +215,7 @@ extension ViewGraph {
     /// animatable views at their in-between values.
     package func advanceAnimations(to time: Double) {
         self.time = time
+        showTooltipIfDue()
         var finished: [Int] = []
         for (id, state) in nodeAnimations {
             if let animation = state.frame, animation.values(at: time).isFinished { state.frame = nil }
