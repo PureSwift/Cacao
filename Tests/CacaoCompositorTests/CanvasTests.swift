@@ -163,6 +163,21 @@ import Silica
         #expect(pixel(image, 12, 22)[0] > 200)
         #expect(pixel(image, 37, 37)[2] > 200)
     }
+
+    /// An image made from pixels draws them as they are, two pixels a point
+    /// at scale 2.
+    @Test func pixelImagesDraw() throws {
+        // Two rows, top to bottom: red, then blue, with padding after each.
+        let pixels = Data([255, 0, 0, 255, 255, 0, 0, 255, 9, 9, 9, 9,
+                           0, 0, 255, 255, 0, 0, 255, 255, 9, 9, 9, 9])
+        let source = Image(pixels: pixels, width: 2, height: 2, bytesPerRow: 12, scale: 2)
+        let image = try render { context, size in
+            context.draw(source, in: CGRect(x: 0, y: 0, width: 40, height: 40))
+        }
+        #expect(pixel(image, 20, 5)[0] > 200)
+        #expect(pixel(image, 20, 35)[2] > 200)
+        #expect(pixel(image, 20, 35)[0] < 50)
+    }
 }
 
 extension CanvasTests {
