@@ -28,7 +28,7 @@ import Silica
     }
 
     func pixel(_ image: Silica.CGImage, _ x: Int, _ y: Int) -> [Int] {
-        image.data.withUnsafeBytes { bytes in
+        image.data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
             let base = y * image.bytesPerRow + x * 4
             return (0..<4).map { (index: Int) -> Int in Int(bytes[base + index]) }
         }
