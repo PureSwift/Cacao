@@ -138,6 +138,8 @@ jobs:
           cmake --build /tmp/SDL/build
           cmake --install /tmp/SDL/build
       - name: Build Silica, its Cairo modules and the SDL3 module
+        env:
+          PKG_CONFIG_PATH: /opt/sdl3/lib/pkgconfig
         run: .github/scripts/build-cmake-dependencies.sh "$PWD/dependencies"
       - name: Configure
         run: |
