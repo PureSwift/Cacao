@@ -314,6 +314,44 @@ struct EffectsScreen: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
+                Section("Materials") {
+                    ZStack {
+                        // Something busy for the materials to blur.
+                        LinearGradient(colors: [.orange, .pink, .purple, .blue], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        HStack(spacing: 24) {
+                            ForEach(["sun.max.fill", "leaf.fill", "flame.fill", "drop.fill", "bolt.fill", "star.fill"], id: \.self) { name in
+                                Image(systemName: name)
+                                    .font(.system(size: 44))
+                                    .foregroundStyle(.white)
+                            }
+                        }
+                        Text("Behind the glass")
+                            .font(.largeTitle.bold())
+                            .foregroundStyle(.black.opacity(0.7))
+                            .offset(y: 46)
+                        HStack(spacing: 12) {
+                            Text("Ultra thin")
+                                .padding(12)
+                                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                            Text("Thin")
+                                .padding(12)
+                                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                            Text("Regular")
+                                .padding(12)
+                                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                            Text("Thick")
+                                .padding(12)
+                                .background(.thickMaterial, in: RoundedRectangle(cornerRadius: 12))
+                            Text("Capsule")
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                                .background(.ultraThinMaterial, in: Capsule())
+                        }
+                        .offset(y: 30)
+                    }
+                    .frame(height: 180)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                }
                 Section("Symbols") {
                     let names = [
                         "chevron.left", "chevron.right.circle", "arrow.up.right", "arrow.clockwise", "arrow.triangle.2.circlepath", "square.and.arrow.up", "tray.and.arrow.down", "paperplane", "link", "paperclip", "magnifyingglass", "slider.horizontal.3", "line.3.horizontal", "list.bullet", "ellipsis.circle",

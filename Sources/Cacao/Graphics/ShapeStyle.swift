@@ -193,6 +193,11 @@ internal struct _ShapeStyleView: View, PrimitiveView {
 
     func resolve(in context: ResolveContext) -> Resolution {
         let style = AnyShapeStyle(style)
+        if let material = style.style as? Material {
+            return Resolution(children: [
+                ChildView(key: "material", view: _MaterialView(shape: Rectangle(), material: material)),
+            ])
+        }
         let color = style.resolveColor(in: context.environment)
         if let gradient = style.resolveGradient(in: context.environment) {
             return Resolution(behavior: ShapeBehavior(shape: Rectangle(), color: color, gradient: gradient, drawing: .fill(FillStyle())))
