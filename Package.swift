@@ -15,8 +15,11 @@ import CompilerPluginSupport
 /// - `CacaoScrollPhysics`: velocity, deceleration, rubber band and spring-back.
 /// - `CacaoCompositor`: the layer tree, drawn with Silica only when content
 ///   changes and composited on the GPU every frame.
-/// - `CacaoHost`: SDL3 windows, the main loop and frame clock, input and the
-///   SDL3 renderer backend, showing whatever implements `HostScene`.
+/// - `CacaoSDLRenderer`: the compositor's SDL3 renderer backend, and
+///   `HostRenderer`, which draws display lists with a renderer that belongs
+///   to a UI framework with windows of its own.
+/// - `CacaoHost`: SDL3 windows, the main loop and frame clock and input,
+///   showing whatever implements `HostScene`.
 /// - `CacaoSDL`: SwiftUI on the host: a view graph as each window's scene.
 /// - `CacaoWayland` (Linux): touchpad pinch rotations from Wayland, which SDL
 ///   doesn't report.
@@ -40,6 +43,10 @@ let package = Package(
         .library(
             name: "CacaoCompositor",
             targets: ["CacaoCompositor"]
+        ),
+        .library(
+            name: "CacaoSDLRenderer",
+            targets: ["CacaoSDLRenderer"]
         ),
         .library(
             name: "CacaoHost",
@@ -117,10 +124,26 @@ let package = Package(
             exclude: ["CMakeLists.txt"]
         ),
         .target(
+            name: "CacaoSDLRenderer",
+            dependencies: [
+                "CacaoRender",
+                "CacaoCompositor",
+                .product(
+                    name: "SDL3Swift",
+                    package: "SDL"
+                )
+            ],
+            exclude: ["CMakeLists.txt"],
+            // On iOS, SDL3 is a static library, so what it uses is linked
+            // here: its package configuration's frameworks.
+            linkerSettings: sdlFrameworks.map { .linkedFramework($0, .when(platforms: [.iOS])) }
+        ),
+        .target(
             name: "CacaoHost",
             dependencies: [
                 "CacaoRender",
                 "CacaoCompositor",
+                "CacaoSDLRenderer",
                 .target(
                     name: "CacaoWayland",
                     condition: .when(platforms: [.linux])
@@ -182,7 +205,7 @@ let package = Package(
             name: "CacaoSDLTests",
             dependencies: [
                 "CacaoSDL",
-                "CacaoHost",
+                "CacaoSDLRenderer",
                 .product(
                     name: "SDL3Swift",
                     package: "SDL"
