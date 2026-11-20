@@ -58,9 +58,8 @@ public final class HostWindow {
     /// Whether to draw frame times and compositor counts.
     public var showsStatistics = ProcessInfo.processInfo.environment["CACAO_SHOW_STATISTICS"] == "1"
 
+    /// When each frame of the last second was drawn, for the frame rate.
     private var frameTimes: [Double] = []
-
-    private var lastFrameTime: Double?
 
     private static let resizable: SDL_WindowFlags = 0x0000_0000_0000_0020
 
@@ -167,17 +166,25 @@ public final class HostWindow {
             needsRender = true
         case SDL_EVENT_WINDOW_EXPOSED:
             needsRender = true
-        case SDL_EVENT_MOUSE_BUTTON_DOWN where event.button.button == UInt8(SDL_BUTTON_LEFT):
-            scene.handle(.pointer(.began, at: CGPoint(x: CGFloat(event.button.x), y: CGFloat(event.button.y))), time: now)
-        case SDL_EVENT_MOUSE_BUTTON_DOWN where event.button.button == UInt8(SDL_BUTTON_RIGHT):
-            scene.handle(.secondaryClick(at: CGPoint(x: CGFloat(event.button.x), y: CGFloat(event.button.y))), time: now)
-        case SDL_EVENT_MOUSE_BUTTON_UP where event.button.button == UInt8(SDL_BUTTON_LEFT):
-            scene.handle(.pointer(.ended, at: CGPoint(x: CGFloat(event.button.x), y: CGFloat(event.button.y))), time: now)
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+            guard let button = Self.button(event.button.button) else { break }
+            // A drag belongs to the first button pressed.
+            if pressedButton == nil {
+                pressedButton = button
+            }
+            scene.handle(.pointer(.began, button: button, at: CGPoint(x: CGFloat(event.button.x), y: CGFloat(event.button.y))), time: now)
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+            guard let button = Self.button(event.button.button) else { break }
+            if pressedButton == button {
+                pressedButton = nil
+            }
+            scene.handle(.pointer(.ended, button: button, at: CGPoint(x: CGFloat(event.button.x), y: CGFloat(event.button.y))), time: now)
         case SDL_EVENT_MOUSE_MOTION:
             mouseLocation = CGPoint(x: CGFloat(event.motion.x), y: CGFloat(event.motion.y))
-            if event.motion.state & 0x1 != 0 {
-                scene.handle(.pointer(.moved, at: mouseLocation), time: now)
+            if let pressedButton, event.motion.state != 0 {
+                scene.handle(.pointer(.moved, button: pressedButton, at: mouseLocation), time: now)
             } else {
+                pressedButton = nil
                 scene.handle(.hover(at: mouseLocation), time: now)
             }
         case SDL_EVENT_WINDOW_MOUSE_LEAVE:
@@ -217,10 +224,15 @@ public final class HostWindow {
         case SDL_EVENT_KEY_DOWN where event.key.key == SDLK_F12:
             showsStatistics.toggle()
             needsRender = true
-        case SDL_EVENT_KEY_DOWN:
-            if let key = Self.key(event.key.key, modifiers: event.key.mod) {
-                scene.handle(.keyDown(key, modifiers: Self.modifiers(event.key.mod)), time: now)
-            }
+        case SDL_EVENT_KEY_DOWN, SDL_EVENT_KEY_UP:
+            scene.handle(.key(HostKeyEvent(
+                isDown: event.key.down,
+                isRepeat: event.key.repeat,
+                usage: UInt32(event.key.scancode.rawValue),
+                keyCode: UInt32(event.key.key),
+                modifiers: Self.modifiers(event.key.mod),
+                key: Self.key(event.key.key, modifiers: event.key.mod)
+            )), time: now)
         case SDL_EVENT_DROP_BEGIN:
             droppedItems = []
         case SDL_EVENT_DROP_POSITION:
@@ -243,6 +255,18 @@ public final class HostWindow {
             }
         default:
             break
+        }
+    }
+
+    /// The button a drag belongs to: the first pressed.
+    private var pressedButton: HostPointerButton?
+
+    private static func button(_ button: UInt8) -> HostPointerButton? {
+        switch Int32(button) {
+        case SDL_BUTTON_LEFT: .primary
+        case SDL_BUTTON_RIGHT: .secondary
+        case SDL_BUTTON_MIDDLE: .middle
+        default: nil
         }
     }
 
@@ -370,7 +394,6 @@ public final class HostWindow {
             needsRender = true
         }
         guard needsRender || showsStatistics && isAnimating else {
-            lastFrameTime = nil
             return
         }
         needsRender = false
@@ -445,13 +468,12 @@ public final class HostWindow {
     }
 
     private func drawStatistics(renderTime: Double, now: Double, scene: any HostScene) {
-        if let lastFrameTime {
-            frameTimes.append(now - lastFrameTime)
-            if frameTimes.count > 60 { frameTimes.removeFirst() }
-        }
-        lastFrameTime = now
-        let average = frameTimes.isEmpty ? 0 : frameTimes.reduce(0, +) / Double(frameTimes.count)
-        let fps = average > 0 ? 1 / average : 0
+        // Frames drawn in the last second, however far apart: the loop
+        // idles between frames when nothing but an external surface, or a
+        // timer, changes what's shown.
+        frameTimes.append(now)
+        frameTimes.removeAll { now - $0 >= 1 }
+        let fps = Double(frameTimes.count)
         let frame = compositor.lastFrame
         var text = String(
             format: "%.0f fps  render %.1f ms  raster %d  upload %d  draws %d  textures %d",
