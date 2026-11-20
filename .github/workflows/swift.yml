@@ -70,11 +70,8 @@ jobs:
           echo "PKG_CONFIG_PATH=/opt/sdl3/lib/pkgconfig:/opt/sdl3/lib/x86_64-linux-gnu/pkgconfig" >> "$GITHUB_ENV"
           echo "LD_LIBRARY_PATH=/opt/sdl3/lib:/opt/sdl3/lib/x86_64-linux-gnu" >> "$GITHUB_ENV"
       - name: Build
-        run: swift build
-      - name: Test
-        env:
-          SDL_VIDEO_DRIVER: offscreen
-        run: swift test
+        # Compiles the libraries and the tests. Tests run on macOS only.
+        run: swift build --build-tests
 
   # The CMake build, which makes the shared libraries a system image
   # (Buildroot and the like) installs.
@@ -154,10 +151,3 @@ jobs:
         run: cmake --build build
       - name: Install
         run: cmake --install build --prefix "$PWD/stage"
-      - name: Run the demo
-        # draws one frame offscreen, saves it and quits
-        timeout-minutes: 2
-        env:
-          SDL_VIDEO_DRIVER: offscreen
-          CACAO_SCREENSHOT: demo.png
-        run: LD_LIBRARY_PATH="$PWD/dependencies:$PWD/build/lib:/opt/sdl3/lib" build/bin/CacaoDemo

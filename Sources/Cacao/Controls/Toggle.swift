@@ -159,25 +159,71 @@ private struct _Switch: View {
 
     @Environment(\.labelsHidden) private var labelsHidden
 
+    /// Where a drag has the knob, from the track's leading end, while it's
+    /// being dragged.
+    @State private var dragPosition: CGFloat?
+
+    private static let trackSize = CGSize(width: 44, height: 26)
+
+    private static let knobSize: CGFloat = 22
+
+    private static let inset: CGFloat = 2
+
+    /// How far the knob moves between off and on.
+    private static var travel: CGFloat {
+        trackSize.width - knobSize - inset * 2
+    }
+
+    private static let animation = Animation.easeOut(duration: 0.18)
+
     var body: some View {
         let isOn = configuration.$isOn
+        let position = dragPosition ?? (isOn.wrappedValue ? Self.travel : 0)
+        // Dragged past the middle, the track shows what letting go does.
+        let showsOn = position > Self.travel / 2
         HStack {
             if !labelsHidden {
                 configuration.label
                 Spacer()
             }
-            ZStack(alignment: isOn.wrappedValue ? .trailing : .leading) {
+            ZStack(alignment: .leading) {
                 Capsule()
-                    .fill(isOn.wrappedValue ? Color.green : Color.controlFill)
+                    .fill(showsOn ? Color.green : Color.controlFill)
+                // A circle takes all the space it's offered, so without a
+                // size of its own it would fill the track and sit in its
+                // middle.
                 Circle()
                     .fill(.white)
-                    .padding(2)
+                    .frame(width: Self.knobSize, height: Self.knobSize)
+                    .padding(Self.inset)
+                    .offset(x: position)
             }
-            .frame(width: 44, height: 26)
+            .frame(width: Self.trackSize.width, height: Self.trackSize.height)
             .opacity(isEnabled ? 1 : 0.5)
+            // The knob follows a drag, and stays at the end it's let go
+            // nearer to: dragged right, the switch is on; left, off.
+            .gesture(
+                DragGesture(minimumDistance: 6)
+                    .onChanged { value in
+                        let start: CGFloat = isOn.wrappedValue ? Self.travel : 0
+                        dragPosition = min(max(start + value.translation.width, 0), Self.travel)
+                    }
+                    .onEnded { value in
+                        let start: CGFloat = isOn.wrappedValue ? Self.travel : 0
+                        let end = min(max(start + value.translation.width, 0), Self.travel)
+                        withAnimation(Self.animation) {
+                            dragPosition = nil
+                            isOn.wrappedValue = end > Self.travel / 2
+                        }
+                    }
+            )
         }
         .contentShape(Rectangle())
-        .onTapGesture { isOn.wrappedValue.toggle() }
+        .onTapGesture {
+            withAnimation(Self.animation) {
+                isOn.wrappedValue.toggle()
+            }
+        }
     }
 }
 

@@ -49,6 +49,9 @@ final class ScrollController {
         var position: CGPoint
         var tracker = VelocityTracker()
         var lastEvent: Double
+        /// Whether a finger on a touch screen is moving the content: the
+        /// gesture lasts until the finger lifts, however still it's held.
+        var isHeld = false
     }
 
     private enum Motion {
@@ -100,6 +103,85 @@ final class ScrollController {
             precise(scroller, delta: delta, now: now)
         } else {
             discrete(scroller, delta: delta, now: now)
+        }
+    }
+
+    /// A finger came down: content coasting or springing back stops where
+    /// it is, caught.
+    func catchMotion() {
+        for (key, scroller) in scrollers where scroller.motion != nil {
+            scroller.motion = nil
+            if scroller.gesture == nil {
+                scrollers[key] = nil
+            }
+        }
+    }
+
+    /// A finger has moved far enough to scroll: the scroll view under it
+    /// that can move that way follows it from here on, so the content
+    /// doesn't jump by the distance it took to tell a pan from a press.
+    /// Returns whether there is such a scroll view.
+    @discardableResult
+    func beginPan(toward movement: CGSize, at point: CGPoint, graph: ViewGraph, now: Double) -> Bool {
+        guard let state = graph.scrollState(at: point, delta: CGSize(width: -movement.width, height: -movement.height)) else {
+            return false
+        }
+        graph.cancelScrollAnimation(of: state)
+        let scroller = scrollers[ObjectIdentifier(state)] ?? Scroller(state: state)
+        scrollers[ObjectIdentifier(state)] = scroller
+        scroller.gesture = nil
+        precise(scroller, delta: .zero, now: now)
+        scroller.gesture?.isHeld = true
+        return true
+    }
+
+    /// Moves the scroll view under a finger with it, by how far the finger
+    /// moved: content follows the finger one to one, past the edges on a
+    /// rubber band. Returns whether a scroll view took the movement.
+    @discardableResult
+    func pan(by movement: CGSize, at point: CGPoint, graph: ViewGraph, now: Double) -> Bool {
+        // Content moves with the finger, so the offset goes the other way.
+        let delta = CGSize(width: -movement.width, height: -movement.height)
+        let state: ScrollState
+        if let held = scrollers.values.first(where: { $0.gesture?.isHeld == true })?.state {
+            state = held
+        } else if let target = graph.scrollState(at: point, delta: delta) {
+            state = target
+        } else {
+            return false
+        }
+        graph.cancelScrollAnimation(of: state)
+        let scroller = scrollers[ObjectIdentifier(state)] ?? Scroller(state: state)
+        scrollers[ObjectIdentifier(state)] = scroller
+        precise(scroller, delta: delta, now: now)
+        scroller.gesture?.isHeld = true
+        return true
+    }
+
+    /// Whether to print what scrolling does with input, from the
+    /// `CACAO_LOG_INPUT` environment variable.
+    static let logsInput = ProcessInfo.processInfo.environment["CACAO_LOG_INPUT"] != nil
+
+    /// The finger lifted: the content coasts on from its speed, or springs
+    /// back inside its bounds.
+    func endPan(now: Double) {
+        if Self.logsInput, !scrollers.values.contains(where: { $0.gesture?.isHeld == true }) {
+            print("Cacao: pan ended with no scroll view held")
+        }
+        for scroller in scrollers.values {
+            guard let gesture = scroller.gesture, gesture.isHeld else { continue }
+            if Self.logsInput {
+                let velocity = gesture.tracker.velocity
+                print(String(
+                    format: "Cacao: pan ended, velocity %.0f, %.0f pt/s, %.0f ms after the last move, offset %.0f of %.0f",
+                    velocity.x, velocity.y, (now - gesture.lastEvent) * 1000,
+                    Double(scroller.state.offset.y), Double(scroller.state.maxOffset.y)
+                ))
+            }
+            scroller.gesture = nil
+            // A finger held still before it lifts leaves the content where
+            // it is.
+            endGesture(scroller, gesture: gesture, now: now, coasts: now - gesture.lastEvent <= VelocityTracker.window)
         }
     }
 
@@ -167,7 +249,7 @@ final class ScrollController {
     func step(now: Double) {
         for (key, scroller) in scrollers {
             let state = scroller.state
-            if let gesture = scroller.gesture, now - gesture.lastEvent > Self.gestureEnd {
+            if let gesture = scroller.gesture, !gesture.isHeld, now - gesture.lastEvent > Self.gestureEnd {
                 scroller.gesture = nil
                 endGesture(scroller, gesture: gesture, now: now)
             }
@@ -195,7 +277,23 @@ final class ScrollController {
         }
     }
 
-    private func endGesture(_ scroller: Scroller, gesture: Gesture, now: Double) {
+    /// A gesture's velocity along the axes a scroll view can move: a finger
+    /// never moves quite straight, and what it does across a list would
+    /// otherwise count as running into an edge, which ends coasting.
+    private static func velocity(_ velocity: (x: Double, y: Double), along state: ScrollState) -> (x: Double, y: Double) {
+        let max = state.maxOffset
+        return (
+            state.axes.contains(.horizontal) && max.x > 0 ? velocity.x : 0,
+            state.axes.contains(.vertical) && max.y > 0 ? velocity.y : 0
+        )
+    }
+
+    /// - Parameter coasts: Whether the content keeps moving from the
+    ///   gesture's speed. A finger's gesture says: the system sends no
+    ///   momentum for fingers, and one held still before it lifts leaves
+    ///   the content where it is. `nil`, for a trackpad's, coasts where the
+    ///   system sends no momentum of its own.
+    private func endGesture(_ scroller: Scroller, gesture: Gesture, now: Double, coasts: Bool? = nil) {
         let state = scroller.state
         let clamped = state.clamped(state.offset)
         // Snapping scroll views settle where their behavior says, from where
@@ -221,9 +319,18 @@ final class ScrollController {
                 x: SpringBack(from: state.offset.x, to: clamped.x, time: now),
                 y: SpringBack(from: state.offset.y, to: clamped.y, time: now)
             )
-        } else if Self.synthesizesMomentum,
-                  let deceleration = Deceleration(velocity: gesture.tracker.velocity, time: now) {
+        } else if coasts ?? Self.synthesizesMomentum,
+                  let deceleration = Deceleration(velocity: Self.velocity(gesture.tracker.velocity, along: state), time: now) {
             scroller.motion = .decelerating(deceleration)
+        }
+        if Self.logsInput {
+            let what = switch scroller.motion {
+            case .decelerating: "coasting"
+            case .springing: "springing"
+            case .eased: "easing"
+            case nil: "stopped"
+            }
+            print("Cacao: scroll gesture ended: \(what)")
         }
     }
 }

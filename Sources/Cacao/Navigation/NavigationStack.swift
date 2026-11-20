@@ -55,6 +55,13 @@ internal enum NavigationEntry {
 
     /// A view, from a link with a destination.
     case view(AnyView, id: Int)
+
+    /// A collapsed split view's detail column, above its sidebar.
+    case detail
+
+    var isDetail: Bool {
+        if case .detail = self { true } else { false }
+    }
 }
 
 /// A navigation stack's state and the actions views inside it use.
@@ -83,10 +90,16 @@ internal final class NavigationContext {
     /// Whether this stack is a split view's detail column.
     var isDetail = false
 
+    /// Whether this is the one stack of a split view collapsed to a single
+    /// column, as in a compact width: the sidebar, with what the detail
+    /// column would show pushed above it.
+    var isCollapsed = false
+
     /// For a split view's sidebar: the detail column's context, which links
-    /// in the sidebar show their destinations in.
+    /// in the sidebar show their destinations in. A collapsed split view's
+    /// links push onto its one stack.
     var detail: NavigationContext? {
-        isDetail ? nil : split?.detail
+        isDetail || isCollapsed ? nil : split?.detail
     }
 
     private var nextViewID = 0
@@ -148,7 +161,40 @@ internal final class NavigationContext {
         if excess > 0, let path {
             path.wrappedValue.removeLast(min(excess, path.wrappedValue.count))
         }
+        // Going back from the detail of a collapsed split view deselects
+        // what the sidebar's list had selected.
+        if isCollapsed, !ownEntries.contains(where: \.isDetail), let selection = split?.sidebarSelection, !selection.isEmpty {
+            split?.sidebarSelection?.isEmpty = true
+            selection.clear()
+        }
         onChange()
+    }
+
+    /// Keeps a collapsed split view's stack as its columns would show:
+    /// when it collapses, what the detail column showed goes on top; a
+    /// sidebar list with a selection shows the detail while a row is
+    /// selected; and when it expands again, what was pushed goes back to
+    /// the detail column.
+    func updateCollapse(to collapsed: Bool, link: SplitLink) {
+        if collapsed, !isCollapsed {
+            // What the detail column shows, or the column itself.
+            if let shown = link.detail?.entries.last {
+                ownEntries = [shown]
+            } else if link.sidebarSelection?.isEmpty != true {
+                ownEntries = [.detail]
+            }
+        } else if !collapsed, isCollapsed {
+            link.restoredEntry = ownEntries.last { !$0.isDetail }
+            ownEntries = []
+        }
+        isCollapsed = collapsed
+        guard collapsed, let selection = link.sidebarSelection else { return }
+        let showsDetail = ownEntries.contains(where: \.isDetail)
+        if !selection.isEmpty, !showsDetail {
+            ownEntries = [.detail]
+        } else if selection.isEmpty, showsDetail {
+            ownEntries.removeAll(where: \.isDetail)
+        }
     }
 
     func destination(for value: AnyHashable) -> AnyView? {
@@ -164,6 +210,14 @@ internal final class NavigationContext {
 internal final class SplitLink {
     weak var sidebar: NavigationContext?
     weak var detail: NavigationContext?
+
+    /// A list in the sidebar whose selection the detail column shows:
+    /// whether nothing is selected, and how to deselect.
+    var sidebarSelection: (isEmpty: Bool, clear: () -> Void)?
+
+    /// What a collapsed split view had pushed when it expanded, for the
+    /// detail column to show.
+    var restoredEntry: NavigationEntry?
 
     /// The widths that columns' views set, by column.
     var widths: [String: SplitColumnWidth] = [:]
@@ -315,6 +369,10 @@ internal struct _NavigationStack: View, PrimitiveView {
     /// The column of a split view this stack is, if any.
     let column: (link: SplitLink, isDetail: Bool)?
 
+    /// For the sidebar of a split view collapsed to one column: its detail
+    /// column's root, which this stack shows above the sidebar.
+    var collapsedDetail: AnyView? = nil
+
     func resolve(in context: ResolveContext) -> Resolution {
         let node = context.node
         let navigation: NavigationContext
@@ -331,8 +389,15 @@ internal struct _NavigationStack: View, PrimitiveView {
             navigation.isDetail = column.isDetail
             if column.isDetail {
                 column.link.detail = navigation
+                // What a collapsed split view had pushed, now that there's
+                // a detail column to show it.
+                if let restored = column.link.restoredEntry {
+                    column.link.restoredEntry = nil
+                    navigation.ownEntries = [restored]
+                }
             } else {
                 column.link.sidebar = navigation
+                navigation.updateCollapse(to: collapsedDetail != nil, link: column.link)
             }
         }
         var environment = context.environment
@@ -354,6 +419,9 @@ internal struct _NavigationStack: View, PrimitiveView {
             case let .view(view, id):
                 content = view
                 key = AnyHashable("\(depth) view \(id)")
+            case .detail:
+                content = collapsedDetail ?? AnyView(EmptyView())
+                key = AnyHashable("\(depth) detail")
             }
             // Pushed screens slide in from the trailing edge, over the last.
             children.append(ChildView(
@@ -1199,6 +1267,21 @@ private struct _NavigationSplit: View, PrimitiveView {
                 .frame(width: link.width(of: key, default: width))
         }
         let colorScheme = context.environment.colorScheme
+        // In a compact width the columns collapse into one stack: the
+        // sidebar, with the detail and what links show pushed above it.
+        if context.environment.horizontalSizeClass == .compact {
+            return Resolution(behavior: _SplitBehavior(shows: [true]), children: [
+                ChildView(
+                    key: "sidebar",
+                    view: column(
+                        "collapsed",
+                        _NavigationStack(path: nil, root: sidebar, column: (link, false), collapsedDetail: detail),
+                        width: nil
+                    )
+                    .background(Color.barBackground(colorScheme))
+                ),
+            ])
+        }
         var children = [
             ChildView(
                 key: "sidebar",
