@@ -987,17 +987,81 @@ extension View {
         searchable(text: text, prompt: Text(prompt))
     }
 
-    /// Configures the search suggestions for this view.
-    ///
-    /// Cacao doesn't show search suggestions yet: the view is unchanged.
+    /// Configures the search suggestions for this view: they're listed
+    /// under the search field of a `searchable` view inside this one.
     public func searchSuggestions<S: View>(@ViewBuilder _ suggestions: () -> S) -> some View {
-        self
+        environment(\.searchSuggestions, AnyView(suggestions()))
     }
 
     /// Associates a fully formed string with the value of this view when
-    /// used as a search suggestion.
+    /// used as a search suggestion: choosing the suggestion makes it the
+    /// search text.
     public func searchCompletion(_ completion: String) -> some View {
-        self
+        var traits = LayoutTraits()
+        traits[SearchCompletionKey.self] = completion
+        return modifier(_TraitWritingModifier(traits: traits))
+    }
+}
+
+private struct SearchSuggestionsKey: EnvironmentKey {
+    static var defaultValue: AnyView? { nil }
+}
+
+extension EnvironmentValues {
+
+    /// The suggestions of searchable views in the environment.
+    internal var searchSuggestions: AnyView? {
+        get { self[SearchSuggestionsKey.self] }
+        set { self[SearchSuggestionsKey.self] = newValue }
+    }
+}
+
+/// The text a search suggestion completes to, set with `searchCompletion(_:)`.
+internal enum SearchCompletionKey: LayoutValueKey {
+    static var defaultValue: String? { nil }
+}
+
+/// The suggestions of a search, listed over the top of what's searched.
+/// One with a completion is a button that makes it the search text, after
+/// which the list goes until the text changes.
+internal struct _SearchSuggestionList: View {
+
+    let suggestions: AnyView
+
+    let text: Binding<String>
+
+    @State private var chosen: String?
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        let rows = Cacao.options(in: suggestions)
+        if !rows.isEmpty, chosen != text.wrappedValue {
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(rows.indices, id: \.self) { index in
+                    let row = HStack(spacing: 0) {
+                        rows[index].label
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .contentShape(Rectangle())
+                    if let completion = rows[index].traits[SearchCompletionKey.self] {
+                        Button {
+                            chosen = completion
+                            text.wrappedValue = completion
+                        } label: {
+                            row
+                        }
+                        .buttonStyle(.plain)
+                    } else {
+                        row
+                    }
+                    Divider()
+                }
+            }
+            .background(Color.controlBackground(colorScheme))
+        }
     }
 }
 
@@ -1011,20 +1075,32 @@ internal struct _Searchable<Content: View>: View, PrimitiveView {
     let prompt: Text?
 
     func resolve(in context: ResolveContext) -> Resolution {
+        // Suggestions show over the top of the content, under the field.
+        let searched: AnyView
+        if let suggestions = context.environment.searchSuggestions {
+            searched = AnyView(content.overlay(alignment: .top) {
+                _SearchSuggestionList(suggestions: suggestions, text: text)
+            })
+        } else {
+            searched = AnyView(content)
+        }
+        // They're this search's, not those of searches in the content.
+        var environment = context.environment
+        environment.searchSuggestions = nil
         if let screen = context.environment.screenContext {
             let changed = screen.search == nil
             screen.search = (text, prompt)
             if changed {
                 screen.barNeedsUpdate()
             }
-            return Resolution(children: [ChildView(key: "content", view: content)])
+            return Resolution(children: [ChildView(key: "content", view: searched, environment: environment)])
         }
         let view = VStack(spacing: 8) {
             TextField("Search", text: text, prompt: prompt ?? Text("Search"))
                 .padding(.horizontal)
-            content
+            searched
         }
-        return Resolution(children: [ChildView(key: "stacked", view: view)])
+        return Resolution(children: [ChildView(key: "stacked", view: view, environment: environment)])
     }
 
     typealias Body = Never

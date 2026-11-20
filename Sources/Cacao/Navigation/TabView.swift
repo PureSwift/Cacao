@@ -34,51 +34,98 @@ public struct TabView<SelectionValue: Hashable, Content: View>: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
+    @Environment(\.tabViewStyleKind) private var style
+
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
     public var body: some View {
         let tabs = Cacao.options(in: content)
         let tags = tabs.enumerated().map { $0.element.tag ?? AnyHashable($0.offset) }
         let selected: AnyHashable = selection.map { AnyHashable($0.wrappedValue) } ?? ownSelection ?? tags.first ?? AnyHashable(0)
         let selectedIndex = tags.firstIndex(of: selected) ?? 0
+        let pages = _TabPages(pages: tabs.map(\.label), selected: selectedIndex)
+        // A sidebar where there's room for one, as on a Mac or an Apple TV;
+        // a tab bar in a compact width, and for the other styles.
+        if style == .sidebarAdaptable, horizontalSizeClass != .compact {
+            HStack(spacing: 0) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(tabs.indices, id: \.self) { index in
+                            // A section's title, above its first tab.
+                            if let section = tabs[index].traits[TabSectionKey.self],
+                               index == 0 || tabs[index - 1].traits[TabSectionKey.self] != section {
+                                Text(section)
+                                    .font(.footnote.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                                    .padding(.horizontal, 14)
+                                    .padding(.top, 12)
+                                    .padding(.bottom, 4)
+                            }
+                            tabButton(tabs[index], tag: tags[index], index: index, isSelected: index == selectedIndex, fillsWidth: true)
+                        }
+                    }
+                    .padding(8)
+                }
+                .frame(width: 220)
+                .background(Color.barBackground(colorScheme))
+                Divider()
+                pages
+            }
+        } else {
+            VStack(spacing: 0) {
+                // Centered while the tabs fit; more than fit scroll.
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 4) {
+                        ForEach(tabs.indices, id: \.self) { index in
+                            tabButton(tabs[index], tag: tags[index], index: index, isSelected: index == selectedIndex, fillsWidth: false)
+                        }
+                    }
+                    .padding(8)
+                }
+                .defaultScrollAnchor(.center, for: .alignment)
+                .fixedSize(horizontal: false, vertical: true)
+                .background(Color.barBackground(colorScheme))
+                Divider()
+                pages
+            }
+        }
+    }
+
+    /// A tab's button, in the bar or the sidebar: its label and badge,
+    /// highlighted while it's selected.
+    private func tabButton(_ tab: Option, tag: AnyHashable, index: Int, isSelected: Bool, fillsWidth: Bool) -> some View {
         let selection = self.selection
         let ownSelection = $ownSelection
-        VStack(spacing: 0) {
-            HStack(spacing: 4) {
-                ForEach(tabs.indices, id: \.self) { index in
-                    let isSelected = index == selectedIndex
-                    Button {
-                        if let selection, let value = tags[index].base as? SelectionValue {
-                            selection.wrappedValue = value
-                        } else {
-                            ownSelection.wrappedValue = tags[index]
-                        }
-                    } label: {
-                        HStack(spacing: 6) {
-                            tabs[index].traits[TabItemKey.self] ?? AnyView(Text("Tab \(index + 1)"))
-                            if let badge = tabs[index].traits[BadgeKey.self] {
-                                badge
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 5)
-                                    .background { Capsule().fill(Color.red) }
-                            }
-                        }
-                            .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 6)
-                            .background {
-                                RoundedRectangle(cornerRadius: 7)
-                                    .fill(isSelected ? Color.accentColor.opacity(0.15) : Color.clear)
-                            }
-                    }
-                    .buttonStyle(.plain)
+        return Button {
+            if let selection, let value = tag.base as? SelectionValue {
+                selection.wrappedValue = value
+            } else {
+                ownSelection.wrappedValue = tag
+            }
+        } label: {
+            HStack(spacing: 6) {
+                tab.traits[TabItemKey.self] ?? AnyView(Text("Tab \(index + 1)"))
+                if let badge = tab.traits[BadgeKey.self] {
+                    badge
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 5)
+                        .background { Capsule().fill(Color.red) }
                 }
             }
-            .padding(8)
-            .frame(maxWidth: .infinity)
-            .background(Color.barBackground(colorScheme))
-            Divider()
-            _TabPages(pages: tabs.map(\.label), selected: selectedIndex)
+            .lineLimit(1)
+            .fixedSize(horizontal: !fillsWidth, vertical: false)
+            .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 6)
+            .frame(maxWidth: fillsWidth ? .infinity : nil, alignment: .leading)
+            .background {
+                RoundedRectangle(cornerRadius: 7)
+                    .fill(isSelected ? Color.accentColor.opacity(0.15) : Color.clear)
+            }
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
     }
 }
 
@@ -327,9 +374,15 @@ extension TabView {
     }
 }
 
+/// The title of the section a tab is in, for a tab view's sidebar.
+internal enum TabSectionKey: LayoutValueKey {
+    static var defaultValue: String? { nil }
+}
+
 /// A container that you can use to add hierarchy within a tab view.
 ///
-/// Cacao lists a section's tabs with the others, without its title.
+/// A sidebar shows a section's title above its tabs; a tab bar lists them
+/// with the others.
 public struct TabSection<SelectionValue: Hashable>: View, TabContent {
 
     public typealias TabValue = SelectionValue
@@ -361,32 +414,51 @@ public struct TabSection<SelectionValue: Hashable>: View, TabContent {
 extension TabSection: OptionSource {
 
     func options() -> [Option] {
-        content.options()
+        let name = title.runs.map(\.string).joined()
+        return content.options().map { option in
+            var option = option
+            option.traits[TabSectionKey.self] = name
+            return option
+        }
     }
 }
 
 // MARK: - Style
 
+/// The kinds of tab view styles.
+public struct _TabViewStyleKind: Equatable, Sendable {
+
+    private let name: String
+
+    static let automatic = _TabViewStyleKind(name: "automatic")
+    static let sidebarAdaptable = _TabViewStyleKind(name: "sidebarAdaptable")
+    static let tabBarOnly = _TabViewStyleKind(name: "tabBarOnly")
+}
+
 /// A specification for the appearance and interaction of a tab view.
-///
-/// Cacao draws every tab view with a tab bar, whatever its style.
 @MainActor
 @preconcurrency
-public protocol TabViewStyle { }
+public protocol TabViewStyle {
+    var _kind: _TabViewStyleKind { get }
+}
 
 /// The default tab view style.
 public struct DefaultTabViewStyle: TabViewStyle {
     public init() { }
+    public var _kind: _TabViewStyleKind { .automatic }
 }
 
-/// A tab bar style that adapts to each platform.
+/// A tab view style that shows its tabs in a sidebar where there's room
+/// for one, and in a tab bar in a compact width.
 public struct SidebarAdaptableTabViewStyle: TabViewStyle {
     public init() { }
+    public var _kind: _TabViewStyleKind { .sidebarAdaptable }
 }
 
 /// A tab view style that displays a tab bar when possible.
 public struct TabBarOnlyTabViewStyle: TabViewStyle {
     public init() { }
+    public var _kind: _TabViewStyleKind { .tabBarOnly }
 }
 
 extension TabViewStyle where Self == DefaultTabViewStyle {
@@ -405,6 +477,19 @@ extension View {
 
     /// Sets the style for the tab view within the current environment.
     public func tabViewStyle<S: TabViewStyle>(_ style: S) -> some View {
-        self
+        environment(\.tabViewStyleKind, style._kind)
+    }
+}
+
+private struct TabViewStyleKey: EnvironmentKey {
+    static let defaultValue = _TabViewStyleKind.automatic
+}
+
+extension EnvironmentValues {
+
+    /// The style of tab views in the environment.
+    internal var tabViewStyleKind: _TabViewStyleKind {
+        get { self[TabViewStyleKey.self] }
+        set { self[TabViewStyleKey.self] = newValue }
     }
 }

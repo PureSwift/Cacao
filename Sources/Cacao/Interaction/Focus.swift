@@ -202,6 +202,8 @@ extension ViewGraph {
             }
             focus(nodes[next])
             return true
+        case .left, .right, .up, .down:
+            return moveFocus(key)
         case .escape:
             if isPresenting {
                 dismissTopPresentation()
@@ -215,6 +217,72 @@ extension ViewGraph {
         default:
             return false
         }
+    }
+
+    /// Moves focus from the focused view to the nearest focusable view in
+    /// the direction of an arrow key: one in line with it, or else one in a
+    /// focus section that's in line with it. Returns whether focus moved.
+    func moveFocus(_ direction: KeyCode) -> Bool {
+        guard let current = focusedNode, current.isAttached else { return false }
+        let from = current.windowFrame
+        guard !from.isNull else { return false }
+        let isHorizontal = direction == .left || direction == .right
+        /// Whether a frame lies past the focused view, that way.
+        func isBeyond(_ frame: CGRect) -> Bool {
+            switch direction {
+            case .left: frame.maxX <= from.minX + 1
+            case .right: frame.minX >= from.maxX - 1
+            case .up: frame.maxY <= from.minY + 1
+            default: frame.minY >= from.maxY - 1
+            }
+        }
+        /// Whether a frame is in line with the focused view.
+        func isInLine(_ frame: CGRect) -> Bool {
+            isHorizontal
+                ? frame.minY < from.maxY && frame.maxY > from.minY
+                : frame.minX < from.maxX && frame.maxX > from.minX
+        }
+        func distance(_ frame: CGRect) -> CGFloat {
+            hypot(frame.midX - from.midX, frame.midY - from.midY)
+        }
+        // Views that show: not those of a tab or a screen that's hidden.
+        let candidates = focusableNodes().compactMap { node -> (node: ViewNode, frame: CGRect)? in
+            guard node !== current else { return nil }
+            let frame = node.windowFrame
+            guard !frame.isNull, frame.width > 0, frame.height > 0,
+                  root.hitTest(CGPoint(x: frame.midX, y: frame.midY))?.contains(where: { $0 === node }) == true else {
+                return nil
+            }
+            return (node, frame)
+        }
+        if let next = candidates.filter({ isBeyond($0.frame) && isInLine($0.frame) }).min(by: { distance($0.frame) < distance($1.frame) }) {
+            focus(next.node)
+            return true
+        }
+        // A focus section that way takes focus for the views in it.
+        var sections: [(node: ViewNode, frame: CGRect)] = []
+        root.forEachNode { node in
+            guard node.attributes.isFocusSection else { return }
+            let frame = node.windowFrame
+            if !frame.isNull, isBeyond(frame), isInLine(frame) {
+                sections.append((node, frame))
+            }
+        }
+        for section in sections.sorted(by: { distance($0.frame) < distance($1.frame) }) {
+            let inside = candidates.filter { candidate in
+                var ancestor = candidate.node.parent
+                while let node = ancestor {
+                    if node === section.node { return true }
+                    ancestor = node.parent
+                }
+                return false
+            }
+            if let next = inside.min(by: { distance($0.frame) < distance($1.frame) }) {
+                focus(next.node)
+                return true
+            }
+        }
+        return false
     }
 
     /// Delivers typed text to the focused view.

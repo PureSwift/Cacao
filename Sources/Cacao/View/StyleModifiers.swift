@@ -475,9 +475,11 @@ extension View {
     /// Indicates that the view's frame and cohort of focusable descendants
     /// should be used to guide focus movement.
     ///
-    /// Cacao moves focus in the order of the views, so this changes nothing.
+    /// An arrow key moves focus to the nearest focusable view that way. When
+    /// none is in line with the focused view, focus goes to a focus section
+    /// that is, and to the focusable view in it nearest the focused one.
     public func focusSection() -> some View {
-        self
+        modifier(_AttributesModifier { $0.isFocusSection = true })
     }
 }
 
@@ -804,8 +806,36 @@ extension View {
 
 // MARK: - Scrolling
 
+/// A view with a hover effect, shown while the pointer is over it.
+internal struct _HoverEffectView<Content: View>: View {
+
+    let content: Content
+
+    let effect: HoverEffect
+
+    let isEnabled: Bool
+
+    @State private var isHovered = false
+
+    var body: some View {
+        let isActive = isHovered && isEnabled
+        content
+            .background {
+                // The highlight: a platter a little larger than the view.
+                if isActive, effect != .lift {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.primary.opacity(0.1))
+                        .padding(-4)
+                }
+            }
+            .scaleEffect(isActive && effect == .lift ? 1.05 : 1)
+            .animation(.easeOut(duration: 0.15), value: isActive)
+            .onHover { isHovered = $0 }
+    }
+}
+
 /// An effect applied when the pointer hovers over a view.
-public struct HoverEffect: Sendable {
+public struct HoverEffect: Equatable, Sendable {
 
     private let name: String
 
@@ -893,11 +923,10 @@ extension View {
         environment(\.isScrollClipDisabled, disabled)
     }
 
-    /// Applies a hover effect to this view.
-    ///
-    /// Cacao has no system hover effects, so this draws nothing.
+    /// Applies a hover effect to this view: while the pointer is over it, a
+    /// platter behind it, or a lift toward the viewer.
     public func hoverEffect(_ effect: HoverEffect = .automatic, isEnabled: Bool = true) -> some View {
-        self
+        _HoverEffectView(content: self, effect: effect, isEnabled: isEnabled)
     }
 
     /// Disables or enables scrolling in scrollable views.
