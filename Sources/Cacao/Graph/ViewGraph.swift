@@ -106,6 +106,10 @@ package final class ViewGraph {
     /// The time animations are evaluated at, in seconds, from the host's clock.
     package var time: Double = 0
 
+    /// When the scroll indicators that show after scrolling have faded
+    /// out: frames keep drawing until then.
+    var scrollIndicatorsFadeEnd: Double = 0
+
     /// The transaction of state changes waiting for the next update.
     var pendingTransaction: Transaction?
 
