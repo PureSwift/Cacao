@@ -762,16 +762,32 @@ extension View {
 /// The visibility of scroll indicators of a UI element.
 public struct ScrollIndicatorVisibility: Equatable, Sendable {
 
-    let isVisible: Bool
+    internal enum Kind: Sendable {
+        case automatic
+        case visible
+        case hidden
+    }
 
-    public static var automatic: ScrollIndicatorVisibility { ScrollIndicatorVisibility(isVisible: true) }
-    public static var visible: ScrollIndicatorVisibility { ScrollIndicatorVisibility(isVisible: true) }
-    public static var hidden: ScrollIndicatorVisibility { ScrollIndicatorVisibility(isVisible: false) }
-    public static var never: ScrollIndicatorVisibility { ScrollIndicatorVisibility(isVisible: false) }
+    internal let kind: Kind
+
+    /// Whether the indicators ever show.
+    internal var isVisible: Bool { kind != .hidden }
+
+    /// Scroll indicators show while scrolling, and fade out after.
+    public static var automatic: ScrollIndicatorVisibility { ScrollIndicatorVisibility(kind: .automatic) }
+
+    /// Scroll indicators stay visible.
+    public static var visible: ScrollIndicatorVisibility { ScrollIndicatorVisibility(kind: .visible) }
+
+    /// Scroll indicators are hidden.
+    public static var hidden: ScrollIndicatorVisibility { ScrollIndicatorVisibility(kind: .hidden) }
+
+    /// Scroll indicators are never shown.
+    public static var never: ScrollIndicatorVisibility { ScrollIndicatorVisibility(kind: .hidden) }
 }
 
 private struct ScrollIndicatorsKey: EnvironmentKey {
-    static let defaultValue = true
+    static let defaultValue = ScrollIndicatorVisibility.automatic
 }
 
 private struct ScrollDisabledKey: EnvironmentKey {
@@ -780,8 +796,8 @@ private struct ScrollDisabledKey: EnvironmentKey {
 
 extension EnvironmentValues {
 
-    /// Whether scroll views in the environment show their indicators.
-    internal var showsScrollIndicators: Bool {
+    /// How scroll views in the environment show their indicators.
+    internal var scrollIndicatorVisibility: ScrollIndicatorVisibility {
         get { self[ScrollIndicatorsKey.self] }
         set { self[ScrollIndicatorsKey.self] = newValue }
     }
@@ -798,7 +814,7 @@ extension View {
 
     /// Sets the visibility of scroll indicators within this view.
     public func scrollIndicators(_ visibility: ScrollIndicatorVisibility, axes: Axis.Set = [.vertical, .horizontal]) -> some View {
-        environment(\.showsScrollIndicators, visibility.isVisible)
+        environment(\.scrollIndicatorVisibility, visibility)
     }
 
     /// Disables or enables scrolling in scrollable views.
