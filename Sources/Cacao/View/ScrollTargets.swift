@@ -317,10 +317,39 @@ extension ViewGraph {
     /// identity, animated in the current transaction.
     func scroll(to id: AnyHashable, in subtree: ViewNode, anchor: UnitPoint?) {
         guard let found = findScrollTarget(id, in: subtree) else { return }
-        let target = found.node
-        var frame = found.frame
-        var ancestor = target.parent
         let animation = (Transaction.current?.disablesAnimations ?? false) ? nil : Transaction.current?.animation
+        scroll(toShow: found.frame, of: found.node, anchor: anchor, animation: animation)
+    }
+
+    /// Scrolls the scroll views around the focused view only as far as
+    /// needed to show it, with some room around it: as after an on-screen
+    /// keyboard took part of the window.
+    package func revealFocusedView(animation: Animation? = .smooth(duration: 0.25)) {
+        guard let node = focusedNode, node.isAttached else { return }
+        let frame = node.subtreeFrame
+        guard !frame.isNull else { return }
+        scroll(toShow: frame.insetBy(dx: 0, dy: -Self.focusRevealMargin), of: node, anchor: nil, animation: animation)
+    }
+
+    /// The room kept above and below a focused view scrolled into view.
+    package static let focusRevealMargin: CGFloat = 12
+
+    /// How much height the content loses at once, with a text view focused,
+    /// for it to be taken as an on-screen keyboard appearing. Where the
+    /// system doesn't say that one did, as on Linux, its window only gets
+    /// shorter.
+    package static let keyboardHeightThreshold: CGFloat = 100
+
+    /// Whether the room for content going from one height to another looks
+    /// like an on-screen keyboard appearing for the focused text view.
+    package func looksLikeKeyboardAppearing(from oldHeight: CGFloat, to newHeight: CGFloat) -> Bool {
+        acceptsTextInput && oldHeight - newHeight > Self.keyboardHeightThreshold
+    }
+
+    /// Scrolls the scroll views around a node to show a frame of its.
+    private func scroll(toShow frame: CGRect, of target: ViewNode, anchor: UnitPoint?, animation: Animation?) {
+        var frame = frame
+        var ancestor = target.parent
         while let node = ancestor {
             defer { ancestor = node.parent }
             guard let scroll = node.behavior as? ScrollBehavior else { continue }
