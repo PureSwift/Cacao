@@ -117,6 +117,28 @@ import Testing
         #expect(log.inputs == ["touch began 2 10,10", "touch moved 2 200,200", "touch ended 2 200,200"])
     }
 
+    /// A touch screen's fingers also arrive as presses the host made up,
+    /// for views that only know of pointers.
+    @Test func aFingerIsNotAlsoDeliveredAsAPress() {
+        let (graph, log, taps) = make()
+        let point = CGPoint(x: 60, y: 60)
+        #expect(graph.externalPointer(.began, button: .primary, at: point, isFromTouch: true))
+        #expect(graph.externalTouch(.began, finger: 1, at: point))
+        #expect(graph.externalPointer(.moved, button: .primary, at: CGPoint(x: 70, y: 60), isFromTouch: true))
+        #expect(graph.externalTouch(.moved, finger: 1, at: CGPoint(x: 70, y: 60)))
+        #expect(graph.externalPointer(.ended, button: .primary, at: CGPoint(x: 70, y: 60), isFromTouch: true))
+        #expect(graph.externalTouch(.ended, finger: 1, at: CGPoint(x: 70, y: 60)))
+        // The press gave the surface focus and reached nothing behind it.
+        #expect(log.inputs == ["focus true", "touch began 1 10,10", "touch moved 1 20,10", "touch ended 1 20,10"])
+        #expect(taps() == 0)
+        // A finger elsewhere still presses SwiftUI's views.
+        let outside = CGPoint(x: 250, y: 250)
+        #expect(!graph.externalPointer(.began, button: .primary, at: outside, isFromTouch: true))
+        graph.pointer(.began, at: outside)
+        graph.pointer(.ended, at: outside)
+        #expect(taps() == 1)
+    }
+
     @Test func keysAndTextGoToTheSurfaceWhileItHasFocus() {
         let (graph, log, _) = make(acceptsText: true)
         let key = ExternalInput.Key(isDown: true, usage: 4, keyCode: 97)
