@@ -273,7 +273,7 @@ with no changes, and run in a native window on Linux and macOS.
 
 | Target | Contents | Depends on |
 |---|---|---|
-| `CacaoRender` | `DisplayList` and the values it's made of: `Path`, resolved colors, text and fonts, images, gradients, canvas drawing, effects, `Transform2D`; the `TextEngine` protocol. **No SwiftUI**, so other UI frameworks can draw through the compositor. | Foundation |
+| `CacaoRender` | `DisplayList` and the values it's made of: `Path`, resolved colors, text and fonts, images, gradients, canvas drawing, effects, `Transform2D`; the `TextEngine` protocol; `ExternalSurface`, where frames drawn outside the compositor (GL, web views, video) are published from any thread, as pixels or as shared GPU buffers. **No SwiftUI**, so other UI frameworks can draw through the compositor. | Foundation |
 | `Cacao` | Public SwiftUI API, evaluator, `ViewGraph`, layout, building `DisplayList`s, layer tree model, animation, scroll physics, gestures, focus, text model. **No SDL, no GPU** – builds and tests headless anywhere. Geometry types (`CGPoint`/`CGSize`/`CGRect`/`CGAffineTransform`) from Foundation. | `CacaoRender`, Foundation, Observation |
 | `CacaoScrollPhysics` | Velocity tracking, deceleration, rubber band, spring‑back (ported from Perry's `PerryScrollPhysics`; pure Swift, no deps) | – |
 | `CacaoCompositor` | Layer tree → GPU: texture cache keyed by layer + content version, compositing pass, offscreen passes for group opacity / rounded clips / masks; layer‑content drawing through Silica; `TextEngine` over Silica fonts | `CacaoRender`, Silica (`SilicaCairo` on Linux, `SilicaCoreGraphics` on macOS) |
