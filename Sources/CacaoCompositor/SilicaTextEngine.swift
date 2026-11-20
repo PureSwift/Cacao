@@ -9,7 +9,7 @@ import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
 #endif
-import Cacao
+import CacaoRender
 import Silica
 #if canImport(SilicaCoreGraphics)
 import SilicaCoreGraphics
@@ -25,7 +25,7 @@ import SilicaCairo
 @MainActor
 package final class SilicaTextEngine: TextEngine {
 
-    private var fonts: [Font.Resolved: Silica.CGFont] = [:]
+    private var fonts: [ResolvedFont: Silica.CGFont] = [:]
 
     private var shapedCache: [ResolvedText: Shaped] = [:]
 
@@ -40,7 +40,7 @@ package final class SilicaTextEngine: TextEngine {
     // MARK: Fonts
 
     /// The platform font for a resolved font.
-    func font(for resolved: Font.Resolved) -> Silica.CGFont? {
+    func font(for resolved: ResolvedFont) -> Silica.CGFont? {
         if let font = fonts[resolved] {
             return font
         }
@@ -63,7 +63,7 @@ package final class SilicaTextEngine: TextEngine {
         return nil
     }
 
-    private static func systemFamily(_ design: Font.Design) -> String {
+    private static func systemFamily(_ design: FontDesign) -> String {
         #if canImport(SilicaCoreGraphics)
         switch design {
         case .default, .rounded: "HelveticaNeue"
