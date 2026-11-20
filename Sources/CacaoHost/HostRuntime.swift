@@ -114,6 +114,28 @@ public enum HostRuntime {
         _ = SDL_PushEvent(&event)
     }
 
+    /// Runs an app's entry point as the platform needs it run. On iOS the
+    /// system's app launch comes first, which SDL does, calling `body` once
+    /// the app is up; everywhere else `body` just runs.
+    public static func runApp(_ body: @escaping @MainActor () -> Void) {
+        #if os(iOS) || os(tvOS) || os(visionOS)
+        appMain = body
+        _ = SDL_RunApp(CommandLine.argc, CommandLine.unsafeArgv, { _, _ in
+            MainActor.assumeIsolated {
+                HostRuntime.appMain?()
+            }
+            return 0
+        }, nil)
+        #else
+        body()
+        #endif
+    }
+
+    #if os(iOS) || os(tvOS) || os(visionOS)
+    /// The app's entry point, for SDL to call after launch.
+    private static var appMain: (@MainActor () -> Void)?
+    #endif
+
     /// Starts SDL, runs `setup` (which opens the first windows), then runs
     /// the loop until the last window closes.
     public static func run(_ setup: () -> Void) {
@@ -259,3 +281,15 @@ public struct HostError: Error, CustomStringConvertible {
         "SDL: \(message)"
     }
 }
+
+#if os(iOS) || os(tvOS) || os(visionOS)
+/// `SDL_RunApp`, from SDL's main header, which SDL's own header doesn't
+/// include.
+@_silgen_name("SDL_RunApp")
+private func SDL_RunApp(
+    _ argc: Int32,
+    _ argv: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?,
+    _ mainFunction: @convention(c) (Int32, UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?) -> Int32,
+    _ reserved: UnsafeMutableRawPointer?
+) -> Int32
+#endif
