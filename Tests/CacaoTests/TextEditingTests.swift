@@ -16,6 +16,57 @@ import Testing
         return graph
     }
 
+    /// A field 500 points down a scroll view, focused, in a window 600 tall.
+    private func fieldInScrollView() -> ViewGraph {
+        let text = Box("")
+        let graph = layout(
+            ScrollView {
+                VStack(spacing: 0) {
+                    Color.blue.frame(height: 500)
+                    TextField("Name", text: text.binding).probe("field")
+                    Color.blue.frame(height: 500)
+                }
+            },
+            width: 300, height: 600
+        )
+        graph.settle()
+        graph.tap("field")
+        graph.settle()
+        return graph
+    }
+
+    @Test func aFocusedFieldScrollsBackIntoViewAboveAKeyboard() throws {
+        let graph = fieldInScrollView()
+        #expect(graph.acceptsTextInput)
+        // A keyboard takes the bottom half: the field is below what's left.
+        graph.layout(in: CGSize(width: 300, height: 300))
+        #expect(try #require(graph.focusedFrame).minY >= 300)
+        graph.revealFocusedView(animation: nil)
+        graph.layout(in: CGSize(width: 300, height: 300))
+        let frame = try #require(graph.focusedFrame)
+        #expect(frame.minY >= 0)
+        #expect(frame.maxY <= 300 - ViewGraph.focusRevealMargin)
+    }
+
+    @Test func aFieldAlreadyInViewStaysWhereItIs() throws {
+        let graph = fieldInScrollView()
+        let before = try #require(graph.focusedFrame)
+        graph.revealFocusedView(animation: nil)
+        graph.layout(in: CGSize(width: 300, height: 600))
+        #expect(graph.focusedFrame == before)
+    }
+
+    @Test func onlyLosingMuchHeightWithATextViewFocusedLooksLikeAKeyboard() {
+        let graph = fieldInScrollView()
+        #expect(graph.looksLikeKeyboardAppearing(from: 600, to: 300))
+        // A window resized a little, or getting taller.
+        #expect(!graph.looksLikeKeyboardAppearing(from: 600, to: 560))
+        #expect(!graph.looksLikeKeyboardAppearing(from: 300, to: 600))
+        // Nothing takes text.
+        graph.focus(nil)
+        #expect(!graph.looksLikeKeyboardAppearing(from: 600, to: 300))
+    }
+
     @Test func boundariesFollowCharacters() {
         // A flag is two scalars; a family emoji is seven.
         let boundaries = TextBoundaries("a🇫🇷b👨‍👩‍👧‍👦")
