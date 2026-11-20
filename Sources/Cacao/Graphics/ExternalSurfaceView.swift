@@ -29,6 +29,9 @@ public struct ExternalSurfaceView: View, PrimitiveView {
     /// Whether frames are smoothed when they're scaled.
     public var isSmooth: Bool
 
+    /// What the surface's producer does with input; see `onInput`.
+    internal var input: ExternalInputHandler?
+
     public init(_ surface: ExternalSurface, scale: CGFloat? = nil, isSmooth: Bool = true) {
         self.surface = surface
         self.scale = scale
@@ -38,11 +41,24 @@ public struct ExternalSurfaceView: View, PrimitiveView {
     public typealias Body = Never
 
     func resolve(in context: ResolveContext) -> Resolution {
-        Resolution(behavior: ExternalSurfaceBehavior(
-            surface: surface,
-            scale: scale ?? context.environment.displayScale,
-            isSmooth: isSmooth
-        ))
+        var attributes = NodeAttributes()
+        if let input, context.environment.isEnabled {
+            attributes.externalInput = input
+            // Focusable, so a click or Tab sends keys and text its way.
+            attributes.focus = FocusTarget(
+                acceptsText: input.acceptsText,
+                insertText: { input.handle(.text($0)) },
+                focusChanged: { input.handle(.focus($0)) }
+            )
+        }
+        return Resolution(
+            behavior: ExternalSurfaceBehavior(
+                surface: surface,
+                scale: scale ?? context.environment.displayScale,
+                isSmooth: isSmooth
+            ),
+            attributes: attributes
+        )
     }
 }
 

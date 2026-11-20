@@ -68,12 +68,26 @@ final class WindowScene: HostScene {
             read: { HostRuntime.clipboardText },
             write: { HostRuntime.clipboardText = $0 }
         )
-        graph.fileDialogs = SDLFileDialogs.dialogs(for: window.sdlWindow)
+        graph.fileDialogs = FileDialogs(
+            open: { [weak window] types, allowsMultiple, completion in
+                window?.showOpenDialog(filters: Self.filters(for: types), allowsMultiple: allowsMultiple, completion: completion)
+            },
+            save: { [weak window] defaultName, types, completion in
+                window?.showSaveDialog(defaultName: defaultName, filters: Self.filters(for: types), completion: completion)
+            }
+        )
         #if os(macOS)
         graph.share = { [weak self] request in
             self?.showSharePicker(request) ?? false
         }
         #endif
+    }
+
+    /// One dialog filter per type with a known file name extension.
+    private static func filters(for types: [UTType]) -> [HostFileFilter] {
+        types.compactMap { type in
+            filenameExtension(of: type).map { HostFileFilter(name: type.description, extensions: [$0]) }
+        }
     }
 
     var isAnimating: Bool {
@@ -119,17 +133,30 @@ final class WindowScene: HostScene {
                 graph.environment.displayScale = scale
             }
             needsLayout = true
-        case let .pointer(phase, location):
-            graph.pointer(Self.phase(phase), at: location, time: now)
-        case let .secondaryClick(location):
-            graph.secondaryClick(at: location)
+        case let .pointer(phase, button, location):
+            // External content takes the presses that start on it.
+            if graph.externalPointer(Self.externalPhase(phase), button: Self.button(button), at: location) {
+                break
+            }
+            switch (button, phase) {
+            case (.primary, _):
+                graph.pointer(Self.phase(phase), at: location, time: now)
+            case (.secondary, .began):
+                graph.secondaryClick(at: location)
+            default:
+                break
+            }
         case let .hover(location):
             graph.hover(at: location)
+            graph.externalHover(at: location)
         case let .magnify(phase, scale, location):
             graph.magnify(Self.phase(phase), scale: scale, at: location, time: now)
         case let .rotate(phase, angle, location):
             graph.rotate(Self.phase(phase), angle: angle, at: location, time: now)
         case let .touch(phase, finger, location):
+            if graph.externalTouch(Self.externalPhase(phase), finger: finger, at: location) {
+                break
+            }
             let update: TouchRotationTracker.Update? = switch phase {
             case .began: touchRotation.fingerDown(finger, at: location)
             case .moved: touchRotation.fingerMoved(finger, to: location)
@@ -140,9 +167,26 @@ final class WindowScene: HostScene {
                 graph.rotate(update.phase, angle: update.angle, at: update.location, time: now)
             }
         case let .scroll(x, y, location):
+            if graph.externalScroll(x: Double(x), y: Double(y), at: location) {
+                break
+            }
             scrollController.wheel(x: x, y: y, at: location, graph: graph, now: now)
-        case let .keyDown(key, modifiers):
-            graph.keyDown(Self.key(key), modifiers: KeyModifiers(rawValue: modifiers.rawValue))
+        case let .key(event):
+            let modifiers = KeyModifiers(rawValue: event.modifiers.rawValue)
+            // Commands' shortcuts work whatever has focus.
+            let isShortcut = event.isDown && modifiers.contains(.shortcut) && event.key != nil
+            if !isShortcut, graph.externalKey(ExternalInput.Key(
+                isDown: event.isDown,
+                isRepeat: event.isRepeat,
+                usage: event.usage,
+                keyCode: event.keyCode,
+                modifiers: EventModifiers(modifiers)
+            )) {
+                break
+            }
+            if event.isDown, let key = event.key {
+                graph.keyDown(Self.key(key), modifiers: modifiers)
+            }
         case let .text(text):
             graph.insertText(text)
         case let .drop(phase, items, location):
@@ -158,6 +202,23 @@ final class WindowScene: HostScene {
         case .moved: .moved
         case .ended: .ended
         case .cancelled: .cancelled
+        }
+    }
+
+    private static func externalPhase(_ phase: HostPhase) -> ExternalInput.Phase {
+        switch phase {
+        case .began: .began
+        case .moved: .moved
+        case .ended: .ended
+        case .cancelled: .cancelled
+        }
+    }
+
+    private static func button(_ button: HostPointerButton) -> ExternalInput.Button {
+        switch button {
+        case .primary: .primary
+        case .secondary: .secondary
+        case .middle: .middle
         }
     }
 

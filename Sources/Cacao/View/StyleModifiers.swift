@@ -318,7 +318,7 @@ public struct EventModifiers: OptionSet, Hashable, Sendable {
     public static let numericPad = EventModifiers(rawValue: 1 << 5)
     public static let all: EventModifiers = [.capsLock, .shift, .control, .option, .command, .numericPad]
 
-    init(_ modifiers: KeyModifiers) {
+    package init(_ modifiers: KeyModifiers) {
         var result: EventModifiers = []
         if modifiers.contains(.shift) { result.insert(.shift) }
         if modifiers.contains(.control) { result.insert(.control) }

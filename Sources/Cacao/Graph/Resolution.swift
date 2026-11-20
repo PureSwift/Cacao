@@ -107,6 +107,9 @@ internal struct NodeAttributes {
     /// How the node handles keyboard focus, if it can be focused.
     var focus: FocusTarget?
 
+    /// What external content shown by the node does with input.
+    var externalInput: ExternalInputHandler?
+
     /// A binding between a focus state and the focusable view in the subtree.
     var focusBinding: FocusBinding?
 

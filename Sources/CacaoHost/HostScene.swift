@@ -161,11 +161,9 @@ public enum HostPhase: Hashable, Sendable {
 /// Input for a window. Locations are in the window, in points.
 public enum HostEvent {
 
-    /// The primary button, pressed, dragged and released.
-    case pointer(HostPhase, at: CGPoint)
-
-    /// The secondary button, pressed.
-    case secondaryClick(at: CGPoint)
+    /// A mouse button, pressed, dragged and released. A drag reports the
+    /// first button that was pressed.
+    case pointer(HostPhase, button: HostPointerButton, at: CGPoint)
 
     /// The pointer moved with no button down, or left the window (`nil`).
     case hover(at: CGPoint?)
@@ -184,9 +182,8 @@ public enum HostEvent {
     /// positive `y` scrolls away from the user.
     case scroll(x: Float, y: Float, at: CGPoint)
 
-    /// A key pressed. Characters only count with control or command held;
-    /// typing arrives as text.
-    case keyDown(HostKey, modifiers: HostKeyModifiers)
+    /// A key pressed or released.
+    case key(HostKeyEvent)
 
     /// Text typed, perhaps through an input method.
     case text(String)
@@ -200,6 +197,53 @@ public enum HostEvent {
 
     /// The system switched between light and dark.
     case appearanceChanged(HostAppearance)
+}
+
+/// The buttons of a mouse.
+public enum HostPointerButton: Hashable, Sendable {
+    case primary
+    case secondary
+    case middle
+}
+
+/// A key going down or up.
+public struct HostKeyEvent: Hashable, Sendable {
+
+    /// Whether the key went down, rather than up.
+    public var isDown: Bool
+
+    /// Whether the key is repeating as it's held.
+    public var isRepeat: Bool
+
+    /// The physical key, whatever the keyboard layout: its usage in the
+    /// USB HID keyboard page.
+    public var usage: UInt32
+
+    /// What the key means in the keyboard layout: a Unicode scalar for
+    /// keys that type a character, and SDL's key code otherwise.
+    public var keyCode: UInt32
+
+    public var modifiers: HostKeyModifiers
+
+    /// The key as a UI responds to it, if it's one a UI does. Characters
+    /// only count with control or command held; typing arrives as text.
+    public var key: HostKey?
+
+    public init(
+        isDown: Bool,
+        isRepeat: Bool = false,
+        usage: UInt32,
+        keyCode: UInt32,
+        modifiers: HostKeyModifiers = [],
+        key: HostKey? = nil
+    ) {
+        self.isDown = isDown
+        self.isRepeat = isRepeat
+        self.usage = usage
+        self.keyCode = keyCode
+        self.modifiers = modifiers
+        self.key = key
+    }
 }
 
 public enum HostDropPhase: Hashable, Sendable {
