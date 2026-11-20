@@ -122,6 +122,22 @@ final class ScrollController {
     /// doesn't jump by the distance it took to tell a pan from a press.
     /// Returns whether there is such a scroll view.
     @discardableResult
+    /// The way a finger is going, for telling a scroll from a drag across a
+    /// scroll view: its movement along the axis it has moved farther on,
+    /// once that's more than `distance`; `nil` until then.
+    ///
+    /// A finger rarely moves straight, so a drag along a slider in a list
+    /// also moves a little up or down. Going by the whole movement would
+    /// scroll the list, and end the drag, whenever the list could move that
+    /// little way.
+    static func panDirection(of movement: CGSize, beyond distance: CGFloat) -> CGSize? {
+        let direction = abs(movement.width) > abs(movement.height)
+            ? CGSize(width: movement.width, height: 0)
+            : CGSize(width: 0, height: movement.height)
+        guard max(abs(direction.width), abs(direction.height)) > distance else { return nil }
+        return direction
+    }
+
     func beginPan(toward movement: CGSize, at point: CGPoint, graph: ViewGraph, now: Double) -> Bool {
         guard let state = graph.scrollState(at: point, delta: CGSize(width: -movement.width, height: -movement.height)) else {
             return false
