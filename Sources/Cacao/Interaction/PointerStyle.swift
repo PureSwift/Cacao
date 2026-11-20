@@ -6,6 +6,7 @@
 //
 
 #if canImport(CoreGraphics)
+import CacaoRender
 import CoreGraphics
 #endif
 
