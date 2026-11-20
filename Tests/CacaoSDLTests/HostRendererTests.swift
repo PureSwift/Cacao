@@ -1,5 +1,5 @@
 import CacaoRender
-import CacaoHost
+import CacaoSDLRenderer
 import CSDL3
 import Foundation
 #if canImport(CoreGraphics)

@@ -1,6 +1,6 @@
 //
 //  HostRenderer.swift
-//  CacaoHost
+//  CacaoSDLRenderer
 //
 //  Created by Alsey Coleman Miller on 11/20/26.
 //

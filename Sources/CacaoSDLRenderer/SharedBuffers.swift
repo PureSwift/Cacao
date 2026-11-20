@@ -1,6 +1,6 @@
 //
 //  SharedBuffers.swift
-//  CacaoHost
+//  CacaoSDLRenderer
 //
 //  Created by Alsey Coleman Miller on 11/19/26.
 //

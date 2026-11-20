@@ -1,6 +1,6 @@
 //
 //  SDLBackend.swift
-//  CacaoHost
+//  CacaoSDLRenderer
 //
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
@@ -18,9 +18,9 @@ import SDL3Swift
 ///
 /// A drawing call that fails draws nothing: the next frame draws again.
 @MainActor
-final class SDLBackend: CompositorBackend {
+package final class SDLBackend: CompositorBackend {
 
-    let renderer: SDLRenderer
+    package let renderer: SDLRenderer
 
     private var textures: [Int: SDLTexture] = [:]
 
@@ -35,7 +35,7 @@ final class SDLBackend: CompositorBackend {
     /// A color component at full strength: a texture's colors as they are.
     private static let full: Float = 1
 
-    init(renderer: SDLRenderer) {
+    package init(renderer: SDLRenderer) {
         self.renderer = renderer
     }
 
@@ -45,7 +45,7 @@ final class SDLBackend: CompositorBackend {
         return TextureID(rawValue: nextTexture)
     }
 
-    func makeTexture(width: Int, height: Int, bytesPerRow: Int, pixels: Data) -> TextureID? {
+    package func makeTexture(width: Int, height: Int, bytesPerRow: Int, pixels: Data) -> TextureID? {
         guard let texture = try? SDLTexture(renderer: renderer, format: .abgr8888, access: .static, width: width, height: height) else {
             return nil
         }
@@ -57,7 +57,7 @@ final class SDLBackend: CompositorBackend {
         return add(texture)
     }
 
-    func makeLayer(width: Int, height: Int) -> TextureID? {
+    package func makeLayer(width: Int, height: Int) -> TextureID? {
         guard let texture = try? SDLTexture(renderer: renderer, format: .abgr8888, access: .target, width: width, height: height) else {
             return nil
         }
@@ -70,7 +70,7 @@ final class SDLBackend: CompositorBackend {
 
     // MARK: External surfaces
 
-    func makeExternalTexture(width: Int, height: Int, format: ExternalSurface.PixelFormat) -> TextureID? {
+    package func makeExternalTexture(width: Int, height: Int, format: ExternalSurface.PixelFormat) -> TextureID? {
         // SDL names formats by the order in a 32-bit value: the bytes
         // R, G, B, A are ABGR8888 on little-endian machines.
         guard let texture = try? SDLTexture(
@@ -85,7 +85,7 @@ final class SDLBackend: CompositorBackend {
         return add(texture)
     }
 
-    func updateExternalTexture(_ texture: TextureID, bytesPerRow: Int, pixels: Data) {
+    package func updateExternalTexture(_ texture: TextureID, bytesPerRow: Int, pixels: Data) {
         guard let texture = textures[texture.rawValue] else { return }
         pixels.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
             guard let base = bytes.baseAddress else { return }
@@ -93,7 +93,7 @@ final class SDLBackend: CompositorBackend {
         }
     }
 
-    func importExternalBuffer(_ buffer: ExternalSurface.Buffer) -> TextureID? {
+    package func importExternalBuffer(_ buffer: ExternalSurface.Buffer) -> TextureID? {
         guard let imported = SharedBuffers.importBuffer(buffer, renderer: renderer) else { return nil }
         let id = add(imported.texture)
         if let image = imported.image {
@@ -102,7 +102,7 @@ final class SDLBackend: CompositorBackend {
         return id
     }
 
-    func readPixels(_ rect: CGRect) -> (pixels: Data, width: Int, height: Int, bytesPerRow: Int)? {
+    package func readPixels(_ rect: CGRect) -> (pixels: Data, width: Int, height: Int, bytesPerRow: Int)? {
         let area = SDLRect(x: Int32(rect.minX), y: Int32(rect.minY), width: Int32(rect.width), height: Int32(rect.height))
         // R, G, B, A bytes, whatever the target's format is.
         guard area.width > 0, area.height > 0,
@@ -117,7 +117,7 @@ final class SDLBackend: CompositorBackend {
         return (pixels, width, height, pitch)
     }
 
-    func drawExternal(_ texture: TextureID, in rect: CGRect, opacity: Double, isOpaque: Bool, isFlipped: Bool, smooth: Bool) {
+    package func drawExternal(_ texture: TextureID, in rect: CGRect, opacity: Double, isOpaque: Bool, isFlipped: Bool, smooth: Bool) {
         guard let texture = textures[texture.rawValue] else { return }
         let alpha = Float(opacity)
         try? texture.setBlendMode(isOpaque && alpha >= 1 ? [] : Self.premultipliedBlend)
@@ -130,7 +130,7 @@ final class SDLBackend: CompositorBackend {
     /// The layers being drawn into, innermost last.
     private var targets: [SDLTexture] = []
 
-    func beginLayer(_ layer: TextureID) {
+    package func beginLayer(_ layer: TextureID) {
         guard let texture = textures[layer.rawValue] else { return }
         targets.append(texture)
         try? renderer.setTarget(texture)
@@ -139,12 +139,12 @@ final class SDLBackend: CompositorBackend {
         try? renderer.clear()
     }
 
-    func endLayer() {
+    package func endLayer() {
         targets.removeLast()
         try? renderer.setTarget(targets.last)
     }
 
-    func drawLayer(_ layer: TextureID, in rect: CGRect, opacity: Double, mask: [CGPoint]?) {
+    package func drawLayer(_ layer: TextureID, in rect: CGRect, opacity: Double, mask: [CGPoint]?) {
         guard let texture = textures[layer.rawValue] else { return }
         let alpha = Float(opacity)
         guard let mask, mask.count >= 3, rect.width > 0, rect.height > 0 else {
@@ -179,7 +179,7 @@ final class SDLBackend: CompositorBackend {
         try? renderer.drawGeometry(texture: texture, vertices: vertices, indices: indices)
     }
 
-    func mask(with layer: TextureID, in rect: CGRect) {
+    package func mask(with layer: TextureID, in rect: CGRect) {
         guard let texture = textures[layer.rawValue] else { return }
         try? texture.setColorModulation(red: Self.full, green: Self.full, blue: Self.full)
         try? texture.setAlphaModulation(Self.full)
@@ -189,7 +189,7 @@ final class SDLBackend: CompositorBackend {
         try? texture.setBlendMode(Self.premultipliedBlend)
     }
 
-    func drawLayer(_ layer: TextureID, corners: [CGPoint], opacity: Double) {
+    package func drawLayer(_ layer: TextureID, corners: [CGPoint], opacity: Double) {
         guard let texture = textures[layer.rawValue], corners.count == 4 else { return }
         try? texture.setColorModulation(red: Self.full, green: Self.full, blue: Self.full)
         try? texture.setAlphaModulation(Self.full)
@@ -209,7 +209,7 @@ final class SDLBackend: CompositorBackend {
         try? renderer.drawGeometry(texture: texture, vertices: vertices, indices: [0, 1, 2, 0, 2, 3])
     }
 
-    func destroyTexture(_ texture: TextureID) {
+    package func destroyTexture(_ texture: TextureID) {
         // The texture is destroyed as its last reference goes.
         textures[texture.rawValue] = nil
         if let image = images.removeValue(forKey: texture.rawValue) {
@@ -217,7 +217,7 @@ final class SDLBackend: CompositorBackend {
         }
     }
 
-    func beginFrame(width: Int, height: Int, clearColor: ResolvedColor) {
+    package func beginFrame(width: Int, height: Int, clearColor: ResolvedColor) {
         targets.removeAll()
         try? renderer.setTarget(nil)
         try? renderer.setClipRect(nil)
@@ -225,14 +225,14 @@ final class SDLBackend: CompositorBackend {
         try? renderer.clear()
     }
 
-    func fill(_ rect: CGRect, color: ResolvedColor) {
+    package func fill(_ rect: CGRect, color: ResolvedColor) {
         // Alpha blending, for fills with straight alpha.
         try? renderer.setDrawBlendMode([.alpha])
         try? renderer.setDrawColorFloat(red: color.red, green: color.green, blue: color.blue, alpha: color.opacity)
         try? renderer.fill(SDLFRect(rect))
     }
 
-    func draw(_ texture: TextureID, in rect: CGRect, opacity: Double, smooth: Bool) {
+    package func draw(_ texture: TextureID, in rect: CGRect, opacity: Double, smooth: Bool) {
         guard let texture = textures[texture.rawValue] else { return }
         // Premultiplied colors scale with the opacity too.
         try? texture.setColorModulation(red: Float(opacity), green: Float(opacity), blue: Float(opacity))
@@ -241,7 +241,7 @@ final class SDLBackend: CompositorBackend {
         try? renderer.copy(texture, to: SDLFRect(rect))
     }
 
-    func setClip(_ rect: CGRect?) {
+    package func setClip(_ rect: CGRect?) {
         guard let rect else {
             try? renderer.setClipRect(nil)
             return
@@ -254,9 +254,9 @@ final class SDLBackend: CompositorBackend {
         ))
     }
 
-    func endFrame() { }
+    package func endFrame() { }
 
-    func destroyAllTextures() {
+    package func destroyAllTextures() {
         targets.removeAll()
         textures.removeAll()
         for image in images.values {
