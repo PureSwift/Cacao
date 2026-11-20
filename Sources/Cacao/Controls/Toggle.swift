@@ -169,8 +169,12 @@ private struct _Switch: View {
             ZStack(alignment: isOn.wrappedValue ? .trailing : .leading) {
                 Capsule()
                     .fill(isOn.wrappedValue ? Color.green : Color.controlFill)
+                // A circle takes all the space it's offered, so without a
+                // size of its own it would fill the track and sit in its
+                // middle whatever the alignment.
                 Circle()
                     .fill(.white)
+                    .frame(width: 22, height: 22)
                     .padding(2)
             }
             .frame(width: 44, height: 26)
