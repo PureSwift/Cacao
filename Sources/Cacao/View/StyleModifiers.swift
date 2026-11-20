@@ -5,6 +5,7 @@
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
 
+import CacaoRender
 import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
@@ -55,16 +56,6 @@ extension View {
 }
 
 // MARK: - Shadow
-
-/// A shadow drawn behind a view's content.
-package struct ShadowEffect: Equatable, Sendable {
-
-    package var color: Color.Resolved
-
-    package var radius: CGFloat
-
-    package var offset: CGSize
-}
 
 internal struct ShadowBehavior: UnaryLayoutBehavior, AnimatableBehavior {
 
@@ -551,19 +542,11 @@ public enum TextCase: Hashable, Sendable {
     case lowercase
 }
 
-/// The type of truncation to apply to a line of text when it's too long to
-/// fit in the available space.
-public enum TruncationMode: Hashable, Sendable {
-    case head
-    case tail
-    case middle
-}
-
 extension Text {
 
     /// The type of truncation to apply to a line of text when it's too long
     /// to fit in the available space.
-    public typealias TruncationMode = Cacao.TruncationMode
+    public typealias TruncationMode = CacaoRender.TruncationMode
 }
 
 private struct TruncationModeKey: EnvironmentKey {
@@ -666,13 +649,7 @@ extension Text {
     public struct LineStyle: Hashable, Sendable {
 
         /// The pattern of a line.
-        public enum Pattern: Hashable, Sendable {
-            case solid
-            case dot
-            case dash
-            case dashDot
-            case dashDotDot
-        }
+        public typealias Pattern = TextLinePattern
 
         internal let pattern: Pattern
 
