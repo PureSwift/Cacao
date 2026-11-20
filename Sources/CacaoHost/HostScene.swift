@@ -163,7 +163,11 @@ public enum HostEvent {
 
     /// A mouse button, pressed, dragged and released. A drag reports the
     /// first button that was pressed.
-    case pointer(HostPhase, button: HostPointerButton, at: CGPoint)
+    ///
+    /// A finger on a touch screen is reported twice: as a touch, and as
+    /// the primary button with `isFromTouch`, for scenes (or parts of one)
+    /// that only know of pointers. A scene uses one or the other.
+    case pointer(HostPhase, button: HostPointerButton, at: CGPoint, isFromTouch: Bool)
 
     /// The pointer moved with no button down, or left the window (`nil`).
     case hover(at: CGPoint?)
