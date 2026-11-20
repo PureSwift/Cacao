@@ -1,8 +1,9 @@
 # SDL3 windows, the main loop and frame clock, input and the SDL3 renderer
 # backend, showing whatever implements `HostScene`. No SwiftUI.
 #
-# The `CSDL3` C module comes from PureSwift/SDL, in the Swift resource
-# directory (or from search paths in CMAKE_Swift_FLAGS).
+# The `SDL3Swift` module and the `CSDL3` C module it wraps come from
+# PureSwift/SDL, in the Swift resource directory (or from search paths in
+# CMAKE_Swift_FLAGS). Importing `SDL3Swift` links its library.
 
 find_package(SDL3 REQUIRED CONFIG)
 
