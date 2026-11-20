@@ -40,6 +40,21 @@ final class WindowScene: HostScene {
     /// Whether the next frame must lay out again.
     private var needsLayout = true
 
+    /// A finger on a touch screen that isn't on external content: it
+    /// presses views, like the pointer the host also reports it as, until
+    /// it moves far enough over a scroll view to scroll it instead.
+    private struct TouchPan {
+        var finger: UInt64
+        var start: CGPoint
+        var last: CGPoint
+        var isScrolling = false
+    }
+
+    private var touchPan: TouchPan?
+
+    /// How far a finger moves before it scrolls rather than presses.
+    private static let panDistance: CGFloat = 10
+
     init(description: WindowDescription, value: AnyHashable? = nil, window: HostWindow, textEngine: any TextEngine) {
         self.window = window
         self.sceneID = description.id
@@ -134,6 +149,10 @@ final class WindowScene: HostScene {
             }
             needsLayout = true
         case let .pointer(phase, button, location, isFromTouch):
+            // A finger that's scrolling no longer presses anything.
+            if isFromTouch, touchPan?.isScrolling == true {
+                break
+            }
             // External content takes the presses that start on it.
             if graph.externalPointer(Self.externalPhase(phase), button: Self.button(button), at: location, isFromTouch: isFromTouch) {
                 break
@@ -157,6 +176,7 @@ final class WindowScene: HostScene {
             if graph.externalTouch(Self.externalPhase(phase), finger: finger, at: location) {
                 break
             }
+            pan(phase, finger: finger, at: location, now: now)
             let update: TouchRotationTracker.Update? = switch phase {
             case .began: touchRotation.fingerDown(finger, at: location)
             case .moved: touchRotation.fingerMoved(finger, to: location)
@@ -193,6 +213,45 @@ final class WindowScene: HostScene {
             graph.systemDrop(phase == .dropped ? .dropped : .moved, items: items, at: location)
         case let .appearanceChanged(appearance):
             applyColorScheme(system: appearance)
+        }
+    }
+
+    /// Scrolls with a finger: the first one down, once it has moved far
+    /// enough over a scroll view that can move that way.
+    private func pan(_ phase: HostPhase, finger: UInt64, at location: CGPoint, now: Double) {
+        switch phase {
+        case .began:
+            if touchPan == nil {
+                touchPan = TouchPan(finger: finger, start: location, last: location)
+                scrollController.catchMotion()
+            }
+        case .moved:
+            guard var pan = touchPan, pan.finger == finger else { return }
+            if !pan.isScrolling {
+                let movement = CGSize(width: location.x - pan.start.x, height: location.y - pan.start.y)
+                guard hypot(movement.width, movement.height) > Self.panDistance,
+                      scrollController.beginPan(toward: movement, at: pan.start, graph: graph, now: now) else {
+                    return
+                }
+                pan.isScrolling = true
+                pan.last = location
+                touchPan = pan
+                // The press the finger began is over.
+                graph.pointer(.cancelled, at: location, time: now)
+                return
+            }
+            scrollController.pan(
+                by: CGSize(width: location.x - pan.last.x, height: location.y - pan.last.y),
+                at: pan.start, graph: graph, now: now
+            )
+            pan.last = location
+            touchPan = pan
+        case .ended, .cancelled:
+            guard let pan = touchPan, pan.finger == finger else { return }
+            touchPan = nil
+            if pan.isScrolling {
+                scrollController.endPan(now: now)
+            }
         }
     }
 
