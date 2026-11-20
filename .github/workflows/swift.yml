@@ -91,6 +91,10 @@ jobs:
           swift-version: "6.4.2"
       - name: Install dependencies
         run: brew install sdl3 ninja
+      - name: Point the toolchain at the macOS SDK
+        # CMake runs swiftc directly, which doesn't find the SDK on its own
+        # (SwiftPM passes it).
+        run: echo "SDKROOT=$(xcrun --sdk macosx --show-sdk-path)" >> "$GITHUB_ENV"
       - name: Build Silica and the SDL3 module
         run: .github/scripts/build-cmake-dependencies.sh "$PWD/dependencies"
       - name: Configure
