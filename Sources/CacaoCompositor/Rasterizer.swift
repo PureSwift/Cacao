@@ -413,8 +413,8 @@ package enum Rasterizer {
 private typealias StrokeLineCap = CoreGraphics.CGLineCap
 private typealias StrokeLineJoin = CoreGraphics.CGLineJoin
 #else
-private typealias StrokeLineCap = Cacao.CGLineCap
-private typealias StrokeLineJoin = Cacao.CGLineJoin
+private typealias StrokeLineCap = CacaoRender.CGLineCap
+private typealias StrokeLineJoin = CacaoRender.CGLineJoin
 #endif
 
 private extension Silica.CGLineCap {
