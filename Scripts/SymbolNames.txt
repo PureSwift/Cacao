@@ -1,0 +1,597 @@
+# System symbol names and the Phosphor icon each is drawn from.
+#
+#   <symbol name> [<another name for it>...] = <Phosphor icon> [@flip]
+#
+# A name's `.fill` variant is the icon's own filled drawing, so isn't listed.
+# `@flip` mirrors the icon left to right. Scripts/GenerateSymbols.py turns
+# this into Sources/Cacao/Graphics/SymbolGlyphs.swift.
+
+# Chevrons
+chevron.left chevron.backward = caret-left
+chevron.right chevron.forward = caret-right
+chevron.up = caret-up
+chevron.down = caret-down
+chevron.up.chevron.down = caret-up-down
+chevron.left.2 chevron.backward.2 = caret-double-left
+chevron.right.2 chevron.forward.2 = caret-double-right
+chevron.up.2 = caret-double-up
+chevron.down.2 = caret-double-down
+chevron.left.circle chevron.backward.circle = caret-circle-left
+chevron.right.circle chevron.forward.circle = caret-circle-right
+chevron.up.circle = caret-circle-up
+chevron.down.circle = caret-circle-down
+chevron.left.to.line chevron.backward.to.line = caret-line-left
+chevron.right.to.line chevron.forward.to.line = caret-line-right
+chevron.left.forwardslash.chevron.right = code
+
+# Arrows
+arrow.left arrow.backward = arrow-left
+arrow.right arrow.forward = arrow-right
+arrow.up = arrow-up
+arrow.down = arrow-down
+arrow.up.left arrow.up.backward = arrow-up-left
+arrow.up.right arrow.up.forward = arrow-up-right
+arrow.down.left arrow.down.backward = arrow-down-left
+arrow.down.right arrow.down.forward = arrow-down-right
+arrow.left.circle arrow.backward.circle = arrow-circle-left
+arrow.right.circle arrow.forward.circle = arrow-circle-right
+arrow.up.circle = arrow-circle-up
+arrow.down.circle = arrow-circle-down
+arrow.up.left.circle arrow.up.backward.circle = arrow-circle-up-left
+arrow.up.right.circle arrow.up.forward.circle = arrow-circle-up-right
+arrow.down.left.circle arrow.down.backward.circle = arrow-circle-down-left
+arrow.down.right.circle arrow.down.forward.circle = arrow-circle-down-right
+arrow.left.square arrow.backward.square = arrow-square-left
+arrow.right.square arrow.forward.square = arrow-square-right
+arrow.up.square = arrow-square-up
+arrow.down.square = arrow-square-down
+arrow.up.right.square arrow.up.forward.square = arrow-square-out
+arrow.clockwise = arrow-clockwise
+arrow.counterclockwise = arrow-counter-clockwise
+arrow.triangle.2.circlepath arrow.2.circlepath = arrows-clockwise
+arrow.up.arrow.down = arrows-down-up
+arrow.left.arrow.right = arrows-left-right
+arrow.left.and.right = arrows-horizontal
+arrow.up.and.down = arrows-vertical
+arrow.up.left.and.arrow.down.right arrow.up.backward.and.arrow.down.forward = arrows-out-simple
+arrow.down.right.and.arrow.up.left arrow.down.forward.and.arrow.up.backward = arrows-in-simple
+arrow.up.and.down.and.arrow.left.and.right = arrows-out-cardinal
+arrow.uturn.left arrow.uturn.backward = arrow-u-up-left
+arrow.uturn.right arrow.uturn.forward = arrow-u-up-right
+arrow.turn.up.left = arrow-bend-up-left
+arrow.turn.up.right = arrow-bend-up-right
+arrow.turn.down.left = arrow-bend-down-left
+arrow.turn.down.right = arrow-bend-down-right
+arrow.turn.left.up = arrow-bend-left-up
+arrow.turn.left.down = arrow-bend-left-down
+arrow.turn.right.up = arrow-bend-right-up
+arrow.turn.right.down = arrow-bend-right-down
+arrowshape.turn.up.left arrowshape.turn.up.backward = arrow-bend-up-left
+arrowshape.turn.up.left.2 arrowshape.turn.up.backward.2 = arrow-bend-double-up-left
+arrowshape.turn.up.right arrowshape.turn.up.forward = share-fat
+arrowshape.left arrowshape.backward = arrow-fat-left
+arrowshape.right arrowshape.forward = arrow-fat-right
+arrowshape.up = arrow-fat-up
+arrowshape.down = arrow-fat-down
+arrow.up.to.line = arrow-line-up
+arrow.down.to.line = arrow-line-down
+arrow.left.to.line arrow.backward.to.line = arrow-line-left
+arrow.right.to.line arrow.forward.to.line = arrow-line-right
+arrow.triangle.branch = git-branch
+arrow.triangle.merge = git-merge
+arrow.triangle.pull = git-pull-request
+arrow.triangle.swap = swap
+arrow.down.doc = file-arrow-down
+arrow.up.doc = file-arrow-up
+shuffle = shuffle
+repeat = repeat
+repeat.1 = repeat-once
+rotate.left = arrow-counter-clockwise
+rotate.right = arrow-clockwise
+
+# Sharing and transfer
+square.and.arrow.up = export
+square.and.arrow.down = download-simple
+rectangle.portrait.and.arrow.right rectangle.portrait.and.arrow.forward = sign-out
+tray = tray
+tray.and.arrow.down = tray-arrow-down
+tray.and.arrow.up = tray-arrow-up
+icloud = cloud
+icloud.and.arrow.down = cloud-arrow-down
+icloud.and.arrow.up = cloud-arrow-up
+icloud.slash = cloud-slash
+checkmark.icloud = cloud-check
+xmark.icloud = cloud-x
+exclamationmark.icloud = cloud-warning
+paperplane = paper-plane-tilt
+link = link
+paperclip = paperclip
+
+# Weather
+cloud = cloud
+cloud.rain = cloud-rain
+cloud.snow = cloud-snow
+cloud.fog = cloud-fog
+cloud.bolt = cloud-lightning
+cloud.sun = cloud-sun
+cloud.moon = cloud-moon
+sun.max = sun
+sun.min = sun-dim
+sun.horizon = sun-horizon
+moon = moon
+moon.stars = moon-stars
+snowflake = snowflake
+wind = wind
+tornado = tornado
+hurricane = hurricane
+drop = drop
+flame = fire
+bolt = lightning
+bolt.slash = lightning-slash
+thermometer thermometer.medium = thermometer
+thermometer.sun = thermometer-hot
+thermometer.snowflake = thermometer-cold
+umbrella = umbrella
+rainbow = rainbow
+sparkle sparkles = sparkle
+
+# Signs and math
+plus = plus
+minus = minus
+xmark multiply = x
+checkmark = check
+plus.circle = plus-circle
+minus.circle = minus-circle
+xmark.circle multiply.circle = x-circle
+checkmark.circle = check-circle
+plus.square = plus-square
+minus.square = minus-square
+xmark.square multiply.square = x-square
+checkmark.square = check-square
+plusminus = plus-minus
+equal = equals
+divide = divide
+percent = percent
+number = hash
+asterisk = asterisk
+at = at
+infinity = infinity
+sum = sigma
+function = function
+x.squareroot = radical
+lessthan = less-than
+greaterthan = greater-than
+nosign slash.circle = prohibit
+
+# Shapes
+circle = circle
+square = square
+triangle = triangle
+diamond = diamond
+hexagon = hexagon
+pentagon = pentagon
+octagon = octagon
+rectangle = rectangle
+seal = seal
+checkmark.seal = seal-check
+shield = shield
+checkmark.shield = shield-check
+exclamationmark.shield = shield-warning
+shield.slash = shield-slash
+circle.dashed = circle-dashed
+circle.lefthalf.filled = circle-half
+square.dashed = selection
+rectangle.dashed = rectangle-dashed
+circle.grid.2x2 = circles-four
+circle.grid.3x3 = dots-nine
+square.grid.2x2 = squares-four
+square.grid.3x3 = grid-nine
+rectangle.grid.2x2 = grid-four
+smallcircle.filled.circle = radio-button
+cube = cube
+cylinder = cylinder
+star = star
+star.leadinghalf.filled = star-half
+heart = heart
+heart.slash = heart-break
+suit.heart = heart-straight
+suit.club = club
+suit.spade = spade
+suit.diamond = diamond
+
+# Status
+info.circle = info
+questionmark = question-mark
+questionmark.circle = question
+exclamationmark = exclamation-mark
+exclamationmark.circle = warning-circle
+exclamationmark.triangle = warning
+exclamationmark.octagon = warning-octagon
+ellipsis = dots-three
+ellipsis.circle = dots-three-circle
+
+# Lists and controls
+line.3.horizontal line.horizontal.3 = list
+list.bullet = list-bullets
+list.dash = list-dashes
+list.number = list-numbers
+checklist = list-checks
+list.star = list-star
+text.badge.plus = list-plus
+line.3.horizontal.decrease = funnel-simple
+slider.horizontal.3 = sliders-horizontal
+slider.vertical.3 = sliders
+magnifyingglass = magnifying-glass
+plus.magnifyingglass = magnifying-glass-plus
+minus.magnifyingglass = magnifying-glass-minus
+doc.text.magnifyingglass = file-magnifying-glass
+power = power
+
+# Tools
+gear gearshape = gear
+wrench = wrench
+hammer = hammer
+screwdriver = screwdriver
+paintbrush paintbrush.pointed = paint-brush
+paintpalette = palette
+eyedropper = eyedropper
+scissors = scissors
+ruler = ruler
+pencil = pencil-simple
+pencil.line = pencil-simple-line
+pencil.slash = pencil-simple-slash
+pencil.circle = pencil-circle
+square.and.pencil = note-pencil
+pencil.and.ruler = pencil-ruler
+highlighter = highlighter
+eraser = eraser
+lasso = lasso
+wand.and.stars = magic-wand
+crop = crop
+compass.drawing = compass-tool
+scribble = scribble
+signature = signature
+
+# Places
+house = house
+building = building
+building.2 = buildings
+building.columns = bank
+storefront = storefront
+map = map-trifold
+mappin = map-pin-simple
+mappin.and.ellipse = map-pin-area
+pin = push-pin
+pin.slash = push-pin-slash
+location = navigation-arrow
+scope = crosshair
+globe = globe
+globe.americas = globe-hemisphere-west
+globe.europe.africa globe.asia.australia = globe-hemisphere-east
+safari = compass
+signpost.right = signpost
+mountain.2 = mountains
+tent = tent
+
+# People
+person = user
+person.circle person.crop.circle = user-circle
+person.crop.square = user-square
+person.crop.rectangle = user-rectangle
+person.2 = users
+person.3 = users-three
+person.badge.plus = user-plus
+person.badge.minus = user-minus
+person.crop.circle.badge.plus = user-circle-plus
+person.crop.circle.badge.minus = user-circle-minus
+person.crop.circle.badge.checkmark = user-circle-check
+person.text.rectangle = identification-card
+person.wave.2 = user-sound
+figure.stand = person-simple
+figure.walk = person-simple-walk
+figure.run = person-simple-run
+figure.hiking = person-simple-hike
+figure.outdoor.cycle = person-simple-bike
+figure.pool.swim = person-simple-swim
+figure.roll = wheelchair-motion
+accessibility = person-arms-spread
+face.smiling = smiley
+eyes = eyes
+ear = ear
+brain = brain
+hand.thumbsup = thumbs-up
+hand.thumbsdown = thumbs-down
+hand.raised = hand
+hand.wave = hand-waving
+hand.point.up.left = hand-pointing
+hand.tap = hand-tap
+hands.clap = hands-clapping
+
+# Files
+trash = trash
+folder = folder
+folder.badge.plus = folder-plus
+folder.badge.minus = folder-minus
+doc = file
+doc.text doc.plaintext = file-text
+doc.richtext = article
+doc.on.doc = copy
+doc.badge.plus = file-plus
+doc.zipper = file-zip
+doc.on.clipboard list.clipboard = clipboard-text
+clipboard = clipboard
+note note.text = note
+archivebox = archive
+shippingbox = package
+externaldrive internaldrive = hard-drive
+opticaldisc = disc
+server.rack = hard-drives
+
+# Communication
+envelope = envelope
+envelope.open = envelope-open
+bell = bell
+bell.slash = bell-slash
+bell.and.waves.left.and.right = bell-ringing
+app.badge = notification
+phone = phone
+phone.down = phone-disconnect
+phone.arrow.up.right = phone-outgoing
+phone.arrow.down.left = phone-incoming
+message = chat-circle
+ellipsis.message = chat-circle-dots
+bubble.left bubble = chat
+bubble.right = chat @flip
+bubble.left.and.bubble.right = chats
+ellipsis.bubble = chat-dots
+text.bubble = chat-text
+captions.bubble = subtitles
+megaphone = megaphone
+translate = translate
+
+# Reading
+bookmark = bookmark
+book = book-open
+book.closed text.book.closed = book
+books.vertical = books
+newspaper = newspaper
+tag = tag
+flag = flag
+flag.checkered = flag-checkered
+graduationcap = graduation-cap
+
+# Privacy
+eye = eye
+eye.slash = eye-slash
+eyeglasses = eyeglasses
+lock = lock
+lock.open = lock-open
+key = key
+touchid = fingerprint
+faceid = scan-smiley
+viewfinder = scan
+
+# Time
+calendar = calendar-dots
+calendar.badge.plus = calendar-plus
+calendar.badge.minus = calendar-minus
+calendar.badge.checkmark = calendar-check
+clock = clock
+clock.arrow.circlepath = clock-counter-clockwise
+alarm = alarm
+timer stopwatch = timer
+hourglass = hourglass
+metronome = metronome
+
+# Media
+photo = image
+photo.on.rectangle = images
+camera = camera
+camera.rotate = camera-rotate
+camera.aperture = aperture
+video = video-camera
+video.slash = video-camera-slash
+film = film-strip
+play.rectangle = monitor-play
+play = play
+pause = pause
+stop = stop
+playpause = play-pause
+record.circle = record
+backward = rewind
+forward = fast-forward
+backward.end = skip-back
+forward.end = skip-forward
+play.circle = play-circle
+pause.circle = pause-circle
+stop.circle = stop-circle
+eject = eject
+speaker = speaker-none
+speaker.slash = speaker-slash
+speaker.wave.1 = speaker-low
+speaker.wave.2 speaker.wave.3 = speaker-high
+mic = microphone
+mic.slash = microphone-slash
+music.note = music-note
+music.note.list = playlist
+music.mic = microphone-stage
+waveform = waveform
+guitars = guitar
+pianokeys = piano-keys
+airplayvideo airplayaudio = airplay
+pip pip.enter = picture-in-picture
+aspectratio = frame-corners
+flip.horizontal = flip-horizontal
+4k.tv = four-k
+theatermasks = mask-happy
+
+# Devices
+tv = television-simple
+display = monitor
+desktopcomputer = desktop
+laptopcomputer = laptop
+iphone = device-mobile
+ipad = device-tablet
+applewatch = watch
+keyboard = keyboard
+computermouse = mouse-simple
+printer = printer
+gamecontroller = game-controller
+headphones = headphones
+hifispeaker = speaker-hifi
+cpu = cpu
+memorychip = memory
+simcard = sim-card
+wifi = wifi-high
+wifi.slash = wifi-slash
+antenna.radiowaves.left.and.right dot.radiowaves.left.and.right = broadcast
+cellularbars = cell-signal-full
+battery.100percent battery.100 = battery-full
+battery.75percent battery.75 = battery-high
+battery.50percent battery.50 = battery-medium
+battery.25percent battery.25 = battery-low
+battery.0percent battery.0 = battery-empty
+battery.100percent.bolt battery.100.bolt = battery-charging
+powerplug = plug
+qrcode = qr-code
+barcode = barcode
+gauge gauge.medium = gauge
+speedometer = speedometer
+fan = fan
+lightbulb = lightbulb
+
+# Shopping
+cart = shopping-cart
+bag = bag
+basket = basket
+creditcard = credit-card
+gift = gift
+banknote = money
+dollarsign = currency-dollar
+dollarsign.circle = currency-circle-dollar
+eurosign = currency-eur
+sterlingsign = currency-gbp
+yensign = currency-jpy
+bitcoinsign = currency-btc
+ticket = ticket
+
+# Windows and layout
+sidebar.left sidebar.leading = sidebar-simple
+sidebar.right sidebar.trailing = sidebar-simple @flip
+rectangle.split.2x1 square.split.2x1 = square-split-horizontal
+rectangle.split.1x2 square.split.1x2 = square-split-vertical
+rectangle.split.3x1 = columns
+rectangle.3.group = kanban
+tablecells = table
+macwindow = app-window
+terminal = terminal-window
+curlybraces = brackets-curly
+square.stack.3d.up = stack
+square.on.square rectangle.on.rectangle = copy-simple
+rectangle.stack = cards
+
+# Text
+textformat textformat.size = text-aa
+bold = text-b
+italic = text-italic
+underline = text-underline
+strikethrough = text-strikethrough
+text.alignleft = text-align-left
+text.aligncenter = text-align-center
+text.alignright = text-align-right
+text.justify = text-align-justify
+increase.indent = text-indent
+decrease.indent = text-outdent
+character.cursor.ibeam = cursor-text
+paragraphsign = paragraph
+text.quote quote.opening = quotes
+command = command
+option = option
+control = control
+delete.left delete.backward = backspace
+return = key-return
+
+# Travel
+airplane = airplane-tilt
+car = car
+bus = bus
+tram = tram
+bicycle = bicycle
+scooter = scooter
+ferry = boat
+sailboat = sailboat
+fuelpump = gas-pump
+truck.box = truck
+suitcase = suitcase-simple
+backpack = backpack
+briefcase = briefcase
+
+# Home
+bed.double = bed
+sofa = couch
+chair = chair
+bathtub = bathtub
+shower = shower
+toilet = toilet
+door.left.hand.open = door-open
+door.left.hand.closed = door
+washer = washing-machine
+oven = oven
+stairs = stairs
+tshirt = t-shirt
+
+# Nature
+leaf = leaf
+tree = tree
+pawprint = paw-print
+ladybug = bug-beetle
+ant = bug
+fish = fish
+bird = bird
+cat = cat
+dog = dog
+hare = rabbit
+atom = atom
+
+# Food
+fork.knife = fork-knife
+cup.and.saucer = coffee
+wineglass = wine
+birthday.cake = cake
+carrot = carrot
+
+# Health
+cross.case = first-aid-kit
+pill pills = pill
+stethoscope = stethoscope
+syringe = syringe
+bandage = bandaids
+waveform.path.ecg = heartbeat
+testtube.2 = test-tube
+flask = flask
+
+# Charts
+chart.bar = chart-bar
+chart.pie = chart-pie-slice
+chart.xyaxis.line = chart-line
+chart.line.uptrend.xyaxis = chart-line-up
+chart.line.downtrend.xyaxis = chart-line-down
+chart.dots.scatter = chart-scatter
+
+# Games and sport
+trophy = trophy
+medal = medal
+crown = crown
+target = target
+dice = dice-five
+puzzlepiece = puzzle-piece
+balloon = balloon
+party.popper = confetti
+soccerball = soccer-ball
+basketball = basketball
+football = football
+baseball = baseball
+tennisball = tennis-ball
+volleyball = volleyball
+dumbbell = barbell
+sportscourt = court-basketball
