@@ -158,11 +158,26 @@ final class ScrollController {
         return true
     }
 
+    /// Whether to print what scrolling does with input, from the
+    /// `CACAO_LOG_INPUT` environment variable.
+    static let logsInput = ProcessInfo.processInfo.environment["CACAO_LOG_INPUT"] != nil
+
     /// The finger lifted: the content coasts on from its speed, or springs
     /// back inside its bounds.
     func endPan(now: Double) {
+        if Self.logsInput, !scrollers.values.contains(where: { $0.gesture?.isHeld == true }) {
+            print("Cacao: pan ended with no scroll view held")
+        }
         for scroller in scrollers.values {
             guard let gesture = scroller.gesture, gesture.isHeld else { continue }
+            if Self.logsInput {
+                let velocity = gesture.tracker.velocity
+                print(String(
+                    format: "Cacao: pan ended, velocity %.0f, %.0f pt/s, %.0f ms after the last move, offset %.0f of %.0f",
+                    velocity.x, velocity.y, (now - gesture.lastEvent) * 1000,
+                    Double(scroller.state.offset.y), Double(scroller.state.maxOffset.y)
+                ))
+            }
             scroller.gesture = nil
             // A finger held still before it lifts leaves the content where
             // it is.
@@ -294,6 +309,15 @@ final class ScrollController {
         } else if Self.synthesizesMomentum || coasts,
                   let deceleration = Deceleration(velocity: gesture.tracker.velocity, time: now) {
             scroller.motion = .decelerating(deceleration)
+        }
+        if Self.logsInput {
+            let what = switch scroller.motion {
+            case .decelerating: "coasting"
+            case .springing: "springing"
+            case .eased: "easing"
+            case nil: "stopped"
+            }
+            print("Cacao: scroll gesture ended: \(what)")
         }
     }
 }
