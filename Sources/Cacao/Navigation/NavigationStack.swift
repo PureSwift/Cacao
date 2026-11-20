@@ -84,6 +84,9 @@ internal final class NavigationContext {
     /// The context of each screen, by depth.
     var screens: [Int: ScreenContext] = [:]
 
+    /// The stack's bar, to update when what its top screen sets changes.
+    weak var barNode: ViewNode?
+
     /// The split view this stack is a column of, if any.
     var split: SplitLink?
 
@@ -298,11 +301,11 @@ internal final class ScreenContext {
 
     var search: (text: Binding<String>, prompt: Text?)?
 
-    /// The bar, to update when what the screen sets changes.
-    weak var barNode: ViewNode?
+    /// The stack the screen is in, whose bar shows what the screen sets.
+    weak var navigation: NavigationContext?
 
     func barNeedsUpdate() {
-        barNode?.invalidate()
+        navigation?.barNode?.invalidate()
     }
 }
 
@@ -386,8 +389,8 @@ extension NavigationStack where Data: MutableCollection, Data: RandomAccessColle
     }
 }
 
-/// A navigation stack's screens: the root and an entry per pushed screen,
-/// all kept, only the top one shown.
+/// A navigation stack: its screens under one navigation bar, which stays in
+/// place and shows what the top screen sets, while screens slide in below.
 internal struct _NavigationStack: View, PrimitiveView {
 
     let path: Binding<[AnyHashable]>?
@@ -475,7 +478,12 @@ internal struct _NavigationStack: View, PrimitiveView {
             ))
         }
         navigation.screens = navigation.screens.filter { $0.key <= entries.count }
-        var resolution = Resolution(behavior: NavigationStackBehavior(), children: children)
+        // The screens first, so the top one sets the bar's title and items
+        // before the bar resolves.
+        var resolution = Resolution(behavior: NavigationBarBehavior(), children: [
+            ChildView(key: "screens", view: _NavigationScreens(screens: children)),
+            ChildView(key: "bar", view: _NavigationBar(navigation: navigation, depth: entries.count)),
+        ])
         // Pushing and popping animate, except a split view's detail.
         if let last = navigation.lastDepth, last != entries.count, column?.isDetail != true {
             resolution.transaction = { $0.animateByDefault(.smooth(duration: 0.35)) }
@@ -485,6 +493,45 @@ internal struct _NavigationStack: View, PrimitiveView {
     }
 
     typealias Body = Never
+}
+
+/// A navigation stack's screens: the root and an entry per pushed screen,
+/// all kept, only the top one shown.
+internal struct _NavigationScreens: View, PrimitiveView {
+
+    let screens: [ChildView]
+
+    func resolve(in context: ResolveContext) -> Resolution {
+        Resolution(behavior: NavigationStackBehavior(), children: screens)
+    }
+
+    typealias Body = Never
+}
+
+/// Places a stack's bar at the top and its screens below it.
+internal struct NavigationBarBehavior: NodeBehavior {
+
+    func sizeThatFits(_ proposal: ProposedViewSize, node: ViewNode) -> CGSize {
+        proposal.replacingUnspecifiedDimensions(by: CGSize(width: 320, height: 480))
+    }
+
+    func placeChildren(in bounds: CGRect, proposal: ProposedViewSize, node: ViewNode) {
+        var barHeight: CGFloat = 0
+        if let bar = LazyProxy(node, 1) {
+            barHeight = bar.size(in: ProposedViewSize(width: bounds.width, height: nil)).height
+            bar.place(at: bounds.origin, proposal: ProposedViewSize(width: bounds.width, height: barHeight))
+        }
+        if let screens = LazyProxy(node, 0) {
+            screens.place(
+                at: CGPoint(x: bounds.minX, y: bounds.minY + barHeight),
+                proposal: ProposedViewSize(width: bounds.width, height: max(bounds.height - barHeight, 0))
+            )
+        }
+    }
+
+    func displayOrder(of children: [ViewNode]) -> [ViewNode] {
+        children
+    }
 }
 
 /// Shows the destination registered for a value's type, looked up when it
@@ -510,8 +557,7 @@ internal struct _DestinationView: View, PrimitiveView {
 internal struct NavigationStackBehavior: NodeBehavior {
 
     func sizeThatFits(_ proposal: ProposedViewSize, node: ViewNode) -> CGSize {
-        let top = LazyProxyTop(node)
-        return top?.size(in: proposal) ?? proposal.replacingUnspecifiedDimensions(by: .zero)
+        proposal.replacingUnspecifiedDimensions(by: CGSize(width: 320, height: 480))
     }
 
     func placeChildren(in bounds: CGRect, proposal: ProposedViewSize, node: ViewNode) {
@@ -530,15 +576,10 @@ internal struct NavigationStackBehavior: NodeBehavior {
     }
 }
 
-@MainActor
-private func LazyProxyTop(_ node: ViewNode) -> LayoutProxy? {
-    LayoutProxy.combining(node.layoutChildren(ofChildAt: node.children.count - 1))
-}
-
 // MARK: - Screen
 
-/// A screen of a navigation stack: its content under a navigation bar that
-/// shows what the content sets: title, toolbar and search.
+/// A screen of a navigation stack: its content, which sets what the stack's
+/// bar shows while the screen is on top: title, toolbar and search.
 internal struct _NavigationScreen: View, PrimitiveView {
 
     let content: AnyView
@@ -560,25 +601,24 @@ internal struct _NavigationScreen: View, PrimitiveView {
             screen = ScreenContext()
             node.dynamicStorage["screen"] = screen
         }
-        navigation.screens[depth] = screen
+        screen.navigation = navigation
         screen.depth = depth
+        if navigation.screens[depth] !== screen {
+            navigation.screens[depth] = screen
+            screen.barNeedsUpdate()
+        }
         var environment = context.environment
         environment.screenContext = screen
-        // The content first, so it sets the bar's title and items before the
-        // bar resolves.
         return Resolution(
             behavior: NavigationScreenBehavior(),
-            children: [
-                ChildView(key: "content", view: content, environment: environment),
-                ChildView(key: "bar", view: _NavigationBar(screen: screen, navigation: navigation, depth: depth))
-            ]
+            children: [ChildView(key: "content", view: content, environment: environment)]
         )
     }
 
     typealias Body = Never
 }
 
-/// Places the bar at the top and the content below it.
+/// Fills the stack below its bar, with the content centered.
 internal struct NavigationScreenBehavior: NodeBehavior {
 
     func sizeThatFits(_ proposal: ProposedViewSize, node: ViewNode) -> CGSize {
@@ -586,23 +626,16 @@ internal struct NavigationScreenBehavior: NodeBehavior {
     }
 
     func placeChildren(in bounds: CGRect, proposal: ProposedViewSize, node: ViewNode) {
-        var barHeight: CGFloat = 0
-        if let bar = LazyProxy(node, 1) {
-            barHeight = bar.size(in: ProposedViewSize(width: bounds.width, height: nil)).height
-            bar.place(at: bounds.origin, proposal: ProposedViewSize(width: bounds.width, height: barHeight))
-        }
-        if let content = LazyProxy(node, 0) {
-            let size = CGSize(width: bounds.width, height: max(bounds.height - barHeight, 0))
-            let contentSize = content.size(in: ProposedViewSize(size))
-            // Content smaller than the area is centered, like a window's.
-            content.place(
-                at: CGPoint(
-                    x: bounds.minX + (size.width - contentSize.width) / 2,
-                    y: bounds.minY + barHeight + (size.height - contentSize.height) / 2
-                ),
-                proposal: ProposedViewSize(size)
-            )
-        }
+        guard let content = LazyProxy(node, 0) else { return }
+        let contentSize = content.size(in: ProposedViewSize(bounds.size))
+        // Content smaller than the area is centered, like a window's.
+        content.place(
+            at: CGPoint(
+                x: bounds.minX + (bounds.width - contentSize.width) / 2,
+                y: bounds.minY + (bounds.height - contentSize.height) / 2
+            ),
+            proposal: ProposedViewSize(bounds.size)
+        )
     }
 
     func displayOrder(of children: [ViewNode]) -> [ViewNode] {
@@ -617,19 +650,19 @@ private func LazyProxy(_ node: ViewNode, _ index: Int) -> LayoutProxy? {
 
 // MARK: - Bar
 
-/// A navigation bar: back button, title, toolbar items and search.
+/// A stack's navigation bar, for its top screen: back button, title,
+/// toolbar items and search.
 internal struct _NavigationBar: View, PrimitiveView {
-
-    let screen: ScreenContext
 
     let navigation: NavigationContext
 
+    /// The top screen's depth.
     let depth: Int
 
     func resolve(in context: ResolveContext) -> Resolution {
-        screen.barNode = context.node
-        // A stack in this screen's content shows its bar instead.
-        if screen.hasNestedStack {
+        self.navigation.barNode = context.node
+        // A stack in the screen's content shows its bar instead.
+        guard let screen = self.navigation.screens[self.depth], !screen.hasNestedStack else {
             return Resolution(children: [])
         }
         // The root of a stack in another stack's screen stands in for that
