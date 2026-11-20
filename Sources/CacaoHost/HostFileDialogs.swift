@@ -44,7 +44,15 @@ extension HostWindow {
         completion: @escaping @MainActor (URL?) -> Void
     ) {
         let request = DialogRequest(filters: filters) { urls in completion(urls.first) }
-        let location = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(defaultName).path
+        // Where the dialog opens: the home folder, or the app's documents
+        // where apps have no home folder to write to.
+        #if os(macOS) || os(Linux)
+        let folder = FileManager.default.homeDirectoryForCurrentUser
+        #else
+        let folder = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
+        #endif
+        let location = folder.appendingPathComponent(defaultName).path
         SDL_ShowSaveFileDialog(dialogCallback, request.retained(), sdlWindow, request.filters, Int32(request.filterCount), location)
     }
 }
