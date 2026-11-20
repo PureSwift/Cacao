@@ -5,6 +5,8 @@
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
 
+import CacaoRender
+
 /// An interface for a stored variable that updates an external property of
 /// a view.
 ///
