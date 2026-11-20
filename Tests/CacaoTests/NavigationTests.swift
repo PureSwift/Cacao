@@ -568,6 +568,50 @@ extension ViewGraph {
 }
 
 @MainActor
+@Suite struct NestedNavigationStackTests {
+
+    struct Root: View {
+        var body: some View {
+            NavigationStack {
+                NavigationLink("Go") {
+                    NavigationStack {
+                        NavigationLink("Apple") { Text("Apple screen").navigationTitle("Apple") }
+                            .navigationTitle("Fruits")
+                    }
+                    .navigationTitle("Covered")
+                }
+                .navigationTitle("Catalog")
+            }
+        }
+    }
+
+    @Test func stackInAScreenShowsOneBarWithTheWayBack() {
+        let graph = layout(Root(), width: 400, height: 500)
+        graph.settle()
+        graph.tapText("Go")
+        graph.finish()
+        // The inner stack's bar, not the screen's own; back goes to the outer root.
+        #expect(graph.texts.contains("Fruits"))
+        #expect(!graph.texts.contains("Covered"))
+        #expect(graph.texts.filter { $0 == "Catalog" }.count == 1)
+        #expect(!graph.texts.contains("Go"))
+    }
+
+    @Test func pushingInTheInnerStackGoesBackToItsRoot() {
+        let graph = layout(Root(), width: 400, height: 500)
+        graph.settle()
+        graph.tapText("Go")
+        graph.finish()
+        graph.tapText("Apple")
+        graph.finish()
+        #expect(graph.texts.contains("Apple screen"))
+        #expect(graph.texts.filter { $0 == "Fruits" }.count == 1)
+        #expect(!graph.texts.contains("Catalog"))
+        #expect(!graph.texts.contains("Covered"))
+    }
+}
+
+@MainActor
 @Suite struct NavigationAnimationTests {
 
     @Test func pushSlidesInOverThePreviousScreen() {
@@ -597,6 +641,94 @@ extension ViewGraph {
         graph.advance(to: graph.time + 2)
         #expect(!graph.texts.contains("Push"))
         #expect(!graph.hasActiveAnimations)
+    }
+
+    @Test func finishedPushDrawsWithoutThePreviousScreen() {
+        struct Stack: View {
+            @State var path: [Int] = []
+            var body: some View {
+                NavigationStack(path: $path) {
+                    Button("Push") { path = [1] }
+                        .navigationDestination(for: Int.self) { Text("Screen \($0)") }
+                }
+            }
+        }
+        let graph = layout(Stack(), width: 400, height: 500)
+        graph.settle()
+        graph.tapText("Push")
+        graph.settle()
+        // A frame drawn while the new screen slides in shows both screens.
+        graph.advanceAnimations(to: graph.time + 0.1)
+        #expect(graph.texts.contains("Push"))
+        #expect(!graph.needsDisplay)
+        // The frame the slide finishes at draws again, without the screen below.
+        graph.advanceAnimations(to: graph.time + 2)
+        #expect(!graph.hasActiveAnimations)
+        #expect(graph.needsDisplay)
+        #expect(!graph.texts.contains("Push"))
+    }
+
+    @Test func pushedScreenCoversThePreviousOneWhileItSlidesIn() {
+        struct Stack: View {
+            @State var path: [Int] = []
+            var body: some View {
+                NavigationStack(path: $path) {
+                    Button("Push") { path = [1] }
+                        .navigationDestination(for: Int.self) { Text("Screen \($0)") }
+                }
+            }
+        }
+        let graph = layout(Stack(), width: 400, height: 500)
+        graph.settle()
+        graph.tapText("Push")
+        graph.settle()
+        graph.advance(to: graph.time + 0.1)
+        // Between the two screens' texts: the window's background, filling
+        // the stack below its bar and sliding in with the new screen.
+        let drawn = graph.drawnItems
+        func index(ofText string: String) -> Int? {
+            drawn.firstIndex { drawn in
+                if case let .content(.text(text)) = drawn.item.value { return text.string == string }
+                return false
+            }
+        }
+        let below = index(ofText: "Push") ?? 0
+        let above = index(ofText: "Screen 1") ?? 0
+        #expect(below < above)
+        let cover = drawn[below..<max(above, below)].first { drawn in
+            if case .content(.color) = drawn.item.value { return drawn.item.frame.width == 400 && drawn.item.frame.height > 400 }
+            return false
+        }
+        #expect(cover != nil)
+        #expect((cover?.transforms.first?.tx ?? 0) > 0)
+    }
+
+    @Test func barStaysInPlaceWhileAScreenSlidesIn() {
+        struct Stack: View {
+            @State var path: [Int] = []
+            var body: some View {
+                NavigationStack(path: $path) {
+                    Button("Push") { path = [1] }
+                        .navigationTitle("Root")
+                        .navigationDestination(for: Int.self) { Text("Screen \($0)").navigationTitle("Pushed") }
+                }
+            }
+        }
+        let graph = layout(Stack(), width: 400, height: 500)
+        graph.settle()
+        graph.tapText("Push")
+        graph.settle()
+        graph.advance(to: graph.time + 0.1)
+        func drawn(_ string: String) -> DrawnItem? {
+            graph.drawnItems.first { drawn in
+                if case let .content(.text(text)) = drawn.item.value { return text.string == string }
+                return false
+            }
+        }
+        // The screen slides; the bar already shows its title, where it stays.
+        #expect((drawn("Screen 1")?.transforms.first?.tx ?? 0) > 0)
+        #expect(drawn("Pushed") != nil)
+        #expect((drawn("Pushed")?.transforms.first?.tx ?? 0) == 0)
     }
 
     @Test func disabledAnimationsPushInstantly() {

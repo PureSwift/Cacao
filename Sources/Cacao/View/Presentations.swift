@@ -302,6 +302,7 @@ internal struct _PopoverContent: View {
 
     var body: some View {
         content
+            .environment(\.screenBackground, Color.controlBackground(colorScheme))
             .padding(12)
             .background { RoundedRectangle(cornerRadius: 10).fill(Color.controlBackground(colorScheme)) }
             .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Color.separator, lineWidth: 1) }

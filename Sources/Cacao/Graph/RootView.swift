@@ -120,11 +120,16 @@ internal struct _PresentationContainer: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
+        // A presentation isn't part of the screen that presents it: a
+        // navigation stack in it has its own bar.
         switch style {
         case .popup:
             content
+                .environment(\.screenContext, nil)
         case .sheet, .alert:
             content
+                .environment(\.screenContext, nil)
+                .environment(\.screenBackground, Color.controlBackground(colorScheme))
                 .background { Color.controlBackground(colorScheme) }
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(Color.separator, lineWidth: 1) }
