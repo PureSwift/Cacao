@@ -18,6 +18,8 @@ target_link_libraries(CacaoHost
     SDL3::SDL3)
 
 if(CMAKE_SYSTEM_NAME STREQUAL Linux)
-  target_link_libraries(CacaoHost PRIVATE
+  # Public, so modules that import CacaoHost find the C module too when
+  # it's built without library evolution.
+  target_link_libraries(CacaoHost PUBLIC
     CacaoWayland)
 endif()
