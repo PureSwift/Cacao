@@ -38,3 +38,10 @@ set(CMAKE_Swift_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/swift)
 include(CacaoSupport)
 
 add_subdirectory(Sources)
+
+# Cacao's license, and those of the work it includes, such as the Phosphor
+# Icons its system symbols are drawn from.
+install(FILES
+    LICENSE
+    ThirdPartyLicenses.md
+  DESTINATION ${CMAKE_INSTALL_DATADIR}/doc/Cacao)

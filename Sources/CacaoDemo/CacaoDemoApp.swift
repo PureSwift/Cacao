@@ -315,11 +315,33 @@ struct EffectsScreen: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 Section("Symbols") {
-                    let names = ["chevron.left", "plus", "xmark.circle.fill", "checkmark.circle", "star.fill", "heart", "magnifyingglass", "gearshape", "house.fill", "person", "trash", "folder", "envelope", "bell.fill", "info.circle", "exclamationmark.triangle.fill", "ellipsis", "arrow.clockwise", "play.fill", "square.and.arrow.up", "calendar", "clock", "pencil", "photo", "globe", "lock.fill", "sun.max", "moon.fill", "bolt.fill", "eye"]
+                    let names = [
+                        "chevron.left", "chevron.right.circle", "arrow.up.right", "arrow.clockwise", "arrow.triangle.2.circlepath", "square.and.arrow.up", "tray.and.arrow.down", "paperplane", "link", "paperclip", "magnifyingglass", "slider.horizontal.3", "line.3.horizontal", "list.bullet", "ellipsis.circle",
+                        "plus", "minus.circle", "xmark.circle", "checkmark.circle", "exclamationmark.triangle", "info.circle", "questionmark.circle", "nosign", "star", "heart", "bookmark", "tag", "flag", "bell", "bell.slash",
+                        "house", "building.2", "map", "mappin", "location", "globe", "person", "person.2", "person.crop.circle", "hand.thumbsup", "trash", "trash.slash", "folder", "doc.text", "doc.on.doc",
+                        "envelope", "phone", "message", "bubble.left.and.bubble.right", "calendar", "clock", "alarm", "timer", "photo", "camera", "video", "play", "pause", "backward", "forward",
+                        "speaker.wave.2", "mic", "music.note", "headphones", "tv", "laptopcomputer", "iphone", "keyboard", "printer", "gamecontroller", "wifi", "battery.75percent", "lightbulb", "lock", "key",
+                        "eye", "gearshape", "wrench", "hammer", "pencil", "paintbrush", "scissors", "cart", "bag", "creditcard", "gift", "sidebar.left", "textformat", "bold", "terminal",
+                        "airplane", "car", "bicycle", "cloud.rain", "sun.max", "moon", "snowflake", "bolt", "flame", "drop", "leaf", "pawprint", "chart.bar", "trophy", "puzzlepiece",
+                    ]
                     LazyVGrid(columns: Array(repeating: GridItem(.fixed(36)), count: 15), spacing: 10) {
                         ForEach(names, id: \.self) { name in
                             Image(systemName: name).imageScale(.large)
                         }
+                    }
+                    .foregroundStyle(.tint)
+                    // Filled variants, and weights from light to black.
+                    HStack(spacing: 14) {
+                        ForEach(["house.fill", "heart.fill", "bell.fill", "person.fill", "folder.fill", "star.fill", "checkmark.circle.fill", "trash.circle.fill"], id: \.self) { name in
+                            Image(systemName: name).imageScale(.large)
+                        }
+                        Divider().frame(height: 24)
+                        ForEach([Font.Weight.ultraLight, .light, .regular, .semibold, .bold, .black], id: \.self) { weight in
+                            Image(systemName: "gearshape").font(.system(size: 22, weight: weight))
+                        }
+                        Divider().frame(height: 24)
+                        Label("Settings", systemImage: "gearshape").fixedSize()
+                        Image(systemName: "heart.fill").renderingMode(.original)
                     }
                     .foregroundStyle(.tint)
                 }

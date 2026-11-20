@@ -74,7 +74,7 @@ tests.
 | `lineLimit`, `truncationMode`, `minimumScaleFactor` | ✅ | Truncated lines end in an ellipsis; head and middle truncation for single lines. |
 | `allowsTightening` | ○ | |
 | `Image` (resources, data, resizing, template rendering) | ✅ | |
-| `Image(systemName:)`, `imageScale` | ◐ | Cacao's own drawings of about 60 common symbols, in the foreground style; others are empty. |
+| `Image(systemName:)`, `imageScale` | ◐ | About 600 common symbol names (and their `.fill` variants) drawn from [Phosphor Icons](https://phosphoricons.com), so they look like Phosphor's, not Apple's. Strokes follow the font weight; `.circle`, `.square` and `.slash` names without a drawing enclose or strike through their symbol. Other names are empty, sized like a glyph. One color: no hierarchical, palette or multicolor rendering, and no variable values. |
 | `Shape`s (`UnevenRoundedRectangle` too), `Path`, fills and strokes, `strokeBorder` | ✅ | |
 | `Color`, `ShapeStyle`, `foregroundStyle`, `tint`, `.tint` style, `Color.mix` | ✅ | Color spaces (linear is converted to sRGB; Display P3 draws as sRGB); `Color(NSColor)` on macOS follows light and dark. |
 | `LinearGradient`, `RadialGradient`, `EllipticalGradient`, `AngularGradient`, `Color.gradient` | ✅ | As views, fills and strokes of shapes, and text styles. |

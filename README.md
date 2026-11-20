@@ -144,3 +144,7 @@ SDL_VIDEO_DRIVER=offscreen swift test
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+`Image(systemName:)` draws symbols from [Phosphor Icons](https://phosphoricons.com)
+(MIT), generated into Swift by `Scripts/GenerateSymbols.py` from the names
+in `Scripts/SymbolNames.txt`. See [ThirdPartyLicenses.md](ThirdPartyLicenses.md).
