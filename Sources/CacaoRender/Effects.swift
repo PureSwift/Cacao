@@ -54,13 +54,18 @@ public struct ScrollEffect: Equatable, Sendable {
     /// Whether to draw scroll indicators.
     public var showsIndicators: Bool
 
+    /// How opaque the indicators are, from 0 to 1: they fade out a while
+    /// after scrolling.
+    public var indicatorOpacity: Double
+
     /// The size of the content, for indicators.
     public var contentSize: CGSize
 
-    public init(viewport: CGRect, offset: CGPoint, showsIndicators: Bool, contentSize: CGSize) {
+    public init(viewport: CGRect, offset: CGPoint, showsIndicators: Bool, indicatorOpacity: Double = 1, contentSize: CGSize) {
         self.viewport = viewport
         self.offset = offset
         self.showsIndicators = showsIndicators
+        self.indicatorOpacity = indicatorOpacity
         self.contentSize = contentSize
     }
 }
