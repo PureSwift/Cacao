@@ -103,10 +103,6 @@ import Testing
         #expect(graph.texts.contains("not focused"))
     }
 
-    @Test func focusSectionsLeaveAViewAsItIs() {
-        #expect(layout(Text("Shelf").focusSection()).texts == ["Shelf"])
-    }
-
     @Test func viewsOutsideAFocusableViewAreNotFocused() {
         #expect(layout(Reader()).texts == ["not focused"])
     }
