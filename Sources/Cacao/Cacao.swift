@@ -16,6 +16,7 @@
 @_exported import struct CacaoRender.ColorMatrix
 @_exported import enum CacaoRender.TextAlignment
 @_exported import enum CacaoRender.TruncationMode
+@_exported import class CacaoRender.ExternalSurface
 #if !canImport(CoreGraphics)
 @_exported import enum CacaoRender.CGLineCap
 @_exported import enum CacaoRender.CGLineJoin

@@ -73,6 +73,7 @@ enum Screen: String, CaseIterable, Hashable {
     case navigation = "Navigation"
     case presentations = "Presentations"
     case tabs = "Tabs"
+    case external = "External"
 }
 
 struct ContentView: View {
@@ -114,6 +115,7 @@ struct ScreenView: View {
             case .navigation: NavigationScreen()
             case .presentations: PresentationsScreen()
             case .tabs: TabsScreen()
+            case .external: ExternalScreen()
             }
         }
         .navigationTitle(screen.rawValue)
@@ -842,5 +844,100 @@ struct TabsScreen: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - External
+
+/// Draws frames on its own thread, as a game or a video decoder would,
+/// and publishes each to a surface.
+final class PlasmaProducer: @unchecked Sendable {
+
+    let surface = ExternalSurface()
+
+    private let width = 160
+
+    private let height = 120
+
+    private let lock = NSLock()
+
+    private var isRunning = false
+
+    /// Publishes one frame now, and then thirty a second.
+    func start() {
+        lock.lock()
+        let wasRunning = isRunning
+        isRunning = true
+        lock.unlock()
+        guard !wasRunning else { return }
+        publish(time: 0)
+        let thread = Thread { [self] in
+            var time = 0.0
+            while running {
+                Thread.sleep(forTimeInterval: 1.0 / 30)
+                time += 1.0 / 30
+                publish(time: time)
+            }
+        }
+        thread.name = "Plasma"
+        thread.start()
+    }
+
+    func stop() {
+        lock.lock()
+        isRunning = false
+        lock.unlock()
+    }
+
+    private var running: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return isRunning
+    }
+
+    private func publish(time: Double) {
+        var pixels = [UInt8](repeating: 255, count: width * height * 4)
+        for y in 0..<height {
+            for x in 0..<width {
+                let u = Double(x) / Double(width), v = Double(y) / Double(height)
+                let wave = sin(u * 10 + time * 2) + sin(v * 8 - time * 1.5) + sin((u + v) * 6 + time)
+                let index = (y * width + x) * 4
+                pixels[index] = UInt8(127 + 127 * sin(wave * 1.3))
+                pixels[index + 1] = UInt8(127 + 127 * sin(wave * 1.3 + 2.1))
+                pixels[index + 2] = UInt8(127 + 127 * sin(wave * 1.3 + 4.2))
+            }
+        }
+        pixels.withUnsafeBytes {
+            surface.publish(pixels: $0, width: width, height: height, isOpaque: true)
+        }
+    }
+}
+
+struct ExternalScreen: View {
+
+    @State private var producer = PlasmaProducer()
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Frames drawn on another thread, published to an ExternalSurface and composited like any other view.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                ExternalSurfaceView(producer.surface)
+                    .frame(height: 240)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                HStack(spacing: 16) {
+                    ExternalSurfaceView(producer.surface)
+                        .frame(width: 160, height: 120)
+                        .opacity(0.5)
+                    ExternalSurfaceView(producer.surface, isSmooth: false)
+                        .frame(width: 160, height: 120)
+                        .rotationEffect(.degrees(8))
+                }
+            }
+            .padding()
+        }
+        .onAppear { producer.start() }
+        .onDisappear { producer.stop() }
     }
 }

@@ -25,11 +25,6 @@ xcc() {
 silica=${SILICA_DIR:-$work/Silica}
 if [ ! -d "$silica" ]; then
   git clone --depth 1 https://github.com/PureSwift/Silica.git "$silica"
-  # Until Silica's CMake build is on its default branch.
-  if [ ! -f "$silica/CMakeLists.txt" ]; then
-    git -C "$silica" fetch --depth 1 origin feature/cmake
-    git -C "$silica" checkout FETCH_HEAD
-  fi
 fi
 
 flags="-I $out -L $out"

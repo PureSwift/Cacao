@@ -24,6 +24,9 @@ final class SDLBackend: CompositorBackend {
 
     private var nextTexture = 0
 
+    /// The EGL images behind textures imported from shared buffers.
+    private var images: [Int: UnsafeMutableRawPointer] = [:]
+
     /// Premultiplied alpha blending, for textures drawn by Silica.
     private static let premultipliedBlend = SDL_BlendMode(0x0000_0010)
 
@@ -70,6 +73,53 @@ final class SDLBackend: CompositorBackend {
         nextTexture += 1
         textures[nextTexture] = texture
         return TextureID(rawValue: nextTexture)
+    }
+
+    // MARK: External surfaces
+
+    func makeExternalTexture(width: Int, height: Int, format: ExternalSurface.PixelFormat) -> TextureID? {
+        // SDL names formats by the order in a 32-bit value: the bytes
+        // R, G, B, A are ABGR8888 on little-endian machines.
+        guard let texture = SDL_CreateTexture(
+            renderer,
+            format == .bgra ? SDL_PIXELFORMAT_ARGB8888 : SDL_PIXELFORMAT_ABGR8888,
+            SDL_TEXTUREACCESS_STREAMING,
+            Int32(width),
+            Int32(height)
+        ) else {
+            return nil
+        }
+        nextTexture += 1
+        textures[nextTexture] = texture
+        return TextureID(rawValue: nextTexture)
+    }
+
+    func updateExternalTexture(_ texture: TextureID, bytesPerRow: Int, pixels: Data) {
+        guard let texture = textures[texture.rawValue] else { return }
+        pixels.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
+            _ = SDL_UpdateTexture(texture, nil, bytes.baseAddress, Int32(bytesPerRow))
+        }
+    }
+
+    func importExternalBuffer(_ buffer: ExternalSurface.Buffer) -> TextureID? {
+        guard let texture = SharedBuffers.importBuffer(buffer, renderer: renderer) else { return nil }
+        nextTexture += 1
+        textures[nextTexture] = texture.texture
+        if let image = texture.image {
+            images[nextTexture] = image
+        }
+        return TextureID(rawValue: nextTexture)
+    }
+
+    func drawExternal(_ texture: TextureID, in rect: CGRect, opacity: Double, isOpaque: Bool, isFlipped: Bool, smooth: Bool) {
+        guard let texture = textures[texture.rawValue] else { return }
+        let alpha = Float(opacity)
+        SDL_SetTextureBlendMode(texture, isOpaque && alpha >= 1 ? SDL_BlendMode(0) : Self.premultipliedBlend)
+        SDL_SetTextureScaleMode(texture, smooth ? SDL_SCALEMODE_LINEAR : SDL_SCALEMODE_NEAREST)
+        SDL_SetTextureColorModFloat(texture, alpha, alpha, alpha)
+        SDL_SetTextureAlphaModFloat(texture, alpha)
+        var frame = SDL_FRect(rect)
+        SDL_RenderTextureRotated(renderer, texture, nil, &frame, 0, nil, isFlipped ? SDL_FLIP_VERTICAL : SDL_FLIP_NONE)
     }
 
     /// The layers being drawn into, innermost last.
@@ -163,6 +213,9 @@ final class SDLBackend: CompositorBackend {
         if let pointer = textures.removeValue(forKey: texture.rawValue) {
             SDL_DestroyTexture(pointer)
         }
+        if let image = images.removeValue(forKey: texture.rawValue) {
+            SharedBuffers.destroyImage(image)
+        }
     }
 
     func beginFrame(width: Int, height: Int, clearColor: ResolvedColor) {
@@ -211,6 +264,10 @@ final class SDLBackend: CompositorBackend {
             SDL_DestroyTexture(texture)
         }
         textures.removeAll()
+        for image in images.values {
+            SharedBuffers.destroyImage(image)
+        }
+        images.removeAll()
     }
 }
 

@@ -359,6 +359,11 @@ public final class HostWindow {
             needsRender = true
         }
         apply(scene.windowState)
+        // A surface drawn outside the scene has a frame the scene doesn't
+        // know of.
+        if compositor.hasNewExternalFrames {
+            needsRender = true
+        }
         // A delayed screenshot is of the first frame after the delay, drawn
         // even if nothing changed by then.
         if screenshotPath != nil, now >= screenshotTime {
@@ -371,6 +376,11 @@ public final class HostWindow {
         needsRender = false
         let start = HostRuntime.now
         compositor.render(scene.displayList(), size: size, scale: scale)
+        // Producers publish from their own threads: each frame wakes the
+        // loop, which is otherwise waiting for input.
+        for surface in compositor.externalSurfaces where surface.onPublish == nil {
+            surface.onPublish = { HostRuntime.wake() }
+        }
         scene.didRender(time: start)
         if showsStatistics {
             drawStatistics(renderTime: HostRuntime.now - start, now: now, scene: scene)
