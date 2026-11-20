@@ -5,7 +5,7 @@
 # directory on its own with the host's toolchain; for a native build, the
 # top level adds it with CACAO_BUILD_MACROS.
 
-cmake_minimum_required(VERSION 3.29)
+cmake_minimum_required(VERSION 3.26)
 
 if(POLICY CMP0157)
   cmake_policy(SET CMP0157 NEW)
