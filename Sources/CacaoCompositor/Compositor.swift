@@ -78,6 +78,11 @@ package protocol CompositorBackend: AnyObject {
     /// where the backend can't.
     func importExternalBuffer(_ buffer: ExternalSurface.Buffer) -> TextureID?
 
+    /// Reads back what is drawn so far in a rectangle of the current
+    /// target: RGBA pixels, rows top first. `nil` where the backend can't,
+    /// or the rectangle is outside the target.
+    func readPixels(_ rect: CGRect) -> (pixels: Data, width: Int, height: Int, bytesPerRow: Int)?
+
     /// Draws an external texture stretched to a rectangle, upside down if
     /// its rows are bottom first, and without blending if it's opaque.
     func drawExternal(_ texture: TextureID, in rect: CGRect, opacity: Double, isOpaque: Bool, isFlipped: Bool, smooth: Bool)
@@ -89,6 +94,10 @@ package protocol CompositorBackend: AnyObject {
 extension CompositorBackend {
 
     package func importExternalBuffer(_ buffer: ExternalSurface.Buffer) -> TextureID? {
+        nil
+    }
+
+    package func readPixels(_ rect: CGRect) -> (pixels: Data, width: Int, height: Int, bytesPerRow: Int)? {
         nil
     }
 }
@@ -131,6 +140,9 @@ package final class Compositor {
 
         /// External surfaces' frames shown for the first time.
         package var externalFrames = 0
+
+        /// Backdrops read back from the frame and blurred.
+        package var backdrops = 0
     }
 
     /// Items with more pixels than this along either axis are drawn in tiles.
@@ -213,6 +225,13 @@ package final class Compositor {
 
     private var presentExternals: Set<ExternalSurface> = []
 
+    /// Textures made for one frame, as backdrops' are: destroyed when the
+    /// next frame starts.
+    private var transientTextures: [TextureID] = []
+
+    /// The size of the window being drawn, in pixels.
+    private var framePixelSize = CGSize.zero
+
     /// The external surfaces the last frame drew.
     package var externalSurfaces: Set<ExternalSurface> {
         presentExternals
@@ -254,6 +273,11 @@ package final class Compositor {
         presentOffscreens.removeAll(keepingCapacity: true)
         presentExternals.removeAll(keepingCapacity: true)
         targetOrigins = [CGPoint(x: 0, y: 0)]
+        for texture in transientTextures {
+            backend.destroyTexture(texture)
+        }
+        transientTextures.removeAll(keepingCapacity: true)
+        framePixelSize = CGSize(width: (size.width * scale).rounded(), height: (size.height * scale).rounded())
         backend.beginFrame(
             width: Int((size.width * scale).rounded()),
             height: Int((size.height * scale).rounded()),
@@ -681,7 +705,71 @@ package final class Compositor {
             frameStatistics.draws += 1
         case let .external(external):
             drawExternal(external, frame: frame, opacity: opacity)
+        case let .backdrop(backdrop):
+            drawBackdrop(backdrop, frame: frame, clip: clip, opacity: opacity)
         }
+    }
+
+    /// Draws what the frame shows so far behind a rectangle, blurred: read
+    /// back from the backend, blurred small on the CPU, and drawn as a
+    /// texture the GPU scales up.
+    private func drawBackdrop(_ content: BackdropContent, frame: CGRect, clip: CGRect, opacity: Double) {
+        let sigma = content.blurRadius * scale
+        let shown = frame.intersection(clip)
+        guard sigma >= 1, !shown.isNull, shown.width > 0, shown.height > 0 else { return }
+        let pixelFrame = pixelRect(frame)
+        var visible = pixelRect(shown)
+        // The window's edges, when drawing to the window; a layer's are the
+        // backend's to know.
+        var limit = CGSize(width: CGFloat.infinity, height: CGFloat.infinity)
+        if targetOrigins.count == 1 {
+            limit = framePixelSize
+            visible = visible.intersection(CGRect(origin: CGPoint(x: 0, y: 0), size: limit))
+        }
+        guard !visible.isNull, visible.width >= 1, visible.height >= 1 else { return }
+        // What the blur reads past the edges, with the edges aligned to the
+        // shrinking.
+        let shrink = BackdropBlur.shrink(sigma: sigma)
+        let reach = BackdropBlur.reach(sigma: sigma)
+        let left = max(Int(visible.minX) - reach, 0) / shrink * shrink
+        let top = max(Int(visible.minY) - reach, 0) / shrink * shrink
+        let right = Int(min(visible.maxX.rounded(.up) + CGFloat(reach), limit.width))
+        let bottom = Int(min(visible.maxY.rounded(.up) + CGFloat(reach), limit.height))
+        guard right > left, bottom > top else { return }
+        backend.setClip(nil)
+        defer { setClip(clip) }
+        guard let read = backend.readPixels(CGRect(x: left, y: top, width: right - left, height: bottom - top)) else {
+            return
+        }
+        let blurred = BackdropBlur.blur(
+            pixels: read.pixels,
+            width: read.width,
+            height: read.height,
+            bytesPerRow: read.bytesPerRow,
+            origin: (left, top),
+            sigma: sigma,
+            saturation: content.saturation,
+            rounding: content.cornerRadius > 0
+                ? (pixelFrame, content.cornerRadius * scale, content.corners)
+                : nil
+        )
+        guard let texture = backend.makeTexture(
+            width: blurred.width, height: blurred.height, bytesPerRow: blurred.width * 4, pixels: blurred.pixels
+        ) else {
+            return
+        }
+        transientTextures.append(texture)
+        frameStatistics.backdrops += 1
+        frameStatistics.uploads += 1
+        // Only inside the frame, though the blur read past it.
+        backend.setClip(visible)
+        backend.draw(
+            texture,
+            in: CGRect(x: left, y: top, width: blurred.width * blurred.shrink, height: blurred.height * blurred.shrink),
+            opacity: opacity,
+            smooth: true
+        )
+        frameStatistics.draws += 1
     }
 
     /// Draws an external surface's newest frame: from a shared buffer,
@@ -913,6 +1001,8 @@ package final class Compositor {
         for textures in externalBuffers.values {
             for texture in textures.compactMap({ $0 }) { backend.destroyTexture(texture) }
         }
+        for texture in transientTextures { backend.destroyTexture(texture) }
+        transientTextures.removeAll()
         externalTextures.removeAll()
         externalBuffers.removeAll()
         layers.removeAll()
