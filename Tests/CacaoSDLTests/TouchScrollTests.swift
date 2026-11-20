@@ -58,6 +58,23 @@ import Testing
         #expect(!controller.isAnimating)
     }
 
+    /// A real finger's flick down a list also moves a little across it.
+    @Test func aFlickThatIsNotQuiteStraightStillCoasts() {
+        let (graph, controller, offset) = make()
+        let point = CGPoint(x: 150, y: 200)
+        for step in 0..<5 {
+            controller.pan(by: CGSize(width: 3, height: -25), at: point, graph: graph, now: Double(step) * 0.01)
+        }
+        #expect(offset() == 125)
+        controller.endPan(now: 0.05)
+        controller.step(now: 0.07)
+        controller.step(now: 0.2)
+        controller.step(now: 0.4)
+        // Well past where the finger left it.
+        #expect(offset() > 400)
+        #expect(controller.isAnimating)
+    }
+
     @Test func aFingerHeldStillBeforeLiftingDoesNotCoast() {
         let (graph, controller, offset) = make()
         let point = CGPoint(x: 150, y: 200)
