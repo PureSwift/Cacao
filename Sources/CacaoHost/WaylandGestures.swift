@@ -1,13 +1,13 @@
 //
 //  WaylandGestures.swift
-//  CacaoSDL
+//  CacaoHost
 //
 //  Created by Alsey Coleman Miller on 11/15/26.
 //
 
 #if os(Linux)
+import CacaoRender
 import Foundation
-import Cacao
 import CSDL3
 import CacaoWayland
 
@@ -17,9 +17,6 @@ import CacaoWayland
 enum WaylandGestures {
 
     private static var gestures: OpaquePointer?
-
-    /// The open windows, to find the one a pinch is over.
-    static var windows: [WindowHost] = []
 
     /// Listens on SDL's Wayland connection, if SDL uses Wayland and the
     /// compositor offers pointer gestures.
@@ -47,8 +44,8 @@ enum WaylandGestures {
 
     /// A pinch over the surface at an address.
     fileprivate static func pinch(_ phase: CacaoPinchPhase, surface: UInt, rotation: Double) {
-        guard let window = windows.first(where: { UInt(bitPattern: $0.waylandSurface) == surface }) else { return }
-        let phase: PointerPhase = switch phase {
+        guard let window = HostRuntime.windows.first(where: { UInt(bitPattern: $0.waylandSurface) == surface }) else { return }
+        let phase: HostPhase = switch phase {
         case CacaoPinchPhaseBegan: .began
         case CacaoPinchPhaseChanged: .moved
         case CacaoPinchPhaseEnded: .ended
