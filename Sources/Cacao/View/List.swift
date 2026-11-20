@@ -173,6 +173,17 @@ internal struct _ListRows<Content: View>: View, PrimitiveView {
 
     func resolve(in context: ResolveContext) -> Resolution {
         let selection = self.selection, style = self.style
+        // A split view's sidebar tells it whether a row is selected: when
+        // it's collapsed to one column, that's when its detail shows.
+        if let selection, let navigation = context.environment.navigationContext, !navigation.isDetail,
+           let link = navigation.split {
+            let isEmpty = selection.wrappedValue == nil
+            let changed = link.sidebarSelection?.isEmpty != isEmpty
+            link.sidebarSelection = (isEmpty, { selection.wrappedValue = nil })
+            if changed, navigation.isCollapsed {
+                navigation.onChange()
+            }
+        }
         let margin = style.margin + (style.isGrouped ? 4 : 0)
         return LazyStack(axis: .vertical, alignment: HorizontalAlignment.leading.key, spacing: 0, rowTransform: { view, id, position -> any View in
             switch position.kind {
