@@ -11,7 +11,7 @@ import CoreGraphics
 #endif
 import CacaoRender
 import CacaoCompositor
-import CSDL3
+import SDL3Swift
 
 /// The SDL3 host: windows, the main loop and frame clock, and input.
 ///
@@ -22,18 +22,17 @@ public enum HostRuntime {
 
     /// The version of the SDL library loaded at run time, as `major.minor.micro`.
     public nonisolated static var sdlVersion: String {
-        let version = Int(SDL_GetVersion())
-        return "\(version / 1_000_000).\(version / 1_000 % 1_000).\(version % 1_000)"
+        SDL.version.description
     }
 
     /// Seconds since SDL started, from its high resolution clock.
     public static var now: Double {
-        Double(SDL_GetTicksNS()) / 1_000_000_000
+        Double(SDL.ticks) / 1_000_000_000
     }
 
     /// Whether the system shows light or dark windows.
     public static var systemAppearance: HostAppearance {
-        SDL_GetSystemTheme() == SDL_SYSTEM_THEME_DARK ? .dark : .light
+        SDL.systemTheme == .dark ? .dark : .light
     }
 
     // MARK: Options
@@ -47,10 +46,12 @@ public enum HostRuntime {
 
     /// Initializes SDL's video subsystem, runs `body`, then shuts SDL down.
     public static func withVideo<T>(_ body: () throws -> T) throws -> T {
-        guard SDL_Init(SDL_InitFlags(0x0000_0020)) else {
-            throw HostError(message: String(cString: SDL_GetError()))
+        do {
+            try SDL.initialize(subSystems: [.video])
+        } catch {
+            throw HostError(message: error.errorMessage)
         }
-        defer { SDL_Quit() }
+        defer { SDL.quit() }
         return try body()
     }
 
@@ -109,9 +110,7 @@ public enum HostRuntime {
     /// for input.
     public nonisolated static func wake() {
         guard wakeEvent != 0 else { return }
-        var event = SDL_Event()
-        event.type = wakeEvent
-        _ = SDL_PushEvent(&event)
+        SDL.pushUserEvent(type: wakeEvent)
     }
 
     /// Runs an app's entry point as the platform needs it run. On iOS the
@@ -140,11 +139,11 @@ public enum HostRuntime {
     /// the loop until the last window closes.
     public static func run(_ setup: () -> Void) {
         // Deliver macOS's own trackpad momentum as wheel events.
-        SDL_SetHint("SDL_MAC_SCROLL_MOMENTUM", "1")
+        _ = SDL.setHint("SDL_MAC_SCROLL_MOMENTUM", "1")
         do {
             try withVideo {
                 textEngine = SilicaTextEngine()
-                wakeEvent = SDL_RegisterEvents(1)
+                wakeEvent = SDL.registerEvents() ?? 0
                 defer {
                     wakeEvent = 0
                     wakeHooks = []
@@ -152,7 +151,7 @@ public enum HostRuntime {
                 }
                 setup()
                 guard !windows.isEmpty || runsWithoutWindows() else {
-                    print("Cacao: no windows to show: \(String(cString: SDL_GetError()))")
+                    print("Cacao: no windows to show: \(SDLError.current()?.errorMessage ?? "none were opened")")
                     return
                 }
                 #if os(Linux)
@@ -172,17 +171,16 @@ public enum HostRuntime {
     /// Waits for events while idle, and runs a frame per display refresh
     /// while anything animates; frames wait for vsync when presented.
     private static func runLoop() {
-        var event = SDL_Event()
         while !windows.isEmpty || runsWithoutWindows() {
             let animating = windows.contains { $0.isAnimating }
             // Idle: sleep until an event, waking periodically to run main
             // actor work (tasks, timers) scheduled outside of SDL.
-            if animating ? SDL_PollEvent(&event) : SDL_WaitEventTimeout(&event, 16) {
-                repeat {
-                    if !handle(event) {
-                        return
-                    }
-                } while SDL_PollEvent(&event)
+            var next = animating ? SDL.pollEvent() : SDL.waitEvent(timeout: 16)
+            while let event = next {
+                if !handle(event) {
+                    return
+                }
+                next = SDL.pollEvent()
             }
             #if os(Linux)
             WaylandGestures.dispatch()
@@ -202,49 +200,28 @@ public enum HostRuntime {
     }
 
     /// Returns false to quit.
-    private static func handle(_ event: SDL_Event) -> Bool {
+    private static func handle(_ event: SDLEvent) -> Bool {
         let now = now
-        switch SDL_EventType(event.type) {
-        case SDL_EVENT_QUIT:
+        switch event {
+        case .quit:
             return false
-        case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-            if let window = windows.first(where: { $0.id == event.window.windowID }) {
+        case let .window(windowID, .closeRequested):
+            if let window = windows.first(where: { $0.id == windowID }) {
                 close(window)
             }
             return !windows.isEmpty || runsWithoutWindows()
-        case SDL_EVENT_SYSTEM_THEME_CHANGED:
+        case .systemThemeChanged:
             let appearance = systemAppearance
             windows.forEach { $0.scene?.handle(.appearanceChanged(appearance), time: now) }
+        case .user:
+            // A wake: the loop goes around, running its hooks.
+            break
         default:
-            if let windowID = windowID(of: event), let window = windows.first(where: { $0.id == windowID }) {
+            if let windowID = event.windowID, let window = windows.first(where: { $0.id == windowID }) {
                 window.handle(event, now: now)
             }
         }
         return true
-    }
-
-    private static func windowID(of event: SDL_Event) -> SDL_WindowID? {
-        switch SDL_EventType(event.type) {
-        case SDL_EVENT_MOUSE_BUTTON_DOWN, SDL_EVENT_MOUSE_BUTTON_UP:
-            event.button.windowID
-        case SDL_EVENT_MOUSE_MOTION:
-            event.motion.windowID
-        case SDL_EVENT_MOUSE_WHEEL:
-            event.wheel.windowID
-        case SDL_EVENT_PINCH_BEGIN, SDL_EVENT_PINCH_UPDATE, SDL_EVENT_PINCH_END:
-            event.pinch.windowID
-        case SDL_EVENT_KEY_DOWN, SDL_EVENT_KEY_UP:
-            event.key.windowID
-        case SDL_EVENT_TEXT_INPUT:
-            event.text.windowID
-        case SDL_EVENT_DROP_BEGIN, SDL_EVENT_DROP_POSITION, SDL_EVENT_DROP_FILE, SDL_EVENT_DROP_TEXT, SDL_EVENT_DROP_COMPLETE:
-            event.drop.windowID
-        case SDL_EVENT_FINGER_DOWN, SDL_EVENT_FINGER_MOTION, SDL_EVENT_FINGER_UP, SDL_EVENT_FINGER_CANCELED:
-            event.tfinger.windowID
-        default:
-            event.type >= SDL_EVENT_WINDOW_FIRST.rawValue && event.type <= SDL_EVENT_WINDOW_LAST.rawValue
-                ? event.window.windowID : nil
-        }
     }
 
     /// Runs work scheduled on the main actor, such as tasks and timers.
@@ -257,18 +234,16 @@ public enum HostRuntime {
     /// The text on the system's clipboard.
     public static var clipboardText: String? {
         get {
-            guard SDL_HasClipboardText(), let text = SDL_GetClipboardText() else { return nil }
-            defer { SDL_free(text) }
-            return String(cString: text)
+            SDL.hasClipboardText ? SDL.clipboardText : nil
         }
         set {
-            _ = SDL_SetClipboardText(newValue ?? "")
+            SDL.clipboardText = newValue ?? ""
         }
     }
 
     /// Opens a URL with the system's handler for it.
     public static func open(_ url: URL) {
-        _ = SDL_OpenURL(url.absoluteString)
+        try? SDL.open(url: url.absoluteString)
     }
 }
 
