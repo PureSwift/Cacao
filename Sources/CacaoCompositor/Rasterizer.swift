@@ -121,7 +121,7 @@ package enum Rasterizer {
                 draw(shape, in: context)
             case let .drawing(drawing):
                 draw(drawing.flattened(), in: context, scale: scale, textEngine: textEngine)
-            case .color, .image, .external:
+            case .color, .image, .external, .backdrop:
                 break
             }
         }
