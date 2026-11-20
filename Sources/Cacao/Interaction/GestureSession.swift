@@ -29,8 +29,14 @@ internal final class GestureSession {
     /// Whether a pointer is pressed.
     var isPressed = false
 
+    /// How many of a pinch and a rotation are in progress: fingers on a
+    /// touch screen do both at once.
+    var twoFingerGestures = 0
+
     /// Whether a pinch or a rotation is in progress.
-    var isTwoFinger = false
+    var isTwoFinger: Bool {
+        twoFingerGestures > 0
+    }
 
     var lastLocation: CGPoint
 
@@ -176,16 +182,21 @@ extension ViewGraph {
         let time = time ?? self.time
         switch phase {
         case .began:
-            if gestureSession == nil || gestureSession?.isPressed == false {
+            // A pinch joins a press, or a rotation by the same fingers.
+            if let session = gestureSession, session.isPressed || session.isTwoFinger {
+                session.twoFingerGestures += 1
+            } else {
                 gestureSession?.cancel()
                 gestureSession = makeGestureSession(path: root.hitTest(point) ?? [], location: point)
+                gestureSession?.twoFingerGestures = 1
             }
-            gestureSession?.isTwoFinger = true
             deliver(event, at: point, time: time)
         case .moved:
             deliver(event, at: point, time: time)
         case .ended, .cancelled:
-            gestureSession?.isTwoFinger = false
+            if let session = gestureSession {
+                session.twoFingerGestures = max(session.twoFingerGestures - 1, 0)
+            }
             deliver(ended, at: point, time: time)
         }
     }
