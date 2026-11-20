@@ -863,6 +863,16 @@ final class PlasmaProducer: @unchecked Sendable {
 
     private var isRunning = false
 
+    private var center = CGPoint(x: 0.5, y: 0.5)
+
+    /// Where the waves spread from, in the frame's unit square: the demo
+    /// moves it with the pointer.
+    func setCenter(_ point: CGPoint) {
+        lock.lock()
+        center = point
+        lock.unlock()
+    }
+
     /// Publishes one frame now, and then thirty a second.
     func start() {
         lock.lock()
@@ -896,11 +906,16 @@ final class PlasmaProducer: @unchecked Sendable {
     }
 
     private func publish(time: Double) {
+        lock.lock()
+        let center = self.center
+        lock.unlock()
         var pixels = [UInt8](repeating: 255, count: width * height * 4)
         for y in 0..<height {
             for x in 0..<width {
                 let u = Double(x) / Double(width), v = Double(y) / Double(height)
-                let wave = sin(u * 10 + time * 2) + sin(v * 8 - time * 1.5) + sin((u + v) * 6 + time)
+                let du = u - Double(center.x), dv = v - Double(center.y)
+                let ripple = sin((du * du + dv * dv).squareRoot() * 30 - time * 4)
+                let wave = sin(u * 10 + time * 2) + sin(v * 8 - time * 1.5) + sin((u + v) * 6 + time) + ripple
                 let index = (y * width + x) * 4
                 pixels[index] = UInt8(127 + 127 * sin(wave * 1.3))
                 pixels[index + 1] = UInt8(127 + 127 * sin(wave * 1.3 + 2.1))
@@ -917,15 +932,25 @@ struct ExternalScreen: View {
 
     @State private var producer = PlasmaProducer()
 
+    @State private var lastInput = "Click the large surface, then move, scroll or type."
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Frames drawn on another thread, published to an ExternalSurface and composited like any other view.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                ExternalSurfaceView(producer.surface)
-                    .frame(height: 240)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                GeometryReader { geometry in
+                    ExternalSurfaceView(producer.surface)
+                        .onInput(acceptsText: true) { input in
+                            handle(input, size: geometry.size)
+                        }
+                }
+                .frame(height: 240)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                Text(lastInput)
+                    .font(.footnote)
+                    .monospacedDigit()
                 HStack(spacing: 16) {
                     ExternalSurfaceView(producer.surface)
                         .frame(width: 160, height: 120)
@@ -939,5 +964,37 @@ struct ExternalScreen: View {
         }
         .onAppear { producer.start() }
         .onDisappear { producer.stop() }
+    }
+
+    /// Input the surface's producer would take: here, the pointer moves the
+    /// ripple, and everything is described.
+    private func handle(_ input: ExternalInput, size: CGSize) {
+        func move(_ location: CGPoint) {
+            guard size.width > 0, size.height > 0 else { return }
+            producer.setCenter(CGPoint(x: location.x / size.width, y: location.y / size.height))
+        }
+        switch input {
+        case let .pointer(phase, button, location):
+            move(location)
+            lastInput = "pointer \(phase) \(button) at \(Int(location.x)), \(Int(location.y))"
+        case let .hover(location):
+            if let location {
+                move(location)
+                lastInput = "hover at \(Int(location.x)), \(Int(location.y))"
+            } else {
+                lastInput = "hover left"
+            }
+        case let .scroll(x, y, _):
+            lastInput = "scroll \(x), \(y)"
+        case let .touch(phase, finger, location):
+            move(location)
+            lastInput = "touch \(phase) finger \(finger) at \(Int(location.x)), \(Int(location.y))"
+        case let .key(key):
+            lastInput = "key \(key.isDown ? "down" : "up") usage \(key.usage) code \(key.keyCode)"
+        case let .text(text):
+            lastInput = "text \"\(text)\""
+        case let .focus(focused):
+            lastInput = focused ? "focused" : "lost focus"
+        }
     }
 }
