@@ -172,17 +172,17 @@ public final class HostWindow {
             if pressedButton == nil {
                 pressedButton = button
             }
-            scene.handle(.pointer(.began, button: button, at: CGPoint(x: CGFloat(event.button.x), y: CGFloat(event.button.y))), time: now)
+            scene.handle(.pointer(.began, button: button, at: CGPoint(x: CGFloat(event.button.x), y: CGFloat(event.button.y)), isFromTouch: event.button.which == Self.touchMouse), time: now)
         case SDL_EVENT_MOUSE_BUTTON_UP:
             guard let button = Self.button(event.button.button) else { break }
             if pressedButton == button {
                 pressedButton = nil
             }
-            scene.handle(.pointer(.ended, button: button, at: CGPoint(x: CGFloat(event.button.x), y: CGFloat(event.button.y))), time: now)
+            scene.handle(.pointer(.ended, button: button, at: CGPoint(x: CGFloat(event.button.x), y: CGFloat(event.button.y)), isFromTouch: event.button.which == Self.touchMouse), time: now)
         case SDL_EVENT_MOUSE_MOTION:
             mouseLocation = CGPoint(x: CGFloat(event.motion.x), y: CGFloat(event.motion.y))
             if let pressedButton, event.motion.state != 0 {
-                scene.handle(.pointer(.moved, button: pressedButton, at: mouseLocation), time: now)
+                scene.handle(.pointer(.moved, button: pressedButton, at: mouseLocation, isFromTouch: event.motion.which == Self.touchMouse), time: now)
             } else {
                 pressedButton = nil
                 scene.handle(.hover(at: mouseLocation), time: now)
@@ -257,6 +257,10 @@ public final class HostWindow {
             break
         }
     }
+
+    /// `SDL_TOUCH_MOUSEID`: the mouse SDL makes up for fingers on a touch
+    /// screen.
+    private static let touchMouse = SDL_MouseID.max
 
     /// The button a drag belongs to: the first pressed.
     private var pressedButton: HostPointerButton?
