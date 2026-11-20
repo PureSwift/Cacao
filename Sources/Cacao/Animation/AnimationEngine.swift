@@ -217,6 +217,9 @@ extension ViewGraph {
     package func advanceAnimations(to time: Double) {
         self.time = time
         showTooltipIfDue()
+        // What was animating draws once more as it finishes: at its final
+        // values, and without what only showed during a transition.
+        let wasActive = hasActiveAnimations
         var finished: [Int] = []
         for (id, state) in nodeAnimations {
             if let animation = state.frame, animation.values(at: time).isFinished { state.frame = nil }
@@ -240,7 +243,7 @@ extension ViewGraph {
         ghosts = ghosts.mapValues { list in
             list.filter { !$0.animation.values(at: time).isFinished }
         }.filter { !$0.value.isEmpty }
-        if hasActiveAnimations {
+        if wasActive || hasActiveAnimations {
             setNeedsDisplay()
         }
     }
