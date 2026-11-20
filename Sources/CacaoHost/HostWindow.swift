@@ -15,6 +15,9 @@ import CSDL3
 #if os(macOS)
 import AppKit
 #endif
+#if os(iOS)
+import UIKit
+#endif
 
 /// One window: its SDL window and renderer, its compositor, and the scene
 /// it shows and sends input to.
@@ -426,9 +429,28 @@ public final class HostWindow {
         return HostInsets(
             top: CGFloat(rect.y),
             left: CGFloat(rect.x),
-            bottom: max(size.height - CGFloat(rect.y + rect.h), 0),
+            bottom: max(size.height - CGFloat(rect.y + rect.h), keyboardHeight, 0),
             right: max(size.width - CGFloat(rect.x + rect.w), 0)
         )
+    }
+
+    /// How much of the bottom of the window an on-screen keyboard covers.
+    /// SDL says when one shows and hides but not how tall it is, so on iOS
+    /// that comes from UIKit.
+    private var keyboardHeight: CGFloat {
+        #if os(iOS)
+        guard let frame = ScreenKeyboard.shared.frame,
+              let pointer = SDL_GetPointerProperty(SDL_GetWindowProperties(sdlWindow), "SDL.window.uikit.window", nil) else {
+            return 0
+        }
+        let window = Unmanaged<UIWindow>.fromOpaque(pointer).takeUnretainedValue()
+        let covered = window.convert(frame, from: nil).intersection(window.bounds)
+        // A keyboard at the bottom, not one floating over the window.
+        guard !covered.isNull, covered.maxY >= window.bounds.maxY - 1 else { return 0 }
+        return covered.height
+        #else
+        return 0
+        #endif
     }
 
     /// Where to save the first frame as a PNG, then quit; from the
