@@ -20,7 +20,9 @@ extension App {
     /// main loop until the last window closes.
     @MainActor
     public static func main() {
-        SDLHost.run(Self())
+        HostRuntime.runApp {
+            SDLHost.run(Self())
+        }
     }
 }
 
