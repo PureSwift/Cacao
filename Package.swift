@@ -25,7 +25,8 @@ import CompilerPluginSupport
 let package = Package(
     name: "Cacao",
     platforms: [
-        .macOS(.v14)
+        .macOS(.v14),
+        .iOS(.v17)
     ],
     products: [
         .library(
@@ -105,7 +106,7 @@ let package = Package(
                 .product(
                     name: "SilicaCoreGraphics",
                     package: "Silica",
-                    condition: .when(platforms: [.macOS])
+                    condition: .when(platforms: [.macOS, .iOS])
                 ),
                 .product(
                     name: "SilicaCairo",
@@ -129,7 +130,10 @@ let package = Package(
                     package: "SDL"
                 )
             ],
-            exclude: ["CMakeLists.txt"]
+            exclude: ["CMakeLists.txt"],
+            // On iOS, SDL3 is a static library, so what it uses is linked
+            // here: its package configuration's frameworks.
+            linkerSettings: sdlFrameworks.map { .linkedFramework($0, .when(platforms: [.iOS])) }
         ),
         .target(
             name: "CacaoSDL",
@@ -180,6 +184,16 @@ let package = Package(
         )
     ] + swiftUITargets + waylandTestTargets + layoutParityTargets
 )
+
+// MARK: - SDL on iOS
+
+var sdlFrameworks: [String] {
+    [
+        "AVFoundation", "AudioToolbox", "CoreAudio", "CoreBluetooth", "CoreGraphics", "CoreHaptics",
+        "CoreMedia", "CoreMotion", "CoreVideo", "Foundation", "GameController", "Metal", "OpenGLES",
+        "QuartzCore", "UIKit",
+    ]
+}
 
 // MARK: - SwiftUI and Combine alias modules
 
