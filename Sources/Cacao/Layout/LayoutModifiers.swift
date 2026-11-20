@@ -584,6 +584,11 @@ extension View {
         background { _ShapeStyleView(style: style) }
     }
 
+    /// Sets the view's background to a shape filled with a style.
+    public func background<S: ShapeStyle, T: Shape>(_ style: S, in shape: T, fillStyle: FillStyle = FillStyle()) -> some View {
+        background { _ShapeView(shape: shape, style: style, drawing: .fill(fillStyle)) }
+    }
+
     /// Layers the views that you specify in front of this view.
     public func overlay<V: View>(
         alignment: Alignment = .center,
