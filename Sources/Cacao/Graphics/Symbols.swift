@@ -11,8 +11,12 @@ import Foundation
 import CoreGraphics
 #endif
 
-/// Cacao's own drawings for common system symbol names, in a unit square,
-/// drawn in the foreground style at the size of the current font.
+/// Drawings for system symbol names, in a unit square, drawn in the
+/// foreground style at the size of the current font.
+///
+/// Most are Phosphor Icons' (`SymbolGlyphs.swift`, generated from them);
+/// Cacao draws a few of its own, and encloses or strikes through a symbol
+/// for a `.circle`, `.square` or `.slash` name without a drawing.
 internal enum Symbols {
 
     /// One part of a symbol: a stroked or filled path, in the foreground
@@ -23,6 +27,40 @@ internal enum Symbols {
         var isKnockout = false
     }
 
+    /// Builds a symbol's parts from the calls of a generated drawing.
+    struct Glyph {
+
+        var parts = [Part]()
+
+        private var path = Path()
+
+        mutating func m(_ x: Double, _ y: Double) {
+            path.move(to: CGPoint(x: x, y: y))
+        }
+
+        mutating func l(_ x: Double, _ y: Double) {
+            path.addLine(to: CGPoint(x: x, y: y))
+        }
+
+        mutating func c(_ x1: Double, _ y1: Double, _ x2: Double, _ y2: Double, _ x: Double, _ y: Double) {
+            path.addCurve(to: CGPoint(x: x, y: y), control1: CGPoint(x: x1, y: y1), control2: CGPoint(x: x2, y: y2))
+        }
+
+        mutating func z() {
+            path.closeSubpath()
+        }
+
+        mutating func stroke() {
+            parts.append(Part(path: path, isFilled: false))
+            path = Path()
+        }
+
+        mutating func fill() {
+            parts.append(Part(path: path, isFilled: true))
+            path = Path()
+        }
+    }
+
     /// The parts of a symbol, or nil for a name Cacao doesn't draw.
     static func parts(_ name: String) -> [Part]? {
         var name = name
@@ -31,12 +69,19 @@ internal enum Symbols {
             filled = true
             name.removeLast(5)
         }
+        return parts(name, filled: filled)
+    }
+
+    /// The parts of a symbol named without `.fill`, outlined or filled.
+    private static func parts(_ name: String, filled: Bool) -> [Part]? {
+        if let parts = glyph(name, filled: filled) ?? glyphs(name, filled: filled) {
+            return parts
+        }
         // A shape enclosing a glyph: the glyph knocked out of a filled shape.
         for (suffix, enclosure) in [(".circle", Path(ellipseIn: unit.insetBy(dx: 0.04, dy: 0.04))),
                                     (".square", Path(roundedRect: unit.insetBy(dx: 0.06, dy: 0.06), cornerRadius: 0.18))]
-        where name.hasSuffix(suffix) && name != suffix.dropFirst() {
-            let glyph = String(name.dropLast(suffix.count))
-            guard let inner = glyphs(glyph, filled: false) else { return nil }
+        where name.hasSuffix(suffix) {
+            guard let inner = parts(String(name.dropLast(suffix.count)), filled: false) else { return nil }
             let scaled = inner.map { part -> Part in
                 var part = part
                 part.path = part.path.applying(.translation(-0.5, -0.5).concatenating(.scale(0.55, 0.55)).concatenating(.translation(0.5, 0.5)))
@@ -45,7 +90,25 @@ internal enum Symbols {
             }
             return [Part(path: enclosure, isFilled: filled)] + scaled
         }
-        return glyphs(name, filled: filled)
+        // A glyph struck through.
+        if name.hasSuffix(".slash") {
+            guard let inner = parts(String(name.dropLast(6)), filled: filled) else { return nil }
+            return inner + [Part(path: lines([(0.12, 0.1), (0.88, 0.9)]), isFilled: false)]
+        }
+        return nil
+    }
+
+    /// The width of a symbol's strokes, in its unit square, at a font
+    /// weight: Phosphor's thin, light, regular and bold widths at those
+    /// weights, and between them in between.
+    static func lineWidth(weight: Int) -> CGFloat {
+        let widths: [(weight: CGFloat, width: CGFloat)] = [(100, 8), (300, 12), (400, 16), (700, 24), (900, 28)]
+        let weight = min(max(CGFloat(weight), 100), 900)
+        var width = widths[0].width
+        for (lower, upper) in zip(widths, widths.dropFirst()) where weight >= lower.weight {
+            width = lower.width + (upper.width - lower.width) * (weight - lower.weight) / (upper.weight - lower.weight)
+        }
+        return width * 1.15 / 256
     }
 
     static let unit = CGRect(x: 0, y: 0, width: 1, height: 1)
@@ -108,7 +171,8 @@ internal enum Symbols {
         return [Part(path: outline, isFilled: filled), Part(path: hole, isFilled: false, isKnockout: filled)]
     }
 
-    /// The glyphs themselves, outlined or filled.
+    /// Cacao's own glyphs, outlined or filled, for names without a Phosphor
+    /// drawing.
     private static func glyphs(_ name: String, filled: Bool) -> [Part]? {
         func stroke(_ path: Path) -> [Part] { [Part(path: path, isFilled: false)] }
         func shape(_ path: Path) -> [Part] { [Part(path: path, isFilled: filled)] }
@@ -345,7 +409,7 @@ internal enum Symbols {
     /// The symbol drawn in a rectangle: its parts, scaled, in a color or
     /// gradient, with strokes of a weight.
     static func drawing(_ parts: [Part], in rect: CGRect, color: Color.Resolved, gradient: GradientPaint?, weight: Int) -> DrawingContent {
-        let lineWidth = 0.085 * (0.7 + CGFloat(weight) / 1000)
+        let lineWidth = lineWidth(weight: weight)
         var state = DrawingState()
         state.transform = Transform2D.scale(rect.width, rect.height).concatenating(.translation(rect.minX, rect.minY))
         let white = Color.Resolved(red: 1, green: 1, blue: 1)
