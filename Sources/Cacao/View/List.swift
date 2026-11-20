@@ -174,9 +174,11 @@ internal struct _ListRows<Content: View>: View, PrimitiveView {
     func resolve(in context: ResolveContext) -> Resolution {
         let selection = self.selection, style = self.style
         // A split view's sidebar tells it whether a row is selected: when
-        // it's collapsed to one column, that's when its detail shows.
+        // it's collapsed to one column, that's when its detail shows. Only
+        // the sidebar's own list: not one in a screen pushed above it,
+        // as the detail's are in a collapsed split view.
         if let selection, let navigation = context.environment.navigationContext, !navigation.isDetail,
-           let link = navigation.split {
+           context.environment.screenContext?.depth == 0, let link = navigation.split {
             let isEmpty = selection.wrappedValue == nil
             let changed = link.sidebarSelection?.isEmpty != isEmpty
             link.sidebarSelection = (isEmpty, { selection.wrappedValue = nil })
