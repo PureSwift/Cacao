@@ -85,7 +85,12 @@ public final class ImageSource: Hashable, @unchecked Sendable {
 
     private static let lock = NSLock()
 
-    /// Loads a named PNG from a bundle, preferring the variant for `scale`.
+    /// The asset catalogs of each bundle looked in, by its path.
+    nonisolated(unsafe) private static var catalogs: [String: AssetCatalog] = [:]
+
+    /// Loads a named image from a bundle, preferring the variant for
+    /// `scale`: a PNG file in the bundle, or an image set of an asset
+    /// catalog in it.
     public static func named(_ name: String, bundlePath: String?, scale: CGFloat) -> ImageSource? {
         let key = "\(bundlePath ?? "main")/\(name)@\(scale)"
         lock.lock()
@@ -105,6 +110,26 @@ public final class ImageSource: Hashable, @unchecked Sendable {
                 cache[key] = source
                 return source
             }
+        }
+        // An image set of an asset catalog copied into the bundle.
+        let catalogKey = bundlePath ?? "main"
+        let catalog: AssetCatalog
+        if let known = catalogs[catalogKey] {
+            catalog = known
+        } else {
+            catalog = AssetCatalog(directories: AssetCatalog.directories(for: bundle))
+            catalogs[catalogKey] = catalog
+        }
+        if let variant = catalog.variant(named: name, scale: preferred), let data = try? Data(contentsOf: variant.url) {
+            let source = ImageSource(data: data, scale: CGFloat(variant.scale))
+            cache[key] = source
+            return source
+        }
+        // A catalog the system compiled.
+        if let image = AssetCatalog.systemImage(named: name, in: bundle) {
+            let source = ImageSource(data: image.data, scale: image.scale)
+            cache[key] = source
+            return source
         }
         return nil
     }
