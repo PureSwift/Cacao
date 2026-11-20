@@ -62,6 +62,41 @@ import Testing
         settle(graph, size: size)
     }
 
+    // MARK: Lists in pushed screens
+
+    /// A sidebar of links, and a screen with a list that has a selection.
+    private struct PushedList: View {
+        @State var selection: Int?
+        var body: some View {
+            NavigationSplitView {
+                List {
+                    NavigationLink("Rows", value: "rows")
+                }
+                .navigationTitle("Catalog")
+                .navigationDestination(for: String.self) { _ in
+                    List(0..<5, id: \.self, selection: $selection) { index in
+                        Text("Row \(index)")
+                    }
+                    .navigationTitle("Rows")
+                }
+            } detail: {
+                Text("Detail root")
+            }
+        }
+    }
+
+    @Test func selectingARowOfAPushedListStaysOnItsScreen() {
+        let graph = make(PushedList(), size: Self.phone)
+        // Back from the detail, which shows first, to the sidebar.
+        tap(graph, "Catalog", size: Self.phone)
+        tap(graph, "Rows", size: Self.phone)
+        #expect(texts(graph)["Row 2"] != nil)
+        // The row is selected; the split view's detail doesn't take over.
+        tap(graph, "Row 2", size: Self.phone)
+        #expect(texts(graph)["Row 2"] != nil)
+        #expect(texts(graph)["Detail root"] == nil)
+    }
+
     // MARK: Size classes
 
     @Test func aWindowIsCompactBelowAnIPadsSplitWidth() {
