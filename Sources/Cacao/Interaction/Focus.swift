@@ -159,6 +159,11 @@ extension ViewGraph {
         focusedNode = node
         previous?.attributes.focus?.focusChanged(false)
         node?.attributes.focus?.focusChanged(true)
+        // Focusable views' content reads whether they have focus.
+        focusEnvironmentNodes = focusEnvironmentNodes.filter { $0.value.node?.isAttached == true }
+        for reference in focusEnvironmentNodes.values {
+            reference.node?.invalidate()
+        }
         syncFocusBindings()
     }
 
