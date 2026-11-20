@@ -568,6 +568,50 @@ extension ViewGraph {
 }
 
 @MainActor
+@Suite struct NestedNavigationStackTests {
+
+    struct Root: View {
+        var body: some View {
+            NavigationStack {
+                NavigationLink("Go") {
+                    NavigationStack {
+                        NavigationLink("Apple") { Text("Apple screen").navigationTitle("Apple") }
+                            .navigationTitle("Fruits")
+                    }
+                    .navigationTitle("Covered")
+                }
+                .navigationTitle("Catalog")
+            }
+        }
+    }
+
+    @Test func stackInAScreenShowsOneBarWithTheWayBack() {
+        let graph = layout(Root(), width: 400, height: 500)
+        graph.settle()
+        graph.tapText("Go")
+        graph.finish()
+        // The inner stack's bar, not the screen's own; back goes to the outer root.
+        #expect(graph.texts.contains("Fruits"))
+        #expect(!graph.texts.contains("Covered"))
+        #expect(graph.texts.filter { $0 == "Catalog" }.count == 1)
+        #expect(!graph.texts.contains("Go"))
+    }
+
+    @Test func pushingInTheInnerStackGoesBackToItsRoot() {
+        let graph = layout(Root(), width: 400, height: 500)
+        graph.settle()
+        graph.tapText("Go")
+        graph.finish()
+        graph.tapText("Apple")
+        graph.finish()
+        #expect(graph.texts.contains("Apple screen"))
+        #expect(graph.texts.filter { $0 == "Fruits" }.count == 1)
+        #expect(!graph.texts.contains("Catalog"))
+        #expect(!graph.texts.contains("Covered"))
+    }
+}
+
+@MainActor
 @Suite struct NavigationAnimationTests {
 
     @Test func pushSlidesInOverThePreviousScreen() {
