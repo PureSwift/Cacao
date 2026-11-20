@@ -352,6 +352,36 @@ extension ViewGraph {
         #expect(graph.gestureSession == nil)
     }
 
+    @Test func magnifyGestureFollowsTwoFingerTouches() {
+        let log = self.log
+        let graph = layout(
+            Color.red.frame(width: 200, height: 200).probe("box")
+                .gesture(
+                    MagnifyGesture()
+                        .onChanged { log.log("scale \($0.magnification)") }
+                        .onEnded { log.log("ended \($0.magnification)") }
+                )
+        )
+        let center = graph.center("box")
+        var tracker = TouchPinchTracker()
+        func send(_ update: TouchPinchTracker.Update?, at time: Double) {
+            guard let update else { return }
+            graph.magnify(update.phase, scale: update.scale, at: update.location, time: time)
+        }
+        // One finger alone isn't a pinch.
+        send(tracker.fingerDown(1, at: CGPoint(x: center.x - 20, y: center.y)), at: 1)
+        #expect(tracker.fingerMoved(1, to: CGPoint(x: center.x - 25, y: center.y)) == nil)
+        // A second, 50 points away; then they spread to twice that.
+        send(tracker.fingerDown(2, at: CGPoint(x: center.x + 25, y: center.y)), at: 1.1)
+        send(tracker.fingerMoved(2, to: CGPoint(x: center.x + 50, y: center.y)), at: 1.2)
+        send(tracker.fingerMoved(1, to: CGPoint(x: center.x - 50, y: center.y)), at: 1.3)
+        send(tracker.fingerUp(2), at: 1.4)
+        #expect(log.events == ["scale 1.5", "scale 2.0", "ended 2.0"])
+        // The finger left down doesn't pinch on.
+        #expect(tracker.fingerMoved(1, to: center) == nil)
+        #expect(tracker.fingerUp(1) == nil)
+    }
+
     @Test func mapTransformsValues() {
         let log = self.log
         let graph = layout(
