@@ -986,6 +986,19 @@ extension View {
     public func searchable(text: Binding<String>, prompt: LocalizedStringKey) -> some View {
         searchable(text: text, prompt: Text(prompt))
     }
+
+    /// Configures the search suggestions for this view.
+    ///
+    /// Cacao doesn't show search suggestions yet: the view is unchanged.
+    public func searchSuggestions<S: View>(@ViewBuilder _ suggestions: () -> S) -> some View {
+        self
+    }
+
+    /// Associates a fully formed string with the value of this view when
+    /// used as a search suggestion.
+    public func searchCompletion(_ completion: String) -> some View {
+        self
+    }
 }
 
 /// In a navigation stack, a search field in the bar; elsewhere, above the content.
