@@ -4,7 +4,7 @@
 #
 # SwiftPM (Package.swift) stays the way to develop and test Cacao.
 
-cmake_minimum_required(VERSION 3.29)
+cmake_minimum_required(VERSION 3.26)
 
 if(POLICY CMP0157)
   # Swift's new build model: modules are emitted on their own, in parallel.
