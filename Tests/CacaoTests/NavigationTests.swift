@@ -624,6 +624,41 @@ extension ViewGraph {
         #expect(!graph.texts.contains("Push"))
     }
 
+    @Test func pushedScreenCoversThePreviousOneWhileItSlidesIn() {
+        struct Stack: View {
+            @State var path: [Int] = []
+            var body: some View {
+                NavigationStack(path: $path) {
+                    Button("Push") { path = [1] }
+                        .navigationDestination(for: Int.self) { Text("Screen \($0)") }
+                }
+            }
+        }
+        let graph = layout(Stack(), width: 400, height: 500)
+        graph.settle()
+        graph.tapText("Push")
+        graph.settle()
+        graph.advance(to: graph.time + 0.1)
+        // Between the two screens' texts: the window's background, filling
+        // the stack and sliding in with the new screen.
+        let drawn = graph.drawnItems
+        func index(ofText string: String) -> Int? {
+            drawn.firstIndex { drawn in
+                if case let .content(.text(text)) = drawn.item.value { return text.string == string }
+                return false
+            }
+        }
+        let below = index(ofText: "Push") ?? 0
+        let above = index(ofText: "Screen 1") ?? 0
+        #expect(below < above)
+        let cover = drawn[below..<max(above, below)].first { drawn in
+            if case .content(.color) = drawn.item.value { return drawn.item.frame.size == CGSize(width: 400, height: 500) }
+            return false
+        }
+        #expect(cover != nil)
+        #expect((cover?.transforms.first?.tx ?? 0) > 0)
+    }
+
     @Test func disabledAnimationsPushInstantly() {
         struct Stack: View {
             @State var path: [Int] = []
