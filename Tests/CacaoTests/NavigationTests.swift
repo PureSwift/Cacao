@@ -599,6 +599,31 @@ extension ViewGraph {
         #expect(!graph.hasActiveAnimations)
     }
 
+    @Test func finishedPushDrawsWithoutThePreviousScreen() {
+        struct Stack: View {
+            @State var path: [Int] = []
+            var body: some View {
+                NavigationStack(path: $path) {
+                    Button("Push") { path = [1] }
+                        .navigationDestination(for: Int.self) { Text("Screen \($0)") }
+                }
+            }
+        }
+        let graph = layout(Stack(), width: 400, height: 500)
+        graph.settle()
+        graph.tapText("Push")
+        graph.settle()
+        // A frame drawn while the new screen slides in shows both screens.
+        graph.advanceAnimations(to: graph.time + 0.1)
+        #expect(graph.texts.contains("Push"))
+        #expect(!graph.needsDisplay)
+        // The frame the slide finishes at draws again, without the screen below.
+        graph.advanceAnimations(to: graph.time + 2)
+        #expect(!graph.hasActiveAnimations)
+        #expect(graph.needsDisplay)
+        #expect(!graph.texts.contains("Push"))
+    }
+
     @Test func disabledAnimationsPushInstantly() {
         struct Stack: View {
             @State var path: [Int] = []
