@@ -11,7 +11,7 @@ import CoreGraphics
 #endif
 import CacaoRender
 import CacaoCompositor
-import CSDL3
+import SDL3Swift
 #if os(macOS)
 import AppKit
 #endif
@@ -24,11 +24,17 @@ import UIKit
 @MainActor
 public final class HostWindow {
 
-    /// The `SDL_Window`.
-    public let sdlWindow: OpaquePointer
+    /// SDL's window.
+    public let window: SDLWindow
 
-    /// The `SDL_Renderer`.
-    public let sdlRenderer: OpaquePointer
+    /// SDL's renderer for the window.
+    public let renderer: SDLRenderer
+
+    /// The `SDL_Window`, for what SDL3Swift doesn't wrap.
+    public var sdlWindow: OpaquePointer { window.unsafePointer }
+
+    /// The `SDL_Renderer`, for what SDL3Swift doesn't wrap.
+    public var sdlRenderer: OpaquePointer { renderer.unsafePointer }
 
     /// The `SDL_WindowID`.
     public let id: UInt32
@@ -42,7 +48,7 @@ public final class HostWindow {
 
     /// Whether the window has keyboard focus.
     public var isKey: Bool {
-        SDL_GetKeyboardFocus() == sdlWindow
+        window.hasKeyboardFocus
     }
 
     /// Where the mouse is, for pinches.
@@ -75,10 +81,6 @@ public final class HostWindow {
     /// When each frame of the last second was drawn, for the frame rate.
     private var frameTimes: [Double] = []
 
-    private static let resizable: SDL_WindowFlags = 0x0000_0000_0000_0020
-
-    private static let highPixelDensity: SDL_WindowFlags = 0x0000_0000_0000_2000
-
     /// What the scene last asked of the window.
     private var shown = HostWindowState()
 
@@ -87,22 +89,26 @@ public final class HostWindow {
     private var isTextInputActive = false
 
     init?(title: String, size: CGSize, textEngine: SilicaTextEngine) {
-        guard let window = SDL_CreateWindow(
-            title,
-            Int32(size.width),
-            Int32(size.height),
-            Self.resizable | Self.highPixelDensity
-        ) else {
+        var driver = SDLRenderer.Driver.default
+        if let name = HostRuntime.rendererName {
+            guard let named = SDLRenderer.Driver(name: name) else {
+                print("Cacao: SDL has no \(name) renderer")
+                return nil
+            }
+            driver = named
+        }
+        guard let window = try? SDLWindow(
+            title: title,
+            width: Int(size.width),
+            height: Int(size.height),
+            options: [.resizable, .highPixelDensity]
+        ), let renderer = try? SDLRenderer(window: window, driver: driver) else {
             return nil
         }
-        guard let renderer = SDL_CreateRenderer(window, HostRuntime.rendererName) else {
-            SDL_DestroyWindow(window)
-            return nil
-        }
-        SDL_SetRenderVSync(renderer, 1)
-        self.sdlWindow = window
-        self.sdlRenderer = renderer
-        self.id = SDL_GetWindowID(window)
+        try? renderer.setVSync(.every(1))
+        self.window = window
+        self.renderer = renderer
+        self.id = UInt32(window.id)
         self.backend = SDLBackend(renderer: renderer)
         self.compositor = Compositor(backend: backend, textEngine: textEngine)
         #if os(macOS)
@@ -112,7 +118,7 @@ public final class HostWindow {
 
     /// Brings the window to the front.
     public func raise() {
-        SDL_RaiseWindow(sdlWindow)
+        window.raise()
     }
 
     /// Draws the scene again on the next frame.
@@ -128,22 +134,21 @@ public final class HostWindow {
             NSEvent.removeMonitor(rotationMonitor)
         }
         #endif
+        // The renderer and the window are destroyed with this object, which
+        // the host has let go of.
         backend.destroyAllTextures()
-        SDL_DestroyRenderer(sdlRenderer)
-        SDL_DestroyWindow(sdlWindow)
+        try? window.hide()
     }
 
     /// The window's size in points.
     public var size: CGSize {
-        var width: Int32 = 0
-        var height: Int32 = 0
-        SDL_GetWindowSize(sdlWindow, &width, &height)
-        return CGSize(width: CGFloat(width), height: CGFloat(height))
+        let size = window.size
+        return CGSize(width: CGFloat(size.width), height: CGFloat(size.height))
     }
 
     /// Pixels per point.
     public var scale: CGFloat {
-        CGFloat(SDL_GetWindowPixelDensity(sdlWindow))
+        CGFloat(window.pixelDensity)
     }
 
     /// Whether the window needs frames even without events.
@@ -153,7 +158,7 @@ public final class HostWindow {
 
     /// The window's Wayland surface, when SDL uses Wayland.
     var waylandSurface: UnsafeMutableRawPointer? {
-        SDL_GetPointerProperty(SDL_GetWindowProperties(sdlWindow), SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, nil)
+        window.properties.pointer("SDL.window.wayland.surface")
     }
 
     /// Delivers a change to a trackpad rotation from the system, which
@@ -172,157 +177,163 @@ public final class HostWindow {
     /// Files and text dropped from the system so far, in one drop.
     private var droppedItems: [Any] = []
 
-    func handle(_ event: SDL_Event, now: Double) {
+    func handle(_ event: SDLEvent, now: Double) {
         guard let scene else { return }
-        switch SDL_EventType(event.type) {
-        case SDL_EVENT_WINDOW_RESIZED, SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED, SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED:
+        switch event {
+        case .window(_, .resized), .window(_, .pixelSizeChanged), .window(_, .displayScaleChanged):
             scene.handle(.geometryChanged, time: now)
             needsRender = true
-        case SDL_EVENT_WINDOW_EXPOSED:
+        case .window(_, .exposed):
             needsRender = true
-        case SDL_EVENT_MOUSE_BUTTON_DOWN:
-            guard let button = Self.button(event.button.button) else { break }
+        case let .mouseButtonDown(_, which, button, _, x, y):
+            guard let button = Self.button(button) else { break }
             // A drag belongs to the first button pressed.
             if pressedButton == nil {
                 pressedButton = button
             }
-            scene.handle(.pointer(.began, button: button, at: CGPoint(x: CGFloat(event.button.x), y: CGFloat(event.button.y)), isFromTouch: event.button.which == Self.touchMouse), time: now)
-        case SDL_EVENT_MOUSE_BUTTON_UP:
-            guard let button = Self.button(event.button.button) else { break }
+            scene.handle(.pointer(.began, button: button, at: CGPoint(x: CGFloat(x), y: CGFloat(y)), isFromTouch: which == .touch), time: now)
+        case let .mouseButtonUp(_, which, button, _, x, y):
+            guard let button = Self.button(button) else { break }
             if pressedButton == button {
                 pressedButton = nil
             }
-            scene.handle(.pointer(.ended, button: button, at: CGPoint(x: CGFloat(event.button.x), y: CGFloat(event.button.y)), isFromTouch: event.button.which == Self.touchMouse), time: now)
-        case SDL_EVENT_MOUSE_MOTION:
-            mouseLocation = CGPoint(x: CGFloat(event.motion.x), y: CGFloat(event.motion.y))
-            if let pressedButton, event.motion.state != 0 {
-                scene.handle(.pointer(.moved, button: pressedButton, at: mouseLocation, isFromTouch: event.motion.which == Self.touchMouse), time: now)
+            scene.handle(.pointer(.ended, button: button, at: CGPoint(x: CGFloat(x), y: CGFloat(y)), isFromTouch: which == .touch), time: now)
+        case let .mouseMotion(_, which, buttons, x, y, _, _):
+            mouseLocation = CGPoint(x: CGFloat(x), y: CGFloat(y))
+            if let pressedButton, !buttons.isEmpty {
+                scene.handle(.pointer(.moved, button: pressedButton, at: mouseLocation, isFromTouch: which == .touch), time: now)
             } else {
                 pressedButton = nil
                 scene.handle(.hover(at: mouseLocation), time: now)
             }
-        case SDL_EVENT_WINDOW_MOUSE_LEAVE:
+        case .window(_, .mouseLeave):
             scene.handle(.hover(at: nil), time: now)
-        case SDL_EVENT_PINCH_BEGIN:
+        case let .pinch(_, phase, scale):
             // SDL reports each change; scenes see the total.
-            pinchScale = 1
-            scene.handle(.magnify(.began, scale: pinchScale, at: pinchLocation), time: now)
-        case SDL_EVENT_PINCH_UPDATE:
-            pinchScale *= Double(event.pinch.scale)
-            scene.handle(.magnify(.moved, scale: pinchScale, at: pinchLocation), time: now)
-        case SDL_EVENT_PINCH_END:
-            scene.handle(.magnify(.ended, scale: pinchScale, at: pinchLocation), time: now)
-        case SDL_EVENT_FINGER_DOWN, SDL_EVENT_FINGER_MOTION, SDL_EVENT_FINGER_UP, SDL_EVENT_FINGER_CANCELED:
-            // Touch screens only: trackpads' gestures come from the system.
-            guard SDL_GetTouchDeviceType(event.tfinger.touchID) == SDL_TOUCH_DEVICE_DIRECT else { break }
-            let size = size
-            let location = CGPoint(x: CGFloat(event.tfinger.x) * size.width, y: CGFloat(event.tfinger.y) * size.height)
-            let phase: HostPhase = switch SDL_EventType(event.type) {
-            case SDL_EVENT_FINGER_DOWN: .began
-            case SDL_EVENT_FINGER_MOTION: .moved
-            case SDL_EVENT_FINGER_UP: .ended
-            default: .cancelled
-            }
-            let finger = UInt64(event.tfinger.fingerID)
             switch phase {
-            case .began, .moved: fingers[finger] = location
-            case .ended, .cancelled: fingers[finger] = nil
+            case .began:
+                pinchScale = 1
+                scene.handle(.magnify(.began, scale: pinchScale, at: pinchLocation), time: now)
+            case .updated:
+                pinchScale *= Double(scale)
+                scene.handle(.magnify(.moved, scale: pinchScale, at: pinchLocation), time: now)
+            case .ended:
+                scene.handle(.magnify(.ended, scale: pinchScale, at: pinchLocation), time: now)
             }
-            scene.handle(.touch(phase, finger: UInt64(event.tfinger.fingerID), at: location), time: now)
-        case SDL_EVENT_MOUSE_WHEEL:
-            var x = event.wheel.x
-            var y = event.wheel.y
-            if event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED {
-                x = -x
-                y = -y
-            }
+        case let .fingerDown(_, touchID, fingerID, x, y):
+            touch(.began, touchID: touchID, fingerID: fingerID, x: x, y: y, scene: scene, now: now)
+        case let .fingerMotion(_, touchID, fingerID, x, y):
+            touch(.moved, touchID: touchID, fingerID: fingerID, x: x, y: y, scene: scene, now: now)
+        case let .fingerUp(_, touchID, fingerID, x, y):
+            touch(.ended, touchID: touchID, fingerID: fingerID, x: x, y: y, scene: scene, now: now)
+        case let .fingerCanceled(_, touchID, fingerID, x, y):
+            touch(.cancelled, touchID: touchID, fingerID: fingerID, x: x, y: y, scene: scene, now: now)
+        case let .mouseWheel(_, _, x, y, isFlipped, mouseX, mouseY):
             scene.handle(
-                .scroll(x: x, y: y, at: CGPoint(x: CGFloat(event.wheel.mouse_x), y: CGFloat(event.wheel.mouse_y))),
+                .scroll(x: isFlipped ? -x : x, y: isFlipped ? -y : y, at: CGPoint(x: CGFloat(mouseX), y: CGFloat(mouseY))),
                 time: now
             )
-        case SDL_EVENT_KEY_DOWN where event.key.key == SDLK_F12:
+        case let .keyDown(_, _, keycode, _, _) where keycode == .f12:
             showsStatistics.toggle()
             needsRender = true
-        case SDL_EVENT_KEY_DOWN, SDL_EVENT_KEY_UP:
-            scene.handle(.key(HostKeyEvent(
-                isDown: event.key.down,
-                isRepeat: event.key.repeat,
-                usage: UInt32(event.key.scancode.rawValue),
-                keyCode: UInt32(event.key.key),
-                modifiers: Self.modifiers(event.key.mod),
-                key: Self.key(event.key.key, modifiers: event.key.mod)
-            )), time: now)
-        case SDL_EVENT_DROP_BEGIN:
-            droppedItems = []
-        case SDL_EVENT_DROP_POSITION:
-            scene.handle(.drop(.moved, items: droppedItems, at: CGPoint(x: CGFloat(event.drop.x), y: CGFloat(event.drop.y))), time: now)
-        case SDL_EVENT_DROP_FILE:
-            if let data = event.drop.data {
-                droppedItems.append(URL(fileURLWithPath: String(cString: data)))
+        case let .keyDown(_, scancode, keycode, modifiers, isRepeat):
+            key(isDown: true, scancode: scancode, keycode: keycode, modifiers: modifiers, isRepeat: isRepeat, scene: scene, now: now)
+        case let .keyUp(_, scancode, keycode, modifiers, isRepeat):
+            key(isDown: false, scancode: scancode, keycode: keycode, modifiers: modifiers, isRepeat: isRepeat, scene: scene, now: now)
+        case let .drop(_, drop):
+            switch drop {
+            case .began:
+                droppedItems = []
+            case let .position(x, y):
+                scene.handle(.drop(.moved, items: droppedItems, at: CGPoint(x: CGFloat(x), y: CGFloat(y))), time: now)
+            case let .file(path, _, _):
+                droppedItems.append(URL(fileURLWithPath: path))
+            case let .text(text, _, _):
+                droppedItems.append(text)
+            case let .completed(x, y):
+                scene.handle(.drop(.dropped, items: droppedItems, at: CGPoint(x: CGFloat(x), y: CGFloat(y))), time: now)
+                droppedItems = []
+                needsRender = true
             }
-        case SDL_EVENT_DROP_TEXT:
-            if let data = event.drop.data {
-                droppedItems.append(String(cString: data))
-            }
-        case SDL_EVENT_DROP_COMPLETE:
-            scene.handle(.drop(.dropped, items: droppedItems, at: CGPoint(x: CGFloat(event.drop.x), y: CGFloat(event.drop.y))), time: now)
-            droppedItems = []
-            needsRender = true
-        case SDL_EVENT_TEXT_INPUT:
-            if let text = event.text.text {
-                scene.handle(.text(String(cString: text)), time: now)
+        case let .textInput(_, text):
+            if !text.isEmpty {
+                scene.handle(.text(text), time: now)
             }
         default:
             break
         }
     }
 
-    /// `SDL_TOUCH_MOUSEID`: the mouse SDL makes up for fingers on a touch
-    /// screen.
-    private static let touchMouse = SDL_MouseID.max
+    /// A finger: on touch screens only, as trackpads' gestures come from
+    /// the system. SDL places it as a fraction of the window.
+    private func touch(_ phase: HostPhase, touchID: TouchID, fingerID: FingerID, x: Float, y: Float, scene: any HostScene, now: Double) {
+        guard touchID.deviceType == .direct else { return }
+        let size = size
+        let location = CGPoint(x: CGFloat(x) * size.width, y: CGFloat(y) * size.height)
+        switch phase {
+        case .began, .moved: fingers[fingerID.rawValue] = location
+        case .ended, .cancelled: fingers[fingerID.rawValue] = nil
+        }
+        scene.handle(.touch(phase, finger: fingerID.rawValue, at: location), time: now)
+    }
+
+    private func key(
+        isDown: Bool, scancode: Scancode, keycode: Keycode, modifiers: KeyModifiers, isRepeat: Bool,
+        scene: any HostScene, now: Double
+    ) {
+        scene.handle(.key(HostKeyEvent(
+            isDown: isDown,
+            isRepeat: isRepeat,
+            usage: scancode.rawValue,
+            keyCode: keycode.rawValue,
+            modifiers: Self.modifiers(modifiers),
+            key: Self.key(keycode, modifiers: modifiers)
+        )), time: now)
+    }
 
     /// The button a drag belongs to: the first pressed.
     private var pressedButton: HostPointerButton?
 
-    private static func button(_ button: UInt8) -> HostPointerButton? {
-        switch Int32(button) {
-        case SDL_BUTTON_LEFT: .primary
-        case SDL_BUTTON_RIGHT: .secondary
-        case SDL_BUTTON_MIDDLE: .middle
+    private static func button(_ button: MouseButton) -> HostPointerButton? {
+        switch button {
+        case .left: .primary
+        case .right: .secondary
+        case .middle: .middle
         default: nil
         }
     }
 
     // MARK: Keyboard
 
-    private static func modifiers(_ mod: SDL_Keymod) -> HostKeyModifiers {
-        var modifiers: HostKeyModifiers = []
-        if mod & 0x0003 != 0 { modifiers.insert(.shift) }
-        if mod & 0x00C0 != 0 { modifiers.insert(.control) }
-        if mod & 0x0300 != 0 { modifiers.insert(.option) }
-        if mod & 0x0C00 != 0 { modifiers.insert(.command) }
-        return modifiers
+    private static func modifiers(_ modifiers: KeyModifiers) -> HostKeyModifiers {
+        var result: HostKeyModifiers = []
+        if !modifiers.isDisjoint(with: .shift) { result.insert(.shift) }
+        if !modifiers.isDisjoint(with: .control) { result.insert(.control) }
+        if !modifiers.isDisjoint(with: .alt) { result.insert(.option) }
+        if !modifiers.isDisjoint(with: .gui) { result.insert(.command) }
+        return result
     }
 
     /// The key for an SDL key code. Characters only count with the control
     /// or command key held; typing arrives as text input.
-    private static func key(_ key: SDL_Keycode, modifiers mod: SDL_Keymod) -> HostKey? {
+    private static func key(_ key: Keycode, modifiers: KeyModifiers) -> HostKey? {
         switch key {
-        case SDLK_LEFT: return .left
-        case SDLK_RIGHT: return .right
-        case SDLK_UP: return .up
-        case SDLK_DOWN: return .down
-        case SDLK_HOME: return .home
-        case SDLK_END: return .end
-        case SDLK_PAGEUP: return .pageUp
-        case SDLK_PAGEDOWN: return .pageDown
-        case SDLK_BACKSPACE: return .backspace
-        case SDLK_DELETE: return .delete
-        case SDLK_RETURN, SDLK_KP_ENTER: return .returnKey
-        case SDLK_ESCAPE: return .escape
-        case SDLK_TAB: return .tab
+        case .left: return .left
+        case .right: return .right
+        case .up: return .up
+        case .down: return .down
+        case .home: return .home
+        case .end: return .end
+        case .pageUp: return .pageUp
+        case .pageDown: return .pageDown
+        case .backspace: return .backspace
+        case .delete: return .delete
+        case .return, .keypadEnter: return .returnKey
+        case .escape: return .escape
+        case .tab: return .tab
         default:
-            guard mod & 0x0CC0 != 0, key < 0x80, let scalar = Unicode.Scalar(key) else {
+            guard !modifiers.isDisjoint(with: [.control, .gui]), key.rawValue < 0x80,
+                  let scalar = Unicode.Scalar(key.rawValue) else {
                 return nil
             }
             return .character(Character(scalar))
@@ -335,26 +346,25 @@ public final class HostWindow {
     /// text input (with an input method) as focus moves in and out of text.
     private func apply(_ state: HostWindowState) {
         if state.title != shown.title, let title = state.title {
-            SDL_SetWindowTitle(sdlWindow, title)
+            window.title = title
         }
         if state.cursor != shownCursor {
             shownCursor = state.cursor
-            SDL_SetCursor(SystemCursors.cursor(for: state.cursor))
+            SDL.setCursor(SystemCursors.cursor(for: state.cursor))
         }
         if state.acceptsTextInput != isTextInputActive {
             isTextInputActive = state.acceptsTextInput
             if state.acceptsTextInput {
-                SDL_StartTextInput(sdlWindow)
+                try? window.startTextInput()
             } else {
-                SDL_StopTextInput(sdlWindow)
+                try? window.stopTextInput()
             }
         }
         if state.acceptsTextInput, let frame = state.textInputArea {
-            var area = SDL_Rect(
+            try? window.setTextInputArea(SDLRect(
                 x: Int32(frame.minX), y: Int32(frame.minY),
-                w: Int32(frame.width), h: Int32(frame.height)
-            )
-            SDL_SetTextInputArea(sdlWindow, &area, 0)
+                width: Int32(frame.width), height: Int32(frame.height)
+            ))
         }
         compositor.backgroundColor = state.backgroundColor
         shown = state
@@ -389,8 +399,7 @@ public final class HostWindow {
 
     /// The window's AppKit content view.
     public var contentView: NSView? {
-        let properties = SDL_GetWindowProperties(sdlWindow)
-        guard let pointer = SDL_GetPointerProperty(properties, SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nil) else { return nil }
+        guard let pointer = window.properties.pointer("SDL.window.cocoa.window") else { return nil }
         return Unmanaged<NSWindow>.fromOpaque(pointer).takeUnretainedValue().contentView
     }
     #endif
@@ -435,18 +444,17 @@ public final class HostWindow {
             screenshotPath = nil
             saveScreenshot(to: path)
         }
-        SDL_RenderPresent(sdlRenderer)
+        renderer.present()
     }
 
     /// The parts of the window the system covers.
     private func safeArea(size: CGSize) -> HostInsets {
-        var rect = SDL_Rect()
-        guard SDL_GetWindowSafeArea(sdlWindow, &rect), rect.w > 0, rect.h > 0 else { return HostInsets() }
+        guard let rect = try? window.safeArea(), rect.width > 0, rect.height > 0 else { return HostInsets() }
         return HostInsets(
             top: CGFloat(rect.y),
             left: CGFloat(rect.x),
-            bottom: max(size.height - CGFloat(rect.y + rect.h), keyboardHeight, 0),
-            right: max(size.width - CGFloat(rect.x + rect.w), 0)
+            bottom: max(size.height - CGFloat(rect.y + rect.height), keyboardHeight, 0),
+            right: max(size.width - CGFloat(rect.x + rect.width), 0)
         )
     }
 
@@ -456,7 +464,7 @@ public final class HostWindow {
     private var keyboardHeight: CGFloat {
         #if os(iOS)
         guard let frame = ScreenKeyboard.shared.frame,
-              let pointer = SDL_GetPointerProperty(SDL_GetWindowProperties(sdlWindow), "SDL.window.uikit.window", nil) else {
+              let pointer = self.window.properties.pointer("SDL.window.uikit.window") else {
             return 0
         }
         let window = Unmanaged<UIWindow>.fromOpaque(pointer).takeUnretainedValue()
@@ -484,19 +492,21 @@ public final class HostWindow {
 
     private func saveScreenshot(to path: String) {
         defer { didSaveScreenshot = true }
-        guard let surface = SDL_RenderReadPixels(sdlRenderer, nil),
-              let rgba = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_ABGR8888) else {
-            print("Cacao: screenshot failed: \(String(cString: SDL_GetError()))")
+        // Bytes in R, G, B, A order, as PNGs have them.
+        let surface: SDLSurface
+        do {
+            surface = try renderer.readPixels().converted(to: .abgr8888)
+        } catch {
+            print("Cacao: screenshot failed: \(error)")
             return
         }
-        defer {
-            SDL_DestroySurface(rgba)
-            SDL_DestroySurface(surface)
+        let width = surface.width
+        let height = surface.height
+        let pitch = surface.pitch
+        guard let pixels = try? surface.withUnsafeMutableBytes({ Data(bytes: $0, count: pitch * height) }) else {
+            print("Cacao: screenshot failed: its pixels can't be read")
+            return
         }
-        let width = Int(rgba.pointee.w)
-        let height = Int(rgba.pointee.h)
-        let pitch = Int(rgba.pointee.pitch)
-        let pixels = Data(bytes: rgba.pointee.pixels, count: pitch * height)
         guard let png = Rasterizer.encodePNG(width: width, height: height, bytesPerRow: pitch, pixels: pixels) else {
             print("Cacao: screenshot encoding failed")
             return
@@ -526,14 +536,13 @@ public final class HostWindow {
             text += "  " + extra
         }
         let scale = Float(self.scale)
-        SDL_SetRenderClipRect(sdlRenderer, nil)
-        SDL_SetRenderDrawColorFloat(sdlRenderer, 0, 0, 0, 0.7)
-        var background = SDL_FRect(x: 0, y: 0, w: Float(text.count * 8 + 8) * scale, h: 16 * scale)
-        SDL_RenderFillRect(sdlRenderer, &background)
-        SDL_SetRenderScale(sdlRenderer, scale, scale)
-        SDL_SetRenderDrawColorFloat(sdlRenderer, 1, 1, 1, 1)
-        SDL_RenderDebugText(sdlRenderer, 4, 4, text)
-        SDL_SetRenderScale(sdlRenderer, 1, 1)
+        try? renderer.setClipRect(nil)
+        try? renderer.setDrawColorFloat(red: 0, green: 0, blue: 0, alpha: 0.7)
+        try? renderer.fill(SDLFRect(x: 0, y: 0, width: Float(text.count * 8 + 8) * scale, height: 16 * scale))
+        try? renderer.setScale(x: scale, y: scale)
+        try? renderer.setDrawColorFloat(red: 1, green: 1, blue: 1, alpha: 1)
+        try? renderer.debugText(text, x: 4, y: 4)
+        try? renderer.setScale(x: 1, y: 1)
     }
 }
 
@@ -541,24 +550,24 @@ public final class HostWindow {
 @MainActor
 enum SystemCursors {
 
-    private static var cursors: [HostCursor: OpaquePointer] = [:]
+    private static var cursors: [HostCursor: SDLCursor] = [:]
 
-    static func cursor(for kind: HostCursor) -> OpaquePointer? {
+    static func cursor(for kind: HostCursor) -> SDLCursor? {
         if let cursor = cursors[kind] {
             return cursor
         }
-        let id: SDL_SystemCursor = switch kind {
-        case .default: SDL_SYSTEM_CURSOR_DEFAULT
-        case .text: SDL_SYSTEM_CURSOR_TEXT
-        case .pointer: SDL_SYSTEM_CURSOR_POINTER
-        case .move: SDL_SYSTEM_CURSOR_MOVE
-        case .crosshair: SDL_SYSTEM_CURSOR_CROSSHAIR
-        case .horizontalResize: SDL_SYSTEM_CURSOR_EW_RESIZE
-        case .verticalResize: SDL_SYSTEM_CURSOR_NS_RESIZE
-        case .diagonalResize: SDL_SYSTEM_CURSOR_NWSE_RESIZE
-        case .antidiagonalResize: SDL_SYSTEM_CURSOR_NESW_RESIZE
+        let system: SDLCursor.System = switch kind {
+        case .default: .default
+        case .text: .text
+        case .pointer: .pointer
+        case .move: .move
+        case .crosshair: .crosshair
+        case .horizontalResize: .eastWestResize
+        case .verticalResize: .northSouthResize
+        case .diagonalResize: .northwestSoutheastResize
+        case .antidiagonalResize: .northeastSouthwestResize
         }
-        let cursor = SDL_CreateSystemCursor(id)
+        let cursor = try? SDLCursor(system: system)
         cursors[kind] = cursor
         return cursor
     }
