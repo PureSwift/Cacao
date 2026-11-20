@@ -73,7 +73,11 @@ public struct EntryMacro: AccessorMacro, PeerMacro {
     }
 }
 
+// A plugin executable has an entry point; a plugin library (CMake's build)
+// is loaded by the compiler, which finds the macros by name.
+#if !CACAO_MACROS_LIBRARY
 @main
 struct CacaoMacrosPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [EntryMacro.self]
 }
+#endif
