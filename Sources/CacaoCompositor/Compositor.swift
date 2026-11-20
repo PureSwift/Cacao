@@ -67,8 +67,30 @@ package protocol CompositorBackend: AnyObject {
     /// Limits drawing to a rectangle, or removes the limit.
     func setClip(_ rect: CGRect?)
 
+    /// Creates a texture for an external surface's frames of pixels, which
+    /// `updateExternalTexture` fills.
+    func makeExternalTexture(width: Int, height: Int, format: ExternalSurface.PixelFormat) -> TextureID?
+
+    /// Replaces an external texture's pixels with a frame of its size.
+    func updateExternalTexture(_ texture: TextureID, bytesPerRow: Int, pixels: Data)
+
+    /// Imports a shared GPU buffer as a texture, without copying it; `nil`
+    /// where the backend can't.
+    func importExternalBuffer(_ buffer: ExternalSurface.Buffer) -> TextureID?
+
+    /// Draws an external texture stretched to a rectangle, upside down if
+    /// its rows are bottom first, and without blending if it's opaque.
+    func drawExternal(_ texture: TextureID, in rect: CGRect, opacity: Double, isOpaque: Bool, isFlipped: Bool, smooth: Bool)
+
     /// Shows the frame.
     func endFrame()
+}
+
+extension CompositorBackend {
+
+    package func importExternalBuffer(_ buffer: ExternalSurface.Buffer) -> TextureID? {
+        nil
+    }
 }
 
 // MARK: - Compositor
@@ -106,6 +128,9 @@ package final class Compositor {
 
         /// Textures alive after the frame.
         package var textures = 0
+
+        /// External surfaces' frames shown for the first time.
+        package var externalFrames = 0
     }
 
     /// Items with more pixels than this along either axis are drawn in tiles.
@@ -171,6 +196,33 @@ package final class Compositor {
 
     private var offscreens: [OffscreenKey: Offscreen] = [:]
 
+    /// The texture an external surface's frames of pixels are copied to,
+    /// and the frame it holds.
+    private struct ExternalTexture {
+        var texture: TextureID
+        var width: Int
+        var height: Int
+        var format: ExternalSurface.PixelFormat
+        var generation: Int
+    }
+
+    private var externalTextures: [ExternalSurface: ExternalTexture] = [:]
+
+    /// The textures an external surface's shared buffers were imported as.
+    private var externalBuffers: [ExternalSurface: [TextureID?]] = [:]
+
+    private var presentExternals: Set<ExternalSurface> = []
+
+    /// The external surfaces the last frame drew.
+    package var externalSurfaces: Set<ExternalSurface> {
+        presentExternals
+    }
+
+    /// Whether a surface the last frame drew has a newer frame to show.
+    package var hasNewExternalFrames: Bool {
+        presentExternals.contains { $0.hasNewFrame }
+    }
+
     private var scale: CGFloat = 1
 
     private var frameStatistics = Statistics()
@@ -200,6 +252,7 @@ package final class Compositor {
         presentLayers.removeAll(keepingCapacity: true)
         presentImages.removeAll(keepingCapacity: true)
         presentOffscreens.removeAll(keepingCapacity: true)
+        presentExternals.removeAll(keepingCapacity: true)
         targetOrigins = [CGPoint(x: 0, y: 0)]
         backend.beginFrame(
             width: Int((size.width * scale).rounded()),
@@ -592,6 +645,8 @@ package final class Compositor {
             case let .content(.image(image)):
                 presentLayers.insert(item.identity)
                 presentImages.insert(ImageKey(image))
+            case let .content(.external(external)):
+                presentExternals.insert(external.surface)
             case .content:
                 presentLayers.insert(item.identity)
             case let .effect(.clip(effect), nested):
@@ -624,7 +679,69 @@ package final class Compositor {
             }
             backend.draw(texture, in: pixelRect(frame), opacity: opacity, smooth: image.interpolation != .none)
             frameStatistics.draws += 1
+        case let .external(external):
+            drawExternal(external, frame: frame, opacity: opacity)
         }
+    }
+
+    /// Draws an external surface's newest frame: from a shared buffer,
+    /// imported once, or from its pixels, copied into one texture.
+    private func drawExternal(_ content: ExternalContent, frame: CGRect, opacity: Double) {
+        let surface = content.surface
+        presentExternals.insert(surface)
+        let rect = pixelRect(frame)
+        if surface.usesBuffers {
+            // Until the first frame is finished, there's nothing to show.
+            guard let taken = surface.takeBuffer(), taken.index < surface.buffers.count else { return }
+            var textures = externalBuffers[surface] ?? Array(repeating: nil, count: surface.buffers.count)
+            if textures[taken.index] == nil {
+                textures[taken.index] = backend.importExternalBuffer(surface.buffers[taken.index])
+            }
+            if let texture = textures[taken.index] {
+                externalBuffers[surface] = textures
+                frameStatistics.externalFrames += taken.frames
+                backend.drawExternal(
+                    texture, in: rect, opacity: opacity, isOpaque: surface.isOpaque,
+                    isFlipped: surface.bufferRowOrder == .bottomFirst, smooth: content.isSmooth
+                )
+                frameStatistics.draws += 1
+                return
+            }
+            // The buffers can't be imported: the producer publishes pixels
+            // from now on.
+            for texture in textures.compactMap({ $0 }) { backend.destroyTexture(texture) }
+            externalBuffers[surface] = nil
+            surface.failBuffers()
+        }
+        guard let pixels = surface.takeFrame(), pixels.width > 0, pixels.height > 0 else { return }
+        var entry = externalTextures[surface]
+        if let current = entry, current.width != pixels.width || current.height != pixels.height || current.format != pixels.format {
+            backend.destroyTexture(current.texture)
+            entry = nil
+        }
+        if entry == nil {
+            guard let texture = backend.makeExternalTexture(width: pixels.width, height: pixels.height, format: pixels.format) else {
+                externalTextures[surface] = nil
+                return
+            }
+            entry = ExternalTexture(
+                texture: texture, width: pixels.width, height: pixels.height,
+                format: pixels.format, generation: pixels.generation &- 1
+            )
+        }
+        guard var current = entry else { return }
+        if current.generation != pixels.generation {
+            backend.updateExternalTexture(current.texture, bytesPerRow: pixels.bytesPerRow, pixels: pixels.pixels)
+            frameStatistics.uploads += 1
+            frameStatistics.externalFrames += 1
+            current.generation = pixels.generation
+        }
+        externalTextures[surface] = current
+        backend.drawExternal(
+            current.texture, in: rect, opacity: opacity, isOpaque: pixels.isOpaque,
+            isFlipped: pixels.rowOrder == .bottomFirst, smooth: content.isSmooth
+        )
+        frameStatistics.draws += 1
     }
 
     private func drawIndicators(_ effect: ScrollEffect, viewport: CGRect, opacity: Double) {
@@ -776,6 +893,14 @@ package final class Compositor {
             backend.destroyTexture(offscreen.texture)
             offscreens[key] = nil
         }
+        for (surface, external) in externalTextures where !presentExternals.contains(surface) {
+            backend.destroyTexture(external.texture)
+            externalTextures[surface] = nil
+        }
+        for (surface, textures) in externalBuffers where !presentExternals.contains(surface) {
+            for texture in textures.compactMap({ $0 }) { backend.destroyTexture(texture) }
+            externalBuffers[surface] = nil
+        }
     }
 
     private func removeAllTextures() {
@@ -784,6 +909,12 @@ package final class Compositor {
         }
         for texture in images.values.compactMap({ $0 }) { backend.destroyTexture(texture) }
         for offscreen in offscreens.values { backend.destroyTexture(offscreen.texture) }
+        for external in externalTextures.values { backend.destroyTexture(external.texture) }
+        for textures in externalBuffers.values {
+            for texture in textures.compactMap({ $0 }) { backend.destroyTexture(texture) }
+        }
+        externalTextures.removeAll()
+        externalBuffers.removeAll()
         layers.removeAll()
         images.removeAll()
         offscreens.removeAll()
