@@ -5,33 +5,11 @@
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
 
+import CacaoRender
 import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
 #endif
-
-/// Clipping of a subtree's drawing to a shape.
-package struct ClipEffect: Equatable, Sendable {
-
-    /// The clip, in the frame's coordinate space.
-    package var path: Path
-
-    /// Whether the clip is the whole frame, which a renderer can apply
-    /// without an offscreen layer.
-    package var isRectangle: Bool
-
-    /// Whether the path fills by the even-odd rule.
-    package var isEOFilled = false
-
-    /// The clip as a mask: the path filled in white.
-    package var mask: DisplayList.Content {
-        .shape(ShapeContent(
-            path: path,
-            color: Color.Resolved(red: 1, green: 1, blue: 1),
-            drawing: .fill(FillStyle(eoFill: isEOFilled))
-        ))
-    }
-}
 
 internal struct ClipBehavior: UnaryLayoutBehavior {
 
