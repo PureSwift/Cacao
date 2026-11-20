@@ -45,9 +45,9 @@ public struct Image: Equatable, Sendable {
 
     /// Creates a system symbol image.
     ///
-    /// Cacao draws its own versions of common symbols, in the foreground
-    /// style at the size of the current font; others are empty, sized like
-    /// a glyph.
+    /// Cacao draws common symbols from Phosphor Icons, in the foreground
+    /// style at the size of the current font, with strokes as heavy as its
+    /// weight; others are empty, sized like a glyph.
     public init(systemName: String) {
         self.source = .systemName(systemName)
     }
