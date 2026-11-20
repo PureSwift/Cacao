@@ -28,6 +28,27 @@ import Testing
         })
     }
 
+    @Test func aDragAcrossAScrollViewIsNotAScroll() {
+        let (graph, controller, offset) = make()
+        let point = CGPoint(x: 150, y: 200)
+        // A finger dragging a slider sideways wanders a little up, a way the
+        // list can scroll: it's still going sideways.
+        let drag = CGSize(width: -60, height: -6)
+        let direction = ScrollController.panDirection(of: drag, beyond: 10)
+        #expect(direction == CGSize(width: -60, height: 0))
+        #expect(!controller.beginPan(toward: direction ?? drag, at: point, graph: graph, now: 0))
+        #expect(offset() == 0)
+        // Mostly up, it scrolls.
+        let scroll = ScrollController.panDirection(of: CGSize(width: 6, height: -60), beyond: 10)
+        #expect(scroll == CGSize(width: 0, height: -60))
+        #expect(controller.beginPan(toward: scroll ?? .zero, at: point, graph: graph, now: 0))
+    }
+
+    @Test func aFingerThatHasBarelyMovedHasNoDirectionYet() {
+        #expect(ScrollController.panDirection(of: CGSize(width: 7, height: 7), beyond: 10) == nil)
+        #expect(ScrollController.panDirection(of: CGSize(width: 0, height: 11), beyond: 10) != nil)
+    }
+
     @Test func contentFollowsTheFinger() {
         let (graph, controller, offset) = make()
         let point = CGPoint(x: 150, y: 200)
