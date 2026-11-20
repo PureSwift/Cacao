@@ -273,10 +273,12 @@ with no changes, and run in a native window on Linux and macOS.
 
 | Target | Contents | Depends on |
 |---|---|---|
-| `Cacao` | Public SwiftUI API, evaluator, `ViewGraph`, layout, `DisplayList`, layer tree model, animation, scroll physics, gestures, focus, text model. **No SDL, no GPU** – builds and tests headless anywhere. Geometry types (`CGPoint`/`CGSize`/`CGRect`/`CGAffineTransform`) from Foundation; own `Path`. | Foundation, Observation |
+| `CacaoRender` | `DisplayList` and the values it's made of: `Path`, resolved colors, text and fonts, images, gradients, canvas drawing, effects, `Transform2D`; the `TextEngine` protocol. **No SwiftUI**, so other UI frameworks can draw through the compositor. | Foundation |
+| `Cacao` | Public SwiftUI API, evaluator, `ViewGraph`, layout, building `DisplayList`s, layer tree model, animation, scroll physics, gestures, focus, text model. **No SDL, no GPU** – builds and tests headless anywhere. Geometry types (`CGPoint`/`CGSize`/`CGRect`/`CGAffineTransform`) from Foundation. | `CacaoRender`, Foundation, Observation |
 | `CacaoScrollPhysics` | Velocity tracking, deceleration, rubber band, spring‑back (ported from Perry's `PerryScrollPhysics`; pure Swift, no deps) | – |
-| `CacaoCompositor` (internal) | Layer tree → GPU: texture cache keyed by layer + content version, compositing pass, offscreen passes for group opacity / rounded clips / masks; layer‑content drawing through Silica; `TextEngine` over Silica fonts | `Cacao`, Silica (`SilicaCairo` on Linux, `SilicaCoreGraphics` on macOS) |
-| `CacaoSDL` | SDL3 window(s), main loop + vsync frame clock, event translation (precise trackpad deltas, touch), clipboard, IME, cursor, display scale; SDL3 renderer backend of the compositor; implements `App.main()` | `CacaoCompositor`, `CacaoScrollPhysics`, `SDL3Swift` |
+| `CacaoCompositor` | Layer tree → GPU: texture cache keyed by layer + content version, compositing pass, offscreen passes for group opacity / rounded clips / masks; layer‑content drawing through Silica; `TextEngine` over Silica fonts | `CacaoRender`, Silica (`SilicaCairo` on Linux, `SilicaCoreGraphics` on macOS) |
+| `CacaoHost` | SDL3 window(s), main loop + vsync frame clock, wake hooks, event translation (precise trackpad deltas, touch), clipboard, IME, cursor, display scale; SDL3 renderer backend of the compositor. Shows whatever implements `HostScene`; **no SwiftUI**. | `CacaoRender`, `CacaoCompositor`, `SDL3Swift` |
+| `CacaoSDL` | SwiftUI on the host: a `ViewGraph` as each window's `HostScene`, scroll physics, menus, status items, file dialogs, accessibility; implements `App.main()` | `Cacao`, `CacaoHost`, `CacaoCompositor`, `CacaoScrollPhysics`, `SDL3Swift` |
 | `SwiftUI` (Linux only, optional) | `@_exported import Cacao` + `CacaoSDL`, so unmodified sources `import SwiftUI` | `Cacao`, `CacaoSDL` |
 | `CacaoDemo` | Catalog app exercising every component | `Cacao`, `CacaoSDL` |
 | `CacaoTests`, `CacaoCompositorTests`, `CacaoSDLTests`, benchmark | see §5 | |
