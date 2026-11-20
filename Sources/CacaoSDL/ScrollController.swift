@@ -289,9 +289,11 @@ final class ScrollController {
     }
 
     /// - Parameter coasts: Whether the content keeps moving from the
-    ///   gesture's speed even where the system sends momentum for trackpads:
-    ///   it sends none for fingers.
-    private func endGesture(_ scroller: Scroller, gesture: Gesture, now: Double, coasts: Bool = false) {
+    ///   gesture's speed. A finger's gesture says: the system sends no
+    ///   momentum for fingers, and one held still before it lifts leaves
+    ///   the content where it is. `nil`, for a trackpad's, coasts where the
+    ///   system sends no momentum of its own.
+    private func endGesture(_ scroller: Scroller, gesture: Gesture, now: Double, coasts: Bool? = nil) {
         let state = scroller.state
         let clamped = state.clamped(state.offset)
         // Snapping scroll views settle where their behavior says, from where
@@ -317,7 +319,7 @@ final class ScrollController {
                 x: SpringBack(from: state.offset.x, to: clamped.x, time: now),
                 y: SpringBack(from: state.offset.y, to: clamped.y, time: now)
             )
-        } else if Self.synthesizesMomentum || coasts,
+        } else if coasts ?? Self.synthesizesMomentum,
                   let deceleration = Deceleration(velocity: Self.velocity(gesture.tracker.velocity, along: state), time: now) {
             scroller.motion = .decelerating(deceleration)
         }
