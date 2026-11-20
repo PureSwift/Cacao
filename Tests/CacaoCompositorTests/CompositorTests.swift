@@ -51,6 +51,31 @@ final class RecordingBackend: CompositorBackend {
     /// Whether shared buffers can be imported.
     var importsBuffers = false
 
+    /// What reading the frame back gives: a color for each pixel, or `nil`
+    /// for a backend that can't read back.
+    var readback: ((_ x: Int, _ y: Int) -> (UInt8, UInt8, UInt8))?
+
+    /// The rectangles read back.
+    var reads: [CGRect] = []
+
+    func readPixels(_ rect: CGRect) -> (pixels: Data, width: Int, height: Int, bytesPerRow: Int)? {
+        guard let readback else { return nil }
+        reads.append(rect)
+        let width = Int(rect.width), height = Int(rect.height)
+        var pixels = Data(count: width * height * 4)
+        for y in 0..<height {
+            for x in 0..<width {
+                let color = readback(Int(rect.minX) + x, Int(rect.minY) + y)
+                let at = (y * width + x) * 4
+                pixels[at] = color.0
+                pixels[at + 1] = color.1
+                pixels[at + 2] = color.2
+                pixels[at + 3] = 255
+            }
+        }
+        return (pixels, width, height, width * 4)
+    }
+
     func makeExternalTexture(width: Int, height: Int, format: ExternalSurface.PixelFormat) -> TextureID? {
         makeLayer(width: width, height: height)
     }

@@ -79,6 +79,9 @@ public struct DisplayList: Equatable, Sendable {
 
         /// An external surface's newest frame, stretched to the frame.
         case external(ExternalContent)
+
+        /// What is drawn so far behind the frame, blurred.
+        case backdrop(BackdropContent)
     }
 
     public enum Effect: Equatable, Sendable {

@@ -162,8 +162,9 @@ extension DisplayList.Content {
             return .image(image)
         case let .drawing(drawing):
             return .drawing(drawing.applying(matrix))
-        case .external:
-            // Frames drawn elsewhere keep their colors.
+        case .external, .backdrop:
+            // Frames drawn elsewhere, and what a backdrop shows of what's
+            // behind it, keep their colors.
             return self
         }
     }
