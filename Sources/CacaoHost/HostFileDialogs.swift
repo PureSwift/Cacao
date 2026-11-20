@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import CSDL3
+import SDL3Swift
 
 /// A kind of file a dialog offers: a name shown to the user, and the file
 /// name extensions it matches, without dots.
@@ -31,8 +31,13 @@ extension HostWindow {
         allowsMultiple: Bool = false,
         completion: @escaping @MainActor ([URL]) -> Void
     ) {
-        let request = DialogRequest(filters: filters, completion: completion)
-        SDL_ShowOpenFileDialog(dialogCallback, request.retained(), sdlWindow, request.filters, Int32(request.filterCount), nil, allowsMultiple)
+        SDL.showOpenFileDialog(
+            window: window,
+            filters: filters.map(\.dialogFilter),
+            allowsMultiple: allowsMultiple
+        ) { result in
+            Self.deliver(result, to: completion)
+        }
     }
 
     /// Shows the system's save dialog over the window, offering a file
@@ -43,7 +48,6 @@ extension HostWindow {
         filters: [HostFileFilter] = [],
         completion: @escaping @MainActor (URL?) -> Void
     ) {
-        let request = DialogRequest(filters: filters) { urls in completion(urls.first) }
         // Where the dialog opens: the home folder, or the app's documents
         // where apps have no home folder to write to.
         #if os(macOS) || os(Linux)
@@ -53,67 +57,39 @@ extension HostWindow {
             ?? FileManager.default.temporaryDirectory
         #endif
         let location = folder.appendingPathComponent(defaultName).path
-        SDL_ShowSaveFileDialog(dialogCallback, request.retained(), sdlWindow, request.filters, Int32(request.filterCount), location)
+        SDL.showSaveFileDialog(
+            window: window,
+            filters: filters.map(\.dialogFilter),
+            defaultLocation: location
+        ) { result in
+            Self.deliver(result) { urls in completion(urls.first) }
+        }
+    }
+
+    /// Passes a dialog's files to the main actor: SDL may call back on
+    /// another thread. A dialog that failed chose nothing.
+    private nonisolated static func deliver(_ result: SDLDialogResult, to completion: @escaping @MainActor ([URL]) -> Void) {
+        let urls: [URL]
+        switch result {
+        case let .selected(paths):
+            urls = paths.map { URL(fileURLWithPath: $0) }
+        case .cancelled:
+            urls = []
+        case let .failed(error):
+            print("Cacao: the file dialog failed: \(error)")
+            urls = []
+        }
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated {
+                completion(urls)
+            }
+        }
     }
 }
 
-/// A dialog being shown: its filters, which SDL reads until it calls back,
-/// and what to do with the files chosen.
-private final class DialogRequest: @unchecked Sendable {
+extension HostFileFilter {
 
-    let completion: @MainActor ([URL]) -> Void
-
-    let filters: UnsafeMutablePointer<SDL_DialogFileFilter>?
-
-    let filterCount: Int
-
-    private var strings: [UnsafeMutablePointer<CChar>] = []
-
-    init(filters: [HostFileFilter], completion: @escaping @MainActor ([URL]) -> Void) {
-        self.completion = completion
-        let named = filters.filter { !$0.extensions.isEmpty }
-        filterCount = named.count
-        guard !named.isEmpty else {
-            self.filters = nil
-            return
-        }
-        let pointer = UnsafeMutablePointer<SDL_DialogFileFilter>.allocate(capacity: named.count)
-        for (index, filter) in named.enumerated() {
-            // SDL takes a filter's extensions separated by semicolons.
-            let name = strdup(filter.name)!, pattern = strdup(filter.extensions.joined(separator: ";"))!
-            strings += [name, pattern]
-            pointer[index] = SDL_DialogFileFilter(name: name, pattern: pattern)
-        }
-        self.filters = pointer
-    }
-
-    deinit {
-        strings.forEach { free($0) }
-        filters?.deallocate()
-    }
-
-    func retained() -> UnsafeMutableRawPointer {
-        Unmanaged.passRetained(self).toOpaque()
-    }
-}
-
-/// Called by SDL, perhaps on another thread, with the files chosen: none
-/// when cancelled.
-private let dialogCallback: SDL_DialogFileCallback = { userdata, list, _ in
-    guard let userdata else { return }
-    let request = Unmanaged<DialogRequest>.fromOpaque(userdata).takeRetainedValue()
-    var urls: [URL] = []
-    if let list {
-        var index = 0
-        while let path = list[index] {
-            urls.append(URL(fileURLWithPath: String(cString: path)))
-            index += 1
-        }
-    }
-    let chosen = urls
-    DispatchQueue.main.async {
-        MainActor.assumeIsolated {
-            request.completion(chosen)
-        }
+    fileprivate var dialogFilter: SDLDialogFileFilter {
+        SDLDialogFileFilter(name: name, extensions: extensions)
     }
 }
