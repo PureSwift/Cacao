@@ -9,7 +9,7 @@ import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
 #endif
-import Cacao
+import CacaoRender
 import Silica
 #if canImport(SilicaCoreGraphics)
 import SilicaCoreGraphics
@@ -96,7 +96,7 @@ package enum Rasterizer {
             // The shape drawn in white is the mask for the gradient's colors.
             var mask = shape
             mask.gradient = nil
-            mask.color = Color.Resolved(red: 1, green: 1, blue: 1, opacity: 1)
+            mask.color = ResolvedColor(red: 1, green: 1, blue: 1, opacity: 1)
             guard let coverage = rasterize(.shape(mask), size: size, scale: scale, region: region, textEngine: textEngine) else {
                 return nil
             }
@@ -224,7 +224,7 @@ package enum Rasterizer {
                     let pixelScale = scale * max(abs(state.transform.a), abs(state.transform.d), 1)
                     var mask = shape
                     mask.gradient = nil
-                    mask.color = Color.Resolved(red: 1, green: 1, blue: 1)
+                    mask.color = ResolvedColor(red: 1, green: 1, blue: 1)
                     let size = CGSize(
                         width: min(4096, max(1, (bounds.width * pixelScale).rounded(.up))),
                         height: min(4096, max(1, (bounds.height * pixelScale).rounded(.up)))
@@ -380,19 +380,19 @@ package enum Rasterizer {
                 for column in 0..<image.width {
                     let offset = row * image.bytesPerRow + column * 4
                     let storedAlpha = Float(pixels[offset + 3]) / 255
-                    var color: Color.Resolved
+                    var color: ResolvedColor
                     if let tint {
-                        color = Color.Resolved(red: tint.red, green: tint.green, blue: tint.blue, opacity: storedAlpha * tint.opacity)
+                        color = ResolvedColor(red: tint.red, green: tint.green, blue: tint.blue, opacity: storedAlpha * tint.opacity)
                     } else if storedAlpha > 0 {
                         // Straight colors from premultiplied pixels.
-                        color = Color.Resolved(
+                        color = ResolvedColor(
                             red: Float(pixels[offset]) / 255 / storedAlpha,
                             green: Float(pixels[offset + 1]) / 255 / storedAlpha,
                             blue: Float(pixels[offset + 2]) / 255 / storedAlpha,
                             opacity: storedAlpha
                         )
                     } else {
-                        color = Color.Resolved(red: 0, green: 0, blue: 0, opacity: 0)
+                        color = ResolvedColor(red: 0, green: 0, blue: 0, opacity: 0)
                     }
                     if let matrix {
                         color = matrix.apply(color)
