@@ -48,7 +48,7 @@ extension DrawingContent {
             return [.image(image, CGRect(origin: CGPoint(x: 0, y: 0), size: frame.size), local)]
         case let .content(.drawing(drawing)):
             return drawing.flattened().operations.map { $0.composed(with: local) }
-        case .content(.external):
+        case .content(.external), .content(.backdrop):
             // A canvas symbol is drawn once, in software; frames drawn
             // outside the compositor aren't part of it.
             return []
