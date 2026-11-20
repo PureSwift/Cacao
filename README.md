@@ -33,7 +33,8 @@ so scrolling and animation never repaint.
 | `Cacao` | The SwiftUI API: views, state, environment and layout, which build display lists. Platform-neutral, builds headless. |
 | `CacaoMacros` | The `@Entry` macro. |
 | `CacaoCompositor` | Draws display lists with Silica and composites them on the GPU. |
-| `CacaoHost` | SDL3 windows, the main loop, input and the SDL3 GPU compositor backend, for whatever implements `HostScene`. No SwiftUI. |
+| `CacaoSDLRenderer` | The SDL3 GPU compositor backend, and `HostRenderer`, which draws display lists with an SDL renderer a UI framework already has. No windows. |
+| `CacaoHost` | SDL3 windows, the main loop and input, for whatever implements `HostScene`, drawn with `CacaoSDLRenderer`. No SwiftUI. |
 | `CacaoSDL` | SwiftUI on the host: a view graph as each window's scene. |
 | `CacaoScrollPhysics` | Velocity tracking, deceleration, rubber band and spring-back. |
 | `SwiftUI` (Linux only) | Re-exports Cacao, so sources that `import SwiftUI` compile unchanged. |
