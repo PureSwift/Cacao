@@ -5,6 +5,7 @@
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
 
+import CacaoRender
 import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
@@ -186,12 +187,7 @@ extension Font {
     }
 
     /// A design to use for fonts.
-    public enum Design: Hashable, Sendable {
-        case `default`
-        case serif
-        case rounded
-        case monospaced
-    }
+    public typealias Design = FontDesign
 }
 
 // MARK: - Resolved
@@ -199,22 +195,7 @@ extension Font {
 extension Font {
 
     /// A font's concrete face and size, which a text engine draws with.
-    package struct Resolved: Hashable, Sendable {
-
-        /// The font family name, or `nil` for the system font.
-        package var name: String?
-
-        package var size: CGFloat
-
-        /// The OpenType weight class, from 100 to 900.
-        package var weight: Int
-
-        package var design: Design
-
-        package var isItalic: Bool
-
-        package var isMonospacedDigit: Bool
-    }
+    public typealias Resolved = ResolvedFont
 
     /// The concrete font at the default text size.
     package func resolve() -> Resolved {
