@@ -91,6 +91,16 @@ package final class ViewGraph {
 
     let focusedNodeReference = WeakNodeReference()
 
+    /// The external content a mouse press is being delivered to, and the
+    /// button that started it.
+    var externalPress: (node: WeakNodeReference, button: ExternalInput.Button)?
+
+    /// The external content each finger came down on.
+    var externalTouches: [UInt64: WeakNodeReference] = [:]
+
+    /// The external content under the pointer.
+    let externalHovered = WeakNodeReference()
+
     // MARK: Animation state
 
     /// The time animations are evaluated at, in seconds, from the host's clock.
