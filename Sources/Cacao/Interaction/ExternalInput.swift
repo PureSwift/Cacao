@@ -121,8 +121,22 @@ extension ViewGraph {
     /// Delivers a mouse button to external content: a press that starts on
     /// it, and that press's drag and release wherever they go. Returns
     /// whether external content took it.
+    ///
+    /// A press a host made up from a finger (`isFromTouch`) is taken the
+    /// same way, so it reaches nothing else, but isn't delivered: the
+    /// content gets the finger itself, as a touch.
     @discardableResult
-    package func externalPointer(_ phase: ExternalInput.Phase, button: ExternalInput.Button, at point: CGPoint) -> Bool {
+    package func externalPointer(
+        _ phase: ExternalInput.Phase,
+        button: ExternalInput.Button,
+        at point: CGPoint,
+        isFromTouch: Bool = false
+    ) -> Bool {
+        func deliver(_ input: ExternalInput, to node: ViewNode) {
+            if !isFromTouch {
+                node.attributes.externalInput?.handle(input)
+            }
+        }
         switch phase {
         case .began:
             guard externalPress == nil, let node = externalNode(at: point) else {
