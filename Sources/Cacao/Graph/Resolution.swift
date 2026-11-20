@@ -107,6 +107,10 @@ internal struct NodeAttributes {
     /// How the node handles keyboard focus, if it can be focused.
     var focus: FocusTarget?
 
+    /// Whether focus moving toward the node's frame goes to a focusable
+    /// view in it, though none is right in the way.
+    var isFocusSection = false
+
     /// What external content shown by the node does with input.
     var externalInput: ExternalInputHandler?
 
