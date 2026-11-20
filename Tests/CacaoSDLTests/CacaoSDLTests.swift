@@ -1,3 +1,4 @@
+import CacaoRender
 import Testing
 import Foundation
 @testable import CacaoSDL
