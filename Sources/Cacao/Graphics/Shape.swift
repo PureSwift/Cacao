@@ -115,6 +115,13 @@ public struct _ShapeView<Content: Shape, Style: ShapeStyle>: View, PrimitiveView
 
     func resolve(in context: ResolveContext) -> Resolution {
         let style = AnyShapeStyle(style)
+        // A material fills a shape with what's behind it, blurred, under
+        // its tint.
+        if let material = style.style as? Material, case .fill = drawing {
+            return Resolution(children: [
+                ChildView(key: "material", view: _MaterialView(shape: shape, material: material)),
+            ])
+        }
         return Resolution(behavior: ShapeBehavior(
             shape: shape,
             color: style.resolveColor(in: context.environment),
