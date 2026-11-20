@@ -5,6 +5,7 @@
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
 
+import CacaoRender
 import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
@@ -216,16 +217,6 @@ public struct Alignment: Equatable, Sendable {
 }
 
 // MARK: - TextAlignment
-
-/// An alignment position for text along the horizontal axis.
-public enum TextAlignment: Hashable, CaseIterable, Sendable {
-
-    case leading
-
-    case center
-
-    case trailing
-}
 
 // MARK: - ViewDimensions
 
