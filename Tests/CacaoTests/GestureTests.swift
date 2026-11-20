@@ -328,6 +328,30 @@ extension ViewGraph {
         #expect(graph.gestureSession == nil)
     }
 
+    /// Fingers on a touch screen pinch and turn at once.
+    @Test func aPinchAndARotationShareTwoFingers() {
+        let log = self.log
+        let graph = layout(
+            Color.red.frame(width: 100, height: 100).probe("box")
+                .gesture(
+                    RotateGesture()
+                        .onEnded { log.log("turned \(Int(($0.rotation.degrees).rounded()))") }
+                        .simultaneously(with: MagnifyGesture().onEnded { log.log("scaled \($0.magnification)") })
+                )
+        )
+        let center = graph.center("box")
+        graph.rotate(.began, angle: 0, at: center, time: 1)
+        graph.magnify(.began, scale: 1, at: center, time: 1.05)
+        graph.rotate(.moved, angle: .pi / 2, at: center, time: 1.1)
+        graph.magnify(.moved, scale: 2, at: center, time: 1.2)
+        // One ending leaves the other going.
+        graph.rotate(.ended, angle: .pi / 2, at: center, time: 1.3)
+        graph.magnify(.moved, scale: 3, at: center, time: 1.4)
+        graph.magnify(.ended, scale: 3, at: center, time: 1.5)
+        #expect(log.events == ["turned 90", "scaled 3.0"])
+        #expect(graph.gestureSession == nil)
+    }
+
     @Test func mapTransformsValues() {
         let log = self.log
         let graph = layout(

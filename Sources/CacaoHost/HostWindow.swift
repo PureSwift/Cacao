@@ -51,6 +51,17 @@ public final class HostWindow {
     /// A pinch's total scale since it began.
     private var pinchScale = 1.0
 
+    /// Where each finger on a touch screen is.
+    private var fingers: [UInt64: CGPoint] = [:]
+
+    /// Where a pinch is: between the fingers on a touch screen, or at the
+    /// mouse for a trackpad's.
+    private var pinchLocation: CGPoint {
+        guard fingers.count >= 2 else { return mouseLocation }
+        let sum = fingers.values.reduce(CGPoint(x: 0, y: 0)) { CGPoint(x: $0.x + $1.x, y: $0.y + $1.y) }
+        return CGPoint(x: sum.x / CGFloat(fingers.count), y: sum.y / CGFloat(fingers.count))
+    }
+
     /// The rotation so far of a trackpad pinch the system reports, in
     /// radians, clockwise.
     private var systemRotationAngle = 0.0
@@ -195,12 +206,12 @@ public final class HostWindow {
         case SDL_EVENT_PINCH_BEGIN:
             // SDL reports each change; scenes see the total.
             pinchScale = 1
-            scene.handle(.magnify(.began, scale: pinchScale, at: mouseLocation), time: now)
+            scene.handle(.magnify(.began, scale: pinchScale, at: pinchLocation), time: now)
         case SDL_EVENT_PINCH_UPDATE:
             pinchScale *= Double(event.pinch.scale)
-            scene.handle(.magnify(.moved, scale: pinchScale, at: mouseLocation), time: now)
+            scene.handle(.magnify(.moved, scale: pinchScale, at: pinchLocation), time: now)
         case SDL_EVENT_PINCH_END:
-            scene.handle(.magnify(.ended, scale: pinchScale, at: mouseLocation), time: now)
+            scene.handle(.magnify(.ended, scale: pinchScale, at: pinchLocation), time: now)
         case SDL_EVENT_FINGER_DOWN, SDL_EVENT_FINGER_MOTION, SDL_EVENT_FINGER_UP, SDL_EVENT_FINGER_CANCELED:
             // Touch screens only: trackpads' gestures come from the system.
             guard SDL_GetTouchDeviceType(event.tfinger.touchID) == SDL_TOUCH_DEVICE_DIRECT else { break }
@@ -211,6 +222,11 @@ public final class HostWindow {
             case SDL_EVENT_FINGER_MOTION: .moved
             case SDL_EVENT_FINGER_UP: .ended
             default: .cancelled
+            }
+            let finger = UInt64(event.tfinger.fingerID)
+            switch phase {
+            case .began, .moved: fingers[finger] = location
+            case .ended, .cancelled: fingers[finger] = nil
             }
             scene.handle(.touch(phase, finger: UInt64(event.tfinger.fingerID), at: location), time: now)
         case SDL_EVENT_MOUSE_WHEEL:

@@ -56,6 +56,9 @@ final class WindowScene: HostScene {
 
     private var touchPan: TouchPan?
 
+    /// The fingers on a touch screen that aren't on external content.
+    private var fingersDown: Set<UInt64> = []
+
     /// How far a finger moves before it scrolls rather than presses.
     private static let panDistance: CGFloat = 10
 
@@ -180,6 +183,23 @@ final class WindowScene: HostScene {
             if graph.externalTouch(Self.externalPhase(phase), finger: finger, at: location) {
                 break
             }
+            switch phase {
+            case .began:
+                fingersDown.insert(finger)
+                // A second finger makes it a pinch or a rotation, between
+                // the two: the first no longer presses or scrolls.
+                if fingersDown.count == 2 {
+                    graph.pointer(.cancelled, at: location, time: now)
+                    if touchPan?.isScrolling == true {
+                        scrollController.endPan(now: now)
+                    }
+                    touchPan = nil
+                }
+            case .moved:
+                break
+            case .ended, .cancelled:
+                fingersDown.remove(finger)
+            }
             pan(phase, finger: finger, at: location, now: now)
             let update: TouchRotationTracker.Update? = switch phase {
             case .began: touchRotation.fingerDown(finger, at: location)
@@ -225,7 +245,7 @@ final class WindowScene: HostScene {
     private func pan(_ phase: HostPhase, finger: UInt64, at location: CGPoint, now: Double) {
         switch phase {
         case .began:
-            if touchPan == nil {
+            if touchPan == nil, fingersDown.count == 1 {
                 touchPan = TouchPan(finger: finger, start: location, last: location)
                 scrollController.catchMotion()
             }
