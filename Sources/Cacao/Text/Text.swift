@@ -5,6 +5,7 @@
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
 
+import CacaoRender
 import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
@@ -227,84 +228,6 @@ internal struct TextBehavior: NodeBehavior {
 }
 
 // MARK: - ResolvedText
-
-/// Text with concrete fonts and colors, ready to measure and draw.
-package struct ResolvedText: Hashable, Sendable {
-
-    package struct Run: Hashable, Sendable {
-
-        package var string: String
-
-        package var font: Font.Resolved
-
-        package var color: Color.Resolved
-
-        /// A line under the run.
-        package var underline: Line? = nil
-
-        /// A line through the run.
-        package var strikethrough: Line? = nil
-
-        /// Extra space after each character.
-        package var tracking: CGFloat = 0
-
-        /// How far the run is raised above the baseline.
-        package var baselineOffset: CGFloat = 0
-    }
-
-    /// A line drawn under or through a run.
-    package struct Line: Hashable, Sendable {
-
-        package var color: Color.Resolved
-
-        package var pattern: Text.LineStyle.Pattern
-
-        /// The lengths of dashes and gaps for a line of a thickness.
-        package func dashes(thickness: CGFloat) -> [CGFloat] {
-            let unit = max(thickness, 1)
-            switch pattern {
-            case .solid: return []
-            case .dot: return [unit, unit * 2]
-            case .dash: return [unit * 4, unit * 2]
-            case .dashDot: return [unit * 4, unit * 2, unit, unit * 2]
-            case .dashDotDot: return [unit * 4, unit * 2, unit, unit * 2, unit, unit * 2]
-            }
-        }
-    }
-
-    package var runs: [Run]
-
-    package var alignment: TextAlignment
-
-    package var lineLimit: Int?
-
-    /// Extra space between lines.
-    package var lineSpacing: CGFloat = 0
-
-    /// Where text that doesn't fit is cut for an ellipsis.
-    package var truncationMode: TruncationMode = .tail
-
-    /// How far fonts may shrink to fit before text is truncated.
-    package var minimumScaleFactor: CGFloat = 1
-
-    /// The text with every font and spacing scaled.
-    package func scaled(by factor: CGFloat) -> ResolvedText {
-        var text = self
-        text.minimumScaleFactor = 1
-        for index in text.runs.indices {
-            text.runs[index].font.size *= factor
-            text.runs[index].tracking *= factor
-            text.runs[index].baselineOffset *= factor
-        }
-        text.lineSpacing *= factor
-        return text
-    }
-
-    /// The text of all runs.
-    package var string: String {
-        runs.map(\.string).joined()
-    }
-}
 
 // MARK: - LocalizedStringKey
 
