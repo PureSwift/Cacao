@@ -45,6 +45,8 @@ public enum SDLHost {
     public static func run<A: App>(_ app: A) {
         HostRuntime.run {
             guard let textEngine = HostRuntime.textEngine else { return }
+            // In a debug build, previews are drawn to the build folder.
+            PreviewSnapshots.generate(textEngine: textEngine)
             // The first scene's window opens at launch; the others open
             // with `openWindow`.
             descriptions = app.body.windowDescriptions()
