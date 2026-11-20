@@ -461,12 +461,46 @@ extension View {
 
     /// Specifies if the view is focusable.
     public func focusable(_ isFocusable: Bool = true) -> some View {
-        modifier(_AttributesModifier { attributes in
-            if isFocusable, attributes.focus == nil {
-                attributes.focus = FocusTarget()
-            }
-        })
+        modifier(_FocusEnvironmentModifier())
+            .modifier(_AttributesModifier { attributes in
+                if isFocusable, attributes.focus == nil {
+                    attributes.focus = FocusTarget()
+                }
+            })
     }
+}
+
+private struct IsFocusedKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+
+    /// Returns whether the nearest focusable ancestor has focus.
+    public var isFocused: Bool {
+        get { self[IsFocusedKey.self] }
+        set { self[IsFocusedKey.self] = newValue }
+    }
+}
+
+/// Tells the views of a focusable view whether it has focus, through the
+/// environment, again each time focus moves.
+internal struct _FocusEnvironmentModifier: ViewModifier, PrimitiveViewModifier {
+
+    func resolve(content: any View, in context: ResolveContext) -> Resolution {
+        let node = context.node
+        context.graph.focusEnvironmentNodes[node.id] = WeakNodeReference(node)
+        // The focusable view: the nearest node around this one that takes focus.
+        var target = node.parent
+        while let candidate = target, candidate.attributes.focus == nil {
+            target = candidate.parent
+        }
+        var environment = context.environment
+        environment.isFocused = target != nil && target === context.graph.focusedNode
+        return Resolution(children: [ChildView(key: 0, view: content, environment: environment)])
+    }
+
+    typealias Body = Never
 }
 
 extension ViewGraph {
