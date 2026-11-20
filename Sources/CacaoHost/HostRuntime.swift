@@ -83,6 +83,22 @@ public enum HostRuntime {
         return window
     }
 
+    /// Draws a scene in a window that never shows, and saves the drawing
+    /// as a PNG. Returns whether it was saved.
+    public static func snapshot(
+        size: CGSize,
+        to path: String,
+        makeScene: (HostWindow) -> any HostScene
+    ) -> Bool {
+        guard let textEngine,
+              let window = HostWindow(title: "", size: size, textEngine: textEngine, isHidden: true) else {
+            return false
+        }
+        window.scene = makeScene(window)
+        defer { window.close() }
+        return window.snapshot(to: path, now: now)
+    }
+
     /// Closes a window.
     public static func close(_ window: HostWindow) {
         guard let index = windows.firstIndex(where: { $0 === window }) else { return }
