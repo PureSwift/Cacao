@@ -1,3 +1,4 @@
+import CacaoRender
 import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
