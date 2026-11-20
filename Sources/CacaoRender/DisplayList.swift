@@ -76,6 +76,9 @@ public struct DisplayList: Equatable, Sendable {
 
         /// A canvas's drawing in the frame.
         case drawing(DrawingContent)
+
+        /// An external surface's newest frame, stretched to the frame.
+        case external(ExternalContent)
     }
 
     public enum Effect: Equatable, Sendable {
