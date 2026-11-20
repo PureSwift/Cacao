@@ -91,6 +91,10 @@ package final class ViewGraph {
 
     let focusedNodeReference = WeakNodeReference()
 
+    /// The nodes that tell focusable views' content whether they have
+    /// focus, to update when focus moves.
+    var focusEnvironmentNodes: [Int: WeakNodeReference] = [:]
+
     /// The external content a mouse press is being delivered to, and the
     /// button that started it.
     var externalPress: (node: WeakNodeReference, button: ExternalInput.Button)?

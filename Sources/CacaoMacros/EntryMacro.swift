@@ -81,6 +81,6 @@ public struct EntryMacro: AccessorMacro, PeerMacro {
 #if !CACAO_MACROS_LIBRARY
 @main
 struct CacaoMacrosPlugin: CompilerPlugin {
-    let providingMacros: [Macro.Type] = [EntryMacro.self]
+    let providingMacros: [Macro.Type] = [EntryMacro.self, PreviewMacro.self]
 }
 #endif

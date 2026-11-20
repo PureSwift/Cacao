@@ -33,7 +33,8 @@ if(NOT SwiftSyntax_FOUND)
 endif()
 
 add_library(CacaoMacros SHARED
-  EntryMacro.swift)
+  EntryMacro.swift
+  PreviewMacro.swift)
 
 target_compile_options(CacaoMacros PRIVATE
   -parse-as-library)

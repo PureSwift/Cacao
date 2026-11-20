@@ -216,16 +216,14 @@ public struct Label<Title: View, Icon: View>: View {
     @Environment(\.labelStyle) private var style
 
     public var body: some View {
-        switch style {
-        case .titleOnly:
-            title
-        case .iconOnly:
-            icon
-        default:
-            HStack(spacing: 8) {
-                icon
-                title
-            }
+        let configuration = LabelStyleConfiguration(
+            title: LabelStyleConfiguration.Title(content: AnyView(title)),
+            icon: LabelStyleConfiguration.Icon(content: AnyView(icon))
+        )
+        if let style {
+            style(configuration)
+        } else {
+            TitleAndIconLabelStyle().makeBody(configuration: configuration)
         }
     }
 }
@@ -259,35 +257,87 @@ extension Label where Title == Text, Icon == Image {
     }
 }
 
-/// The styles of labels.
-public struct LabelStyleKind: Equatable, Sendable {
-    internal let name: String
-    static let titleAndIcon = LabelStyleKind(name: "titleAndIcon")
-    static let titleOnly = LabelStyleKind(name: "titleOnly")
-    static let iconOnly = LabelStyleKind(name: "iconOnly")
+/// The properties of a label.
+public struct LabelStyleConfiguration {
+
+    /// A type-erased title view of a label.
+    public struct Title: View, PrimitiveView {
+
+        internal let content: AnyView
+
+        public typealias Body = Never
+
+        func resolve(in context: ResolveContext) -> Resolution {
+            Resolution(children: [ChildView(key: 0, view: content)])
+        }
+    }
+
+    /// A type-erased icon view of a label.
+    public struct Icon: View, PrimitiveView {
+
+        internal let content: AnyView
+
+        public typealias Body = Never
+
+        func resolve(in context: ResolveContext) -> Resolution {
+            Resolution(children: [ChildView(key: 0, view: content)])
+        }
+    }
+
+    /// A description of the labeled item.
+    public let title: LabelStyleConfiguration.Title
+
+    /// A symbolic representation of the labeled item.
+    public let icon: LabelStyleConfiguration.Icon
 }
 
-/// A label style.
+/// A type that applies a custom appearance to all labels within a view.
+@MainActor
+@preconcurrency
 public protocol LabelStyle {
-    var _kind: LabelStyleKind { get }
+
+    /// A view that represents the body of a label.
+    associatedtype Body: View
+
+    /// The properties of a label.
+    typealias Configuration = LabelStyleConfiguration
+
+    /// Creates a view that represents the body of a label.
+    @ViewBuilder
+    func makeBody(configuration: Self.Configuration) -> Self.Body
 }
 
 /// A label style that shows both the title and icon of the label.
 public struct TitleAndIconLabelStyle: LabelStyle {
+
     public init() { }
-    public var _kind: LabelStyleKind { .titleAndIcon }
+
+    public func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 8) {
+            configuration.icon
+            configuration.title
+        }
+    }
 }
 
 /// A label style that only displays the title of the label.
 public struct TitleOnlyLabelStyle: LabelStyle {
+
     public init() { }
-    public var _kind: LabelStyleKind { .titleOnly }
+
+    public func makeBody(configuration: Configuration) -> some View {
+        configuration.title
+    }
 }
 
 /// A label style that only displays the icon of the label.
 public struct IconOnlyLabelStyle: LabelStyle {
+
     public init() { }
-    public var _kind: LabelStyleKind { .iconOnly }
+
+    public func makeBody(configuration: Configuration) -> some View {
+        configuration.icon
+    }
 }
 
 extension LabelStyle where Self == TitleAndIconLabelStyle {
@@ -303,12 +353,13 @@ extension LabelStyle where Self == IconOnlyLabelStyle {
 }
 
 private struct LabelStyleKey: EnvironmentKey {
-    static let defaultValue = LabelStyleKind.titleAndIcon
+    static var defaultValue: (@MainActor (LabelStyleConfiguration) -> AnyView)? { nil }
 }
 
 extension EnvironmentValues {
 
-    internal var labelStyle: LabelStyleKind {
+    /// The style of labels: `nil` for the default, a title and an icon.
+    internal var labelStyle: (@MainActor (LabelStyleConfiguration) -> AnyView)? {
         get { self[LabelStyleKey.self] }
         set { self[LabelStyleKey.self] = newValue }
     }
@@ -318,7 +369,7 @@ extension View {
 
     /// Sets the style for labels within this view.
     public func labelStyle<S: LabelStyle>(_ style: S) -> some View {
-        environment(\.labelStyle, style._kind)
+        environment(\.labelStyle, { AnyView(style.makeBody(configuration: $0)) })
     }
 }
 
