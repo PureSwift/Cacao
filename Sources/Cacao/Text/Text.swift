@@ -109,6 +109,20 @@ public struct Text: Equatable, Sendable {
         modifyingRuns { $0.color = $0.color ?? color }
     }
 
+    /// Sets a level of the content style as the style of the text, keeping
+    /// it a text that can be joined with others.
+    public func foregroundStyle(_ style: HierarchicalShapeStyle) -> Text {
+        let levels: [Color] = [.primary, .secondary, Color.primary.opacity(0.3), Color.primary.opacity(0.18)]
+        return foregroundColor(levels[min(max(style.level, 0), levels.count - 1)])
+    }
+
+    /// Sets a color as the style of the text, keeping it a text that can be
+    /// joined with others.
+    @_disfavoredOverload
+    public func foregroundStyle(_ style: Color) -> Text {
+        foregroundColor(style)
+    }
+
     /// Concatenates the text in two text views in a new text view.
     public static func + (lhs: Text, rhs: Text) -> Text {
         var text = lhs
