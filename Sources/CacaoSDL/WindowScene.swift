@@ -40,6 +40,10 @@ final class WindowScene: HostScene {
     /// Whether the next frame must lay out again.
     private var needsLayout = true
 
+    /// The height left for content at the last frame: the window's, less
+    /// what the system covers, an on-screen keyboard included.
+    private var lastContentHeight: CGFloat?
+
     /// A finger on a touch screen that isn't on external content: it
     /// presses views, like the pointer the host also reports it as, until
     /// it moves far enough over a scroll view to scroll it instead.
@@ -338,6 +342,11 @@ final class WindowScene: HostScene {
             graph.safeAreaInsets = insets
             needsLayout = true
         }
+        // An on-screen keyboard takes the bottom of the window, or makes
+        // the window shorter: the focused text view scrolls back into view.
+        let contentHeight = frame.size.height - insets.top - insets.bottom
+        let revealsFocus = lastContentHeight.map { graph.looksLikeKeyboardAppearing(from: $0, to: contentHeight) } ?? false
+        lastContentHeight = contentHeight
         if needsLayout || graph.size != frame.size {
             graph.layout(in: frame.size)
             needsLayout = false
@@ -349,6 +358,9 @@ final class WindowScene: HostScene {
         while graph.needsUpdate, passes < 4 {
             graph.layout(in: frame.size)
             passes += 1
+        }
+        if revealsFocus {
+            graph.revealFocusedView()
         }
         if graph.needsDisplay {
             changed = true
