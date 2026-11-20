@@ -298,6 +298,10 @@ private struct ScreenContextKey: EnvironmentKey {
     static var defaultValue: ScreenContext? { nil }
 }
 
+private struct ScreenBackgroundKey: EnvironmentKey {
+    static var defaultValue: Color? { nil }
+}
+
 extension EnvironmentValues {
 
     internal var navigationContext: NavigationContext? {
@@ -308,6 +312,14 @@ extension EnvironmentValues {
     internal var screenContext: ScreenContext? {
         get { self[ScreenContextKey.self] }
         set { self[ScreenContextKey.self] = newValue }
+    }
+
+    /// What's behind the views of a presentation, which pushed screens of a
+    /// navigation stack cover the screen below with: a sheet's or popover's
+    /// card. `nil` in a window, for its background.
+    internal var screenBackground: Color? {
+        get { self[ScreenBackgroundKey.self] }
+        set { self[ScreenBackgroundKey.self] = newValue }
     }
 }
 
@@ -403,6 +415,9 @@ internal struct _NavigationStack: View, PrimitiveView {
         var environment = context.environment
         environment.navigationContext = navigation
         let entries = navigation.entries
+        // Pushed screens are opaque, so the screen below doesn't show
+        // through while they slide in.
+        let background = environment.screenBackground ?? Color.windowBackground(environment.colorScheme)
         var children = [ChildView(
             key: "root",
             view: _NavigationScreen(content: root, depth: 0, navigation: navigation, isDetailRoot: column?.isDetail ?? false),
@@ -427,6 +442,7 @@ internal struct _NavigationStack: View, PrimitiveView {
             children.append(ChildView(
                 key: key,
                 view: _NavigationScreen(content: content, depth: depth, navigation: navigation, isDetailRoot: false)
+                    .background(background)
                     .transition(.move(edge: .trailing)),
                 environment: environment
             ))
@@ -685,6 +701,11 @@ extension Color {
     /// The background of navigation and tab bars.
     internal static func barBackground(_ colorScheme: ColorScheme) -> Color {
         colorScheme == .dark ? Color(white: 0.12) : Color(white: 0.97)
+    }
+
+    /// The background of a window.
+    internal static func windowBackground(_ colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? Color(white: 0) : Color(white: 1)
     }
 }
 
