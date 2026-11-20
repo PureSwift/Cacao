@@ -73,11 +73,13 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "CacaoRender"
+            name: "CacaoRender",
+            exclude: ["CMakeLists.txt"]
         ),
         .target(
             name: "Cacao",
-            dependencies: ["CacaoRender", "CacaoMacros"]
+            dependencies: ["CacaoRender", "CacaoMacros"],
+            exclude: ["CMakeLists.txt"]
         ),
         .macro(
             name: "CacaoMacros",
@@ -85,10 +87,12 @@ let package = Package(
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
                 .product(name: "SwiftDiagnostics", package: "swift-syntax")
-            ]
+            ],
+            exclude: ["CMakeLists.txt"]
         ),
         .target(
-            name: "CacaoScrollPhysics"
+            name: "CacaoScrollPhysics",
+            exclude: ["CMakeLists.txt"]
         ),
         .target(
             name: "CacaoCompositor",
@@ -108,7 +112,8 @@ let package = Package(
                     package: "Silica",
                     condition: .when(platforms: [.linux])
                 )
-            ]
+            ],
+            exclude: ["CMakeLists.txt"]
         ),
         .target(
             name: "CacaoHost",
@@ -123,7 +128,8 @@ let package = Package(
                     name: "SDL3Swift",
                     package: "SDL"
                 )
-            ]
+            ],
+            exclude: ["CMakeLists.txt"]
         ),
         .target(
             name: "CacaoSDL",
@@ -136,13 +142,14 @@ let package = Package(
                     name: "SDL3Swift",
                     package: "SDL"
                 )
-            ]
+            ],
+            exclude: ["CMakeLists.txt"]
         ),
         // Touchpad pinch rotations from Wayland compositors, which SDL
         // doesn't report.
         .target(
             name: "CacaoWayland",
-            exclude: ["protocol"],
+            exclude: ["protocol", "CMakeLists.txt"],
             linkerSettings: [
                 .linkedLibrary("wayland-client", .when(platforms: [.linux]))
             ]
@@ -152,7 +159,8 @@ let package = Package(
             dependencies: [
                 "Cacao",
                 "CacaoSDL"
-            ]
+            ],
+            exclude: ["CMakeLists.txt"]
         ),
         .testTarget(
             name: "CacaoTests",
@@ -186,10 +194,10 @@ var swiftUIProducts: [Product] {
 }
 var swiftUITargets: [Target] {
     [
-        .target(name: "SwiftUI", dependencies: ["Cacao", "CacaoSDL"]),
+        .target(name: "SwiftUI", dependencies: ["Cacao", "CacaoSDL"], exclude: ["CMakeLists.txt"]),
         // `import Combine` for `ObservableObject` and publishers, which
         // Cacao provides where there's no Combine.
-        .target(name: "Combine", dependencies: ["Cacao"]),
+        .target(name: "Combine", dependencies: ["Cacao"], exclude: ["CMakeLists.txt"]),
     ]
 }
 #else
