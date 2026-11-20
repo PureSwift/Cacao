@@ -5,7 +5,10 @@
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
 
+// Only a plugin executable has an entry point, which this module provides.
+#if !CACAO_MACROS_LIBRARY
 import SwiftCompilerPlugin
+#endif
 import SwiftDiagnostics
 import SwiftSyntax
 import SwiftSyntaxMacros
