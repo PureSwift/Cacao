@@ -88,7 +88,7 @@ public final class HostWindow {
 
     private var isTextInputActive = false
 
-    init?(title: String, size: CGSize, textEngine: SilicaTextEngine) {
+    init?(title: String, size: CGSize, textEngine: SilicaTextEngine, isHidden: Bool = false) {
         var driver = SDLRenderer.Driver.default
         if let name = HostRuntime.rendererName {
             guard let named = SDLRenderer.Driver(name: name) else {
@@ -101,7 +101,7 @@ public final class HostWindow {
             title: title,
             width: Int(size.width),
             height: Int(size.height),
-            options: [.resizable, .highPixelDensity]
+            options: isHidden ? [.hidden, .highPixelDensity] : [.resizable, .highPixelDensity]
         ), let renderer = try? SDLRenderer(window: window, driver: driver) else {
             return nil
         }
@@ -490,32 +490,57 @@ public final class HostWindow {
     /// Whether a screenshot was saved, after which the host quits.
     private(set) var didSaveScreenshot = false
 
+    /// Draws the scene as it is at a time, without showing it, and saves
+    /// the drawing as a PNG. Returns whether it was saved.
+    func snapshot(to path: String, now: Double) -> Bool {
+        guard let scene else { return false }
+        let size = size
+        let scale = scale
+        // A few frames, for what views learn from their first layouts.
+        for pass in 0..<3 {
+            _ = scene.update(HostFrame(time: now + Double(pass) / 60, size: size, scale: scale))
+        }
+        apply(scene.windowState)
+        compositor.render(scene.displayList(), size: size, scale: scale)
+        return writePNG(to: path, logs: false)
+    }
+
     private func saveScreenshot(to path: String) {
         defer { didSaveScreenshot = true }
+        writePNG(to: path, logs: true)
+    }
+
+    /// Saves what the renderer last drew as a PNG.
+    @discardableResult
+    private func writePNG(to path: String, logs: Bool) -> Bool {
         // Bytes in R, G, B, A order, as PNGs have them.
         let surface: SDLSurface
         do {
             surface = try renderer.readPixels().converted(to: .abgr8888)
         } catch {
             print("Cacao: screenshot failed: \(error)")
-            return
+            return false
         }
         let width = surface.width
         let height = surface.height
         let pitch = surface.pitch
         guard let pixels = try? surface.withUnsafeMutableBytes({ Data(bytes: $0, count: pitch * height) }) else {
             print("Cacao: screenshot failed: its pixels can't be read")
-            return
+            return false
         }
         guard let png = Rasterizer.encodePNG(width: width, height: height, bytesPerRow: pitch, pixels: pixels) else {
             print("Cacao: screenshot encoding failed")
-            return
+            return false
         }
         do {
             try png.write(to: URL(fileURLWithPath: path))
-            print("Cacao: saved screenshot to \(path)")
+            if logs {
+                print("Cacao: saved screenshot to \(path)")
+            }
+            return true
         } catch {
             print("Cacao: screenshot not saved: \(error)")
+            return false
         }
     }
 
