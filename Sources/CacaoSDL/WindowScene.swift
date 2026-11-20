@@ -133,9 +133,9 @@ final class WindowScene: HostScene {
                 graph.environment.displayScale = scale
             }
             needsLayout = true
-        case let .pointer(phase, button, location):
+        case let .pointer(phase, button, location, isFromTouch):
             // External content takes the presses that start on it.
-            if graph.externalPointer(Self.externalPhase(phase), button: Self.button(button), at: location) {
+            if graph.externalPointer(Self.externalPhase(phase), button: Self.button(button), at: location, isFromTouch: isFromTouch) {
                 break
             }
             switch (button, phase) {
