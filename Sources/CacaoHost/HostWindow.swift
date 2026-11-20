@@ -11,6 +11,7 @@ import CoreGraphics
 #endif
 import CacaoRender
 import CacaoCompositor
+import CacaoSDLRenderer
 import SDL3Swift
 #if os(macOS)
 import AppKit
