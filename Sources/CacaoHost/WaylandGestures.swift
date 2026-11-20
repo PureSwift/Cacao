@@ -8,7 +8,7 @@
 #if os(Linux)
 import CacaoRender
 import Foundation
-import CSDL3
+import SDL3Swift
 internal import CacaoWayland
 
 /// Touchpad pinches from the Wayland compositor, for their rotations: SDL
@@ -22,8 +22,8 @@ enum WaylandGestures {
     /// compositor offers pointer gestures.
     static func start() {
         guard gestures == nil,
-              let driver = SDL_GetCurrentVideoDriver(), String(cString: driver) == "wayland",
-              let display = SDL_GetPointerProperty(SDL_GetGlobalProperties(), SDL_PROP_GLOBAL_VIDEO_WAYLAND_WL_DISPLAY_POINTER, nil) else {
+              SDL.currentVideoDriver == "wayland",
+              let display = SDL.globalProperties.pointer("SDL.video.wayland.wl_display") else {
             return
         }
         gestures = cacao_wayland_gestures_create(display, pinchCallback, nil)

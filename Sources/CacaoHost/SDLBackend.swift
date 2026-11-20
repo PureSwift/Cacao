@@ -11,16 +11,18 @@ import Foundation
 import CoreGraphics
 #endif
 import CacaoCompositor
-import CSDL3
+import SDL3Swift
 
 /// The compositor's GPU backend: the SDL3 renderer, which draws with Metal
 /// on macOS and Vulkan or OpenGL on Linux.
+///
+/// A drawing call that fails draws nothing: the next frame draws again.
 @MainActor
 final class SDLBackend: CompositorBackend {
 
-    let renderer: OpaquePointer
+    let renderer: SDLRenderer
 
-    private var textures: [Int: UnsafeMutablePointer<SDL_Texture>] = [:]
+    private var textures: [Int: SDLTexture] = [:]
 
     private var nextTexture = 0
 
@@ -28,51 +30,42 @@ final class SDLBackend: CompositorBackend {
     private var images: [Int: UnsafeMutableRawPointer] = [:]
 
     /// Premultiplied alpha blending, for textures drawn by Silica.
-    private static let premultipliedBlend = SDL_BlendMode(0x0000_0010)
+    private static let premultipliedBlend: BitMaskOptionSet<SDLBlendMode> = [.alphaPremultiplied]
 
-    /// Alpha blending, for fills with straight alpha.
-    private static let blend = SDL_BlendMode(0x0000_0001)
+    /// A color component at full strength: a texture's colors as they are.
+    private static let full: Float = 1
 
-    init(renderer: OpaquePointer) {
+    init(renderer: SDLRenderer) {
         self.renderer = renderer
     }
 
-    func makeTexture(width: Int, height: Int, bytesPerRow: Int, pixels: Data) -> TextureID? {
-        guard let texture = SDL_CreateTexture(
-            renderer,
-            SDL_PIXELFORMAT_ABGR8888,
-            SDL_TEXTUREACCESS_STATIC,
-            Int32(width),
-            Int32(height)
-        ) else {
-            return nil
-        }
-        pixels.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
-            _ = SDL_UpdateTexture(texture, nil, bytes.baseAddress, Int32(bytesPerRow))
-        }
-        SDL_SetTextureBlendMode(texture, Self.premultipliedBlend)
+    private func add(_ texture: SDLTexture) -> TextureID {
         nextTexture += 1
         textures[nextTexture] = texture
         return TextureID(rawValue: nextTexture)
     }
 
-    func makeLayer(width: Int, height: Int) -> TextureID? {
-        guard let texture = SDL_CreateTexture(
-            renderer,
-            SDL_PIXELFORMAT_ABGR8888,
-            SDL_TEXTUREACCESS_TARGET,
-            Int32(width),
-            Int32(height)
-        ) else {
+    func makeTexture(width: Int, height: Int, bytesPerRow: Int, pixels: Data) -> TextureID? {
+        guard let texture = try? SDLTexture(renderer: renderer, format: .abgr8888, access: .static, width: width, height: height) else {
             return nil
         }
-        SDL_SetTextureBlendMode(texture, Self.premultipliedBlend)
+        pixels.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
+            guard let base = bytes.baseAddress else { return }
+            try? texture.update(pixels: base, pitch: bytesPerRow)
+        }
+        try? texture.setBlendMode(Self.premultipliedBlend)
+        return add(texture)
+    }
+
+    func makeLayer(width: Int, height: Int) -> TextureID? {
+        guard let texture = try? SDLTexture(renderer: renderer, format: .abgr8888, access: .target, width: width, height: height) else {
+            return nil
+        }
+        try? texture.setBlendMode(Self.premultipliedBlend)
         // Layers drawn smaller or larger than their pixels, as blurring
         // does, average their pixels.
-        SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_LINEAR)
-        nextTexture += 1
-        textures[nextTexture] = texture
-        return TextureID(rawValue: nextTexture)
+        try? texture.setScaleMode(.linear)
+        return add(texture)
     }
 
     // MARK: External surfaces
@@ -80,75 +73,75 @@ final class SDLBackend: CompositorBackend {
     func makeExternalTexture(width: Int, height: Int, format: ExternalSurface.PixelFormat) -> TextureID? {
         // SDL names formats by the order in a 32-bit value: the bytes
         // R, G, B, A are ABGR8888 on little-endian machines.
-        guard let texture = SDL_CreateTexture(
-            renderer,
-            format == .bgra ? SDL_PIXELFORMAT_ARGB8888 : SDL_PIXELFORMAT_ABGR8888,
-            SDL_TEXTUREACCESS_STREAMING,
-            Int32(width),
-            Int32(height)
+        guard let texture = try? SDLTexture(
+            renderer: renderer,
+            format: format == .bgra ? .argb8888 : .abgr8888,
+            access: .streaming,
+            width: width,
+            height: height
         ) else {
             return nil
         }
-        nextTexture += 1
-        textures[nextTexture] = texture
-        return TextureID(rawValue: nextTexture)
+        return add(texture)
     }
 
     func updateExternalTexture(_ texture: TextureID, bytesPerRow: Int, pixels: Data) {
         guard let texture = textures[texture.rawValue] else { return }
         pixels.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
-            _ = SDL_UpdateTexture(texture, nil, bytes.baseAddress, Int32(bytesPerRow))
+            guard let base = bytes.baseAddress else { return }
+            try? texture.update(pixels: base, pitch: bytesPerRow)
         }
     }
 
     func importExternalBuffer(_ buffer: ExternalSurface.Buffer) -> TextureID? {
-        guard let texture = SharedBuffers.importBuffer(buffer, renderer: renderer) else { return nil }
-        nextTexture += 1
-        textures[nextTexture] = texture.texture
-        if let image = texture.image {
-            images[nextTexture] = image
+        guard let imported = SharedBuffers.importBuffer(buffer, renderer: renderer) else { return nil }
+        let id = add(imported.texture)
+        if let image = imported.image {
+            images[id.rawValue] = image
         }
-        return TextureID(rawValue: nextTexture)
+        return id
     }
 
     func readPixels(_ rect: CGRect) -> (pixels: Data, width: Int, height: Int, bytesPerRow: Int)? {
-        var area = SDL_Rect(x: Int32(rect.minX), y: Int32(rect.minY), w: Int32(rect.width), h: Int32(rect.height))
-        guard area.w > 0, area.h > 0, let read = SDL_RenderReadPixels(renderer, &area) else { return nil }
-        defer { SDL_DestroySurface(read) }
+        let area = SDLRect(x: Int32(rect.minX), y: Int32(rect.minY), width: Int32(rect.width), height: Int32(rect.height))
         // R, G, B, A bytes, whatever the target's format is.
-        guard let surface = SDL_ConvertSurface(read, SDL_PIXELFORMAT_ABGR8888) else { return nil }
-        defer { SDL_DestroySurface(surface) }
-        let width = Int(surface.pointee.w), height = Int(surface.pointee.h), pitch = Int(surface.pointee.pitch)
-        guard width > 0, height > 0, let pixels = surface.pointee.pixels else { return nil }
-        return (Data(bytes: pixels, count: pitch * height), width, height, pitch)
+        guard area.width > 0, area.height > 0,
+              let surface = try? renderer.readPixels(area).converted(to: .abgr8888) else {
+            return nil
+        }
+        let width = surface.width, height = surface.height, pitch = surface.pitch
+        guard width > 0, height > 0,
+              let pixels = try? surface.withUnsafeMutableBytes({ Data(bytes: $0, count: pitch * height) }) else {
+            return nil
+        }
+        return (pixels, width, height, pitch)
     }
 
     func drawExternal(_ texture: TextureID, in rect: CGRect, opacity: Double, isOpaque: Bool, isFlipped: Bool, smooth: Bool) {
         guard let texture = textures[texture.rawValue] else { return }
         let alpha = Float(opacity)
-        SDL_SetTextureBlendMode(texture, isOpaque && alpha >= 1 ? SDL_BlendMode(0) : Self.premultipliedBlend)
-        SDL_SetTextureScaleMode(texture, smooth ? SDL_SCALEMODE_LINEAR : SDL_SCALEMODE_NEAREST)
-        SDL_SetTextureColorModFloat(texture, alpha, alpha, alpha)
-        SDL_SetTextureAlphaModFloat(texture, alpha)
-        var frame = SDL_FRect(rect)
-        SDL_RenderTextureRotated(renderer, texture, nil, &frame, 0, nil, isFlipped ? SDL_FLIP_VERTICAL : SDL_FLIP_NONE)
+        try? texture.setBlendMode(isOpaque && alpha >= 1 ? [] : Self.premultipliedBlend)
+        try? texture.setScaleMode(smooth ? .linear : .nearest)
+        try? texture.setColorModulation(red: alpha, green: alpha, blue: alpha)
+        try? texture.setAlphaModulation(alpha)
+        try? renderer.copy(texture, to: SDLFRect(rect), angle: 0, flip: isFlipped ? [.vertical] : [])
     }
 
     /// The layers being drawn into, innermost last.
-    private var targets: [UnsafeMutablePointer<SDL_Texture>] = []
+    private var targets: [SDLTexture] = []
 
     func beginLayer(_ layer: TextureID) {
         guard let texture = textures[layer.rawValue] else { return }
         targets.append(texture)
-        SDL_SetRenderTarget(renderer, texture)
-        SDL_SetRenderClipRect(renderer, nil)
-        SDL_SetRenderDrawColorFloat(renderer, 0, 0, 0, 0)
-        SDL_RenderClear(renderer)
+        try? renderer.setTarget(texture)
+        try? renderer.setClipRect(nil)
+        try? renderer.setDrawColorFloat(red: 0, green: 0, blue: 0, alpha: 0)
+        try? renderer.clear()
     }
 
     func endLayer() {
         targets.removeLast()
-        SDL_SetRenderTarget(renderer, targets.last)
+        try? renderer.setTarget(targets.last)
     }
 
     func drawLayer(_ layer: TextureID, in rect: CGRect, opacity: Double, mask: [CGPoint]?) {
@@ -156,75 +149,69 @@ final class SDLBackend: CompositorBackend {
         let alpha = Float(opacity)
         guard let mask, mask.count >= 3, rect.width > 0, rect.height > 0 else {
             // Premultiplied colors scale with the opacity too.
-            SDL_SetTextureColorModFloat(texture, alpha, alpha, alpha)
-            SDL_SetTextureAlphaModFloat(texture, alpha)
-            var frame = SDL_FRect(rect)
-            SDL_RenderTexture(renderer, texture, nil, &frame)
+            try? texture.setColorModulation(red: alpha, green: alpha, blue: alpha)
+            try? texture.setAlphaModulation(alpha)
+            try? renderer.copy(texture, to: SDLFRect(rect))
             return
         }
         // A triangle fan around the polygon's centroid, sampling the layer.
-        SDL_SetTextureColorModFloat(texture, 1, 1, 1)
-        SDL_SetTextureAlphaModFloat(texture, 1)
+        try? texture.setColorModulation(red: Self.full, green: Self.full, blue: Self.full)
+        try? texture.setAlphaModulation(Self.full)
         let count = CGFloat(mask.count)
         let center = CGPoint(x: mask.reduce(0) { $0 + $1.x } / count, y: mask.reduce(0) { $0 + $1.y } / count)
-        func vertex(_ point: CGPoint) -> SDL_Vertex {
-            SDL_Vertex(
-                position: SDL_FPoint(x: Float(point.x), y: Float(point.y)),
-                color: SDL_FColor(r: alpha, g: alpha, b: alpha, a: alpha),
-                tex_coord: SDL_FPoint(
-                    x: Float((point.x - rect.minX) / rect.width),
-                    y: Float((point.y - rect.minY) / rect.height)
-                )
+        let color = SDLRenderer.VertexColor(red: alpha, green: alpha, blue: alpha, alpha: alpha)
+        func vertex(_ point: CGPoint) -> SDLRenderer.Vertex {
+            SDLRenderer.Vertex(
+                x: Float(point.x),
+                y: Float(point.y),
+                color: color,
+                textureX: Float((point.x - rect.minX) / rect.width),
+                textureY: Float((point.y - rect.minY) / rect.height)
             )
         }
-        var vertices = [vertex(center)] + mask.map(vertex)
+        let vertices = [vertex(center)] + mask.map(vertex)
         var indices: [Int32] = []
         for index in 1...mask.count {
             indices.append(0)
             indices.append(Int32(index))
             indices.append(Int32(index % mask.count + 1))
         }
-        SDL_RenderGeometry(renderer, texture, &vertices, Int32(vertices.count), &indices, Int32(indices.count))
+        try? renderer.drawGeometry(texture: texture, vertices: vertices, indices: indices)
     }
-
-    /// Keeps the destination where the source is opaque.
-    private static let destinationIn = SDL_ComposeCustomBlendMode(
-        SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_SRC_ALPHA, SDL_BLENDOPERATION_ADD,
-        SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_SRC_ALPHA, SDL_BLENDOPERATION_ADD
-    )
 
     func mask(with layer: TextureID, in rect: CGRect) {
         guard let texture = textures[layer.rawValue] else { return }
-        SDL_SetTextureColorModFloat(texture, 1, 1, 1)
-        SDL_SetTextureAlphaModFloat(texture, 1)
-        SDL_SetTextureBlendMode(texture, Self.destinationIn)
-        var frame = SDL_FRect(rect)
-        SDL_RenderTexture(renderer, texture, nil, &frame)
-        SDL_SetTextureBlendMode(texture, Self.premultipliedBlend)
+        try? texture.setColorModulation(red: Self.full, green: Self.full, blue: Self.full)
+        try? texture.setAlphaModulation(Self.full)
+        // Keeps the destination where the layer is opaque.
+        try? texture.setBlendMode(SDLCustomBlendMode.destinationIn)
+        try? renderer.copy(texture, to: SDLFRect(rect))
+        try? texture.setBlendMode(Self.premultipliedBlend)
     }
 
     func drawLayer(_ layer: TextureID, corners: [CGPoint], opacity: Double) {
         guard let texture = textures[layer.rawValue], corners.count == 4 else { return }
-        SDL_SetTextureColorModFloat(texture, 1, 1, 1)
-        SDL_SetTextureAlphaModFloat(texture, 1)
-        SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_LINEAR)
+        try? texture.setColorModulation(red: Self.full, green: Self.full, blue: Self.full)
+        try? texture.setAlphaModulation(Self.full)
+        try? texture.setScaleMode(.linear)
         let alpha = Float(opacity)
-        let coordinates = [(0, 0), (1, 0), (1, 1), (0, 1)]
-        var vertices = zip(corners, coordinates).map { corner, coordinate in
-            SDL_Vertex(
-                position: SDL_FPoint(x: Float(corner.x), y: Float(corner.y)),
-                color: SDL_FColor(r: alpha, g: alpha, b: alpha, a: alpha),
-                tex_coord: SDL_FPoint(x: Float(coordinate.0), y: Float(coordinate.1))
+        let color = SDLRenderer.VertexColor(red: alpha, green: alpha, blue: alpha, alpha: alpha)
+        let coordinates: [(Float, Float)] = [(0, 0), (1, 0), (1, 1), (0, 1)]
+        let vertices = zip(corners, coordinates).map { corner, coordinate in
+            SDLRenderer.Vertex(
+                x: Float(corner.x),
+                y: Float(corner.y),
+                color: color,
+                textureX: coordinate.0,
+                textureY: coordinate.1
             )
         }
-        var indices: [Int32] = [0, 1, 2, 0, 2, 3]
-        SDL_RenderGeometry(renderer, texture, &vertices, 4, &indices, 6)
+        try? renderer.drawGeometry(texture: texture, vertices: vertices, indices: [0, 1, 2, 0, 2, 3])
     }
 
     func destroyTexture(_ texture: TextureID) {
-        if let pointer = textures.removeValue(forKey: texture.rawValue) {
-            SDL_DestroyTexture(pointer)
-        }
+        // The texture is destroyed as its last reference goes.
+        textures[texture.rawValue] = nil
         if let image = images.removeValue(forKey: texture.rawValue) {
             SharedBuffers.destroyImage(image)
         }
@@ -232,49 +219,45 @@ final class SDLBackend: CompositorBackend {
 
     func beginFrame(width: Int, height: Int, clearColor: ResolvedColor) {
         targets.removeAll()
-        SDL_SetRenderTarget(renderer, nil)
-        SDL_SetRenderClipRect(renderer, nil)
-        SDL_SetRenderDrawColorFloat(renderer, clearColor.red, clearColor.green, clearColor.blue, 1)
-        SDL_RenderClear(renderer)
+        try? renderer.setTarget(nil)
+        try? renderer.setClipRect(nil)
+        try? renderer.setDrawColorFloat(red: clearColor.red, green: clearColor.green, blue: clearColor.blue, alpha: 1)
+        try? renderer.clear()
     }
 
     func fill(_ rect: CGRect, color: ResolvedColor) {
-        SDL_SetRenderDrawBlendMode(renderer, Self.blend)
-        SDL_SetRenderDrawColorFloat(renderer, color.red, color.green, color.blue, color.opacity)
-        var frame = SDL_FRect(rect)
-        SDL_RenderFillRect(renderer, &frame)
+        // Alpha blending, for fills with straight alpha.
+        try? renderer.setDrawBlendMode([.alpha])
+        try? renderer.setDrawColorFloat(red: color.red, green: color.green, blue: color.blue, alpha: color.opacity)
+        try? renderer.fill(SDLFRect(rect))
     }
 
     func draw(_ texture: TextureID, in rect: CGRect, opacity: Double, smooth: Bool) {
-        guard let pointer = textures[texture.rawValue] else { return }
+        guard let texture = textures[texture.rawValue] else { return }
         // Premultiplied colors scale with the opacity too.
-        SDL_SetTextureColorModFloat(pointer, Float(opacity), Float(opacity), Float(opacity))
-        SDL_SetTextureAlphaModFloat(pointer, Float(opacity))
-        SDL_SetTextureScaleMode(pointer, smooth ? SDL_SCALEMODE_LINEAR : SDL_SCALEMODE_NEAREST)
-        var frame = SDL_FRect(rect)
-        SDL_RenderTexture(renderer, pointer, nil, &frame)
+        try? texture.setColorModulation(red: Float(opacity), green: Float(opacity), blue: Float(opacity))
+        try? texture.setAlphaModulation(Float(opacity))
+        try? texture.setScaleMode(smooth ? .linear : .nearest)
+        try? renderer.copy(texture, to: SDLFRect(rect))
     }
 
     func setClip(_ rect: CGRect?) {
-        if let rect {
-            var clip = SDL_Rect(
-                x: Int32(rect.minX.rounded()),
-                y: Int32(rect.minY.rounded()),
-                w: Int32(max(0, rect.width.rounded())),
-                h: Int32(max(0, rect.height.rounded()))
-            )
-            SDL_SetRenderClipRect(renderer, &clip)
-        } else {
-            SDL_SetRenderClipRect(renderer, nil)
+        guard let rect else {
+            try? renderer.setClipRect(nil)
+            return
         }
+        try? renderer.setClipRect(SDLRect(
+            x: Int32(rect.minX.rounded()),
+            y: Int32(rect.minY.rounded()),
+            width: Int32(max(0, rect.width.rounded())),
+            height: Int32(max(0, rect.height.rounded()))
+        ))
     }
 
     func endFrame() { }
 
     func destroyAllTextures() {
-        for texture in textures.values {
-            SDL_DestroyTexture(texture)
-        }
+        targets.removeAll()
         textures.removeAll()
         for image in images.values {
             SharedBuffers.destroyImage(image)
@@ -283,9 +266,9 @@ final class SDLBackend: CompositorBackend {
     }
 }
 
-extension SDL_FRect {
+extension SDLFRect {
 
     init(_ rect: CGRect) {
-        self.init(x: Float(rect.minX), y: Float(rect.minY), w: Float(rect.width), h: Float(rect.height))
+        self.init(x: Float(rect.minX), y: Float(rect.minY), width: Float(rect.width), height: Float(rect.height))
     }
 }
