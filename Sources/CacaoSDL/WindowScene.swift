@@ -317,6 +317,8 @@ final class WindowScene: HostScene {
         scrollController.step(now: frame.time)
         // Moves animations to this frame; animatable views re-resolve.
         graph.advanceAnimations(to: frame.time)
+        // A narrow window is compact, as an iPhone or a slim iPad window is.
+        graph.applySizeClasses(for: frame.size)
         if graph.needsUpdate {
             graph.update()
             needsLayout = true
