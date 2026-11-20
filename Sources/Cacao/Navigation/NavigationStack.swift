@@ -90,6 +90,11 @@ internal final class NavigationContext {
     /// Whether this stack is a split view's detail column.
     var isDetail = false
 
+    /// For a stack in a screen of another stack: that stack and screen.
+    /// The screen shows this stack's bar instead of its own, with its way
+    /// back at this stack's root.
+    var outer: (navigation: NavigationContext, screen: ScreenContext)?
+
     /// Whether this is the one stack of a split view collapsed to a single
     /// column, as in a compact width: the sidebar, with what the detail
     /// column would show pushed above it.
@@ -275,6 +280,17 @@ internal final class ScreenContext {
 
     var title: String = ""
 
+    /// How many screens are below this one in its stack.
+    var depth = 0
+
+    /// A navigation stack in this screen's content, whose bar this screen
+    /// shows instead of its own.
+    weak var nestedStack: ViewNode?
+
+    var hasNestedStack: Bool {
+        nestedStack?.isAttached == true
+    }
+
     /// Toolbar content, by the node of the modifier that set it.
     var toolbars: [Int: AnyView] = [:]
 
@@ -396,6 +412,17 @@ internal struct _NavigationStack: View, PrimitiveView {
         }
         navigation.path = path
         navigation.onChange = { [weak node] in node?.invalidate() }
+        // In a screen of another stack, this stack's bar replaces that
+        // screen's, as one bar for both.
+        if column == nil, let outer = context.environment.navigationContext, let screen = context.environment.screenContext {
+            navigation.outer = (outer, screen)
+            if screen.nestedStack !== node {
+                screen.nestedStack = node
+                screen.barNeedsUpdate()
+            }
+        } else {
+            navigation.outer = nil
+        }
         if let column {
             navigation.split = column.link
             navigation.isDetail = column.isDetail
@@ -534,6 +561,7 @@ internal struct _NavigationScreen: View, PrimitiveView {
             node.dynamicStorage["screen"] = screen
         }
         navigation.screens[depth] = screen
+        screen.depth = depth
         var environment = context.environment
         environment.screenContext = screen
         // The content first, so it sets the bar's title and items before the
@@ -600,6 +628,20 @@ internal struct _NavigationBar: View, PrimitiveView {
 
     func resolve(in context: ResolveContext) -> Resolution {
         screen.barNode = context.node
+        // A stack in this screen's content shows its bar instead.
+        if screen.hasNestedStack {
+            return Resolution(children: [])
+        }
+        // The root of a stack in another stack's screen stands in for that
+        // screen's bar: with its way back, and its sidebar toggle.
+        var navigation = self.navigation
+        var depth = self.depth
+        var position = screen
+        if depth == 0, let outer = navigation.outer {
+            navigation = outer.navigation
+            depth = outer.screen.depth
+            position = outer.screen
+        }
         var items = screen.toolbars.sorted { $0.key < $1.key }.flatMap { toolbarItems(in: $0.value) }
         // A split view's detail shows a button that shows or hides the sidebar.
         if depth == 0, navigation.isDetail, let split = navigation.split, !split.removesSidebarToggle {
@@ -611,19 +653,18 @@ internal struct _NavigationBar: View, PrimitiveView {
             items.insert(ToolbarItemEntry(placement: .navigation, content: AnyView(toggle)), at: 0)
         }
         let hasContent = !screen.title.isEmpty || !items.isEmpty || screen.search != nil
-            || (depth > 0 && !screen.isBackButtonHidden)
+            || (depth > 0 && !position.isBackButtonHidden)
         guard hasContent else {
             return Resolution(children: [])
         }
         let previousTitle = navigation.screens[depth - 1]?.title ?? ""
         // A split view's detail shows its sidebar's selection without a way back.
-        let showsBack = depth > 0 && !screen.isBackButtonHidden && !(depth == 1 && navigation.isDetail)
-        let navigation = self.navigation
-        let depth = self.depth
+        let showsBack = depth > 0 && !position.isBackButtonHidden && !(depth == 1 && navigation.isDetail)
+        let back = { [navigation, depth] in navigation.pop(to: depth - 1) }
         let bar = _NavigationBarContent(
             title: screen.title,
             backTitle: showsBack ? (previousTitle.isEmpty ? "Back" : previousTitle) : nil,
-            back: { navigation.pop(to: depth - 1) },
+            back: back,
             leading: items.filter { $0.placement.position == .leading }.map(\.content),
             principal: items.filter { $0.placement.position == .principal }.map(\.content),
             trailing: items.filter { $0.placement.position == .trailing }.map(\.content),
