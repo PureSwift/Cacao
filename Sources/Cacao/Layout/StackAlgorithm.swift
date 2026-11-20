@@ -111,12 +111,26 @@ internal struct StackAlgorithm {
         var minorLower = CGFloat.infinity
         var minorUpper = -CGFloat.infinity
         var minorOrigins: [CGFloat] = []
+        // A child without a limit across the stack, as one that fills an
+        // unlimited proposal, makes the stack unlimited too. Its alignment
+        // guide is as far off, so it doesn't count toward where the others go.
+        var isUnlimited = false
         for index in children.indices {
             let childDimensions = dimensions[index]!
+            guard childDimensions.size[minorAxis].isFinite else {
+                isUnlimited = true
+                minorOrigins.append(0)
+                continue
+            }
             let origin = -childDimensions[alignment]
             minorOrigins.append(origin)
             minorLower = Swift.min(minorLower, origin)
             minorUpper = Swift.max(minorUpper, origin + childDimensions.size[minorAxis])
+        }
+        if minorLower > minorUpper {
+            // Every child is unlimited.
+            minorLower = 0
+            minorUpper = 0
         }
         var placements: [Placement] = []
         var major: CGFloat = 0
@@ -130,7 +144,7 @@ internal struct StackAlgorithm {
             ))
             major = majorOrigin + childDimensions.size[axis]
         }
-        return (placements, CGSize(major, in: axis, by: minorUpper - minorLower))
+        return (placements, CGSize(major, in: axis, by: isUnlimited ? .infinity : minorUpper - minorLower))
     }
 
     /// Children in the order they're sized: decreasing priority, then
