@@ -24,6 +24,7 @@ public struct TabView<SelectionValue: Hashable, Content: View>: View {
     internal let content: Content
 
     /// Creates a tab view that uses a provided selection value.
+    @_disfavoredOverload
     public init(selection: Binding<SelectionValue>?, @ViewBuilder content: () -> Content) {
         self.selection = selection
         self.content = content()
@@ -149,18 +150,55 @@ extension View {
 /// The content and behavior of a tab.
 public struct Tab<Value: Hashable, Content: View>: View {
 
-    internal let title: Text
+    internal let label: AnyView
 
     internal let value: Value
+
+    internal let role: TabRole?
 
     internal let content: Content
 
     /// Creates a tab that the tab view presents when its value matches the
     /// selection.
-    public init(_ titleKey: LocalizedStringKey, systemImage: String? = nil, value: Value, @ViewBuilder content: () -> Content) {
-        self.title = Text(titleKey)
+    public init(
+        _ titleKey: LocalizedStringKey,
+        systemImage: String? = nil,
+        value: Value,
+        role: TabRole? = nil,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.label = Self.label(Text(titleKey), systemImage: systemImage)
         self.value = value
+        self.role = role
         self.content = content()
+    }
+
+    /// Creates a tab with a title from a string.
+    @_disfavoredOverload
+    public init<S: StringProtocol>(
+        _ title: S,
+        systemImage: String? = nil,
+        value: Value,
+        role: TabRole? = nil,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.label = Self.label(Text(title), systemImage: systemImage)
+        self.value = value
+        self.role = role
+        self.content = content()
+    }
+
+    /// Creates a tab with a role, labeled for it.
+    public init(value: Value, role: TabRole?, @ViewBuilder content: () -> Content) {
+        self.label = role == .search ? Self.label(Text("Search"), systemImage: "magnifyingglass") : AnyView(EmptyView())
+        self.value = value
+        self.role = role
+        self.content = content()
+    }
+
+    private static func label(_ title: Text, systemImage: String?) -> AnyView {
+        guard let systemImage else { return AnyView(title) }
+        return AnyView(Label(title: { title }, icon: { Image(systemName: systemImage) }))
     }
 
     public var body: some View {
@@ -172,8 +210,9 @@ extension Tab where Value == Int {
 
     /// Creates a tab with a title.
     public init(_ titleKey: LocalizedStringKey, systemImage: String? = nil, @ViewBuilder content: () -> Content) {
-        self.title = Text(titleKey)
+        self.label = Self.label(Text(titleKey), systemImage: systemImage)
         self.value = -1
+        self.role = nil
         self.content = content()
     }
 }
@@ -182,7 +221,190 @@ extension Tab: OptionSource {
 
     func options() -> [Option] {
         var traits = LayoutTraits()
-        traits[TabItemKey.self] = AnyView(title)
+        traits[TabItemKey.self] = label
         return [Option(tag: value == (-1 as? Value) ? nil : AnyHashable(value), label: AnyView(content), traits: traits)]
+    }
+}
+
+/// A value that defines the purpose of a tab.
+public struct TabRole: Hashable, Sendable {
+
+    private let name: String
+
+    /// The search role.
+    public static let search = TabRole(name: "search")
+}
+
+// MARK: - Tab content
+
+/// A type that provides content for programmatically selectable tabs in a
+/// tab view.
+@MainActor
+@preconcurrency
+public protocol TabContent<TabValue> {
+
+    /// The type used to drive selection for the tab.
+    associatedtype TabValue: Hashable
+
+    /// The tabs, as views a tab view lists.
+    var _tabs: AnyView { get }
+}
+
+extension Tab: TabContent {
+
+    public typealias TabValue = Value
+
+    public var _tabs: AnyView { AnyView(self) }
+}
+
+extension ForEach: TabContent where Content: View & TabContent {
+
+    public typealias TabValue = Content.TabValue
+
+    public var _tabs: AnyView { AnyView(self) }
+}
+
+/// Tabs from a tab content builder.
+public struct _TabGroup<TabValue: Hashable>: View, TabContent {
+
+    internal let parts: [AnyView]
+
+    public var _tabs: AnyView { AnyView(self) }
+
+    public var body: some View {
+        ForEach(parts.indices, id: \.self) { parts[$0] }
+    }
+}
+
+extension _TabGroup: OptionSource {
+
+    func options() -> [Option] {
+        parts.flatMap { Cacao.options(in: $0) }
+    }
+}
+
+/// A result builder that constructs tabs for a tab view that supports
+/// programmatic selection, giving its tabs the type of the selection.
+@MainActor
+@resultBuilder
+public struct TabContentBuilder<TabValue: Hashable> {
+
+    public static func buildExpression<C: TabContent>(_ content: C) -> _TabGroup<TabValue> where C.TabValue == TabValue {
+        _TabGroup(parts: [content._tabs])
+    }
+
+    public static func buildBlock(_ parts: _TabGroup<TabValue>...) -> _TabGroup<TabValue> {
+        _TabGroup(parts: parts.flatMap(\.parts))
+    }
+
+    public static func buildOptional(_ part: _TabGroup<TabValue>?) -> _TabGroup<TabValue> {
+        part ?? _TabGroup(parts: [])
+    }
+
+    public static func buildEither(first part: _TabGroup<TabValue>) -> _TabGroup<TabValue> {
+        part
+    }
+
+    public static func buildEither(second part: _TabGroup<TabValue>) -> _TabGroup<TabValue> {
+        part
+    }
+
+    public static func buildLimitedAvailability(_ part: _TabGroup<TabValue>) -> _TabGroup<TabValue> {
+        part
+    }
+}
+
+extension TabView {
+
+    /// Creates a tab view that uses a builder to create and specify
+    /// selection values for its tabs.
+    public init(
+        selection: Binding<SelectionValue>,
+        @TabContentBuilder<SelectionValue> content: () -> _TabGroup<SelectionValue>
+    ) where Content == _TabGroup<SelectionValue> {
+        self.selection = selection
+        self.content = content()
+    }
+}
+
+/// A container that you can use to add hierarchy within a tab view.
+///
+/// Cacao lists a section's tabs with the others, without its title.
+public struct TabSection<SelectionValue: Hashable>: View, TabContent {
+
+    public typealias TabValue = SelectionValue
+
+    internal let title: Text
+
+    internal let content: _TabGroup<SelectionValue>
+
+    /// Creates a section with a title and its tabs.
+    public init(_ titleKey: LocalizedStringKey, @TabContentBuilder<SelectionValue> content: () -> _TabGroup<SelectionValue>) {
+        self.title = Text(titleKey)
+        self.content = content()
+    }
+
+    /// Creates a section with a title from a string and its tabs.
+    @_disfavoredOverload
+    public init<S: StringProtocol>(_ title: S, @TabContentBuilder<SelectionValue> content: () -> _TabGroup<SelectionValue>) {
+        self.title = Text(title)
+        self.content = content()
+    }
+
+    public var _tabs: AnyView { AnyView(self) }
+
+    public var body: some View {
+        content
+    }
+}
+
+extension TabSection: OptionSource {
+
+    func options() -> [Option] {
+        content.options()
+    }
+}
+
+// MARK: - Style
+
+/// A specification for the appearance and interaction of a tab view.
+///
+/// Cacao draws every tab view with a tab bar, whatever its style.
+@MainActor
+@preconcurrency
+public protocol TabViewStyle { }
+
+/// The default tab view style.
+public struct DefaultTabViewStyle: TabViewStyle {
+    public init() { }
+}
+
+/// A tab bar style that adapts to each platform.
+public struct SidebarAdaptableTabViewStyle: TabViewStyle {
+    public init() { }
+}
+
+/// A tab view style that displays a tab bar when possible.
+public struct TabBarOnlyTabViewStyle: TabViewStyle {
+    public init() { }
+}
+
+extension TabViewStyle where Self == DefaultTabViewStyle {
+    public static var automatic: DefaultTabViewStyle { DefaultTabViewStyle() }
+}
+
+extension TabViewStyle where Self == SidebarAdaptableTabViewStyle {
+    public static var sidebarAdaptable: SidebarAdaptableTabViewStyle { SidebarAdaptableTabViewStyle() }
+}
+
+extension TabViewStyle where Self == TabBarOnlyTabViewStyle {
+    public static var tabBarOnly: TabBarOnlyTabViewStyle { TabBarOnlyTabViewStyle() }
+}
+
+extension View {
+
+    /// Sets the style for the tab view within the current environment.
+    public func tabViewStyle<S: TabViewStyle>(_ style: S) -> some View {
+        self
     }
 }
