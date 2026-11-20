@@ -9,7 +9,7 @@
 import CacaoRender
 import Foundation
 import CSDL3
-import CacaoWayland
+internal import CacaoWayland
 
 /// Touchpad pinches from the Wayland compositor, for their rotations: SDL
 /// reports a pinch's scale but not how it turns.
