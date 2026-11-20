@@ -250,7 +250,8 @@ extension ViewGraph {
 
     /// Whether anything is animating, so the host keeps drawing frames.
     package var hasActiveAnimations: Bool {
-        !ghosts.isEmpty || !scrollAnimations.isEmpty || gesturesNeedTicks || hasFrameWakeups || nodeAnimations.values.contains { $0.isActive }
+        !ghosts.isEmpty || !scrollAnimations.isEmpty || gesturesNeedTicks || hasFrameWakeups || time < scrollIndicatorsFadeEnd
+            || nodeAnimations.values.contains { $0.isActive }
     }
 
     /// Keeps a removed node's drawing to transition it out.

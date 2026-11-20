@@ -45,7 +45,8 @@ public struct ScrollView<Content: View>: View, PrimitiveView {
         environment.defaultScrollAnchors = [:]
         let behavior = ScrollBehavior(
             axes: axes,
-            showsIndicators: showsIndicators && context.environment.showsScrollIndicators,
+            showsIndicators: showsIndicators && context.environment.scrollIndicatorVisibility.isVisible,
+            fadesIndicators: context.environment.scrollIndicatorVisibility.kind == .automatic,
             targetBehavior: context.environment.scrollTargetBehavior,
             isScrollEnabled: context.environment.isScrollEnabled,
             anchors: context.environment.defaultScrollAnchors
@@ -97,6 +98,26 @@ package final class ScrollState {
 
     /// Called when the offset changes.
     var onChange: (() -> Void)?
+
+    /// Whether the indicators fade out after scrolling.
+    var fadesIndicators = false
+
+    /// When the offset last changed, for indicators that fade.
+    var lastMoved: Double?
+
+    /// How long indicators stay after scrolling stops, before they fade.
+    static let indicatorHold = 0.6
+
+    /// How long indicators take to fade out.
+    static let indicatorFade = 0.3
+
+    /// How opaque fading indicators are at a time: fully while scrolling
+    /// and a moment after, then fading out; hidden before any scrolling.
+    func indicatorOpacity(at time: Double) -> Double {
+        guard let lastMoved else { return 0 }
+        let idle = time - lastMoved - Self.indicatorHold
+        return min(max(1 - idle / Self.indicatorFade, 0), 1)
+    }
 
     /// Whether the user can scroll it.
     var isEnabled = true
@@ -163,6 +184,10 @@ internal struct ScrollBehavior: NodeBehavior {
 
     let showsIndicators: Bool
 
+    /// Whether the indicators only show while scrolling and a moment
+    /// after, as by default, or stay.
+    var fadesIndicators = true
+
     var targetBehavior: (any ScrollTargetBehavior)? = nil
 
     var isScrollEnabled = true
@@ -176,6 +201,11 @@ internal struct ScrollBehavior: NodeBehavior {
         }
         let state = ScrollState(axes: axes)
         state.onChange = { [weak graph = node.graph, weak state] in
+            // Its indicators show from now until a moment after.
+            if let graph, let state, state.fadesIndicators {
+                state.lastMoved = graph.time
+                graph.scrollIndicatorsFadeEnd = graph.time + ScrollState.indicatorHold + ScrollState.indicatorFade
+            }
             graph?.setNeedsDisplay()
             graph?.scrollDidChange()
             state?.reportPosition()
@@ -211,6 +241,7 @@ internal struct ScrollBehavior: NodeBehavior {
         let state = state(of: node)
         state.targetBehavior = targetBehavior
         state.isEnabled = isScrollEnabled
+        state.fadesIndicators = showsIndicators && fadesIndicators
         if targetBehavior != nil {
             state.targetLayout = { [weak node] in
                 guard let node else { return [] }
@@ -268,6 +299,7 @@ internal struct ScrollBehavior: NodeBehavior {
             viewport: node.frame,
             offset: state.offset,
             showsIndicators: showsIndicators,
+            indicatorOpacity: fadesIndicators ? state.indicatorOpacity(at: node.graph.time) : 1,
             contentSize: state.contentSize
         ))
     }

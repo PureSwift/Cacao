@@ -217,6 +217,8 @@ import Testing
         #expect(state.offset.y == 500)
         graph.advance(to: 1)
         #expect(state.offset.y == 1000)
+        // Its indicator shows a moment longer, then fades.
+        graph.advance(to: 1 + ScrollState.indicatorHold + ScrollState.indicatorFade + 0.1)
         #expect(!graph.hasActiveAnimations)
     }
 }
