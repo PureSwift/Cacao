@@ -1,6 +1,6 @@
 //
 //  Path.swift
-//  Cacao
+//  CacaoRender
 //
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
@@ -35,7 +35,7 @@ public struct Path: Equatable, Sendable {
         case closeSubpath
     }
 
-    internal private(set) var elements: [Element]
+    package private(set) var elements: [Element]
 
     /// Creates an empty path.
     public init() {
@@ -198,7 +198,7 @@ public struct Path: Equatable, Sendable {
     // MARK: Geometry
 
     /// The path with every point transformed.
-    package func applying(_ transform: Transform2D) -> Path {
+    public func applying(_ transform: Transform2D) -> Path {
         let move = transform.apply
         var path = Path()
         path.elements = elements.map { element in
@@ -281,7 +281,7 @@ public struct Path: Equatable, Sendable {
 
     /// Whether a point is on the path's outline, stroked with a line width
     /// (and a point of tolerance).
-    internal func strokeContains(_ point: CGPoint, lineWidth: CGFloat) -> Bool {
+    package func strokeContains(_ point: CGPoint, lineWidth: CGFloat) -> Bool {
         let reach = lineWidth / 2 + 1
         for polygon in polygons() where !polygon.isEmpty {
             for index in polygon.indices {
