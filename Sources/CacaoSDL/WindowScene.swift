@@ -37,6 +37,20 @@ final class WindowScene: HostScene {
     /// Two-finger rotations on touch screens.
     private var touchRotation = TouchRotationTracker()
 
+    /// Two-finger pinches on touch screens, where the system reports the
+    /// fingers but not the pinch.
+    private var touchPinch = TouchPinchTracker()
+
+    /// Whether the system reports a touch screen's pinches itself, as iOS
+    /// and Android do through SDL: elsewhere they're told from the fingers.
+    private static var systemReportsTouchPinches: Bool {
+        #if os(iOS) || os(tvOS) || os(visionOS) || os(Android)
+        true
+        #else
+        false
+        #endif
+    }
+
     /// Whether the next frame must lay out again.
     private var needsLayout = true
 
@@ -210,6 +224,17 @@ final class WindowScene: HostScene {
             if let update {
                 graph.rotate(update.phase, angle: update.angle, at: update.location, time: now)
             }
+            if !Self.systemReportsTouchPinches {
+                let pinch: TouchPinchTracker.Update? = switch phase {
+                case .began: touchPinch.fingerDown(finger, at: location)
+                case .moved: touchPinch.fingerMoved(finger, to: location)
+                case .ended: touchPinch.fingerUp(finger, cancelled: false)
+                case .cancelled: touchPinch.fingerUp(finger, cancelled: true)
+                }
+                if let pinch {
+                    graph.magnify(pinch.phase, scale: pinch.scale, at: pinch.location, time: now)
+                }
+            }
         case let .scroll(x, y, location):
             if graph.externalScroll(x: Double(x), y: Double(y), at: location) {
                 break
@@ -253,8 +278,10 @@ final class WindowScene: HostScene {
             guard var pan = touchPan, pan.finger == finger else { return }
             if !pan.isScrolling {
                 let movement = CGSize(width: location.x - pan.start.x, height: location.y - pan.start.y)
-                guard hypot(movement.width, movement.height) > Self.panDistance,
-                      scrollController.beginPan(toward: movement, at: pan.start, graph: graph, now: now) else {
+                // A scroll view scrolls when the finger mostly goes a way it
+                // can move: not when a drag across it wanders that way.
+                guard let direction = ScrollController.panDirection(of: movement, beyond: Self.panDistance),
+                      scrollController.beginPan(toward: direction, at: pan.start, graph: graph, now: now) else {
                     return
                 }
                 pan.isScrolling = true
