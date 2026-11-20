@@ -61,6 +61,10 @@ public struct ScrollEffect: Equatable, Sendable {
     /// The size of the content, for indicators.
     public var contentSize: CGSize
 
+    /// Whether content draws outside the visible area, as with
+    /// `scrollClipDisabled()`.
+    public var isClipDisabled = false
+
     public init(viewport: CGRect, offset: CGPoint, showsIndicators: Bool, indicatorOpacity: Double = 1, contentSize: CGSize) {
         self.viewport = viewport
         self.offset = offset
