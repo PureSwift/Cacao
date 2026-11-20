@@ -470,6 +470,17 @@ extension View {
     }
 }
 
+extension View {
+
+    /// Indicates that the view's frame and cohort of focusable descendants
+    /// should be used to guide focus movement.
+    ///
+    /// Cacao moves focus in the order of the views, so this changes nothing.
+    public func focusSection() -> some View {
+        self
+    }
+}
+
 private struct IsFocusedKey: EnvironmentKey {
     static let defaultValue = false
 }
@@ -793,6 +804,21 @@ extension View {
 
 // MARK: - Scrolling
 
+/// An effect applied when the pointer hovers over a view.
+public struct HoverEffect: Sendable {
+
+    private let name: String
+
+    /// An effect that attempts to determine the effect automatically.
+    public static let automatic = HoverEffect(name: "automatic")
+
+    /// An effect that morphs the pointer into a platter behind the view.
+    public static let highlight = HoverEffect(name: "highlight")
+
+    /// An effect that slides the pointer under the view and scales it up.
+    public static let lift = HoverEffect(name: "lift")
+}
+
 /// The visibility of scroll indicators of a UI element.
 public struct ScrollIndicatorVisibility: Equatable, Sendable {
 
@@ -828,12 +854,23 @@ private struct ScrollDisabledKey: EnvironmentKey {
     static let defaultValue = false
 }
 
+private struct ScrollClipDisabledKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
 extension EnvironmentValues {
 
     /// How scroll views in the environment show their indicators.
     internal var scrollIndicatorVisibility: ScrollIndicatorVisibility {
         get { self[ScrollIndicatorsKey.self] }
         set { self[ScrollIndicatorsKey.self] = newValue }
+    }
+
+    /// Whether scroll views in the environment draw content outside their
+    /// bounds.
+    internal var isScrollClipDisabled: Bool {
+        get { self[ScrollClipDisabledKey.self] }
+        set { self[ScrollClipDisabledKey.self] = newValue }
     }
 
     /// A Boolean value that indicates whether any scroll views associated
@@ -849,6 +886,18 @@ extension View {
     /// Sets the visibility of scroll indicators within this view.
     public func scrollIndicators(_ visibility: ScrollIndicatorVisibility, axes: Axis.Set = [.vertical, .horizontal]) -> some View {
         environment(\.scrollIndicatorVisibility, visibility)
+    }
+
+    /// Sets whether a scroll view clips its content to its bounds.
+    public func scrollClipDisabled(_ disabled: Bool = true) -> some View {
+        environment(\.isScrollClipDisabled, disabled)
+    }
+
+    /// Applies a hover effect to this view.
+    ///
+    /// Cacao has no system hover effects, so this draws nothing.
+    public func hoverEffect(_ effect: HoverEffect = .automatic, isEnabled: Bool = true) -> some View {
+        self
     }
 
     /// Disables or enables scrolling in scrollable views.
