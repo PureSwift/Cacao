@@ -91,6 +91,10 @@ package final class ViewGraph {
 
     let focusedNodeReference = WeakNodeReference()
 
+    /// The views that are told when enough of them scrolls into or out of
+    /// view, with the check each runs.
+    var scrollVisibilityObservers: [Int: (node: WeakNodeReference, check: () -> Void)] = [:]
+
     /// The nodes that tell focusable views' content whether they have
     /// focus, to update when focus moves.
     var focusEnvironmentNodes: [Int: WeakNodeReference] = [:]

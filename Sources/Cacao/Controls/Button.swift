@@ -280,6 +280,8 @@ private struct _BorderedButton: View {
 
     @Environment(\.font) private var font
 
+    @Environment(\.buttonBorderShape) private var shape
+
     var body: some View {
         let metrics = Self.metrics(controlSize)
         configuration.label
@@ -288,7 +290,14 @@ private struct _BorderedButton: View {
             .padding(.horizontal, metrics.horizontal)
             .padding(.vertical, metrics.vertical)
             .background {
-                RoundedRectangle(cornerRadius: metrics.radius).fill(background)
+                switch shape.kind {
+                case .capsule:
+                    Capsule().fill(background)
+                case .circle:
+                    Circle().fill(background)
+                case let .roundedRectangle(radius):
+                    RoundedRectangle(cornerRadius: radius ?? metrics.radius).fill(background)
+                }
             }
     }
 
@@ -318,6 +327,77 @@ private struct _BorderedButton: View {
         return isProminent
             ? tint.opacity(pressed ? 0.7 : 1)
             : Color.gray.opacity(pressed ? 0.3 : 0.15)
+    }
+}
+
+/// A button style that draws a platter behind its content, with no
+/// padding, clipped to a rounded rectangle: as cards on Apple TV.
+public struct CardButtonStyle: ButtonStyle {
+
+    public init() { }
+
+    public func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(Color.gray.opacity(0.15))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .opacity(configuration.isPressed ? 0.7 : 1)
+    }
+}
+
+extension ButtonStyle where Self == CardButtonStyle {
+
+    /// A button style that doesn't pad the content, and draws a platter
+    /// behind it.
+    public static var card: CardButtonStyle { CardButtonStyle() }
+}
+
+/// A shape used to draw a button's border.
+public struct ButtonBorderShape: Equatable, Sendable {
+
+    internal enum Kind: Equatable, Sendable {
+        case roundedRectangle(radius: CGFloat?)
+        case capsule
+        case circle
+    }
+
+    internal let kind: Kind
+
+    /// A shape that defers to the system: a rounded rectangle.
+    public static let automatic = ButtonBorderShape(kind: .roundedRectangle(radius: nil))
+
+    /// A capsule shape.
+    public static let capsule = ButtonBorderShape(kind: .capsule)
+
+    /// A rounded rectangle shape.
+    public static let roundedRectangle = ButtonBorderShape(kind: .roundedRectangle(radius: nil))
+
+    /// A circular shape.
+    public static let circle = ButtonBorderShape(kind: .circle)
+
+    /// A rounded rectangle shape with a corner radius.
+    public static func roundedRectangle(radius: CGFloat) -> ButtonBorderShape {
+        ButtonBorderShape(kind: .roundedRectangle(radius: radius))
+    }
+}
+
+private struct ButtonBorderShapeKey: EnvironmentKey {
+    static let defaultValue = ButtonBorderShape.automatic
+}
+
+extension EnvironmentValues {
+
+    /// The shape of the border of bordered buttons.
+    internal var buttonBorderShape: ButtonBorderShape {
+        get { self[ButtonBorderShapeKey.self] }
+        set { self[ButtonBorderShapeKey.self] = newValue }
+    }
+}
+
+extension View {
+
+    /// Sets the border shape for buttons in this view.
+    public func buttonBorderShape(_ shape: ButtonBorderShape) -> some View {
+        environment(\.buttonBorderShape, shape)
     }
 }
 

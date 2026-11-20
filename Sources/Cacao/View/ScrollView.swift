@@ -47,6 +47,7 @@ public struct ScrollView<Content: View>: View, PrimitiveView {
             axes: axes,
             showsIndicators: showsIndicators && context.environment.scrollIndicatorVisibility.isVisible,
             fadesIndicators: context.environment.scrollIndicatorVisibility.kind == .automatic,
+            isClipDisabled: context.environment.isScrollClipDisabled,
             targetBehavior: context.environment.scrollTargetBehavior,
             isScrollEnabled: context.environment.isScrollEnabled,
             anchors: context.environment.defaultScrollAnchors
@@ -188,6 +189,9 @@ internal struct ScrollBehavior: NodeBehavior {
     /// after, as by default, or stay.
     var fadesIndicators = true
 
+    /// Whether content draws outside the scroll view's bounds.
+    var isClipDisabled = false
+
     var targetBehavior: (any ScrollTargetBehavior)? = nil
 
     var isScrollEnabled = true
@@ -208,6 +212,7 @@ internal struct ScrollBehavior: NodeBehavior {
             }
             graph?.setNeedsDisplay()
             graph?.scrollDidChange()
+            graph?.scrollVisibilityDidChange()
             state?.reportPosition()
         }
         node.dynamicStorage["scroll"] = state
@@ -295,13 +300,15 @@ internal struct ScrollBehavior: NodeBehavior {
 
     func displayEffect(node: ViewNode) -> DisplayList.Effect? {
         let state = state(of: node)
-        return .scroll(ScrollEffect(
+        var effect = ScrollEffect(
             viewport: node.frame,
             offset: state.offset,
             showsIndicators: showsIndicators,
             indicatorOpacity: fadesIndicators ? state.indicatorOpacity(at: node.graph.time) : 1,
             contentSize: state.contentSize
-        ))
+        )
+        effect.isClipDisabled = isClipDisabled
+        return .scroll(effect)
     }
 }
 

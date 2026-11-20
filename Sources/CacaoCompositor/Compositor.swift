@@ -365,11 +365,13 @@ package final class Compositor {
                 }
             case let .effect(.scroll(effect), nested):
                 let viewport = effect.viewport.offsetBy(dx: -translation.x, dy: -translation.y)
-                let innerClip = clip.intersection(viewport)
-                guard !innerClip.isNull, !innerClip.isEmpty else {
+                let visible = clip.intersection(viewport)
+                guard !visible.isNull, !visible.isEmpty else {
                     markPresent(nested.items)
                     continue
                 }
+                // Content that isn't clipped draws wherever its container does.
+                let innerClip = effect.isClipDisabled ? clip : visible
                 setClip(innerClip)
                 draw(
                     nested.items,
