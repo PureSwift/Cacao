@@ -7,7 +7,7 @@
 
 import Foundation
 import CacaoRender
-import CSDL3
+import SDL3Swift
 
 /// Imports an external surface's shared GPU buffers (dma-bufs) as SDL
 /// textures, so their frames are drawn without passing through the CPU.
@@ -21,7 +21,7 @@ import CSDL3
 enum SharedBuffers {
 
     struct Imported {
-        var texture: UnsafeMutablePointer<SDL_Texture>
+        var texture: SDLTexture
         /// The EGL image, destroyed with the texture.
         var image: UnsafeMutableRawPointer?
     }
@@ -68,7 +68,7 @@ enum SharedBuffers {
     /// The buffer imported: an EGL image of the dma-buf, bound to the GL
     /// texture of a new SDL texture, in SDL's context, whose bindings are
     /// left as they were. `nil` if the host or the renderer can't.
-    static func importBuffer(_ buffer: ExternalSurface.Buffer, renderer: OpaquePointer) -> Imported? {
+    static func importBuffer(_ buffer: ExternalSurface.Buffer, renderer: SDLRenderer) -> Imported? {
         guard buffer.fileDescriptor >= 0, load() else { return nil }
         let display = getCurrentDisplay()
         // EGL_WIDTH, EGL_HEIGHT, EGL_LINUX_DRM_FOURCC_EXT, plane 0's fd,
@@ -87,16 +87,15 @@ enum SharedBuffers {
         // EGL_LINUX_DMA_BUF_EXT, with no context and no client buffer.
         guard let image = createImage(display, nil, 0x3270, nil, attributes) else { return nil }
         // Static access: SDL never writes to it.
-        guard let texture = SDL_CreateTexture(
-            renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STATIC, buffer.width, buffer.height
+        guard let texture = try? SDLTexture(
+            renderer: renderer, format: .abgr8888, access: .static, width: Int(buffer.width), height: Int(buffer.height)
         ) else {
             _ = destroyImage(display, image)
             return nil
         }
         // The texture's GL name, which only the OpenGL ES 2 renderer has.
-        let name = SDL_GetNumberProperty(SDL_GetTextureProperties(texture), "SDL.texture.opengles2.texture", 0)
+        let name = texture.properties.number("SDL.texture.opengles2.texture")
         guard name != 0 else {
-            SDL_DestroyTexture(texture)
             _ = destroyImage(display, image)
             return nil
         }
@@ -108,7 +107,6 @@ enum SharedBuffers {
         let error = getError()
         bindTexture(0x0DE1, UInt32(previous))
         guard error == 0 else {
-            SDL_DestroyTexture(texture)
             _ = destroyImage(display, image)
             return nil
         }
@@ -123,7 +121,7 @@ enum SharedBuffers {
 
     #else
 
-    static func importBuffer(_ buffer: ExternalSurface.Buffer, renderer: OpaquePointer) -> Imported? {
+    static func importBuffer(_ buffer: ExternalSurface.Buffer, renderer: SDLRenderer) -> Imported? {
         nil
     }
 
