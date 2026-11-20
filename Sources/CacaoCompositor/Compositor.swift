@@ -377,8 +377,8 @@ package final class Compositor {
                     clip: innerClip,
                     opacity: opacity
                 )
-                if effect.showsIndicators {
-                    drawIndicators(effect, viewport: viewport, opacity: opacity)
+                if effect.showsIndicators, effect.indicatorOpacity > 0 {
+                    drawIndicators(effect, viewport: viewport, opacity: opacity * effect.indicatorOpacity)
                 }
                 setClip(clip)
             }
