@@ -20,6 +20,8 @@ final class RecordingBackend: CompositorBackend {
         case drawLayer(TextureID, CGRect, Double, masked: Bool)
         case drawTransformedLayer(TextureID, [CGPoint], Double)
         case mask(TextureID, CGRect)
+        case updateExternal(TextureID)
+        case drawExternal(TextureID, CGRect, isOpaque: Bool, isFlipped: Bool)
     }
 
     var commands: [Command] = []
@@ -44,6 +46,25 @@ final class RecordingBackend: CompositorBackend {
 
     func destroyTexture(_ texture: TextureID) {
         liveTextures.remove(texture)
+    }
+
+    /// Whether shared buffers can be imported.
+    var importsBuffers = false
+
+    func makeExternalTexture(width: Int, height: Int, format: ExternalSurface.PixelFormat) -> TextureID? {
+        makeLayer(width: width, height: height)
+    }
+
+    func updateExternalTexture(_ texture: TextureID, bytesPerRow: Int, pixels: Data) {
+        commands.append(.updateExternal(texture))
+    }
+
+    func importExternalBuffer(_ buffer: ExternalSurface.Buffer) -> TextureID? {
+        importsBuffers ? makeLayer(width: Int(buffer.width), height: Int(buffer.height)) : nil
+    }
+
+    func drawExternal(_ texture: TextureID, in rect: CGRect, opacity: Double, isOpaque: Bool, isFlipped: Bool, smooth: Bool) {
+        commands.append(.drawExternal(texture, rect, isOpaque: isOpaque, isFlipped: isFlipped))
     }
 
     func beginLayer(_ layer: TextureID) {
