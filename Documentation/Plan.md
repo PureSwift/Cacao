@@ -64,9 +64,15 @@ Notes:
   moves by grapheme clusters (an emoji flag or an accented letter is one
   step), by words with option (control on Linux), and joins typing in one
   undo step.
-- Phase 9: `Image(systemName:)` draws Cacao's own vector versions of
-  common symbols (SF Symbols aren't available on Linux, nor licensed for
-  redistribution). Command menus live in each window's graph as an unseen
+- Phase 9: `Image(systemName:)` draws vector versions of common symbols
+  (SF Symbols aren't available on Linux, nor licensed for redistribution):
+  about 600 names map to [Phosphor Icons](https://phosphoricons.com) (MIT),
+  whose stroked regular and filled drawings `Scripts/GenerateSymbols.py`
+  turns into Swift path code (`SymbolGlyphs.swift`), with strokes as wide as
+  the font is heavy. Cacao draws a few names itself, and encloses or strikes
+  through a symbol for `.circle`, `.square` and `.slash` names Phosphor
+  doesn't draw. Being code, not resources, the symbols need nothing more
+  from the CMake build. Command menus live in each window's graph as an unseen
   layer, so their shortcuts work everywhere, and the host reads their items
   from there; on macOS they fill the menu bar when opened. Menu bar extras
   are SDL tray icons whose menus come from a graph of their content. Drags
