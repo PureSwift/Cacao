@@ -684,7 +684,7 @@ extension ViewGraph {
         graph.settle()
         graph.advance(to: graph.time + 0.1)
         // Between the two screens' texts: the window's background, filling
-        // the stack and sliding in with the new screen.
+        // the stack below its bar and sliding in with the new screen.
         let drawn = graph.drawnItems
         func index(ofText string: String) -> Int? {
             drawn.firstIndex { drawn in
@@ -696,11 +696,39 @@ extension ViewGraph {
         let above = index(ofText: "Screen 1") ?? 0
         #expect(below < above)
         let cover = drawn[below..<max(above, below)].first { drawn in
-            if case .content(.color) = drawn.item.value { return drawn.item.frame.size == CGSize(width: 400, height: 500) }
+            if case .content(.color) = drawn.item.value { return drawn.item.frame.width == 400 && drawn.item.frame.height > 400 }
             return false
         }
         #expect(cover != nil)
         #expect((cover?.transforms.first?.tx ?? 0) > 0)
+    }
+
+    @Test func barStaysInPlaceWhileAScreenSlidesIn() {
+        struct Stack: View {
+            @State var path: [Int] = []
+            var body: some View {
+                NavigationStack(path: $path) {
+                    Button("Push") { path = [1] }
+                        .navigationTitle("Root")
+                        .navigationDestination(for: Int.self) { Text("Screen \($0)").navigationTitle("Pushed") }
+                }
+            }
+        }
+        let graph = layout(Stack(), width: 400, height: 500)
+        graph.settle()
+        graph.tapText("Push")
+        graph.settle()
+        graph.advance(to: graph.time + 0.1)
+        func drawn(_ string: String) -> DrawnItem? {
+            graph.drawnItems.first { drawn in
+                if case let .content(.text(text)) = drawn.item.value { return text.string == string }
+                return false
+            }
+        }
+        // The screen slides; the bar already shows its title, where it stays.
+        #expect((drawn("Screen 1")?.transforms.first?.tx ?? 0) > 0)
+        #expect(drawn("Pushed") != nil)
+        #expect((drawn("Pushed")?.transforms.first?.tx ?? 0) == 0)
     }
 
     @Test func disabledAnimationsPushInstantly() {
