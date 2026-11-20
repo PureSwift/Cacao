@@ -277,6 +277,17 @@ final class ScrollController {
         }
     }
 
+    /// A gesture's velocity along the axes a scroll view can move: a finger
+    /// never moves quite straight, and what it does across a list would
+    /// otherwise count as running into an edge, which ends coasting.
+    private static func velocity(_ velocity: (x: Double, y: Double), along state: ScrollState) -> (x: Double, y: Double) {
+        let max = state.maxOffset
+        return (
+            state.axes.contains(.horizontal) && max.x > 0 ? velocity.x : 0,
+            state.axes.contains(.vertical) && max.y > 0 ? velocity.y : 0
+        )
+    }
+
     /// - Parameter coasts: Whether the content keeps moving from the
     ///   gesture's speed even where the system sends momentum for trackpads:
     ///   it sends none for fingers.
@@ -307,7 +318,7 @@ final class ScrollController {
                 y: SpringBack(from: state.offset.y, to: clamped.y, time: now)
             )
         } else if Self.synthesizesMomentum || coasts,
-                  let deceleration = Deceleration(velocity: gesture.tracker.velocity, time: now) {
+                  let deceleration = Deceleration(velocity: Self.velocity(gesture.tracker.velocity, along: state), time: now) {
             scroller.motion = .decelerating(deceleration)
         }
         if Self.logsInput {
