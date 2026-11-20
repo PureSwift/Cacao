@@ -1058,13 +1058,3 @@ struct ExternalScreen: View {
         }
     }
 }
-
-// MARK: - Previews
-
-#Preview {
-    ControlsScreen()
-}
-
-#Preview("Shapes") {
-    ShapesScreen()
-}
