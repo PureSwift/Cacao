@@ -125,6 +125,7 @@ internal struct _PresentationContainer: View {
             content
         case .sheet, .alert:
             content
+                .environment(\.screenBackground, Color.controlBackground(colorScheme))
                 .background { Color.controlBackground(colorScheme) }
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(Color.separator, lineWidth: 1) }
