@@ -1,0 +1,4 @@
+module CacaoWayland {
+    umbrella header "CacaoWayland.h"
+    export *
+}

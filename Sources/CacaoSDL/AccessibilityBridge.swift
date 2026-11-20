@@ -6,6 +6,7 @@
 //
 
 #if os(macOS)
+import CacaoRender
 import AppKit
 import Cacao
 

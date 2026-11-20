@@ -5,6 +5,8 @@
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
 
+import CacaoRender
+
 /// A custom parameter attribute that constructs views from closures.
 @MainActor
 @preconcurrency

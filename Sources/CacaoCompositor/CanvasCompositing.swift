@@ -9,7 +9,7 @@ import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
 #endif
-import Cacao
+import CacaoRender
 import Silica
 
 // MARK: - Flattening
@@ -268,7 +268,7 @@ extension Rasterizer {
         case let .alphaThreshold(minimum, maximum, color):
             transformColors(&buffer) { pixel in
                 let alpha = Double(pixel.opacity)
-                return alpha >= minimum && alpha <= maximum ? color : Color.Resolved(red: 0, green: 0, blue: 0, opacity: 0)
+                return alpha >= minimum && alpha <= maximum ? color : ResolvedColor(red: 0, green: 0, blue: 0, opacity: 0)
             }
         case let .blur(radius, isOpaque):
             blur(&buffer, sigma: Float(radius * scale) / 2, clampsEdges: isOpaque)
@@ -313,13 +313,13 @@ extension Rasterizer {
     }
 
     /// Transforms each pixel's straight color.
-    private static func transformColors(_ buffer: inout PixelBuffer, _ transform: (Color.Resolved) -> Color.Resolved) {
+    private static func transformColors(_ buffer: inout PixelBuffer, _ transform: (ResolvedColor) -> ResolvedColor) {
         for pixel in 0..<(buffer.width * buffer.height) {
             let index = pixel * 4
             let alpha = buffer.pixels[index + 3]
             let straight = alpha > 0
-                ? Color.Resolved(red: buffer.pixels[index] / alpha, green: buffer.pixels[index + 1] / alpha, blue: buffer.pixels[index + 2] / alpha, opacity: alpha)
-                : Color.Resolved(red: 0, green: 0, blue: 0, opacity: 0)
+                ? ResolvedColor(red: buffer.pixels[index] / alpha, green: buffer.pixels[index + 1] / alpha, blue: buffer.pixels[index + 2] / alpha, opacity: alpha)
+                : ResolvedColor(red: 0, green: 0, blue: 0, opacity: 0)
             let color = transform(straight)
             buffer.pixels[index] = color.red * color.opacity
             buffer.pixels[index + 1] = color.green * color.opacity

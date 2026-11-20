@@ -5,6 +5,8 @@
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
 
+import CacaoRender
+
 /// A color or pattern to use when rendering a shape or text.
 public protocol ShapeStyle: Sendable { }
 

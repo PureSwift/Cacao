@@ -5,6 +5,7 @@
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
 
+import CacaoRender
 import Foundation
 import Observation
 #if canImport(CoreGraphics)
@@ -12,112 +13,6 @@ import CoreGraphics
 #endif
 
 // MARK: - Drawing content
-
-/// Drawing commands recorded by a canvas, rasterized like a shape.
-package struct DrawingContent: Equatable, Sendable {
-
-    package var operations: [Operation]
-
-    package init(operations: [Operation]) {
-        self.operations = operations
-    }
-
-    package enum Operation: Equatable, Sendable {
-        /// A filled or stroked path.
-        case shape(ShapeContent, DrawingState)
-        /// Text laid out in a rectangle.
-        case text(ResolvedText, CGRect, DrawingState)
-        /// An image scaled to a rectangle.
-        case image(ImageContent, CGRect, DrawingState)
-        /// A path filled with an image repeated from an origin, at a scale.
-        case tiledImage(Path, isEOFilled: Bool, ImageContent, origin: CGPoint, scale: CGFloat, DrawingState)
-        /// A view's drawing (a canvas symbol), its frames from its origin.
-        case items([DisplayList.Item], DrawingState)
-        /// Operations drawn together, then composited with the state's
-        /// opacity, blend mode, filters and masks.
-        case layer(DrawingContent, DrawingState)
-
-        package var state: DrawingState {
-            switch self {
-            case let .shape(_, state), let .text(_, _, state), let .image(_, _, state),
-                 let .tiledImage(_, _, _, _, _, state), let .items(_, state), let .layer(_, state):
-                state
-            }
-        }
-    }
-}
-
-/// A clip of drawing commands: a path, in the coordinates of a transform.
-package struct DrawingClip: Equatable, Sendable {
-
-    package var path: Path
-
-    package var transform: Transform2D
-
-    package var isEOFilled: Bool
-
-    /// Whether drawing shows outside the path instead.
-    package var isInverse = false
-
-    package init(path: Path, transform: Transform2D, isEOFilled: Bool, isInverse: Bool = false) {
-        self.path = path
-        self.transform = transform
-        self.isEOFilled = isEOFilled
-        self.isInverse = isInverse
-    }
-}
-
-/// A filter applied to drawing as it's composited.
-package enum DrawingFilter: Equatable, Sendable {
-    /// A shadow: the drawing's silhouette in a color, blurred and moved,
-    /// below the drawing, above it or alone.
-    case shadow(color: Color.Resolved, radius: CGFloat, offset: CGSize, blendMode: BlendMode, placement: ShadowPlacement, invertsAlpha: Bool)
-    /// A Gaussian blur.
-    case blur(radius: CGFloat, isOpaque: Bool)
-    /// A transformation of colors.
-    case colorMatrix(ColorMatrix)
-    /// Opaque in a color where alpha is in a range, transparent elsewhere.
-    case alphaThreshold(min: Double, max: Double, color: Color.Resolved)
-
-    package enum ShadowPlacement: Equatable, Sendable {
-        case below, above, only
-    }
-}
-
-/// A layer whose alpha masks drawing commands.
-package struct DrawingMask: Equatable, Sendable {
-
-    package var content: DrawingContent
-
-    package var opacity: Double
-
-    package var isInverse: Bool
-}
-
-/// The transform, opacity, clips, blend mode, filters and masks a drawing
-/// command is drawn with.
-package struct DrawingState: Equatable, Sendable {
-
-    package var transform = Transform2D.identity
-
-    package var opacity = 1.0
-
-    /// Paths the drawing is clipped to.
-    package var clips: [DrawingClip] = []
-
-    package var blendMode = BlendMode.normal
-
-    package var filters: [DrawingFilter] = []
-
-    package var masks: [DrawingMask] = []
-
-    package init() { }
-
-    /// Whether the command composites on its own, from its own bitmap.
-    package var isComposited: Bool {
-        blendMode != .normal || !filters.isEmpty || !masks.isEmpty
-    }
-}
 
 // MARK: - GraphicsContext
 
@@ -482,7 +377,7 @@ public struct GraphicsContext {
     @MainActor
     public struct ResolvedText {
 
-        let text: Cacao.ResolvedText
+        let text: CacaoRender.ResolvedText
 
         let textEngine: any TextEngine
 
@@ -524,7 +419,7 @@ public struct GraphicsContext {
     }
 
     /// The text in its shading's color.
-    private func shaded(_ text: ResolvedText) -> Cacao.ResolvedText {
+    private func shaded(_ text: ResolvedText) -> CacaoRender.ResolvedText {
         var resolved = text.text
         if text.shading.tiledImage == nil, !(text.shading.style is ForegroundStyle) {
             let color = text.shading.resolve(in: environment)
@@ -659,13 +554,6 @@ public struct GraphicsContext {
         let size = symbol.size
         draw(symbol, in: CGRect(x: point.x - size.width * anchor.x, y: point.y - size.height * anchor.y, width: size.width, height: size.height))
     }
-}
-
-/// Modes for compositing a view with overlapping content.
-public enum BlendMode: Hashable, Sendable {
-    case normal, multiply, screen, overlay, darken, lighten, colorDodge, colorBurn, softLight, hardLight
-    case difference, exclusion, hue, saturation, color, luminosity, sourceAtop, destinationOver
-    case destinationOut, plusDarker, plusLighter
 }
 
 extension Image {

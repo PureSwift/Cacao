@@ -6,13 +6,18 @@ import CompilerPluginSupport
 ///
 /// See `Documentation/Plan.md` for the architecture. In short:
 ///
-/// - `Cacao`: the public SwiftUI API, evaluation, layout and the display list.
-///   No SDL and no GPU, so it builds and tests headless anywhere.
+/// - `CacaoRender`: the display list and the values it's made of (paths,
+///   colors, text, images, effects). No SwiftUI, so other UI frameworks can
+///   draw through the compositor too.
+/// - `Cacao`: the public SwiftUI API, evaluation and layout, which builds
+///   display lists. No SDL and no GPU, so it builds and tests headless anywhere.
 /// - `CacaoMacros`: the `@Entry` macro.
 /// - `CacaoScrollPhysics`: velocity, deceleration, rubber band and spring-back.
 /// - `CacaoCompositor`: the layer tree, drawn with Silica only when content
 ///   changes and composited on the GPU every frame.
-/// - `CacaoSDL`: windows, the main loop, input and the SDL3 renderer backend.
+/// - `CacaoHost`: SDL3 windows, the main loop and frame clock, input and the
+///   SDL3 renderer backend, showing whatever implements `HostScene`.
+/// - `CacaoSDL`: SwiftUI on the host: a view graph as each window's scene.
 /// - `CacaoWayland` (Linux): touchpad pinch rotations from Wayland, which SDL
 ///   doesn't report.
 /// - `SwiftUI` and `Combine` (Linux only): re-export Cacao so `import SwiftUI`
@@ -26,6 +31,18 @@ let package = Package(
         .library(
             name: "Cacao",
             targets: ["Cacao"]
+        ),
+        .library(
+            name: "CacaoRender",
+            targets: ["CacaoRender"]
+        ),
+        .library(
+            name: "CacaoCompositor",
+            targets: ["CacaoCompositor"]
+        ),
+        .library(
+            name: "CacaoHost",
+            targets: ["CacaoHost"]
         ),
         .library(
             name: "CacaoSDL",
@@ -56,8 +73,13 @@ let package = Package(
     ],
     targets: [
         .target(
+            name: "CacaoRender",
+            exclude: ["CMakeLists.txt"]
+        ),
+        .target(
             name: "Cacao",
-            dependencies: ["CacaoMacros"]
+            dependencies: ["CacaoRender", "CacaoMacros"],
+            exclude: ["CMakeLists.txt"]
         ),
         .macro(
             name: "CacaoMacros",
@@ -65,15 +87,17 @@ let package = Package(
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
                 .product(name: "SwiftDiagnostics", package: "swift-syntax")
-            ]
+            ],
+            exclude: ["CMakeLists.txt"]
         ),
         .target(
-            name: "CacaoScrollPhysics"
+            name: "CacaoScrollPhysics",
+            exclude: ["CMakeLists.txt"]
         ),
         .target(
             name: "CacaoCompositor",
             dependencies: [
-                "Cacao",
+                "CacaoRender",
                 .product(
                     name: "Silica",
                     package: "Silica"
@@ -88,14 +112,14 @@ let package = Package(
                     package: "Silica",
                     condition: .when(platforms: [.linux])
                 )
-            ]
+            ],
+            exclude: ["CMakeLists.txt"]
         ),
         .target(
-            name: "CacaoSDL",
+            name: "CacaoHost",
             dependencies: [
-                "Cacao",
+                "CacaoRender",
                 "CacaoCompositor",
-                "CacaoScrollPhysics",
                 .target(
                     name: "CacaoWayland",
                     condition: .when(platforms: [.linux])
@@ -104,13 +128,28 @@ let package = Package(
                     name: "SDL3Swift",
                     package: "SDL"
                 )
-            ]
+            ],
+            exclude: ["CMakeLists.txt"]
+        ),
+        .target(
+            name: "CacaoSDL",
+            dependencies: [
+                "Cacao",
+                "CacaoCompositor",
+                "CacaoHost",
+                "CacaoScrollPhysics",
+                .product(
+                    name: "SDL3Swift",
+                    package: "SDL"
+                )
+            ],
+            exclude: ["CMakeLists.txt"]
         ),
         // Touchpad pinch rotations from Wayland compositors, which SDL
         // doesn't report.
         .target(
             name: "CacaoWayland",
-            exclude: ["protocol"],
+            exclude: ["protocol", "CMakeLists.txt"],
             linkerSettings: [
                 .linkedLibrary("wayland-client", .when(platforms: [.linux]))
             ]
@@ -120,7 +159,8 @@ let package = Package(
             dependencies: [
                 "Cacao",
                 "CacaoSDL"
-            ]
+            ],
+            exclude: ["CMakeLists.txt"]
         ),
         .testTarget(
             name: "CacaoTests",
@@ -132,7 +172,7 @@ let package = Package(
         ),
         .testTarget(
             name: "CacaoCompositorTests",
-            dependencies: ["CacaoCompositor"]
+            dependencies: ["Cacao", "CacaoCompositor"]
         ),
         .testTarget(
             name: "CacaoSDLTests",
@@ -154,10 +194,10 @@ var swiftUIProducts: [Product] {
 }
 var swiftUITargets: [Target] {
     [
-        .target(name: "SwiftUI", dependencies: ["Cacao", "CacaoSDL"]),
+        .target(name: "SwiftUI", dependencies: ["Cacao", "CacaoSDL"], exclude: ["CMakeLists.txt"]),
         // `import Combine` for `ObservableObject` and publishers, which
         // Cacao provides where there's no Combine.
-        .target(name: "Combine", dependencies: ["Cacao"]),
+        .target(name: "Combine", dependencies: ["Cacao"], exclude: ["CMakeLists.txt"]),
     ]
 }
 #else

@@ -5,6 +5,7 @@
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
 
+import CacaoRender
 import Foundation
 import Observation
 #if canImport(CoreGraphics)

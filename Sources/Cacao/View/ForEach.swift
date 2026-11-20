@@ -5,6 +5,8 @@
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
 
+import CacaoRender
+
 /// A structure that computes views on demand from an underlying collection
 /// of identified data.
 ///

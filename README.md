@@ -29,9 +29,12 @@ so scrolling and animation never repaint.
 
 | Module | |
 |---|---|
-| `Cacao` | The SwiftUI API: views, state, environment, layout and the display list. Platform-neutral, builds headless. |
+| `CacaoRender` | The display list and the values it's made of: paths, colors, text, images, effects. No SwiftUI. |
+| `Cacao` | The SwiftUI API: views, state, environment and layout, which build display lists. Platform-neutral, builds headless. |
 | `CacaoMacros` | The `@Entry` macro. |
-| `CacaoSDL` | Windows, the main loop, input and the SDL3 GPU compositor backend. |
+| `CacaoCompositor` | Draws display lists with Silica and composites them on the GPU. |
+| `CacaoHost` | SDL3 windows, the main loop, input and the SDL3 GPU compositor backend, for whatever implements `HostScene`. No SwiftUI. |
+| `CacaoSDL` | SwiftUI on the host: a view graph as each window's scene. |
 | `CacaoScrollPhysics` | Velocity tracking, deceleration, rubber band and spring-back. |
 | `SwiftUI` (Linux only) | Re-exports Cacao, so sources that `import SwiftUI` compile unchanged. |
 
@@ -106,6 +109,31 @@ cmake --build SDL/build && sudo cmake --install SDL/build
 ```bash
 swift build
 ```
+
+### CMake
+
+For a system image (Buildroot and the like), CMake builds Cacao as shared
+libraries with library evolution, and installs them and their modules into
+the Swift resource directory (`lib/swift/<system>`), where apps find them
+like the OS's own frameworks:
+
+```bash
+cmake -B build -G Ninja -DCMAKE_INSTALL_PREFIX=/usr
+```
+
+```bash
+cmake --build build
+```
+
+```bash
+cmake --install build
+```
+
+Silica's modules and the `CSDL3` module from [PureSwift/SDL](https://github.com/PureSwift/SDL)
+must be in the resource directory, or on search paths in `CMAKE_Swift_FLAGS`.
+The `@Entry` macro's compiler plugin runs on the machine that compiles: when
+cross compiling, build `Sources/CacaoMacros` on its own with the host's
+toolchain. SwiftPM stays the way to develop and test.
 
 ## Testing
 

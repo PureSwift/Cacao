@@ -5,6 +5,7 @@
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
 
+import CacaoRender
 import Observation
 
 /// A property wrapper that reads a value from a view's environment.

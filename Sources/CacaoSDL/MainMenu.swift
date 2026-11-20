@@ -6,6 +6,7 @@
 //
 
 #if os(macOS)
+import CacaoRender
 import AppKit
 import Cacao
 
@@ -19,16 +20,13 @@ import Cacao
 @MainActor
 enum MainMenu {
 
-    /// The open windows, which the run loop keeps current.
-    static var windows: [WindowHost] = []
-
-    private static var keyGraph: ([WindowHost]) -> ViewGraph? = { _ in nil }
+    private static var keyGraph: () -> ViewGraph? = { nil }
 
     private static let bridge = Bridge()
 
-    static func install(keyGraph: @escaping ([WindowHost]) -> ViewGraph?) {
+    static func install(keyGraph: @escaping () -> ViewGraph?) {
         self.keyGraph = keyGraph
-        guard let app = NSApp, let graph = keyGraph(windows) ?? windowsGraphAtLaunch() else { return }
+        guard let app = NSApp, let graph = keyGraph() else { return }
         if app.mainMenu == nil {
             app.mainMenu = NSMenu()
         }
@@ -57,21 +55,13 @@ enum MainMenu {
         }
     }
 
-    /// The first window's graph, before the run loop has listed windows.
-    private static func windowsGraphAtLaunch() -> ViewGraph? {
-        launchGraph
-    }
-
-    /// Set by the host before installing, for the first window.
-    static var launchGraph: ViewGraph?
-
     /// The command of a menu with a title, in the key window.
     static func command(menu: String, title: String) -> CommandItem? {
-        keyGraph(windows)?.commandMenus().first { $0.name == menu }?.items.first { $0.title == title }
+        keyGraph()?.commandMenus().first { $0.name == menu }?.items.first { $0.title == title }
     }
 
     static func items(of menu: String) -> [CommandItem] {
-        keyGraph(windows)?.commandMenus().first { $0.name == menu }?.items ?? []
+        keyGraph()?.commandMenus().first { $0.name == menu }?.items ?? []
     }
 
     @MainActor

@@ -1,6 +1,6 @@
 //
 //  TextEngine.swift
-//  Cacao
+//  CacaoRender
 //
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
@@ -15,7 +15,7 @@ import CoreGraphics
 /// The host provides one backed by real fonts; `FixedTextEngine` gives
 /// deterministic metrics for tests.
 @MainActor
-package protocol TextEngine {
+public protocol TextEngine {
 
     /// Lays out text for a proposed size: wrapping to the proposed width
     /// (or not at all when it's unspecified), and showing as many lines as
@@ -24,20 +24,20 @@ package protocol TextEngine {
 }
 
 /// The size and lines of laid out text.
-package struct TextLayout: Equatable, Sendable {
+public struct TextLayout: Equatable, Sendable {
 
-    package var size: CGSize
+    public var size: CGSize
 
     /// The distance from the top to the first line's baseline.
-    package var firstBaseline: CGFloat
+    public var firstBaseline: CGFloat
 
     /// The distance from the top to the last line's baseline.
-    package var lastBaseline: CGFloat
+    public var lastBaseline: CGFloat
 
     /// The text of each line.
-    package var lines: [String]
+    public var lines: [String]
 
-    package init(size: CGSize, firstBaseline: CGFloat, lastBaseline: CGFloat, lines: [String]) {
+    public init(size: CGSize, firstBaseline: CGFloat, lastBaseline: CGFloat, lines: [String]) {
         self.size = size
         self.firstBaseline = firstBaseline
         self.lastBaseline = lastBaseline
@@ -47,25 +47,25 @@ package struct TextLayout: Equatable, Sendable {
 
 /// A text engine with fixed metrics: every character is the same width,
 /// a fraction of its font size, and lines are a fixed multiple of it.
-package struct FixedTextEngine: TextEngine {
+public struct FixedTextEngine: TextEngine {
 
     /// A character's width as a fraction of its font size.
-    package var characterWidth: CGFloat
+    public var characterWidth: CGFloat
 
     /// A line's height as a multiple of the largest font size.
-    package var lineHeight: CGFloat
+    public var lineHeight: CGFloat
 
     /// The baseline's distance from the top of a line, as a fraction of the
     /// largest font size.
-    package var ascent: CGFloat
+    public var ascent: CGFloat
 
-    package init(characterWidth: CGFloat = 0.5, lineHeight: CGFloat = 1.2, ascent: CGFloat = 0.95) {
+    public init(characterWidth: CGFloat = 0.5, lineHeight: CGFloat = 1.2, ascent: CGFloat = 0.95) {
         self.characterWidth = characterWidth
         self.lineHeight = lineHeight
         self.ascent = ascent
     }
 
-    package func layout(_ text: ResolvedText, in proposal: ProposedViewSize) -> TextLayout {
+    public func layout(_ text: ResolvedText, in proposal: ProposedViewSize) -> TextLayout {
         let fontSize = text.runs.map(\.font.size).max() ?? 0
         let string = text.string
         guard !string.isEmpty, fontSize > 0 else {

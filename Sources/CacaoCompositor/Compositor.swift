@@ -9,7 +9,7 @@ import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
 #endif
-import Cacao
+import CacaoRender
 import Silica
 
 // MARK: - Backend
@@ -39,7 +39,7 @@ package protocol CompositorBackend: AnyObject {
     func destroyTexture(_ texture: TextureID)
 
     /// Starts a frame of the given size, cleared to a color.
-    func beginFrame(width: Int, height: Int, clearColor: Color.Resolved)
+    func beginFrame(width: Int, height: Int, clearColor: ResolvedColor)
 
     /// Makes a layer the target of drawing, cleared to transparent.
     func beginLayer(_ layer: TextureID)
@@ -48,7 +48,7 @@ package protocol CompositorBackend: AnyObject {
     func endLayer()
 
     /// Fills a rectangle with a color, its opacity already applied.
-    func fill(_ rect: CGRect, color: Color.Resolved)
+    func fill(_ rect: CGRect, color: ResolvedColor)
 
     /// Draws a texture stretched to a rectangle.
     func draw(_ texture: TextureID, in rect: CGRect, opacity: Double, smooth: Bool)
@@ -119,7 +119,7 @@ package final class Compositor {
     package let textEngine: SilicaTextEngine
 
     /// The window's background color.
-    package var backgroundColor = Color.Resolved(red: 1, green: 1, blue: 1)
+    package var backgroundColor = ResolvedColor(red: 1, green: 1, blue: 1)
 
     /// The work done by the last frame.
     package private(set) var lastFrame = Statistics()
@@ -142,7 +142,7 @@ package final class Compositor {
 
     private struct ImageKey: Hashable {
         let source: ImageSource
-        let tint: Color.Resolved?
+        let tint: ResolvedColor?
         let colorMatrix: ColorMatrix?
 
         init(_ image: ImageContent) {
@@ -630,7 +630,7 @@ package final class Compositor {
     private func drawIndicators(_ effect: ScrollEffect, viewport: CGRect, opacity: Double) {
         let thickness: CGFloat = 3
         let inset: CGFloat = 2
-        let color = Color.Resolved(red: 0.5, green: 0.5, blue: 0.5, opacity: Float(0.6 * opacity))
+        let color = ResolvedColor(red: 0.5, green: 0.5, blue: 0.5, opacity: Float(0.6 * opacity))
         if effect.contentSize.height > viewport.height, viewport.height > 0 {
             let length = max(viewport.height * viewport.height / effect.contentSize.height, 20)
             let maxOffset = effect.contentSize.height - viewport.height

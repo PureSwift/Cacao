@@ -5,6 +5,8 @@
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
 
+import CacaoRender
+
 /// A modifier that you apply to a view or another view modifier, producing
 /// a different version of the original value.
 @MainActor

@@ -5,12 +5,14 @@
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
 
+import CacaoRender
 import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
 #endif
 import Cacao
 import CacaoCompositor
+import CacaoHost
 import CSDL3
 
 /// A menu bar extra shown as an SDL tray icon: the menu bar's status area
@@ -43,7 +45,7 @@ final class StatusItemHost {
         self.tray = tray
         var environment = EnvironmentValues()
         environment.openURL = OpenURLAction { url in
-            _ = SDL_OpenURL(url.absoluteString)
+            HostRuntime.open(url)
         }
         environment.openWindow = OpenWindowAction { id, value in
             SDLHost.windowRequests.append(.open(id: id, value: value))

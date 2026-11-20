@@ -5,6 +5,7 @@
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
 
+import CacaoRender
 import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
@@ -152,22 +153,6 @@ package final class ScrollState {
         let target = clamped(CGPoint(x: offset.x + delta.width, y: offset.y + delta.height))
         return target != clamped(offset)
     }
-}
-
-/// The effect of a scroll view on its content's drawing.
-package struct ScrollEffect: Equatable, Sendable {
-
-    /// The visible area, in the root's coordinate space.
-    package var viewport: CGRect
-
-    /// How far the content is scrolled.
-    package var offset: CGPoint
-
-    /// Whether to draw scroll indicators.
-    package var showsIndicators: Bool
-
-    /// The size of the content, for indicators.
-    package var contentSize: CGSize
 }
 
 // MARK: - Behavior

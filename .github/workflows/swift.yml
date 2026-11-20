@@ -75,3 +75,89 @@ jobs:
         env:
           SDL_VIDEO_DRIVER: offscreen
         run: swift test
+
+  # The CMake build, which makes the shared libraries a system image
+  # (Buildroot and the like) installs.
+  cmake-macos:
+    name: CMake (macOS)
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - uses: SwiftyLab/setup-swift@latest
+        with:
+          swift-version: "6.4.2"
+      - name: Install dependencies
+        run: brew install sdl3 ninja
+      - name: Point the toolchain at the macOS SDK
+        # CMake runs swiftc directly, which doesn't find the SDK on its own
+        # (SwiftPM passes it).
+        run: echo "SDKROOT=$(xcrun --sdk macosx --show-sdk-path)" >> "$GITHUB_ENV"
+      - name: Build Silica and the SDL3 module
+        run: .github/scripts/build-cmake-dependencies.sh "$PWD/dependencies"
+      - name: Configure
+        run: |
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCACAO_BUILD_DEMO=ON \
+            -DCMAKE_PREFIX_PATH="$(brew --prefix)" \
+            -DCMAKE_Swift_FLAGS="-I $PWD/dependencies -L $PWD/dependencies -Xcc -I$(brew --prefix)/include"
+      - name: Build
+        run: cmake --build build
+      - name: Install
+        run: cmake --install build --prefix "$PWD/stage"
+
+  cmake-linux:
+    name: CMake (Linux)
+    runs-on: ubuntu-latest
+    container: swift:6.4-noble
+    env:
+      SDL_VERSION: release-3.4.8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            cmake ninja-build pkg-config git libcairo2-dev libfontconfig-dev \
+            libfreetype-dev libx11-dev libxext-dev libxrandr-dev libxcursor-dev \
+            libxfixes-dev libxi-dev libxss-dev libxtst-dev libxkbcommon-dev \
+            libwayland-dev wayland-protocols libdecor-0-dev libdrm-dev \
+            libgbm-dev libegl-dev libgl-dev libgles-dev libvulkan-dev \
+            libdbus-1-dev libudev-dev libpulse-dev libasound2-dev \
+            fonts-dejavu-core
+      - name: Cache SDL3
+        id: cache-sdl3
+        uses: actions/cache@v4
+        with:
+          path: /opt/sdl3
+          key: sdl3-${{ env.SDL_VERSION }}-noble
+      - name: Build SDL3
+        if: steps.cache-sdl3.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch "$SDL_VERSION" https://github.com/libsdl-org/SDL.git /tmp/SDL
+          cmake -S /tmp/SDL -B /tmp/SDL/build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/sdl3 -DSDL_TESTS=OFF
+          cmake --build /tmp/SDL/build
+          cmake --install /tmp/SDL/build
+      - name: Build Silica, its Cairo modules and the SDL3 module
+        run: .github/scripts/build-cmake-dependencies.sh "$PWD/dependencies"
+      - name: Configure
+        run: |
+          flags="-I $PWD/dependencies -L $PWD/dependencies -L /opt/sdl3/lib"
+          for flag in $(PKG_CONFIG_PATH=/opt/sdl3/lib/pkgconfig pkg-config --cflags sdl3 cairo fontconfig freetype2); do
+            flags="$flags -Xcc $flag"
+          done
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCACAO_BUILD_DEMO=ON \
+            -DCMAKE_PREFIX_PATH=/opt/sdl3 -DCMAKE_Swift_FLAGS="$flags"
+      - name: Build
+        run: cmake --build build
+      - name: Install
+        run: cmake --install build --prefix "$PWD/stage"
+      - name: Run the demo
+        # draws one frame offscreen, saves it and quits
+        timeout-minutes: 2
+        env:
+          SDL_VIDEO_DRIVER: offscreen
+          CACAO_SCREENSHOT: demo.png
+        run: LD_LIBRARY_PATH="$PWD/dependencies:$PWD/build/lib:/opt/sdl3/lib" build/bin/CacaoDemo

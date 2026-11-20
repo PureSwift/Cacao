@@ -1,15 +1,15 @@
 //
 //  SDLBackend.swift
-//  CacaoSDL
+//  CacaoHost
 //
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
 
+import CacaoRender
 import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
 #endif
-import Cacao
 import CacaoCompositor
 import CSDL3
 
@@ -165,7 +165,7 @@ final class SDLBackend: CompositorBackend {
         }
     }
 
-    func beginFrame(width: Int, height: Int, clearColor: Color.Resolved) {
+    func beginFrame(width: Int, height: Int, clearColor: ResolvedColor) {
         targets.removeAll()
         SDL_SetRenderTarget(renderer, nil)
         SDL_SetRenderClipRect(renderer, nil)
@@ -173,7 +173,7 @@ final class SDLBackend: CompositorBackend {
         SDL_RenderClear(renderer)
     }
 
-    func fill(_ rect: CGRect, color: Color.Resolved) {
+    func fill(_ rect: CGRect, color: ResolvedColor) {
         SDL_SetRenderDrawBlendMode(renderer, Self.blend)
         SDL_SetRenderDrawColorFloat(renderer, color.red, color.green, color.blue, color.opacity)
         var frame = SDL_FRect(rect)

@@ -5,6 +5,8 @@
 //  Created by Alsey Coleman Miller on 11/13/26.
 //
 
+import CacaoRender
+
 /// A key for accessing values in the environment.
 public protocol EnvironmentKey {
 

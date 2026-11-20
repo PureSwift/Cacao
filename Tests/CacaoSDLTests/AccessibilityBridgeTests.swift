@@ -1,4 +1,5 @@
 #if os(macOS)
+import CacaoRender
 import AppKit
 import Testing
 import Cacao

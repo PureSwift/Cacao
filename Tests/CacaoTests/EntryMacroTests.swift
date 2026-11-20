@@ -1,3 +1,4 @@
+import CacaoRender
 import Foundation
 import Testing
 @testable import Cacao
