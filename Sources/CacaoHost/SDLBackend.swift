@@ -111,6 +111,18 @@ final class SDLBackend: CompositorBackend {
         return TextureID(rawValue: nextTexture)
     }
 
+    func readPixels(_ rect: CGRect) -> (pixels: Data, width: Int, height: Int, bytesPerRow: Int)? {
+        var area = SDL_Rect(x: Int32(rect.minX), y: Int32(rect.minY), w: Int32(rect.width), h: Int32(rect.height))
+        guard area.w > 0, area.h > 0, let read = SDL_RenderReadPixels(renderer, &area) else { return nil }
+        defer { SDL_DestroySurface(read) }
+        // R, G, B, A bytes, whatever the target's format is.
+        guard let surface = SDL_ConvertSurface(read, SDL_PIXELFORMAT_ABGR8888) else { return nil }
+        defer { SDL_DestroySurface(surface) }
+        let width = Int(surface.pointee.w), height = Int(surface.pointee.h), pitch = Int(surface.pointee.pitch)
+        guard width > 0, height > 0, let pixels = surface.pointee.pixels else { return nil }
+        return (Data(bytes: pixels, count: pitch * height), width, height, pitch)
+    }
+
     func drawExternal(_ texture: TextureID, in rect: CGRect, opacity: Double, isOpaque: Bool, isFlipped: Bool, smooth: Bool) {
         guard let texture = textures[texture.rawValue] else { return }
         let alpha = Float(opacity)
