@@ -180,7 +180,14 @@ let package = Package(
         ),
         .testTarget(
             name: "CacaoSDLTests",
-            dependencies: ["CacaoSDL"]
+            dependencies: [
+                "CacaoSDL",
+                "CacaoHost",
+                .product(
+                    name: "SDL3Swift",
+                    package: "SDL"
+                )
+            ]
         )
     ] + swiftUITargets + waylandTestTargets + layoutParityTargets
 )
