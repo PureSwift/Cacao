@@ -72,6 +72,10 @@ Run the demo with `swift run CacaoDemo`. Press F12 (or set
 `CACAO_SCREENSHOT=path.png` to save the first frame and quit;
 `CACAO_SCREENSHOT_DELAY=seconds` waits that long first.
 
+Windows follow the system's light or dark appearance. On Linux that is the
+desktop's color scheme, from the freedesktop settings portal or GNOME's
+settings; `CACAO_APPEARANCE=dark` or `light` overrides it.
+
 ## Building
 
 Requires Swift 6.4 or later and SDL3.
