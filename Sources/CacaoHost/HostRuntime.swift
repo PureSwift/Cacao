@@ -30,9 +30,10 @@ public enum HostRuntime {
         Double(SDL.ticks) / 1_000_000_000
     }
 
-    /// Whether the system shows light or dark windows.
+    /// Whether the system shows light or dark windows: what SDL reports,
+    /// or what the desktop's settings say when SDL can't tell.
     public static var systemAppearance: HostAppearance {
-        SDL.systemTheme == .dark ? .dark : .light
+        DesktopAppearance.current
     }
 
     // MARK: Options
