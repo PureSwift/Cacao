@@ -362,6 +362,8 @@ package final class Compositor {
                     setClip(innerClip)
                     draw(nested.items, translation: translation, clip: innerClip, opacity: opacity)
                     setClip(clip)
+                } else if effect.isRoundedRectangle {
+                    drawRoundedClip(nested.items, identity: item.identity, effect: effect, frame: frame, translation: translation, clip: clip, opacity: opacity)
                 } else {
                     // The clip shape, drawn anti-aliased, masks the content.
                     let mask = DisplayList.Item(frame: item.frame, identity: Self.maskIdentity(item.identity), version: 0, value: .content(effect.mask))
@@ -441,6 +443,69 @@ package final class Compositor {
     /// The identity of the drawing of a clip's shape, apart from any node's.
     package static func maskIdentity(_ identity: Int) -> Int {
         -identity - 1
+    }
+
+    /// Draws items clipped to a rounded rectangle, `frame`: into one
+    /// offscreen layer of the visible part of the frame, whose rounded
+    /// corners are then cut with the corner textures rounded rectangles
+    /// are drawn with. Only the corners are masked; nothing the size of the
+    /// frame is rasterized.
+    private func drawRoundedClip(
+        _ items: [DisplayList.Item],
+        identity: Int,
+        effect: ClipEffect,
+        frame: CGRect,
+        translation: CGPoint,
+        clip: CGRect,
+        opacity: Double
+    ) {
+        let content = Self.bounds(of: items).offsetBy(dx: -translation.x, dy: -translation.y)
+        let visible = content.intersection(frame).intersection(clip)
+        guard !visible.isNull, !visible.isEmpty, opacity > 0 else {
+            markPresent(items)
+            return
+        }
+        let pixels = absolutePixelRect(visible)
+        let width = Int(pixels.width), height = Int(pixels.height)
+        guard width > 0, height > 0, width <= 8192, height <= 8192,
+              let layer = offscreen(identity: identity, width: width, height: height) else {
+            markPresent(items)
+            return
+        }
+        targetOrigins.append(pixels.origin)
+        backend.beginLayer(layer)
+        draw(items, translation: translation, clip: visible, opacity: 1)
+        backend.setClip(nil)
+        let box = pixelRect(frame)
+        let radius = Int(min((effect.cornerRadius * scale).rounded(), (min(box.width, box.height) / 2).rounded(.down)))
+        if radius >= 1 {
+            let white = ResolvedColor(red: 1, green: 1, blue: 1)
+            for (corner, square) in Self.cornerSquares(of: box, radius: radius) where effect.roundedCorners.contains(corner) {
+                // Squares outside the layer cut nothing.
+                guard square.intersects(CGRect(x: 0, y: 0, width: width, height: height)),
+                      let mask = cornerTexture(radius: radius, corner: corner, color: white) else { continue }
+                backend.mask(with: mask, in: square)
+                frameStatistics.draws += 1
+            }
+        }
+        backend.endLayer()
+        targetOrigins.removeLast()
+        setClip(clip)
+        backend.drawLayer(layer, in: relative(pixels), opacity: opacity, mask: nil)
+        frameStatistics.layers += 1
+        frameStatistics.draws += 1
+    }
+
+    /// The squares of a rectangle's corners, `radius` pixels a side.
+    private static func cornerSquares(of rect: CGRect, radius: Int) -> [(RoundedRectangleContent.Corners, CGRect)] {
+        let r = CGFloat(radius)
+        let size = CGSize(width: r, height: r)
+        return [
+            (.topLeading, CGRect(origin: CGPoint(x: rect.minX, y: rect.minY), size: size)),
+            (.topTrailing, CGRect(origin: CGPoint(x: rect.maxX - r, y: rect.minY), size: size)),
+            (.bottomLeading, CGRect(origin: CGPoint(x: rect.minX, y: rect.maxY - r), size: size)),
+            (.bottomTrailing, CGRect(origin: CGPoint(x: rect.maxX - r, y: rect.maxY - r), size: size)),
+        ]
     }
 
     /// Draws the mask's items into one offscreen layer and the items into
@@ -689,7 +754,7 @@ package final class Compositor {
             case .content:
                 presentLayers.insert(item.identity)
             case let .effect(.clip(effect), nested):
-                if !effect.isRectangle {
+                if !effect.isRectangle, !effect.isRoundedRectangle {
                     presentLayers.insert(Self.maskIdentity(item.identity))
                 }
                 markPresent(nested.items)
@@ -707,7 +772,7 @@ package final class Compositor {
         case let .color(color):
             var color = color
             color.opacity *= Float(opacity)
-            backend.fill(pixelRect(frame), color: color)
+            backend.fill(relative(fillPixelRect(frame)), color: color)
             frameStatistics.draws += 1
         case let .roundedRectangle(rounded):
             drawRoundedRectangle(rounded, frame: frame, opacity: opacity)
@@ -751,14 +816,7 @@ package final class Compositor {
         fill(CGRect(x: rect.minX + r, y: rect.minY, width: rect.width - 2 * r, height: rect.height))
         fill(CGRect(x: rect.minX, y: rect.minY + r, width: r, height: rect.height - 2 * r))
         fill(CGRect(x: rect.maxX - r, y: rect.minY + r, width: r, height: rect.height - 2 * r))
-        let squares: [(RoundedRectangleContent.Corners, CGPoint)] = [
-            (.topLeading, CGPoint(x: rect.minX, y: rect.minY)),
-            (.topTrailing, CGPoint(x: rect.maxX - r, y: rect.minY)),
-            (.bottomLeading, CGPoint(x: rect.minX, y: rect.maxY - r)),
-            (.bottomTrailing, CGPoint(x: rect.maxX - r, y: rect.maxY - r)),
-        ]
-        for (corner, origin) in squares {
-            let square = CGRect(origin: origin, size: CGSize(width: r, height: r))
+        for (corner, square) in Self.cornerSquares(of: rect, radius: radius) {
             if content.corners.contains(corner), let texture = cornerTexture(radius: radius, corner: corner, color: content.color) {
                 backend.draw(texture, in: square, opacity: opacity, smooth: false)
                 frameStatistics.draws += 1
@@ -1122,6 +1180,22 @@ package final class Compositor {
         let maxX = (rect.maxX * scale).rounded()
         let maxY = (rect.maxY * scale).rounded()
         return CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+    }
+
+    /// A filled rectangle in points as pixels on the window, snapped to
+    /// whole pixels but at least one thick: a hairline thinner than a
+    /// pixel, which snapping would round away, stays a line.
+    private func fillPixelRect(_ rect: CGRect) -> CGRect {
+        var pixels = absolutePixelRect(rect)
+        if pixels.height == 0, rect.height > 0 {
+            pixels.origin.y = (rect.midY * scale).rounded(.down)
+            pixels.size.height = 1
+        }
+        if pixels.width == 0, rect.width > 0 {
+            pixels.origin.x = (rect.midX * scale).rounded(.down)
+            pixels.size.width = 1
+        }
+        return pixels
     }
 
     /// A rectangle in points as pixels on the current target.
