@@ -40,6 +40,9 @@ extension DrawingContent {
         case let .content(.color(color)):
             let shape = ShapeContent(path: Path(CGRect(origin: CGPoint(x: 0, y: 0), size: frame.size)), color: color, drawing: .fill(FillStyle()))
             return [.shape(shape, local)]
+        case let .content(.roundedRectangle(rounded)):
+            let outline = rounded.path(in: CGRect(origin: CGPoint(x: 0, y: 0), size: frame.size))
+            return [.shape(ShapeContent(path: outline, color: rounded.color, drawing: .fill(FillStyle())), local)]
         case let .content(.text(text)):
             return [.text(text, CGRect(origin: CGPoint(x: 0, y: 0), size: frame.size), local)]
         case let .content(.shape(shape)):
