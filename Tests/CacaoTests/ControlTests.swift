@@ -374,6 +374,32 @@ extension ViewGraph {
         #expect(clips.count == 1)
     }
 
+    /// Clipping to a rounded rectangle, a capsule or a corner radius is a
+    /// rounded clip the compositor cuts only at the corners; a circle is a
+    /// path.
+    @Test func roundedClipsKnowTheirCorners() {
+        func clip(_ view: some View) -> ClipEffect? {
+            let graph = layout(view)
+            func find(_ items: [DisplayList.Item]) -> ClipEffect? {
+                for item in items {
+                    if case let .effect(.clip(effect), _) = item.value { return effect }
+                    if case let .effect(_, nested) = item.value, let found = find(nested.items) { return found }
+                }
+                return nil
+            }
+            return find(graph.displayList().items)
+        }
+        let rounded = clip(Color.red.frame(width: 100, height: 60).clipShape(RoundedRectangle(cornerRadius: 12)))
+        #expect(rounded?.isRoundedRectangle == true)
+        #expect(rounded?.cornerRadius == 12)
+        #expect(rounded?.roundedCorners == .all)
+        #expect(clip(Color.red.frame(width: 100, height: 60).clipShape(Capsule()))?.cornerRadius == 30)
+        #expect(clip(Color.red.frame(width: 100, height: 60).cornerRadius(8))?.cornerRadius == 8)
+        let circle = clip(Color.red.frame(width: 100, height: 60).clipShape(Circle()))
+        #expect(circle?.isRoundedRectangle == false)
+        #expect(circle?.isRectangle == false)
+    }
+
     @Test func shareLinkUsesTheHostsPicker() {
         let shared = Box<[ShareRequest]>([])
         let graph = layout(ShareLink(item: URL(string: "https://example.com")!, subject: Text("Look")).probe("link"))
