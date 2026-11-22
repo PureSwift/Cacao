@@ -20,6 +20,10 @@ internal struct ClipBehavior: UnaryLayoutBehavior {
 
     var isEOFilled = false
 
+    /// The corner radius of a rounded rectangle or capsule clip, for a
+    /// frame; nil for other shapes.
+    var cornerRadius: ((CGRect) -> CGFloat?)? = nil
+
     func sizeThatFits(_ proposal: ProposedViewSize, child: LayoutProxy) -> CGSize {
         child.size(in: proposal)
     }
@@ -33,7 +37,11 @@ internal struct ClipBehavior: UnaryLayoutBehavior {
     }
 
     func displayEffect(node: ViewNode) -> DisplayList.Effect? {
-        .clip(ClipEffect(path: path(node: node), isRectangle: isRectangle, isEOFilled: isEOFilled))
+        let bounds = CGRect(origin: CGPoint(x: 0, y: 0), size: node.frame.size)
+        if !isEOFilled, let radius = cornerRadius?(bounds), radius > 0 {
+            return .clip(ClipEffect(roundedRectangleOf: bounds.size, cornerRadius: radius))
+        }
+        return .clip(ClipEffect(path: path(node: node), isRectangle: isRectangle, isEOFilled: isEOFilled))
     }
 }
 
@@ -61,7 +69,11 @@ internal struct _ClipEffect: ViewModifier, LayoutModifier {
 
     var isEOFilled = false
 
-    var behavior: any NodeBehavior { ClipBehavior(shape: shape, isRectangle: isRectangle, isEOFilled: isEOFilled) }
+    var cornerRadius: ((CGRect) -> CGFloat?)? = nil
+
+    var behavior: any NodeBehavior {
+        ClipBehavior(shape: shape, isRectangle: isRectangle, isEOFilled: isEOFilled, cornerRadius: cornerRadius)
+    }
 
     typealias Body = Never
 }
@@ -82,7 +94,10 @@ extension View {
 
     /// Sets a clipping shape for this view.
     public func clipShape<S: Shape>(_ shape: S, style: FillStyle = FillStyle()) -> some View {
-        modifier(_ClipEffect(shape: { shape.path(in: $0) }, isRectangle: shape is Rectangle, isEOFilled: style.isEOFilled))
+        modifier(_ClipEffect(
+            shape: { shape.path(in: $0) }, isRectangle: shape is Rectangle, isEOFilled: style.isEOFilled,
+            cornerRadius: { circularCornerRadius(of: shape, in: $0) }
+        ))
     }
 
     /// Clips this view to its bounding frame, with the specified corner radius.
