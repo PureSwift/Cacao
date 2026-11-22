@@ -23,7 +23,7 @@ import Testing
     }
 
     @Test func shapeDisplayContent() {
-        let graph = layout(RoundedRectangle(cornerRadius: 8).fill(.red).frame(width: 40, height: 20))
+        let graph = layout(Ellipse().fill(.red).frame(width: 40, height: 20))
         guard case let .content(.shape(shape)) = graph.displayList().items.first?.value else {
             Issue.record("Expected a shape")
             return
@@ -31,6 +31,30 @@ import Testing
         #expect(shape.path.boundingRect == rect(0, 0, 40, 20))
         #expect(shape.drawing == .fill(FillStyle()))
         #expect(shape.color == Color.red.resolve(in: EnvironmentValues()))
+    }
+
+    /// A filled rounded rectangle or capsule in a color is a rounded
+    /// rectangle the compositor draws on the GPU; stroked, it's a shape.
+    @Test func roundedRectangleDisplayContent() {
+        let graph = layout(RoundedRectangle(cornerRadius: 8).fill(.red).frame(width: 40, height: 20))
+        guard case let .content(.roundedRectangle(rounded)) = graph.displayList().items.first?.value else {
+            Issue.record("Expected a rounded rectangle")
+            return
+        }
+        #expect(graph.displayList().items.first?.frame.size == CGSize(width: 40, height: 20))
+        #expect(rounded.cornerRadius == 8)
+        #expect(rounded.color == Color.red.resolve(in: EnvironmentValues()))
+        let capsule = layout(Capsule().fill(.blue).frame(width: 40, height: 20))
+        guard case let .content(.roundedRectangle(pill)) = capsule.displayList().items.first?.value else {
+            Issue.record("Expected a rounded rectangle")
+            return
+        }
+        #expect(pill.cornerRadius == 10)
+        let stroked = layout(RoundedRectangle(cornerRadius: 8).stroke(.red).frame(width: 40, height: 20))
+        guard case .content(.shape) = stroked.displayList().items.first?.value else {
+            Issue.record("Expected a shape")
+            return
+        }
     }
 
     @Test func circlePathIsCentered() {
