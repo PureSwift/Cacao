@@ -252,6 +252,17 @@ package final class Compositor {
 
     private var presentOffscreens: Set<OffscreenKey> = []
 
+    /// A rounded corner's antialiased quarter circle, in pixels, of a color.
+    private struct CornerKey: Hashable {
+        var radius: Int
+        var corner: Int
+        var color: ResolvedColor
+    }
+
+    private var corners: [CornerKey: TextureID?] = [:]
+
+    private var presentCorners: Set<CornerKey> = []
+
     /// The pixel origin of each target, the window first.
     private var targetOrigins: [CGPoint] = [CGPoint(x: 0, y: 0)]
 
@@ -272,6 +283,7 @@ package final class Compositor {
         presentImages.removeAll(keepingCapacity: true)
         presentOffscreens.removeAll(keepingCapacity: true)
         presentExternals.removeAll(keepingCapacity: true)
+        presentCorners.removeAll(keepingCapacity: true)
         targetOrigins = [CGPoint(x: 0, y: 0)]
         for texture in transientTextures {
             backend.destroyTexture(texture)
@@ -291,6 +303,7 @@ package final class Compositor {
         frameStatistics.textures = layers.values.reduce(0) { $0 + $1.tiles.values.compactMap { $0 }.count }
             + images.values.compactMap { $0 }.count
             + offscreens.count
+            + corners.values.compactMap { $0 }.count
         lastFrame = frameStatistics
         total.rasterizations += frameStatistics.rasterizations
         total.uploads += frameStatistics.uploads
@@ -696,6 +709,8 @@ package final class Compositor {
             color.opacity *= Float(opacity)
             backend.fill(pixelRect(frame), color: color)
             frameStatistics.draws += 1
+        case let .roundedRectangle(rounded):
+            drawRoundedRectangle(rounded, frame: frame, opacity: opacity)
         case .text, .shape, .drawing:
             drawRasterized(content, identity: identity, frame: frame, clip: clip, opacity: opacity)
         case let .image(image):
@@ -710,6 +725,86 @@ package final class Compositor {
         case let .backdrop(backdrop):
             drawBackdrop(backdrop, frame: frame, clip: clip, opacity: opacity)
         }
+    }
+
+    /// Draws a rounded rectangle on the GPU: its straight parts filled, and
+    /// each rounded corner a small texture of an antialiased quarter
+    /// circle, made once for its radius and color. The pieces meet at
+    /// whole pixels and don't overlap, so a translucent color blends once.
+    private func drawRoundedRectangle(_ content: RoundedRectangleContent, frame: CGRect, opacity: Double) {
+        let rect = pixelRect(frame)
+        guard rect.width > 0, rect.height > 0 else { return }
+        var color = content.color
+        color.opacity *= Float(opacity)
+        let radius = Int(min((content.cornerRadius * scale).rounded(), (min(rect.width, rect.height) / 2).rounded(.down)))
+        func fill(_ part: CGRect) {
+            guard part.width > 0, part.height > 0 else { return }
+            backend.fill(part, color: color)
+            frameStatistics.draws += 1
+        }
+        guard radius >= 1, !content.corners.isEmpty else {
+            fill(rect)
+            return
+        }
+        let r = CGFloat(radius)
+        // The middle, top to bottom, then the sides between the corners.
+        fill(CGRect(x: rect.minX + r, y: rect.minY, width: rect.width - 2 * r, height: rect.height))
+        fill(CGRect(x: rect.minX, y: rect.minY + r, width: r, height: rect.height - 2 * r))
+        fill(CGRect(x: rect.maxX - r, y: rect.minY + r, width: r, height: rect.height - 2 * r))
+        let squares: [(RoundedRectangleContent.Corners, CGPoint)] = [
+            (.topLeading, CGPoint(x: rect.minX, y: rect.minY)),
+            (.topTrailing, CGPoint(x: rect.maxX - r, y: rect.minY)),
+            (.bottomLeading, CGPoint(x: rect.minX, y: rect.maxY - r)),
+            (.bottomTrailing, CGPoint(x: rect.maxX - r, y: rect.maxY - r)),
+        ]
+        for (corner, origin) in squares {
+            let square = CGRect(origin: origin, size: CGSize(width: r, height: r))
+            if content.corners.contains(corner), let texture = cornerTexture(radius: radius, corner: corner, color: content.color) {
+                backend.draw(texture, in: square, opacity: opacity, smooth: false)
+                frameStatistics.draws += 1
+            } else {
+                fill(square)
+            }
+        }
+    }
+
+    /// The texture of a corner: a quarter circle of `radius` pixels about
+    /// the square's inner corner, each pixel as much of the color as the
+    /// circle covers of it (sampled four by four), premultiplied.
+    private func cornerTexture(radius: Int, corner: RoundedRectangleContent.Corners, color: ResolvedColor) -> TextureID? {
+        let key = CornerKey(radius: radius, corner: corner.rawValue, color: color)
+        presentCorners.insert(key)
+        if let texture = corners[key] { return texture }
+        let leading = corner == .topLeading || corner == .bottomLeading
+        let top = corner == .topLeading || corner == .topTrailing
+        let r = Double(radius)
+        // The circle's center: the square's corner nearest the middle.
+        let center = (x: leading ? r : 0, y: top ? r : 0)
+        var pixels = Data(count: radius * radius * 4)
+        pixels.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
+            for y in 0..<radius {
+                for x in 0..<radius {
+                    var covered = 0
+                    for sy in 0..<4 {
+                        for sx in 0..<4 {
+                            let dx = Double(x) + (Double(sx) + 0.5) / 4 - center.x
+                            let dy = Double(y) + (Double(sy) + 0.5) / 4 - center.y
+                            if dx * dx + dy * dy <= r * r { covered += 1 }
+                        }
+                    }
+                    let alpha = Double(color.opacity) * Double(covered) / 16
+                    let at = (y * radius + x) * 4
+                    bytes[at] = UInt8((Double(color.red) * alpha * 255).rounded())
+                    bytes[at + 1] = UInt8((Double(color.green) * alpha * 255).rounded())
+                    bytes[at + 2] = UInt8((Double(color.blue) * alpha * 255).rounded())
+                    bytes[at + 3] = UInt8((alpha * 255).rounded())
+                }
+            }
+        }
+        let texture = backend.makeTexture(width: radius, height: radius, bytesPerRow: radius * 4, pixels: pixels)
+        frameStatistics.uploads += 1
+        corners[key] = texture
+        return texture
     }
 
     /// Draws what the frame shows so far behind a rectangle, blurred: read
@@ -983,6 +1078,10 @@ package final class Compositor {
             backend.destroyTexture(offscreen.texture)
             offscreens[key] = nil
         }
+        for (key, texture) in corners where !presentCorners.contains(key) {
+            if let texture { backend.destroyTexture(texture) }
+            corners[key] = nil
+        }
         for (surface, external) in externalTextures where !presentExternals.contains(surface) {
             backend.destroyTexture(external.texture)
             externalTextures[surface] = nil
@@ -999,6 +1098,7 @@ package final class Compositor {
         }
         for texture in images.values.compactMap({ $0 }) { backend.destroyTexture(texture) }
         for offscreen in offscreens.values { backend.destroyTexture(offscreen.texture) }
+        for texture in corners.values.compactMap({ $0 }) { backend.destroyTexture(texture) }
         for external in externalTextures.values { backend.destroyTexture(external.texture) }
         for textures in externalBuffers.values {
             for texture in textures.compactMap({ $0 }) { backend.destroyTexture(texture) }
@@ -1010,6 +1110,7 @@ package final class Compositor {
         layers.removeAll()
         images.removeAll()
         offscreens.removeAll()
+        corners.removeAll()
     }
 
     // MARK: Geometry
