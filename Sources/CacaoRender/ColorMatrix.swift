@@ -151,6 +151,9 @@ extension DisplayList.Content {
         switch self {
         case let .color(color):
             return .color(matrix.apply(color))
+        case var .roundedRectangle(rounded):
+            rounded.color = matrix.apply(rounded.color)
+            return .roundedRectangle(rounded)
         case var .text(text):
             text.applying(matrix)
             return .text(text)
