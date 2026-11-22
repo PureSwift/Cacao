@@ -26,12 +26,13 @@ import Testing
         graph.tap(at: CGPoint(x: element.frame.midX, y: element.frame.midY))
     }
 
-    /// Shape items in drawing order, with their frames.
+    /// Shape items, rounded rectangles among them, in drawing order, with
+    /// their frames.
     func shapeFrames(_ graph: ViewGraph) -> [CGRect] {
         func collect(_ list: DisplayList) -> [CGRect] {
             list.items.flatMap { item -> [CGRect] in
                 switch item.value {
-                case .content(.shape): [item.frame]
+                case .content(.shape), .content(.roundedRectangle): [item.frame]
                 case .content: []
                 case let .effect(_, nested): collect(nested)
                 }
