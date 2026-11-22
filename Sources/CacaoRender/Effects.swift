@@ -87,10 +87,31 @@ public struct ClipEffect: Equatable, Sendable {
     /// Whether the path fills by the even-odd rule.
     public var isEOFilled = false
 
+    /// When the clip is the frame with circular rounded corners: their
+    /// radius, which a renderer can apply by masking only the corners;
+    /// 0 for any other clip.
+    public var cornerRadius: CGFloat = 0
+
+    /// The corners rounded with `cornerRadius`.
+    public var roundedCorners: RoundedRectangleContent.Corners = []
+
     public init(path: Path, isRectangle: Bool, isEOFilled: Bool = false) {
         self.path = path
         self.isRectangle = isRectangle
         self.isEOFilled = isEOFilled
+    }
+
+    /// The frame, of `size`, with circular corners of `cornerRadius`.
+    public init(roundedRectangleOf size: CGSize, cornerRadius: CGFloat, corners: RoundedRectangleContent.Corners = .all) {
+        let outline = RoundedRectangleContent(color: ResolvedColor(red: 1, green: 1, blue: 1), cornerRadius: cornerRadius, corners: corners)
+        self.init(path: outline.path(in: CGRect(origin: CGPoint(x: 0, y: 0), size: size)), isRectangle: false)
+        self.cornerRadius = cornerRadius
+        self.roundedCorners = corners
+    }
+
+    /// Whether the clip is a rounded rectangle filling the frame.
+    public var isRoundedRectangle: Bool {
+        cornerRadius > 0 && !roundedCorners.isEmpty
     }
 
     /// The clip as a mask: the path filled in white.
