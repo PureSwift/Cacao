@@ -76,6 +76,7 @@ import Testing
         let placeholder = Color.primary.opacity(0.15).resolve(in: EnvironmentValues())
         let shape = graph.drawnItems.first { item in
             if case let .content(.shape(content)) = item.item.value, content.color == placeholder { return true }
+            if case let .content(.roundedRectangle(content)) = item.item.value, content.color == placeholder { return true }
             return false
         }
         #expect(shape?.item.frame.size == graph.frame("secret").size)
