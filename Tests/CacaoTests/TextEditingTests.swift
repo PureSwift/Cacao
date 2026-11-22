@@ -133,6 +133,7 @@ import Testing
                 func find(_ item: DisplayList.Item) -> Bool {
                     switch item.value {
                     case let .content(.shape(shape)): shape.path.boundingRect.width == 1.5
+                    case .content(.roundedRectangle): item.frame.width == 1.5
                     case .content: false
                     case let .effect(_, nested): nested.items.contains(where: find)
                     }

@@ -30,10 +30,14 @@ final class RecordingBackend: CompositorBackend {
 
     private var next = 0
 
+    /// The pixels each texture was made from, and its width.
+    var texturePixels: [TextureID: (width: Int, pixels: Data)] = [:]
+
     func makeTexture(width: Int, height: Int, bytesPerRow: Int, pixels: Data) -> TextureID? {
         next += 1
         let texture = TextureID(rawValue: next)
         liveTextures.insert(texture)
+        texturePixels[texture] = (width, pixels)
         return texture
     }
 

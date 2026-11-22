@@ -65,6 +65,9 @@ public struct DisplayList: Equatable, Sendable {
         /// The frame filled with a color.
         case color(ResolvedColor)
 
+        /// The frame filled with a color, its corners rounded.
+        case roundedRectangle(RoundedRectangleContent)
+
         /// Text laid out in the frame.
         case text(ResolvedText)
 

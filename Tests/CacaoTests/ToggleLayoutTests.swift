@@ -27,7 +27,7 @@ import Testing
         func collect(_ items: [DisplayList.Item]) -> [CGRect] {
             items.flatMap { item -> [CGRect] in
                 switch item.value {
-                case .content(.shape): [item.frame]
+                case .content(.shape), .content(.roundedRectangle): [item.frame]
                 case .content: []
                 case let .effect(_, nested): collect(nested.items)
                 }

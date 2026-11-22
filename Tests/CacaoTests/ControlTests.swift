@@ -343,8 +343,10 @@ extension ViewGraph {
     @Test func progressViewDraws() {
         let graph = layout(ProgressView(value: 0.25).frame(width: 200))
         let fills = graph.displayList().items.filter {
-            if case .content(.shape) = $0.value { return true }
-            return false
+            switch $0.value {
+            case .content(.shape), .content(.roundedRectangle): true
+            default: false
+            }
         }
         #expect(fills.count == 2)
         #expect(fills.last?.frame.width == 50)

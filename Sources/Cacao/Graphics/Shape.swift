@@ -165,12 +165,29 @@ internal struct ShapeBehavior<S: Shape>: AnimatableBehavior {
 
     func displayContent(node: ViewNode) -> DisplayList.Content? {
         let bounds = CGRect(origin: CGPoint(x: 0, y: 0), size: node.graph.presentationFrame(of: node).size)
+        // A filled rounded rectangle or capsule in a color is drawn on the
+        // GPU, without rasterizing it.
+        if case .fill = drawing, gradient == nil, let radius = Self.cornerRadius(of: shape, in: bounds) {
+            return .roundedRectangle(RoundedRectangleContent(color: color, cornerRadius: radius))
+        }
         return .shape(ShapeContent(
             path: shape.path(in: bounds),
             color: color,
             drawing: drawing,
             gradient: gradient?.paint(in: bounds)
         ))
+    }
+
+    /// The corner radius of a rounded rectangle with round corners, or of a
+    /// capsule, that fills `bounds`; nil for any other shape.
+    private static func cornerRadius(of shape: S, in bounds: CGRect) -> CGFloat? {
+        if let rounded = shape as? RoundedRectangle, rounded.insetAmount == 0, rounded.cornerSize.width == rounded.cornerSize.height {
+            return rounded.cornerSize.width
+        }
+        if let capsule = shape as? Capsule, capsule.insetAmount == 0 {
+            return min(bounds.width, bounds.height) / 2
+        }
+        return nil
     }
 
     func hitTest(_ point: CGPoint, node: ViewNode) -> Bool {
