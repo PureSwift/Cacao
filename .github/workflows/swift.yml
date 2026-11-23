@@ -38,6 +38,8 @@ jobs:
     container: swift:6.4-noble
     env:
       SDL_VERSION: release-3.4.8
+      # AVFoundation plays media with FFmpeg 7, which noble doesn't package.
+      FFMPEG_VERSION: n7.1.1
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
@@ -50,7 +52,7 @@ jobs:
             libwayland-dev wayland-protocols libdecor-0-dev libdrm-dev \
             libgbm-dev libegl-dev libgl-dev libgles-dev libvulkan-dev \
             libdbus-1-dev libudev-dev libpulse-dev libasound2-dev \
-            fonts-dejavu-core
+            fonts-dejavu-core make
       - name: Cache SDL3
         id: cache-sdl3
         uses: actions/cache@v4
@@ -69,6 +71,25 @@ jobs:
         run: |
           echo "PKG_CONFIG_PATH=/opt/sdl3/lib/pkgconfig:/opt/sdl3/lib/x86_64-linux-gnu/pkgconfig" >> "$GITHUB_ENV"
           echo "LD_LIBRARY_PATH=/opt/sdl3/lib:/opt/sdl3/lib/x86_64-linux-gnu" >> "$GITHUB_ENV"
+      - name: Cache FFmpeg
+        id: cache-ffmpeg
+        uses: actions/cache@v4
+        with:
+          path: /opt/ffmpeg
+          key: ffmpeg-${{ env.FFMPEG_VERSION }}-noble
+      - name: Build FFmpeg
+        if: steps.cache-ffmpeg.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch "$FFMPEG_VERSION" https://github.com/FFmpeg/FFmpeg.git /tmp/FFmpeg
+          cd /tmp/FFmpeg
+          ./configure --prefix=/opt/ffmpeg --cc=clang --enable-shared --disable-static \
+            --disable-programs --disable-doc --disable-debug --disable-x86asm
+          make -j"$(nproc)"
+          make install
+      - name: Configure FFmpeg paths
+        run: |
+          echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/opt/ffmpeg/lib/pkgconfig" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/ffmpeg/lib" >> "$GITHUB_ENV"
       - name: Build
         # Compiles the libraries and the tests. Tests run on macOS only.
         run: swift build --build-tests
