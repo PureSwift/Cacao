@@ -25,6 +25,9 @@ import CompilerPluginSupport
 ///   doesn't report.
 /// - `SwiftUI` and `Combine` (Linux only): re-export Cacao so `import SwiftUI`
 ///   and `import Combine` compile.
+/// - `CoreMedia`, `AVFoundation` and `AVKit` (Linux only): the parts of
+///   Apple's that play media (`CMTime`, `AVPlayer`, `VideoPlayer`), on
+///   PureSwift/Media, which needs FFmpeg 7.
 let package = Package(
     name: "Cacao",
     platforms: [
@@ -64,8 +67,8 @@ let package = Package(
             name: "CacaoDemo",
             targets: ["CacaoDemo"]
         )
-    ] + swiftUIProducts,
-    dependencies: [
+    ] + swiftUIProducts + mediaProducts,
+    dependencies: mediaDependencies + [
         .package(
             url: "https://github.com/PureSwift/Silica.git",
             branch: "master"
@@ -212,7 +215,7 @@ let package = Package(
                 )
             ]
         )
-    ] + swiftUITargets + waylandTestTargets + layoutParityTargets
+    ] + swiftUITargets + mediaTargets + waylandTestTargets + layoutParityTargets
 )
 
 // MARK: - SDL on iOS
@@ -247,6 +250,72 @@ var swiftUITargets: [Target] {
 #else
 var swiftUIProducts: [Product] { [] }
 var swiftUITargets: [Target] { [] }
+#endif
+
+// MARK: - CoreMedia, AVFoundation and AVKit
+
+// On Linux, `CoreMedia`, `AVFoundation` and `AVKit` modules play media with
+// PureSwift/Media, on FFmpeg, so sources that import them compile. On macOS
+// they would clash with Apple's.
+#if os(Linux)
+var mediaDependencies: [Package.Dependency] {
+    [
+        .package(url: "https://github.com/PureSwift/Media.git", branch: "master"),
+    ]
+}
+var mediaProducts: [Product] {
+    [
+        .library(name: "CoreMedia", targets: ["CoreMedia"]),
+        .library(name: "AVFoundation", targets: ["AVFoundation"]),
+        .library(name: "AVKit", targets: ["AVKit"]),
+    ]
+}
+var mediaTargets: [Target] {
+    [
+        // `CMTime` and `CMTimeRange`.
+        .target(
+            name: "CoreMedia",
+            dependencies: [.product(name: "MediaCore", package: "Media")]
+        ),
+        // `AVPlayer`, which decodes on a thread of its own and publishes
+        // pictures to an external surface.
+        .target(
+            name: "AVFoundation",
+            dependencies: [
+                "CoreMedia",
+                "CacaoRender",
+                .product(name: "MediaCore", package: "Media"),
+                .product(name: "PixelBuffers", package: "Media"),
+                .product(name: "VideoCodec", package: "Media"),
+                .product(name: "MediaPlayback", package: "Media"),
+                .product(name: "MediaSDL", package: "Media"),
+            ]
+        ),
+        // `VideoPlayer`, the view that shows a player's surface.
+        .target(
+            name: "AVKit",
+            dependencies: ["AVFoundation", "Cacao", "CacaoRender"]
+        ),
+        .testTarget(
+            name: "AVFoundationTests",
+            dependencies: [
+                "CoreMedia",
+                "AVFoundation",
+                "AVKit",
+                "Cacao",
+                "CacaoRender",
+                .product(name: "MediaCore", package: "Media"),
+                .product(name: "PixelBuffers", package: "Media"),
+                .product(name: "VideoCodec", package: "Media"),
+                .product(name: "MediaFiles", package: "Media"),
+            ]
+        ),
+    ]
+}
+#else
+var mediaDependencies: [Package.Dependency] { [] }
+var mediaProducts: [Product] { [] }
+var mediaTargets: [Target] { [] }
 #endif
 
 // MARK: - Wayland tests
