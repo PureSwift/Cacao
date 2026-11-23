@@ -38,6 +38,7 @@ so scrolling and animation never repaint.
 | `CacaoSDL` | SwiftUI on the host: a view graph as each window's scene. |
 | `CacaoScrollPhysics` | Velocity tracking, deceleration, rubber band and spring-back. |
 | `SwiftUI` (Linux only) | Re-exports Cacao, so sources that `import SwiftUI` compile unchanged. |
+| `CoreMedia`, `AVFoundation`, `AVKit` (Linux only) | The parts of Apple's that play media: `CMTime`, `AVPlayer` and `AVPlayerItem`, and the `VideoPlayer` view, on [PureSwift/Media](https://github.com/PureSwift/Media) and FFmpeg. |
 
 ## Usage
 
@@ -111,9 +112,44 @@ cmake -S SDL -B SDL/build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build SDL/build && sudo cmake --install SDL/build
 ```
 
+`AVFoundation` plays media with FFmpeg 7 or later (`libavcodec-dev
+libavformat-dev libavutil-dev libswscale-dev libswresample-dev` on Debian 13
+and Ubuntu 25.04), which Ubuntu 24.04 doesn't package either, so build it
+from source there:
+
+```bash
+git clone --depth 1 --branch n7.1.1 https://github.com/FFmpeg/FFmpeg.git
+```
+
+```bash
+cd FFmpeg && ./configure --enable-shared --disable-static --disable-programs --disable-doc --disable-x86asm && make -j"$(nproc)" && sudo make install
+```
+
 ```bash
 swift build
 ```
+
+A player's pictures are shown by `VideoPlayer`, as on Apple's platforms:
+
+```swift
+import AVKit
+import SwiftUI
+
+struct Movie: View {
+
+    @State private var player = AVPlayer(url: URL(fileURLWithPath: "movie.mp4"))
+
+    var body: some View {
+        VideoPlayer(player: player)
+            .onAppear { player.play() }
+    }
+}
+```
+
+The player decodes on a thread of its own and publishes each picture to an
+`ExternalSurface`; its sound goes to SDL's default playback device. There is
+no key-value observing: use a periodic time observer and the item's
+notifications.
 
 ### CMake
 
@@ -138,7 +174,8 @@ Silica's modules and the `CSDL3` module from [PureSwift/SDL](https://github.com/
 must be in the resource directory, or on search paths in `CMAKE_Swift_FLAGS`.
 The `@Entry` macro's compiler plugin runs on the machine that compiles: when
 cross compiling, build `Sources/CacaoMacros` on its own with the host's
-toolchain. SwiftPM stays the way to develop and test.
+toolchain. SwiftPM stays the way to develop and test, and the only way to
+build `CoreMedia`, `AVFoundation` and `AVKit`.
 
 ## Testing
 
