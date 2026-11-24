@@ -8,7 +8,8 @@
 import CacaoRender
 
 /// The appearance a desktop asks for: the values the freedesktop settings
-/// portal serves in its `org.freedesktop.appearance` namespace.
+/// portal serves in its `org.freedesktop.appearance` namespace, and the
+/// window buttons it asks title bars for.
 ///
 /// `CacaoDBus` reads this from the portal as `PortalAppearance`, which is
 /// this type, so what it reads resolves tokens as it is:
@@ -29,10 +30,21 @@ public struct Appearance: Hashable, Sendable {
     /// `contrast`: whether the user asked for higher contrast.
     public var contrast: Contrast?
 
-    public init(colorScheme: ColorScheme? = nil, accentColor: AccentColor? = nil, contrast: Contrast? = nil) {
+    /// `button-layout`, in the `org.gnome.desktop.wm.preferences`
+    /// namespace, which the portal serves too: which window buttons title
+    /// bars show, and at which end.
+    public var buttonLayout: WindowButtonLayout?
+
+    public init(
+        colorScheme: ColorScheme? = nil,
+        accentColor: AccentColor? = nil,
+        contrast: Contrast? = nil,
+        buttonLayout: WindowButtonLayout? = nil
+    ) {
         self.colorScheme = colorScheme
         self.accentColor = accentColor
         self.contrast = contrast
+        self.buttonLayout = buttonLayout
     }
 }
 

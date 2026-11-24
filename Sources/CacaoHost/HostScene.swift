@@ -215,8 +215,9 @@ public enum HostEvent {
     case windowStateChanged
 
     /// The system's appearance changed: it switched between light and
-    /// dark, or changed its accent color or contrast
-    /// (`HostRuntime.systemAccentColor`, `prefersIncreasedContrast`).
+    /// dark, or changed its accent color, contrast or window buttons
+    /// (`HostRuntime.systemAccentColor`, `prefersIncreasedContrast`,
+    /// `windowButtonLayout`).
     case appearanceChanged(HostAppearance)
 }
 

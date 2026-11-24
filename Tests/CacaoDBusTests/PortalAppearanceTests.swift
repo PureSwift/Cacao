@@ -1,4 +1,5 @@
 import CacaoDBus
+import CacaoTokens
 import DBus
 import Testing
 
@@ -72,6 +73,29 @@ import Testing
         ])
         #expect(accentChanged)
         #expect(appearance.accentColor == .init(red: 1, green: 0, blue: 0))
+    }
+
+    @Test func theButtonLayoutIsGnomesSetting() {
+        #expect(PortalAppearance.buttonLayout(from: readOne(.string("close,minimize:maximize"))) == WindowButtonLayout(
+            leading: [.close, .minimize],
+            trailing: [.maximize]
+        ))
+        #expect(PortalAppearance.buttonLayout(from: read(.string("appmenu:close")))?.trailing == [.close])
+        #expect(PortalAppearance.buttonLayout(from: readOne(.uint32(1))) == nil)
+    }
+
+    @Test func theButtonLayoutChangesInItsOwnNamespace() {
+        var appearance = PortalAppearance()
+        let changed = appearance.apply(settingChanged: [
+            .string("org.gnome.desktop.wm.preferences"), .string("button-layout"), readOne(.string("close:")),
+        ])
+        #expect(changed)
+        #expect(appearance.buttonLayout == WindowButtonLayout(leading: [.close]))
+        // Not in the appearance namespace.
+        let ignored = appearance.apply(settingChanged: [
+            .string("org.freedesktop.appearance"), .string("button-layout"), readOne(.string(":close")),
+        ])
+        #expect(!ignored)
     }
 
     @Test func aSettingChangedSignalForAnotherSettingChangesNothing() {
