@@ -5,61 +5,15 @@
 //  Created by Alsey Coleman Miller on 11/23/26.
 //
 
+public import CacaoTokens
 package import DBus
 
 /// The appearance the desktop serves through the freedesktop settings
-/// portal, in the `org.freedesktop.appearance` namespace.
+/// portal, in the `org.freedesktop.appearance` namespace: `CacaoTokens`'
+/// `Appearance`, so what's read here resolves style tokens as it is.
 ///
 /// A value is `nil` when the portal didn't serve it.
-public struct PortalAppearance: Hashable, Sendable {
-
-    /// `color-scheme`: whether apps show light or dark windows.
-    public var colorScheme: ColorScheme?
-
-    /// `accent-color`: the color controls are tinted with.
-    public var accentColor: AccentColor?
-
-    /// `contrast`: whether the user asked for higher contrast.
-    public var contrast: Contrast?
-
-    public init(colorScheme: ColorScheme? = nil, accentColor: AccentColor? = nil, contrast: Contrast? = nil) {
-        self.colorScheme = colorScheme
-        self.accentColor = accentColor
-        self.contrast = contrast
-    }
-}
-
-public extension PortalAppearance {
-
-    /// The portal's `color-scheme` values.
-    enum ColorScheme: UInt32, Hashable, Sendable {
-        case noPreference = 0
-        case dark = 1
-        case light = 2
-    }
-
-    /// The portal's `contrast` values.
-    enum Contrast: UInt32, Hashable, Sendable {
-        case normal = 0
-        case high = 1
-    }
-
-    /// The portal's `accent-color`: sRGB components from 0 to 1.
-    struct AccentColor: Hashable, Sendable {
-
-        public var red: Double
-
-        public var green: Double
-
-        public var blue: Double
-
-        public init(red: Double, green: Double, blue: Double) {
-            self.red = red
-            self.green = green
-            self.blue = blue
-        }
-    }
-}
+public typealias PortalAppearance = Appearance
 
 // MARK: - Keys
 
