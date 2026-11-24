@@ -172,6 +172,9 @@ extension ViewGraph {
     /// Moves the pointer without pressing: views under it start or keep
     /// hovering, and the others stop. `nil` when the pointer leaves the window.
     package func hover(at point: CGPoint?) {
+        if let point {
+            switchMenu(at: point)
+        }
         let path = point.flatMap { root.hitTest($0) } ?? []
         pointerStyle = Self.pointerStyle(along: path)
         // Help text shows once the pointer rests on its view.
