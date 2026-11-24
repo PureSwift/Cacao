@@ -20,8 +20,10 @@ target_link_libraries(CacaoHost
     SDL3::SDL3)
 
 if(CMAKE_SYSTEM_NAME STREQUAL Linux)
-  # Public, so modules that import CacaoHost find the C module too when
-  # it's built without library evolution.
+  # Wayland's gestures and layer shell, and the settings portal's
+  # appearance over D-Bus. Public, so modules that import CacaoHost find
+  # these modules too when it's built without library evolution.
   target_link_libraries(CacaoHost PUBLIC
-    CacaoWayland)
+    CacaoWayland
+    CacaoDBus)
 endif()

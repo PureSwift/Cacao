@@ -73,8 +73,10 @@ Run the demo with `swift run CacaoDemo`. Press F12 (or set
 `CACAO_SCREENSHOT_DELAY=seconds` waits that long first.
 
 Windows follow the system's light or dark appearance. On Linux that is the
-desktop's color scheme, from the freedesktop settings portal or GNOME's
-settings; `CACAO_APPEARANCE=dark` or `light` overrides it.
+desktop's color scheme, accent color and contrast, read from the
+freedesktop settings portal over D-Bus and followed as they change, or
+GNOME's settings where no portal answers; `CACAO_APPEARANCE=dark` or
+`light` overrides it.
 
 ## Building
 
@@ -134,8 +136,10 @@ cmake --build build
 cmake --install build
 ```
 
-Silica's modules and the `CSDL3` module from [PureSwift/SDL](https://github.com/PureSwift/SDL)
-must be in the resource directory, or on search paths in `CMAKE_Swift_FLAGS`.
+Silica's modules, the `CSDL3` module from [PureSwift/SDL](https://github.com/PureSwift/SDL)
+and, on Linux, [PureSwift/DBus](https://github.com/PureSwift/DBus) must be in
+the resource directory, or on search paths in `CMAKE_Swift_FLAGS`.
+`.github/scripts/build-cmake-dependencies.sh` builds them into one directory.
 The `@Entry` macro's compiler plugin runs on the machine that compiles: when
 cross compiling, build `Sources/CacaoMacros` on its own with the host's
 toolchain. SwiftPM stays the way to develop and test.

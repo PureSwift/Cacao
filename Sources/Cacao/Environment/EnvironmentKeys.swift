@@ -21,6 +21,10 @@ private struct ColorSchemeKey: EnvironmentKey {
     static let defaultValue: ColorScheme = .light
 }
 
+private struct ColorSchemeContrastKey: EnvironmentKey {
+    static let defaultValue: ColorSchemeContrast = .standard
+}
+
 private struct LayoutDirectionKey: EnvironmentKey {
     static let defaultValue: LayoutDirection = .leftToRight
 }
@@ -67,6 +71,13 @@ extension EnvironmentValues {
     public var colorScheme: ColorScheme {
         get { self[ColorSchemeKey.self] }
         set { self[ColorSchemeKey.self] = newValue }
+    }
+
+    /// The contrast associated with the color scheme of this environment:
+    /// increased when the system asks for higher contrast.
+    public package(set) var colorSchemeContrast: ColorSchemeContrast {
+        get { self[ColorSchemeContrastKey.self] }
+        set { self[ColorSchemeContrastKey.self] = newValue }
     }
 
     /// The layout direction associated with the current environment.

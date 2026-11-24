@@ -30,10 +30,30 @@ public enum HostRuntime {
         Double(SDL.ticks) / 1_000_000_000
     }
 
-    /// Whether the system shows light or dark windows: what SDL reports,
-    /// or what the desktop's settings say when SDL can't tell.
+    /// Whether the system shows light or dark windows: on Linux what the
+    /// desktop's settings portal says, else what SDL reports, or what the
+    /// desktop's settings say when SDL can't tell.
     public static var systemAppearance: HostAppearance {
         DesktopAppearance.current
+    }
+
+    /// The color the system tints controls with, if it says: on Linux the
+    /// settings portal's accent color.
+    public static var systemAccentColor: ResolvedColor? {
+        DesktopAppearance.accentColor
+    }
+
+    /// Whether the system asks for higher contrast: on Linux the settings
+    /// portal's contrast.
+    public static var prefersIncreasedContrast: Bool {
+        DesktopAppearance.prefersIncreasedContrast
+    }
+
+    /// Tells every window's scene the system's appearance changed.
+    static func systemAppearanceChanged() {
+        let appearance = systemAppearance
+        let now = now
+        windows.forEach { $0.scene?.handle(.appearanceChanged(appearance), time: now) }
     }
 
     // MARK: Options
@@ -182,6 +202,8 @@ public enum HostRuntime {
         _ = SDL.setHint("SDL_MAC_SCROLL_MOMENTUM", "1")
         do {
             try withVideo {
+                // Asked while the app sets up, for the first window.
+                DesktopAppearance.start()
                 textEngine = SilicaTextEngine()
                 wakeEvent = SDL.registerEvents() ?? 0
                 defer {
@@ -262,8 +284,7 @@ public enum HostRuntime {
             }
             return !windows.isEmpty || runsWithoutWindows()
         case .systemThemeChanged:
-            let appearance = systemAppearance
-            windows.forEach { $0.scene?.handle(.appearanceChanged(appearance), time: now) }
+            systemAppearanceChanged()
         case .user:
             // A wake: the loop goes around, running its hooks.
             break
