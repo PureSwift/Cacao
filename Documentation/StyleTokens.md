@@ -63,6 +63,21 @@ They grow with what they round: 4 points for checkboxes and menu items, 6 for co
 
 The system font (fontconfig's default sans-serif on Linux), at 14 points for body text. The 10.5 to 11-point desktop fonts common on Linux are 14 to 14.7 pixels at 96 dots per inch, and a whole number keeps glyphs on the pixel grid at 1× and 2×. Smaller and larger sizes step by about a fifth: 11, 12, 14, 20, 28. Monospaced text is 13 points, a point smaller so it sets to the same visual size as the proportional font.
 
+## The desktop's look
+
+Cacao's built-in styles draw from these tokens under the desktop's look, `InterfaceLook.desktop`, which every app's windows get by default:
+
+- **Buttons**: `.automatic` and `.bordered` are push buttons, `.borderedProminent` the default button in the accent. In a toolbar, automatic buttons are flat until hovered.
+- **Segmented pickers**: one shaded track, the selected segment pressed in.
+- **Text and search fields**: the content background in a rounded border, ringed with the accent while focused. A search field is a pill with a magnifier.
+- **Sidebars**: `.sidebar` lists, and lists in a split view's sidebar column, on the sidebar background with the selection tinted by the accent.
+- **Toolbars**: shaded like the title bar they continue, the title between the items, search at the trailing end.
+- **Menus, checkboxes, forms and switches**: opaque rounded menus, accent-filled checkboxes and switches, and forms on the window's background.
+
+Styles an app writes itself draw the same under either look, and any view can ask for Cacao's stock styles with `.interfaceLook(.stock)`. Views drawn outside an app's windows, as in tests, have the stock look.
+
+Whether third-party apps get the desktop's look by default is one line: `InterfaceLook.appDefault`. It is `.desktop`, so every Cacao app matches the desktop with the stock styles still selectable, as the desktop plan recommends. Set to `.stock`, only apps that set it back to `.desktop` in their `init()`, such as the desktop's own, get the look.
+
 ## What's next
 
-The style package (phase 2 of the [desktop plan](https://github.com/MillerTechnologyPeru/swift-linux-shell/blob/main/Documentation/Plan.md)) builds SwiftUI styles from these tokens: buttons, segmented controls, search fields, sidebar lists, toolbars, menus and window chrome. Perry's `Cells.swift` and `Controls.swift` read the same tokens for AppKit's controls. Until then, the only place Cacao uses them is the accent: on Linux, `Color.accentColor` falls back to Cacao's blue when neither a tint nor the desktop names one.
+The window chrome draws the title bar and window buttons from the `titleBar` tokens. Perry's `Cells.swift` and `Controls.swift` read the same tokens for AppKit's controls.

@@ -367,12 +367,20 @@ internal struct _TextInput: View, PrimitiveView {
             engine: context.graph.textEngine,
             isMultiline: isMultiline
         )
-        let insets = style == .roundedBorder
-            ? EdgeInsets(top: 4, leading: 6, bottom: 4, trailing: 6)
-            : EdgeInsets()
+        let isDesktop = environment.usesDesktopLook && !isMultiline
+        let insets = style != .roundedBorder
+            ? EdgeInsets()
+            : isDesktop
+            ? _DesktopFieldBezel.insets(in: environment)
+            : EdgeInsets(top: 4, leading: 6, bottom: 4, trailing: 6)
 
         var children: [ChildView] = []
-        if style == .roundedBorder {
+        if style == .roundedBorder, isDesktop {
+            children.append(ChildView(key: "background", view: _DesktopFieldBezel(
+                isFocused: state.isFocused,
+                isSearch: environment.isSearchField
+            )))
+        } else if style == .roundedBorder {
             let border = state.isFocused ? Color.accentColor : Color.gray.opacity(0.5)
             children.append(ChildView(key: "background", view: RoundedRectangle(cornerRadius: 6)
                 .fill(Color.controlBackground(environment.colorScheme))))
@@ -381,7 +389,8 @@ internal struct _TextInput: View, PrimitiveView {
         }
         children.append(ChildView(key: "selection", view: _TextOverlay(kind: .selection, content: content, state: state, insets: insets)))
         if displayed.isEmpty, let placeholder {
-            children.append(ChildView(key: "placeholder", view: placeholder.foregroundColor(.gray)))
+            let color = isDesktop ? _DesktopFieldBezel.placeholderColor(in: environment) : Color.gray
+            children.append(ChildView(key: "placeholder", view: placeholder.foregroundColor(color)))
         } else {
             children.append(ChildView(key: "text", view: Text(verbatim: displayed)))
         }

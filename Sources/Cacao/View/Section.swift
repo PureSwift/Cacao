@@ -305,7 +305,7 @@ public struct Form<Content: View>: View {
         self.content = content()
     }
 
-    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.self) private var environment
 
     public var body: some View {
         let rows = FlattenedRows(content)
@@ -334,7 +334,7 @@ public struct Form<Content: View>: View {
                                 }
                             }
                             .background {
-                                RoundedRectangle(cornerRadius: 10).fill(Color.controlBackground(colorScheme))
+                                RoundedRectangle(cornerRadius: 10).fill(GroupedColors.card(in: environment))
                             }
                         }
                         if let footer = section.footer {
@@ -348,7 +348,7 @@ public struct Form<Content: View>: View {
             }
             .padding(20)
         }
-        .background(Color.groupedBackground(colorScheme))
+        .background(GroupedColors.background(in: environment))
     }
 
     private struct FormSection {

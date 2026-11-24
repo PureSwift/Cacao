@@ -850,12 +850,14 @@ package final class Compositor {
                             if dx * dx + dy * dy <= r * r { covered += 1 }
                         }
                     }
-                    let alpha = Double(color.opacity) * Double(covered) / 16
+                    // Colors out of range, as an animation overshooting
+                    // can make, are clamped to what a byte holds.
+                    let alpha = max(0, min(1, Double(color.opacity))) * Double(covered) / 16
                     let at = (y * radius + x) * 4
-                    bytes[at] = UInt8((Double(color.red) * alpha * 255).rounded())
-                    bytes[at + 1] = UInt8((Double(color.green) * alpha * 255).rounded())
-                    bytes[at + 2] = UInt8((Double(color.blue) * alpha * 255).rounded())
-                    bytes[at + 3] = UInt8((alpha * 255).rounded())
+                    bytes[at] = Self.byte(Double(color.red) * alpha)
+                    bytes[at + 1] = Self.byte(Double(color.green) * alpha)
+                    bytes[at + 2] = Self.byte(Double(color.blue) * alpha)
+                    bytes[at + 3] = Self.byte(alpha)
                 }
             }
         }
@@ -863,6 +865,11 @@ package final class Compositor {
         frameStatistics.uploads += 1
         corners[key] = texture
         return texture
+    }
+
+    /// A component from 0 to 1 as a byte, clamped.
+    private static func byte(_ component: Double) -> UInt8 {
+        UInt8((max(0, min(1, component)) * 255).rounded())
     }
 
     /// Draws what the frame shows so far behind a rectangle, blurred: read

@@ -87,6 +87,8 @@ final class WindowScene: HostScene {
         environment.colorScheme = HostRuntime.systemAppearance == .dark ? .dark : .light
         environment.systemAccentColor = HostRuntime.systemAccentColor
         environment.colorSchemeContrast = HostRuntime.prefersIncreasedContrast ? .increased : .standard
+        // The desktop's look, unless the app chose the stock one.
+        environment.interfaceLook = InterfaceLook.appDefault
         environment.openWindow = OpenWindowAction { id, value in
             SDLHost.windowRequests.append(.open(id: id, value: value))
         }
@@ -138,9 +140,7 @@ final class WindowScene: HostScene {
             cursor: Self.cursor(for: graph.pointerStyle?.kind ?? .default),
             acceptsTextInput: graph.acceptsTextInput,
             textInputArea: graph.focusedFrame,
-            backgroundColor: graph.environment.colorScheme == .dark
-                ? Color.Resolved(red: 0, green: 0, blue: 0)
-                : Color.Resolved(red: 1, green: 1, blue: 1)
+            backgroundColor: graph.environment.windowBackgroundColor
         )
     }
 
