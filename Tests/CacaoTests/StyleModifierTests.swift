@@ -16,6 +16,15 @@ import Testing
         #expect(untinted.colorItems.first?.color == Color.blue.resolve(in: EnvironmentValues()))
     }
 
+    @Test func theSystemsAccentColorIsTheAccentWithoutATint() {
+        var environment = EnvironmentValues()
+        let orange = Color.Resolved(red: 1, green: 0.5, blue: 0)
+        environment.systemAccentColor = orange
+        #expect(Color.accentColor.resolve(in: environment) == orange)
+        environment.tint = .red
+        #expect(Color.accentColor.resolve(in: environment) == Color.red.resolve(in: environment))
+    }
+
     @Test func textCaseTransformsText() {
         let graph = layout(VStack {
             Text("Hello").textCase(.uppercase)
