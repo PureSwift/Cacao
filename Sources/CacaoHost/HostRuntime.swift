@@ -111,15 +111,19 @@ public enum HostRuntime {
 
     /// Opens a window showing the scene `makeScene` returns for it: among
     /// the other windows, or in a layer of the screen if `layer` is given
-    /// and the system has layers.
+    /// and the system has layers. With `decorations` of `.none`, the
+    /// window has no title bar or borders of its own: the scene draws
+    /// them, and says where the window moves from.
     @discardableResult
     public static func openWindow(
         title: String,
         size: CGSize,
         layer: HostLayerSurface? = nil,
+        decorations: HostWindowDecorations = .system,
         makeScene: (HostWindow) -> any HostScene
     ) -> HostWindow? {
-        guard let textEngine, let window = HostWindow(title: title, size: size, textEngine: textEngine, layer: layer) else {
+        guard let textEngine,
+              let window = HostWindow(title: title, size: size, textEngine: textEngine, layer: layer, decorations: decorations) else {
             return nil
         }
         window.scene = makeScene(window)
