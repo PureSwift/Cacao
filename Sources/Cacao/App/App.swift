@@ -62,6 +62,9 @@ internal struct SceneModifiers {
     var defaultSize: CGSize?
 
     var commands: [CommandMenuContent] = []
+
+    /// The layer of the screen windows go in, if not among the windows.
+    var layer: WindowLayerPlacement?
 }
 
 /// A window a host should open for an app.
@@ -87,6 +90,10 @@ package struct WindowDescription {
 
     /// Whether the window opens when the app launches, if it's the first.
     package var opensAtLaunch = true
+
+    /// The layer of the screen the window goes in, if not among the
+    /// windows.
+    package var layer: WindowLayerPlacement? = nil
 }
 
 extension Scene {
@@ -115,7 +122,15 @@ extension Scene {
 @MainActor
 internal func sceneWindows<S: Scene>(of scene: S, modifiers: SceneModifiers) -> [WindowDescription] {
     if let primitive = scene as? any PrimitiveScene {
-        return primitive.windows(modifiers: modifiers)
+        // Placement in a layer applies to every kind of window; the
+        // innermost modifier wins.
+        return primitive.windows(modifiers: modifiers).map { window in
+            var window = window
+            if window.layer == nil {
+                window.layer = modifiers.layer
+            }
+            return window
+        }
     }
     return sceneWindows(of: scene.body, modifiers: modifiers)
 }

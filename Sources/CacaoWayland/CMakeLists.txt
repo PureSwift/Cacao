@@ -1,11 +1,12 @@
 # Touchpad pinch rotations from Wayland compositors, which SDL doesn't
-# report. Linux only.
+# report, and layer-shell surfaces for panels and docks. Linux only.
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(WAYLAND_CLIENT REQUIRED IMPORTED_TARGET wayland-client)
 
 add_library(CacaoWayland
-  gestures.c)
+  gestures.c
+  layer_shell.c)
 
 target_include_directories(CacaoWayland
   PUBLIC

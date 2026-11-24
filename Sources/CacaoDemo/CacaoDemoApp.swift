@@ -12,8 +12,25 @@ import CacaoSDL
 @main
 struct CacaoDemoApp: App {
 
+    init() {
+        // Wayland's app_id and X11's window class, for docks.
+        SDLHost.appIdentifier = "org.pureswift.CacaoDemo"
+    }
+
+    /// Whether to open a bar along the top of the screen instead of the
+    /// catalog, from `CACAO_DEMO_LAYER`: a window in the top layer, which
+    /// other windows stay below where the compositor has a layer shell.
+    private static let showsBar = ProcessInfo.processInfo.environment["CACAO_DEMO_LAYER"] == "1"
+
     var body: some Scene {
-        WindowGroup("Cacao") {
+        if Self.showsBar {
+            WindowGroup("Cacao Bar", id: "bar") {
+                DemoBar()
+            }
+            .defaultSize(width: 800, height: DemoBar.height)
+            .windowLayer(.top, edges: [.top, .leading, .trailing], exclusiveZone: DemoBar.height, namespace: "cacao-demo")
+        }
+        WindowGroup("Cacao", id: "catalog") {
             ContentView()
         }
         .defaultSize(width: 900, height: 720)
@@ -29,6 +46,27 @@ struct CacaoDemoApp: App {
         MenuBarExtra("Cacao", systemImage: "bolt.fill") {
             OpenSettingsButton(title: "Settings…")
         }
+    }
+}
+
+/// A bar along the top of the screen, which opens the catalog.
+struct DemoBar: View {
+
+    static let height: CGFloat = 32
+
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "bolt.fill")
+            Text("Cacao")
+                .bold()
+            Spacer()
+            Button("Catalog") { openWindow(id: "catalog") }
+        }
+        .padding(.horizontal, 12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.orange.opacity(0.25))
     }
 }
 

@@ -13,10 +13,17 @@
 #include <wayland-server.h>
 #include <wayland-client.h>
 #include "protocol/pointer-gestures-unstable-v1-server-protocol.h"
+#include "protocol/wlr-layer-shell-unstable-v1-server-protocol.h"
 
 // The interfaces, from CacaoWayland's protocol code.
 extern const struct wl_interface zwp_pointer_gestures_v1_interface;
 extern const struct wl_interface zwp_pointer_gesture_pinch_v1_interface;
+extern const struct wl_interface zwlr_layer_shell_v1_interface;
+extern const struct wl_interface zwlr_layer_surface_v1_interface;
+
+/// The screen the test compositor pretends to have.
+#define SCREEN_WIDTH 1280
+#define SCREEN_HEIGHT 800
 
 struct CacaoTestServer {
     struct wl_display *display;
@@ -27,6 +34,12 @@ struct CacaoTestServer {
     struct wl_resource *pinch;
     double rotations[64];
     int pending;
+    struct wl_resource *layer_surface;
+    CacaoTestLayerState layer;
+    uint32_t pending_width;
+    uint32_t pending_height;
+    int pending_configure;
+    int pending_close;
 };
 
 static void destroy_resource(struct wl_client *client, struct wl_resource *resource) {
@@ -35,8 +48,28 @@ static void destroy_resource(struct wl_client *client, struct wl_resource *resou
 
 // MARK: Compositor
 
+static void send_layer_configure(CacaoTestServer *server, uint32_t width, uint32_t height);
+
+static void surface_commit(struct wl_client *client, struct wl_resource *resource) {
+    CacaoTestServer *server = wl_resource_get_user_data(resource);
+    pthread_mutex_lock(&server->lock);
+    // The first commit of a layer surface asks for its size: what it asked
+    // for, or the screen's along an axis it left to the compositor.
+    int initial = server->layer_surface && !server->layer.configured;
+    uint32_t width = server->layer.width ? server->layer.width : SCREEN_WIDTH;
+    uint32_t height = server->layer.height ? server->layer.height : SCREEN_HEIGHT;
+    if (initial) {
+        server->layer.configured = 1;
+    }
+    pthread_mutex_unlock(&server->lock);
+    if (initial) {
+        send_layer_configure(server, width, height);
+    }
+}
+
 static const struct wl_surface_interface surface_implementation = {
     .destroy = destroy_resource,
+    .commit = surface_commit,
 };
 
 static void compositor_create_surface(struct wl_client *client, struct wl_resource *resource, uint32_t id) {
@@ -110,6 +143,119 @@ static void bind_gestures(struct wl_client *client, void *data, uint32_t version
     wl_resource_set_implementation(resource, &gestures_implementation, data, NULL);
 }
 
+// MARK: Layer shell
+
+static void layer_surface_set_size(struct wl_client *client, struct wl_resource *resource, uint32_t width, uint32_t height) {
+    CacaoTestServer *server = wl_resource_get_user_data(resource);
+    pthread_mutex_lock(&server->lock);
+    server->layer.width = width;
+    server->layer.height = height;
+    pthread_mutex_unlock(&server->lock);
+}
+
+static void layer_surface_set_anchor(struct wl_client *client, struct wl_resource *resource, uint32_t anchor) {
+    CacaoTestServer *server = wl_resource_get_user_data(resource);
+    pthread_mutex_lock(&server->lock);
+    server->layer.anchors = anchor;
+    pthread_mutex_unlock(&server->lock);
+}
+
+static void layer_surface_set_exclusive_zone(struct wl_client *client, struct wl_resource *resource, int32_t zone) {
+    CacaoTestServer *server = wl_resource_get_user_data(resource);
+    pthread_mutex_lock(&server->lock);
+    server->layer.exclusive_zone = zone;
+    pthread_mutex_unlock(&server->lock);
+}
+
+static void layer_surface_set_margin(struct wl_client *client, struct wl_resource *resource,
+                                     int32_t top, int32_t right, int32_t bottom, int32_t left) {
+    CacaoTestServer *server = wl_resource_get_user_data(resource);
+    pthread_mutex_lock(&server->lock);
+    server->layer.margin_top = top;
+    server->layer.margin_right = right;
+    server->layer.margin_bottom = bottom;
+    server->layer.margin_left = left;
+    pthread_mutex_unlock(&server->lock);
+}
+
+static void layer_surface_set_keyboard_interactivity(struct wl_client *client, struct wl_resource *resource, uint32_t keyboard) {
+    CacaoTestServer *server = wl_resource_get_user_data(resource);
+    pthread_mutex_lock(&server->lock);
+    server->layer.keyboard_interactivity = keyboard;
+    pthread_mutex_unlock(&server->lock);
+}
+
+static void layer_surface_ack_configure(struct wl_client *client, struct wl_resource *resource, uint32_t serial) {
+    CacaoTestServer *server = wl_resource_get_user_data(resource);
+    pthread_mutex_lock(&server->lock);
+    server->layer.acked_serial = serial;
+    pthread_mutex_unlock(&server->lock);
+}
+
+static void layer_surface_set_layer(struct wl_client *client, struct wl_resource *resource, uint32_t layer) {
+    CacaoTestServer *server = wl_resource_get_user_data(resource);
+    pthread_mutex_lock(&server->lock);
+    server->layer.layer = layer;
+    pthread_mutex_unlock(&server->lock);
+}
+
+static void layer_surface_destroyed(struct wl_resource *resource) {
+    CacaoTestServer *server = wl_resource_get_user_data(resource);
+    pthread_mutex_lock(&server->lock);
+    if (server->layer_surface == resource) {
+        server->layer_surface = NULL;
+        server->layer.exists = 0;
+    }
+    pthread_mutex_unlock(&server->lock);
+}
+
+static const struct zwlr_layer_surface_v1_interface layer_surface_implementation = {
+    .set_size = layer_surface_set_size,
+    .set_anchor = layer_surface_set_anchor,
+    .set_exclusive_zone = layer_surface_set_exclusive_zone,
+    .set_margin = layer_surface_set_margin,
+    .set_keyboard_interactivity = layer_surface_set_keyboard_interactivity,
+    .ack_configure = layer_surface_ack_configure,
+    .destroy = destroy_resource,
+    .set_layer = layer_surface_set_layer,
+};
+
+static void layer_shell_get_layer_surface(struct wl_client *client, struct wl_resource *resource, uint32_t id,
+                                          struct wl_resource *surface, struct wl_resource *output,
+                                          uint32_t layer, const char *name_space) {
+    CacaoTestServer *server = wl_resource_get_user_data(resource);
+    struct wl_resource *layer_surface = wl_resource_create(client, &zwlr_layer_surface_v1_interface,
+                                                           wl_resource_get_version(resource), id);
+    wl_resource_set_implementation(layer_surface, &layer_surface_implementation, server, layer_surface_destroyed);
+    pthread_mutex_lock(&server->lock);
+    server->layer_surface = layer_surface;
+    memset(&server->layer, 0, sizeof(server->layer));
+    server->layer.exists = 1;
+    server->layer.layer = layer;
+    strncpy(server->layer.name_space, name_space, sizeof(server->layer.name_space) - 1);
+    pthread_mutex_unlock(&server->lock);
+}
+
+static const struct zwlr_layer_shell_v1_interface layer_shell_implementation = {
+    .get_layer_surface = layer_shell_get_layer_surface,
+    .destroy = destroy_resource,
+};
+
+static void bind_layer_shell(struct wl_client *client, void *data, uint32_t version, uint32_t id) {
+    struct wl_resource *resource = wl_resource_create(client, &zwlr_layer_shell_v1_interface, version, id);
+    wl_resource_set_implementation(resource, &layer_shell_implementation, data, NULL);
+}
+
+/// On the server's thread.
+static void send_layer_configure(CacaoTestServer *server, uint32_t width, uint32_t height) {
+    if (!server->layer_surface) return;
+    uint32_t serial = wl_display_next_serial(server->display);
+    pthread_mutex_lock(&server->lock);
+    server->layer.configured_serial = serial;
+    pthread_mutex_unlock(&server->lock);
+    zwlr_layer_surface_v1_send_configure(server->layer_surface, serial, width, height);
+}
+
 // MARK: Running
 
 /// Sends the pinch a test asked for, if any.
@@ -131,18 +277,41 @@ static void send_pending(CacaoTestServer *server) {
     zwp_pointer_gesture_pinch_v1_send_end(server->pinch, wl_display_next_serial(server->display), 1000, 0);
 }
 
+/// Sends the configure or close a test asked for, if any.
+static void send_pending_layer(CacaoTestServer *server) {
+    pthread_mutex_lock(&server->lock);
+    int configure = server->pending_configure;
+    int close = server->pending_close;
+    uint32_t width = server->pending_width;
+    uint32_t height = server->pending_height;
+    server->pending_configure = 0;
+    server->pending_close = 0;
+    pthread_mutex_unlock(&server->lock);
+    if (configure) {
+        send_layer_configure(server, width, height);
+    }
+    if (close && server->layer_surface) {
+        zwlr_layer_surface_v1_send_closed(server->layer_surface);
+    }
+}
+
 static void *run(void *data) {
     CacaoTestServer *server = data;
     struct wl_event_loop *loop = wl_display_get_event_loop(server->display);
     while (server->running) {
         wl_event_loop_dispatch(loop, 10);
         send_pending(server);
+        send_pending_layer(server);
         wl_display_flush_clients(server->display);
     }
     return NULL;
 }
 
 CacaoTestServer *cacao_test_server_start(const char *socket_name) {
+    return cacao_test_server_start_with_layer_shell(socket_name, 0);
+}
+
+CacaoTestServer *cacao_test_server_start_with_layer_shell(const char *socket_name, int with_layer_shell) {
     CacaoTestServer *server = calloc(1, sizeof(CacaoTestServer));
     server->display = wl_display_create();
     if (wl_display_add_socket(server->display, socket_name) != 0) {
@@ -153,6 +322,9 @@ CacaoTestServer *cacao_test_server_start(const char *socket_name) {
     wl_global_create(server->display, &wl_compositor_interface, 4, server, bind_compositor);
     wl_global_create(server->display, &wl_seat_interface, 5, server, bind_seat);
     wl_global_create(server->display, &zwp_pointer_gestures_v1_interface, 1, server, bind_gestures);
+    if (with_layer_shell) {
+        wl_global_create(server->display, &zwlr_layer_shell_v1_interface, 4, server, bind_layer_shell);
+    }
     pthread_mutex_init(&server->lock, NULL);
     server->running = 1;
     pthread_create(&server->thread, NULL, run, server);
@@ -164,6 +336,27 @@ void cacao_test_server_pinch(CacaoTestServer *server, const double *rotations, i
     count = count < 64 ? count : 64;
     memcpy(server->rotations, rotations, sizeof(double) * count);
     server->pending = count;
+    pthread_mutex_unlock(&server->lock);
+}
+
+CacaoTestLayerState cacao_test_server_layer_state(CacaoTestServer *server) {
+    pthread_mutex_lock(&server->lock);
+    CacaoTestLayerState state = server->layer;
+    pthread_mutex_unlock(&server->lock);
+    return state;
+}
+
+void cacao_test_server_configure_layer(CacaoTestServer *server, uint32_t width, uint32_t height) {
+    pthread_mutex_lock(&server->lock);
+    server->pending_width = width;
+    server->pending_height = height;
+    server->pending_configure = 1;
+    pthread_mutex_unlock(&server->lock);
+}
+
+void cacao_test_server_close_layer(CacaoTestServer *server) {
+    pthread_mutex_lock(&server->lock);
+    server->pending_close = 1;
     pthread_mutex_unlock(&server->lock);
 }
 
@@ -222,6 +415,10 @@ void cacao_test_client_disconnect(void *display) {
 #else
 
 CacaoTestServer *cacao_test_server_start(const char *socket_name) { return 0; }
+CacaoTestServer *cacao_test_server_start_with_layer_shell(const char *socket_name, int with_layer_shell) { return 0; }
+CacaoTestLayerState cacao_test_server_layer_state(CacaoTestServer *server) { CacaoTestLayerState state = { 0 }; return state; }
+void cacao_test_server_configure_layer(CacaoTestServer *server, uint32_t width, uint32_t height) { }
+void cacao_test_server_close_layer(CacaoTestServer *server) { }
 void cacao_test_server_pinch(CacaoTestServer *server, const double *rotations, int count) { }
 void cacao_test_server_stop(CacaoTestServer *server) { }
 void *cacao_test_client_connect(const char *socket_name) { return 0; }
