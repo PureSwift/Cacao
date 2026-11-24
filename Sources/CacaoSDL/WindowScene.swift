@@ -85,6 +85,8 @@ final class WindowScene: HostScene {
         }
         environment.displayScale = window.scale
         environment.colorScheme = HostRuntime.systemAppearance == .dark ? .dark : .light
+        environment.systemAccentColor = HostRuntime.systemAccentColor
+        environment.colorSchemeContrast = HostRuntime.prefersIncreasedContrast ? .increased : .standard
         environment.openWindow = OpenWindowAction { id, value in
             SDLHost.windowRequests.append(.open(id: id, value: value))
         }
@@ -262,6 +264,7 @@ final class WindowScene: HostScene {
             graph.systemDrop(phase == .dropped ? .dropped : .moved, items: items, at: location)
         case let .appearanceChanged(appearance):
             applyColorScheme(system: appearance)
+            applySystemAccentAndContrast()
         }
     }
 
@@ -356,6 +359,18 @@ final class WindowScene: HostScene {
         let colorScheme = graph.preferredColorScheme ?? (system == .dark ? .dark : .light)
         if graph.environment.colorScheme != colorScheme {
             graph.environment.colorScheme = colorScheme
+        }
+    }
+
+    /// Shows the system's accent color and contrast.
+    private func applySystemAccentAndContrast() {
+        let accent = HostRuntime.systemAccentColor
+        if graph.environment.systemAccentColor != accent {
+            graph.environment.systemAccentColor = accent
+        }
+        let contrast: ColorSchemeContrast = HostRuntime.prefersIncreasedContrast ? .increased : .standard
+        if graph.environment.colorSchemeContrast != contrast {
+            graph.environment.colorSchemeContrast = contrast
         }
     }
 
