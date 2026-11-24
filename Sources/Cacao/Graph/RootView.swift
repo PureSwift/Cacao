@@ -16,15 +16,25 @@ import CoreGraphics
 /// How a presentation shows above the window's content.
 internal enum PresentationStyle {
 
-    /// Anchored to a rectangle in the window, like a menu or popover;
-    /// dismissed by a tap outside.
-    case popup(anchor: CGRect)
+    /// Anchored to a rectangle in the window, like a menu or popover, on
+    /// one of its sides; dismissed by a tap outside.
+    case popup(anchor: CGRect, edge: PopupEdge)
 
     /// A modal card centered in the window over a dimmed backdrop.
     case sheet(fillsWindow: Bool)
 
     /// A small modal dialog centered in the window.
     case alert
+}
+
+/// The side of its anchor a popup opens on.
+package enum PopupEdge: Hashable, Sendable {
+
+    /// Below, their leading edges lined up: a menu from a button.
+    case bottom
+
+    /// After, their tops lined up: a submenu.
+    case trailing
 }
 
 /// A view presented above the window's content.
@@ -42,6 +52,24 @@ internal struct Presentation {
     var environment: EnvironmentValues?
 
     let onDismiss: (() -> Void)?
+
+    /// Whether the popup shows in a surface of its own, outside the window,
+    /// rather than in it.
+    var isDetached = false
+
+    /// The popup it opened from, as a submenu does from its menu.
+    var parentID: Int?
+
+    /// The height the system gave its surface, when it made it shorter.
+    var maximumHeight: CGFloat?
+
+    /// The view it opened from, like a submenu's item, which takes focus
+    /// back when the keyboard closes it.
+    var opener = WeakNodeReference()
+
+    /// Whether it's a menu, which a choice in it, or in its submenus,
+    /// closes.
+    var isMenu = false
 }
 
 /// The root of a graph: the app's content, centered in the window, and the
@@ -60,28 +88,30 @@ internal struct _GraphRoot: View, PrimitiveView {
             case .sheet, .alert: isModal = true
             }
             let id = presentation.id
+            // A tap outside a popup in a surface of its own closes its
+            // whole chain of menus, which are all outside the window.
+            let dismissed = presentation.isDetached ? graph.rootPopupID(of: id) : id
             children.append(ChildView(
                 key: "backdrop \(id)",
                 view: (isModal ? Color.black.opacity(0.35) : Color.clear)
                     .contentShape(Rectangle())
                     .onTapGesture { [weak graph] in
-                        if !isModal { graph?.dismissPresentation(id) }
+                        if !isModal { graph?.dismissPresentation(dismissed) }
                     }
                     .transition(.opacity)
             ))
             var environment = presentation.environment ?? context.environment
-            environment.dismissPopup = DismissAction { [weak graph] in graph?.dismissPresentation(id) }
-            environment.dismiss = environment.dismissPopup!
-            // Sheets slide up; dialogs and popups fade.
-            let transition: AnyTransition
-            switch presentation.style {
-            case .sheet: transition = .move(edge: .bottom)
-            case .alert, .popup: transition = .opacity
+            // A choice in a menu closes it, and the menus it opened from.
+            environment.dismissPopup = DismissAction { [weak graph] in
+                guard let graph else { return }
+                graph.dismissPresentation(graph.rootMenuID(of: id))
             }
+            environment.dismiss = environment.dismissPopup!
+            environment.dismissPopupsAbove = DismissAction { [weak graph] in graph?.dismissPresentations(after: id) }
+            environment.menuItemHovered = DismissAction { [weak graph] in graph?.menuItemHovered() }
             children.append(ChildView(
                 key: "presentation \(id)",
-                view: _PresentationContainer(style: presentation.style, content: presentation.content)
-                    .transition(transition),
+                view: presentation.containerView,
                 environment: environment
             ))
         }
@@ -90,7 +120,16 @@ internal struct _GraphRoot: View, PrimitiveView {
             children.append(ChildView(key: "tooltip", view: _Tooltip(text: tooltip.text)))
         }
         var resolution = Resolution(
-            behavior: RootBehavior(styles: graph.presentations.map(\.style), tooltipLocation: graph.tooltip?.location),
+            behavior: RootBehavior(
+                presentations: graph.presentations.map { presentation in
+                    RootBehavior.Placement(
+                        style: presentation.style,
+                        detachedOrigin: presentation.isDetached ? ViewGraph.detachedOrigin(of: presentation.id) : nil,
+                        maximumHeight: presentation.maximumHeight ?? graph.popupMaximumHeight
+                    )
+                },
+                tooltipLocation: graph.tooltip?.location
+            ),
             children: children
         )
         // Presenting or dismissing doesn't change the content; a new root
@@ -107,6 +146,26 @@ internal struct _GraphRoot: View, PrimitiveView {
     }
 
     typealias Body = Never
+}
+
+extension Presentation {
+
+    /// How it comes and goes: sheets slide up; dialogs and popups fade. A
+    /// popup in a surface of its own comes and goes with its surface.
+    var transition: AnyTransition {
+        switch style {
+        case .sheet: .move(edge: .bottom)
+        case .popup where isDetached: .identity
+        case .alert, .popup: .opacity
+        }
+    }
+
+    /// The view showing it, in its chrome.
+    @MainActor
+    var containerView: some View {
+        _PresentationContainer(style: style, content: content)
+            .transition(transition)
+    }
 }
 
 /// A presentation's chrome: popups draw their own; sheets and dialogs get a
@@ -139,8 +198,25 @@ internal struct _PresentationContainer: View {
 
 internal struct RootBehavior: NodeBehavior {
 
-    /// The style of each presentation, in order.
-    let styles: [PresentationStyle]
+    /// How a presentation is placed.
+    struct Placement {
+
+        let style: PresentationStyle
+
+        /// Where a popup in a surface of its own goes, away from the
+        /// window's content.
+        let detachedOrigin: CGPoint?
+
+        /// The tallest a popup in a surface of its own gets.
+        let maximumHeight: CGFloat
+    }
+
+    /// Each presentation, in order.
+    let presentations: [Placement]
+
+    var styles: [PresentationStyle] {
+        presentations.map(\.style)
+    }
 
     /// Where the pointer rested, when a tooltip shows.
     var tooltipLocation: CGPoint? = nil
@@ -166,7 +242,8 @@ internal struct RootBehavior: NodeBehavior {
                 proposal: proposal
             )
         }
-        if let location = tooltipLocation, let tooltip = LayoutProxy.combining(node.layoutChildren(ofChildAt: 1 + styles.count * 2)) {
+        if let location = tooltipLocation, bounds.insetBy(dx: -1, dy: -1).contains(location),
+           let tooltip = LayoutProxy.combining(node.layoutChildren(ofChildAt: 1 + styles.count * 2)) {
             // Below and right of the pointer, within the window, at most
             // 300 points wide.
             var size = tooltip.size(in: .unspecified)
@@ -181,21 +258,38 @@ internal struct RootBehavior: NodeBehavior {
             origin.x = min(max(origin.x, bounds.minX + margin), bounds.maxX - margin - size.width)
             tooltip.place(at: origin, proposal: ProposedViewSize(size))
         }
-        for (index, style) in styles.enumerated() {
+        for (index, placement) in presentations.enumerated() {
             if let backdrop = LayoutProxy.combining(node.layoutChildren(ofChildAt: 1 + index * 2)) {
                 backdrop.place(at: bounds.origin, proposal: ProposedViewSize(bounds.size))
             }
             guard let presentation = LayoutProxy.combining(node.layoutChildren(ofChildAt: 2 + index * 2)) else { continue }
             let margin: CGFloat = 8
-            switch style {
-            case let .popup(anchor):
-                // At its ideal size, below its anchor, or above it when it
-                // doesn't fit below, within the window.
+            switch placement.style {
+            case .popup where placement.detachedOrigin != nil:
+                // At its ideal size, away from the content: the system
+                // places its surface next to the anchor.
+                var size = presentation.size(in: ProposedViewSize(width: nil, height: placement.maximumHeight))
+                size.height = min(size.height, placement.maximumHeight)
+                presentation.place(at: placement.detachedOrigin!, proposal: ProposedViewSize(size))
+            case let .popup(anchor, edge):
+                // At its ideal size, within the window: below its anchor,
+                // or above it when it doesn't fit below; or after it, or
+                // before it when it doesn't fit after.
                 var size = presentation.size(in: ProposedViewSize(width: nil, height: bounds.height - 2 * margin))
                 size.height = min(size.height, bounds.height - 2 * margin)
-                var origin = CGPoint(x: anchor.minX, y: anchor.maxY + 4)
-                if origin.y + size.height > bounds.maxY - margin {
-                    origin.y = max(bounds.minY + margin, anchor.minY - 4 - size.height)
+                var origin: CGPoint
+                switch edge {
+                case .bottom:
+                    origin = CGPoint(x: anchor.minX, y: anchor.maxY + PopupMetrics.gap)
+                    if origin.y + size.height > bounds.maxY - margin {
+                        origin.y = max(bounds.minY + margin, anchor.minY - PopupMetrics.gap - size.height)
+                    }
+                case .trailing:
+                    origin = CGPoint(x: anchor.maxX, y: anchor.minY - PopupMetrics.submenuInset)
+                    if origin.x + size.width > bounds.maxX - margin {
+                        origin.x = anchor.minX - size.width
+                    }
+                    origin.y = min(max(origin.y, bounds.minY + margin), bounds.maxY - margin - size.height)
                 }
                 origin.x = min(max(origin.x, bounds.minX + margin), bounds.maxX - margin - size.width)
                 presentation.place(at: origin, proposal: ProposedViewSize(size))
@@ -295,32 +389,57 @@ extension ViewGraph {
                     environment.dismissPopup = node.environment.dismissPopup
                     environment.dismiss = node.environment.dismiss
                 }
-                node.update(view: _PresentationContainer(style: presentations[index].style, content: content), environment: environment)
+                node.update(view: presentations[index].containerView, environment: environment)
                 node.invalidate()
             }
             return id
         }
         nextPopupID += 1
-        presentations.append(Presentation(
+        var presentation = Presentation(
             id: nextPopupID,
             owner: owner,
             style: style,
             content: content,
             environment: environment,
             onDismiss: onDismiss
-        ))
+        )
+        if case let .popup(anchor, _) = style {
+            // Belonging to the popup it opens from, if any, as a submenu
+            // does: its anchor is in that popup.
+            let point = CGPoint(x: anchor.midX, y: anchor.midY)
+            let parent = presentations.last { presentation in
+                guard case .popup = presentation.style else { return false }
+                return presentationNode(presentation.id)?.subtreeFrame.contains(point) ?? false
+            }
+            presentation.parentID = parent?.id
+            // In a surface of its own, as its parent is.
+            presentation.isDetached = opensPopupSurfaces && (parent?.isDetached ?? true)
+        }
+        presentations.append(presentation)
         root.invalidate()
         return nextPopupID
     }
 
-    /// Anchors a popup to a rectangle in the window.
+    /// Anchors a popup to a rectangle in the window, on one of its sides.
     @discardableResult
-    func presentPopup(anchor: CGRect, content: AnyView, onDismiss: (() -> Void)? = nil) -> Int {
-        present(owner: AnyHashable("popup \(nextPopupID + 1)"), style: .popup(anchor: anchor), content: content, onDismiss: onDismiss)
+    func presentPopup(anchor: CGRect, edge: PopupEdge = .bottom, content: AnyView, opener: ViewNode? = nil, onDismiss: (() -> Void)? = nil) -> Int {
+        let id = present(owner: AnyHashable("popup \(nextPopupID + 1)"), style: .popup(anchor: anchor, edge: edge), content: content, onDismiss: onDismiss)
+        if let index = presentations.firstIndex(where: { $0.id == id }) {
+            presentations[index].opener.node = opener
+            presentations[index].isMenu = true
+        }
+        return id
+    }
+
+    /// Dismisses the presentations presented after one, like a submenu
+    /// of a menu.
+    func dismissPresentations(after id: Int) {
+        guard let index = presentations.firstIndex(where: { $0.id == id }), index + 1 < presentations.count else { return }
+        dismissPresentation(presentations[index + 1].id)
     }
 
     /// Dismisses a presentation and those presented after it.
-    func dismissPresentation(_ id: Int) {
+    package func dismissPresentation(_ id: Int) {
         guard let index = presentations.firstIndex(where: { $0.id == id }) else { return }
         let dismissed = presentations[index...]
         presentations.removeSubrange(index...)
