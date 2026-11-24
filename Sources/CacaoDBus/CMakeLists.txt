@@ -9,5 +9,8 @@ file(GLOB sources CONFIGURE_DEPENDS *.swift)
 
 cacao_add_library(CacaoDBus ${sources})
 
-target_link_libraries(CacaoDBus PRIVATE
-  DBus)
+target_link_libraries(CacaoDBus
+  PUBLIC
+    CacaoTokens
+  PRIVATE
+    DBus)
