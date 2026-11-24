@@ -3,8 +3,9 @@
 //  Cacao
 //
 //  What Cacao asks of a Wayland compositor that SDL doesn't: touchpad pinch
-//  gestures with their rotation, and layer-shell surfaces, for panels and
-//  docks anchored to the edges of a screen. Linux only; elsewhere these do
+//  gestures with their rotation, layer-shell surfaces, for panels and docks
+//  anchored to the edges of a screen, and the KDE appmenu protocol, which
+//  ties a window to its menu on D-Bus. Linux only; elsewhere these do
 //  nothing.
 //
 
@@ -130,5 +131,31 @@ void cacao_wayland_layer_surface_destroy(CacaoWaylandLayerSurface *surface);
 
 /// Destroy the shell's surfaces first.
 void cacao_wayland_layer_shell_destroy(CacaoWaylandLayerShell *shell);
+
+// MARK: - App menus
+
+typedef struct CacaoWaylandAppMenuManager CacaoWaylandAppMenuManager;
+
+typedef struct CacaoWaylandAppMenu CacaoWaylandAppMenu;
+
+/// Binds the KDE appmenu manager (`org_kde_kwin_appmenu_manager`) on a
+/// Wayland display (a `struct wl_display *`). Returns NULL if the
+/// compositor doesn't offer it: then nothing shows windows' menus from it.
+CacaoWaylandAppMenuManager *cacao_wayland_appmenu_manager_create(void *display);
+
+/// Ties a window's surface (a `struct wl_surface *`) to the
+/// `com.canonical.dbusmenu` object at a D-Bus service and object path,
+/// which should be on the bus already.
+CacaoWaylandAppMenu *cacao_wayland_appmenu_create(CacaoWaylandAppMenuManager *manager, void *surface,
+                                                  const char *service, const char *path);
+
+/// Moves the surface's menu to another service or path.
+void cacao_wayland_appmenu_set_address(CacaoWaylandAppMenu *menu, const char *service, const char *path);
+
+/// Unties the surface from its menu, before the surface is destroyed.
+void cacao_wayland_appmenu_destroy(CacaoWaylandAppMenu *menu);
+
+/// Destroy the manager's menus first.
+void cacao_wayland_appmenu_manager_destroy(CacaoWaylandAppMenuManager *manager);
 
 #endif
