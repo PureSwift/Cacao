@@ -243,6 +243,23 @@ extension ViewGraph {
         }
     }
 
+    /// Moves from menu to menu as the pointer moves across a menu bar's
+    /// titles: while a title's menu is open, the pointer on another title
+    /// opens its menu instead.
+    func switchMenu(at point: CGPoint) {
+        guard let first = presentations.first, case .popup = first.style,
+              let opener = first.opener.node, opener.attributes.opensMenuOnHover != nil,
+              let content = root.children.first(where: { $0.key == AnyHashable("content") }),
+              let path = content.hitTest(point),
+              let title = path.last(where: { $0.attributes.opensMenuOnHover != nil }),
+              title !== opener,
+              let open = title.attributes.opensMenuOnHover else {
+            return
+        }
+        dismissPresentation(first.id)
+        open()
+    }
+
     /// The pointer came to rest on a menu item: the keyboard's highlight in
     /// a popup gives way to it.
     func menuItemHovered() {
