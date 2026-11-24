@@ -214,6 +214,15 @@ package final class ViewGraph {
     /// Views presented above the content, like menus and sheets.
     var presentations: [Presentation] = []
 
+    /// Whether popups, like menus, show in surfaces of their own outside
+    /// the window, which the host opens for `detachedPopups`; set by hosts
+    /// that can.
+    package var opensPopupSurfaces = false
+
+    /// The tallest a popup in a surface of its own gets: about the
+    /// screen's height. The host can make one shorter still.
+    package var popupMaximumHeight: CGFloat = 640
+
     var nextPopupID = 0
 
     /// Creates a graph for a root view and resolves it.
