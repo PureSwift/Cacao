@@ -84,7 +84,18 @@ internal struct _MenuContent: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
+    @Environment(\.interfaceLook) private var look
+
     var body: some View {
+        if look.value == .desktop {
+            _DesktopMenuContent(content: content)
+        } else {
+            stock
+        }
+    }
+
+    /// The menu in the stock look.
+    private var stock: some View {
         VStack(alignment: .leading, spacing: 0) {
             content
         }
@@ -232,7 +243,18 @@ private struct _SegmentedControl: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
+    @Environment(\.interfaceLook) private var look
+
     var body: some View {
+        if look.value == .desktop {
+            _DesktopSegmentedControl(options: options, selected: selected, select: select)
+        } else {
+            stock
+        }
+    }
+
+    /// The control in the stock look.
+    private var stock: some View {
         HStack(spacing: 0) {
             ForEach(options.indices, id: \.self) { index in
                 let option = options[index]
