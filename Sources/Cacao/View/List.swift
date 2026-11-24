@@ -33,8 +33,6 @@ public struct List<SelectionValue: Hashable, Content: View>: View {
 
     @Environment(\.scrollContentBackgroundVisibility) private var backgroundVisibility
 
-    @Environment(\.colorScheme) private var colorScheme
-
     @Environment(\.interfaceLook) private var look
 
     @Environment(\.self) private var environment
@@ -59,7 +57,7 @@ public struct List<SelectionValue: Hashable, Content: View>: View {
         if style == .sidebar, look.value == .desktop {
             return DesktopSidebar.background(in: environment)
         }
-        return style.isGrouped ? Color.groupedBackground(colorScheme) : Color.clear
+        return style.isGrouped ? GroupedColors.background(in: environment) : Color.clear
     }
 }
 
@@ -419,7 +417,7 @@ private struct _ListRowChrome: ViewModifier, PrimitiveViewModifier {
                 bottomTrailingRadius: position.isLast ? radius : 0,
                 topTrailingRadius: position.isFirst ? radius : 0
             )
-            .fill(Color.controlBackground(context.environment.colorScheme))
+            .fill(GroupedColors.card(in: context.environment))
             row = AnyView(row.background(card))
         }
         return Resolution(children: [ChildView(key: 0, view: row.padding(.horizontal, style.margin))])

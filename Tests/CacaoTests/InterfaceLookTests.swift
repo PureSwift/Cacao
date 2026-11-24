@@ -197,6 +197,23 @@ import Testing
         #expect(fills(in: graph).contains(light.checkbox.checkedFill))
     }
 
+    @Test func formsSitOnTheWindowsBackground() {
+        let graph = layout(
+            Form {
+                Section("Options") {
+                    Toggle("Notifications", isOn: .constant(true))
+                }
+            }
+            .interfaceLook(.desktop)
+        )
+        let colors = fills(in: graph)
+        #expect(colors.contains(light.window.background))
+        #expect(colors.contains(light.window.contentBackground))
+        // A switch that's on is the accent, not green.
+        #expect(colors.contains(Color.accentColor.resolve(in: EnvironmentValues())))
+        #expect(!colors.contains(Color.green.resolve(in: EnvironmentValues())))
+    }
+
     @Test func windowsHaveTheDesktopsBackground() {
         var environment = EnvironmentValues()
         #expect(environment.windowBackgroundColor == Color.Resolved(red: 1, green: 1, blue: 1))
