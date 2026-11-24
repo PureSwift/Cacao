@@ -55,6 +55,47 @@ try await reader.click(item.id)                // the user chose it
 
 `reader.activationRequests` yields items the app asks the bar to highlight. A reader for an app found by `app_id` comes from `AppMenuDiscovery.reader(forAppID:on:)`, which is `nil` when no app with that `app_id` serves a menu.
 
+### Showing a menu in a Cacao menu bar
+
+A menu bar made with Cacao shows each of the bar's menus as a `Menu` with `.menuStyle(.borderlessButton)`: its title as plain text in the desktop's menu bar font, on a highlight while its menu is open. Its menu opens below the bar as a popup surface of the bar's layer surface, so it isn't cut off by the bar's height; a click outside the app, or Escape, closes it, and while one is open the pointer moving onto another title opens that one. A `Menu` inside a menu is a submenu, opened beside its item.
+
+```swift
+struct MenuBarMenus: View {
+
+    let root: DBusMenuItem       // reader.menu
+    let reader: DBusMenuReader
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(root.children.filter(\.isVisible), id: \.id) { menu in
+                Menu(menu.title) { items(of: menu) }
+            }
+        }
+        .menuStyle(.borderlessButton)
+    }
+
+    @ViewBuilder
+    private func items(of menu: DBusMenuItem) -> some View {
+        ForEach(menu.children.filter(\.isVisible), id: \.id) { item in
+            if item.type == .separator {
+                Divider()
+            } else if item.isSubmenu {
+                Menu(item.title) { items(of: item) }
+                    .disabled(!item.isEnabled)
+            } else {
+                Button(item.title) { Task { try? await reader.click(item.id) } }
+                    .disabled(!item.isEnabled)
+            }
+        }
+        // The menu's content is there only while it's open.
+        .onAppear { Task { try? await reader.aboutToShow(menu.id); try? await reader.opened(menu.id) } }
+        .onDisappear { Task { try? await reader.closed(menu.id) } }
+    }
+}
+```
+
+An open menu shows the items it has now: when `reader.changes` delivers a new layout, the open menu's items change in place.
+
 ## Finding a menu by `app_id`
 
 An app owns `org.pureswift.Cacao.AppMenu.` followed by its `app_id`, escaped, and serves its menu at `/MenuBar`. Each element of the `app_id` keeps its ASCII letters and digits; any other byte of its UTF-8 (`_` and `-` included), and a digit at the start of an element, becomes `_` and two capital hex digits, and an empty element is `_`.
