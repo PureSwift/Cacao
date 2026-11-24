@@ -199,7 +199,9 @@ public enum HostEvent {
     /// The window's size or scale changed.
     case geometryChanged
 
-    /// The system switched between light and dark.
+    /// The system's appearance changed: it switched between light and
+    /// dark, or changed its accent color or contrast
+    /// (`HostRuntime.systemAccentColor`, `prefersIncreasedContrast`).
     case appearanceChanged(HostAppearance)
 }
 
