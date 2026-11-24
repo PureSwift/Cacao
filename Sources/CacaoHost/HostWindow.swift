@@ -43,6 +43,9 @@ public final class HostWindow {
     /// What the window shows.
     public internal(set) var scene: (any HostScene)?
 
+    /// Who draws the window's title bar and borders.
+    public let decorations: HostWindowDecorations
+
     package let compositor: Compositor
 
     private let backend: SDLBackend
@@ -114,7 +117,14 @@ public final class HostWindow {
         #endif
     }
 
-    init?(title: String, size: CGSize, textEngine: SilicaTextEngine, isHidden: Bool = false, layer: HostLayerSurface? = nil) {
+    init?(
+        title: String,
+        size: CGSize,
+        textEngine: SilicaTextEngine,
+        isHidden: Bool = false,
+        layer: HostLayerSurface? = nil,
+        decorations: HostWindowDecorations = .system
+    ) {
         var driver = SDLRenderer.Driver.default
         if let name = HostRuntime.rendererName {
             guard let named = SDLRenderer.Driver(name: name) else {
@@ -134,12 +144,20 @@ public final class HostWindow {
             surface = layered.surface
         }
         #endif
+        var isInLayer = false
+        #if os(Linux)
+        isInLayer = surface != nil
+        #endif
         if made == nil {
+            var options: BitMaskOptionSet<SDLWindow.Option> = isHidden ? [.hidden, .highPixelDensity] : [.resizable, .highPixelDensity]
+            if decorations == .none, !isHidden {
+                options.insert(.borderless)
+            }
             made = try? SDLWindow(
                 title: title,
                 width: Int(size.width),
                 height: Int(size.height),
-                options: isHidden ? [.hidden, .highPixelDensity] : [.resizable, .highPixelDensity]
+                options: options
             )
         }
         guard let window = made, let renderer = try? SDLRenderer(window: window, driver: driver) else {
@@ -152,6 +170,8 @@ public final class HostWindow {
         self.layerSurface = surface
         #endif
         try? renderer.setVSync(.every(1))
+        // A window in a layer has no decorations, and isn't moved.
+        self.decorations = isInLayer ? .system : decorations
         self.window = window
         self.renderer = renderer
         self.id = UInt32(window.id)
@@ -160,6 +180,10 @@ public final class HostWindow {
         #if os(macOS)
         installRotationMonitor()
         #endif
+        // Scenes say where windows move from, decorated or not.
+        if !isInLayer, !isHidden {
+            installHitTest()
+        }
     }
 
     /// Brings the window to the front.
@@ -173,6 +197,7 @@ public final class HostWindow {
     }
 
     func close() {
+        removeHitTest()
         scene?.detach()
         scene = nil
         #if os(macOS)
@@ -234,6 +259,10 @@ public final class HostWindow {
             scene.handle(.geometryChanged, time: now)
             needsRender = true
         case .window(_, .exposed):
+            needsRender = true
+        case .window(_, .focusGained), .window(_, .focusLost),
+             .window(_, .maximized), .window(_, .minimized), .window(_, .restored):
+            scene.handle(.windowStateChanged, time: now)
             needsRender = true
         case let .mouseButtonDown(_, which, button, _, x, y):
             guard let button = Self.button(button) else { break }
