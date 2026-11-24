@@ -9,4 +9,5 @@ file(GLOB_RECURSE sources CONFIGURE_DEPENDS *.swift)
 cacao_add_library(Cacao ${sources})
 
 target_link_libraries(Cacao PUBLIC
-  CacaoRender)
+  CacaoRender
+  CacaoTokens)
