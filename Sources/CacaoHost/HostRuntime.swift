@@ -49,6 +49,14 @@ public enum HostRuntime {
         DesktopAppearance.prefersIncreasedContrast
     }
 
+    /// The window buttons the system asks title bars drawn by apps to show,
+    /// in the format of GNOME's `button-layout` setting, such as
+    /// `close,minimize,maximize:`: on Linux what the settings portal says.
+    /// `nil` when the system doesn't say.
+    public static var windowButtonLayout: String? {
+        DesktopAppearance.windowButtonLayout
+    }
+
     /// Tells every window's scene the system's appearance changed.
     static func systemAppearanceChanged() {
         let appearance = systemAppearance
