@@ -227,7 +227,10 @@ public enum HostRuntime {
                 #if os(Linux)
                 // Bound when a window first asks, and let go of after the
                 // windows close.
-                defer { WaylandLayerShell.stop() }
+                defer {
+                    WaylandLayerShell.stop()
+                    WaylandAppMenu.stop()
+                }
                 #endif
                 setup()
                 guard !windows.isEmpty || runsWithoutWindows() else {
@@ -248,10 +251,22 @@ public enum HostRuntime {
         }
     }
 
+    /// Whether the app asked to quit, which ends the loop when it next
+    /// goes around.
+    private static var quitRequested = false
+
+    /// Quits the app: the loop ends, and the windows close.
+    public static func quit() {
+        quitRequested = true
+        wake()
+    }
+
     /// Waits for events while idle, and runs a frame per display refresh
     /// while anything animates; frames wait for vsync when presented.
     private static func runLoop() {
-        while !windows.isEmpty || runsWithoutWindows() {
+        quitRequested = false
+        defer { quitRequested = false }
+        while (!windows.isEmpty || runsWithoutWindows()) && !quitRequested {
             let animating = windows.contains { $0.isAnimating }
             // Idle: sleep until an event, waking periodically to run main
             // actor work (tasks, timers) scheduled outside of SDL.
