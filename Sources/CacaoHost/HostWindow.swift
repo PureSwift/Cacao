@@ -89,7 +89,32 @@ public final class HostWindow {
 
     private var isTextInputActive = false
 
-    init?(title: String, size: CGSize, textEngine: SilicaTextEngine, isHidden: Bool = false) {
+    #if os(Linux)
+    /// The window's surface in a layer of the screen, if it's in one.
+    private var layerSurface: WaylandLayerSurface?
+    #endif
+
+    /// Whether the window is in a layer of the screen, such as a panel or
+    /// dock, rather than among the windows.
+    public var isInLayer: Bool {
+        #if os(Linux)
+        layerSurface != nil
+        #else
+        false
+        #endif
+    }
+
+    /// Whether the system took a window in a layer away, as when its screen
+    /// went away.
+    var isLayerClosed: Bool {
+        #if os(Linux)
+        layerSurface?.isClosed ?? false
+        #else
+        false
+        #endif
+    }
+
+    init?(title: String, size: CGSize, textEngine: SilicaTextEngine, isHidden: Bool = false, layer: HostLayerSurface? = nil) {
         var driver = SDLRenderer.Driver.default
         if let name = HostRuntime.rendererName {
             guard let named = SDLRenderer.Driver(name: name) else {
@@ -98,14 +123,34 @@ public final class HostWindow {
             }
             driver = named
         }
-        guard let window = try? SDLWindow(
-            title: title,
-            width: Int(size.width),
-            height: Int(size.height),
-            options: isHidden ? [.hidden, .highPixelDensity] : [.resizable, .highPixelDensity]
-        ), let renderer = try? SDLRenderer(window: window, driver: driver) else {
+        HostRuntime.applyAppIdentifier()
+        var made: SDLWindow?
+        #if os(Linux)
+        // A window in a layer, where the compositor has a layer shell; an
+        // ordinary window otherwise.
+        var surface: WaylandLayerSurface?
+        if let layer, !isHidden, let layered = WaylandLayerShell.makeWindow(title: title, size: size, options: layer) {
+            made = layered.window
+            surface = layered.surface
+        }
+        #endif
+        if made == nil {
+            made = try? SDLWindow(
+                title: title,
+                width: Int(size.width),
+                height: Int(size.height),
+                options: isHidden ? [.hidden, .highPixelDensity] : [.resizable, .highPixelDensity]
+            )
+        }
+        guard let window = made, let renderer = try? SDLRenderer(window: window, driver: driver) else {
+            #if os(Linux)
+            surface?.destroy()
+            #endif
             return nil
         }
+        #if os(Linux)
+        self.layerSurface = surface
+        #endif
         try? renderer.setVSync(.every(1))
         self.window = window
         self.renderer = renderer
@@ -134,6 +179,10 @@ public final class HostWindow {
         if let rotationMonitor {
             NSEvent.removeMonitor(rotationMonitor)
         }
+        #endif
+        #if os(Linux)
+        // The layer role goes before SDL destroys the surface.
+        layerSurface?.destroy()
         #endif
         // The renderer and the window are destroyed with this object, which
         // the host has let go of.
