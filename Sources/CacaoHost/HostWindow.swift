@@ -184,10 +184,10 @@ public final class HostWindow {
         self.id = UInt32(window.id)
         self.backend = SDLBackend(renderer: renderer)
         self.compositor = Compositor(backend: backend, textEngine: textEngine)
+        self.showsAppMenu = !isInLayer && !isHidden
         #if os(macOS)
         installRotationMonitor()
         #endif
-        self.showsAppMenu = !isInLayer && !isHidden
         // Scenes say where windows move from, decorated or not.
         if !isInLayer, !isHidden {
             installHitTest()
