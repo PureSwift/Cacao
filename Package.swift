@@ -25,7 +25,9 @@ import CompilerPluginSupport
 ///   showing whatever implements `HostScene`.
 /// - `CacaoSDL`: SwiftUI on the host: a view graph as each window's scene.
 /// - `CacaoWayland` (Linux): touchpad pinch rotations from Wayland, which SDL
-///   doesn't report, and layer-shell surfaces for panels and docks.
+///   doesn't report, layer-shell surfaces for panels and docks, and the KDE
+///   appmenu protocol, which ties windows to their menus. A C library, so
+///   other UI frameworks can tie their windows to menus too.
 /// - `CacaoDBus`: the desktop's services over D-Bus, with PureSwift/DBus:
 ///   the settings portal's appearance. No SwiftUI and no SDL; `CacaoHost`
 ///   uses it on Linux.
@@ -72,6 +74,10 @@ let package = Package(
         .library(
             name: "CacaoScrollPhysics",
             targets: ["CacaoScrollPhysics"]
+        ),
+        .library(
+            name: "CacaoWayland",
+            targets: ["CacaoWayland"]
         ),
         .library(
             name: "CacaoDBus",
@@ -211,7 +217,8 @@ let package = Package(
             exclude: ["CMakeLists.txt"]
         ),
         // Touchpad pinch rotations from Wayland compositors, which SDL
-        // doesn't report, and layer-shell surfaces for panels and docks.
+        // doesn't report, layer-shell surfaces for panels and docks, and the
+        // KDE appmenu protocol, which ties windows to their menus.
         .target(
             name: "CacaoWayland",
             exclude: ["protocol", "CMakeLists.txt"],

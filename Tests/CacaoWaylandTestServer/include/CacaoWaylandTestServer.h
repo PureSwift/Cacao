@@ -5,7 +5,8 @@
 //  A minimal Wayland compositor for tests: a compositor, a seat with a
 //  pointer, pointer gestures, sending the pinches a test asks for, and a
 //  layer shell, recording what its surface asks for and sending the
-//  configures a test asks for. Linux only.
+//  configures a test asks for, and the KDE appmenu protocol, recording the
+//  address a surface's menu was given. Linux only.
 //
 
 #ifndef CACAO_WAYLAND_TEST_SERVER_H
@@ -37,11 +38,37 @@ typedef struct CacaoTestLayerState {
     uint32_t acked_serial;
 } CacaoTestLayerState;
 
+/// The menu address the client gave its surface with the appmenu protocol.
+typedef struct CacaoTestAppMenuState {
+    /// Whether the client has an appmenu object.
+    int exists;
+    /// How many times the address was set.
+    int addresses_set;
+    char service_name[128];
+    char object_path[128];
+    /// Whether the object was made for the client's last surface.
+    int is_for_surface;
+} CacaoTestAppMenuState;
+
+/// Globals a test server offers besides a compositor, a seat and pointer
+/// gestures, combined.
+typedef enum CacaoTestServerFeature {
+    CacaoTestServerFeatureLayerShell = 1,
+    CacaoTestServerFeatureAppMenu = 2
+} CacaoTestServerFeature;
+
 /// Starts serving on a socket in `XDG_RUNTIME_DIR`, on its own thread.
 CacaoTestServer *cacao_test_server_start(const char *socket_name);
 
 /// Starts serving, with or without a layer shell global.
 CacaoTestServer *cacao_test_server_start_with_layer_shell(const char *socket_name, int with_layer_shell);
+
+/// Starts serving, with the globals of the `CacaoTestServerFeature` values
+/// given.
+CacaoTestServer *cacao_test_server_start_with_features(const char *socket_name, uint32_t features);
+
+/// The address the client's last appmenu object was given.
+CacaoTestAppMenuState cacao_test_server_appmenu_state(CacaoTestServer *server);
 
 /// What the client's last layer surface asked for.
 CacaoTestLayerState cacao_test_server_layer_state(CacaoTestServer *server);

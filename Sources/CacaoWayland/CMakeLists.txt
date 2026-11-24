@@ -1,10 +1,12 @@
 # Touchpad pinch rotations from Wayland compositors, which SDL doesn't
-# report, and layer-shell surfaces for panels and docks. Linux only.
+# report, layer-shell surfaces for panels and docks, and the KDE appmenu
+# protocol, which ties windows to their menus. Linux only.
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(WAYLAND_CLIENT REQUIRED IMPORTED_TARGET wayland-client)
 
 add_library(CacaoWayland
+  appmenu.c
   gestures.c
   layer_shell.c)
 
