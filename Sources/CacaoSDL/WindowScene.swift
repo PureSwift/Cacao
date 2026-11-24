@@ -12,6 +12,7 @@ import CoreGraphics
 #endif
 import Cacao
 import CacaoHost
+import CacaoTokens
 #if os(macOS)
 import AppKit
 #endif
@@ -76,6 +77,12 @@ final class WindowScene: HostScene {
     /// How far a finger moves before it scrolls rather than presses.
     private static let panDistance: CGFloat = 10
 
+    /// Who draws the window's title bar.
+    let chrome: WindowChrome
+
+    /// The window's title, as the scene describes it.
+    private let sceneTitle: String
+
     init(description: WindowDescription, value: AnyHashable? = nil, window: HostWindow, textEngine: any TextEngine) {
         self.window = window
         self.sceneID = description.id
@@ -99,7 +106,29 @@ final class WindowScene: HostScene {
                 SDLHost.windowRequests.append(.close(window))
             }
         }
-        let rootView = description.makeRootView?(value) ?? description.rootView
+        // A window without the system's decorations draws the desktop's
+        // title bar, or its window buttons, unless it's plain.
+        let chrome = window.decorations == .none ? description.windowStyle.chrome(for: environment.interfaceLook) : .system
+        self.chrome = chrome
+        self.sceneTitle = description.title
+        if chrome.drawsOwnDecorations {
+            environment.windowControls = WindowControls(
+                title: description.title,
+                buttonLayout: Self.buttonLayout,
+                isMaximized: window.isMaximized,
+                close: { [weak window] in
+                    if let window {
+                        SDLHost.windowRequests.append(.close(window))
+                    }
+                },
+                minimize: { [weak window] in window?.minimize() },
+                toggleMaximized: { [weak window] in window?.toggleMaximized() }
+            )
+        }
+        var rootView = description.makeRootView?(value) ?? description.rootView
+        if chrome == .titleBar || chrome == .buttonsOnly {
+            rootView = AnyView(_WindowChrome(content: rootView, chrome: chrome))
+        }
         self.graph = ViewGraph(rootView: rootView, environment: environment, textEngine: textEngine)
         graph.onNeedsDisplay = { [weak window] in
             window?.setNeedsDisplay()
@@ -184,6 +213,10 @@ final class WindowScene: HostScene {
             case (.primary, _):
                 graph.pointer(Self.phase(phase), at: location, time: now)
             case (.secondary, .began):
+                // On a title bar the app draws, the system's window menu.
+                if chrome.drawsOwnDecorations, graph.movesWindow(at: location), window?.showSystemMenu(at: location) == true {
+                    break
+                }
                 graph.secondaryClick(at: location)
             default:
                 break
@@ -265,8 +298,36 @@ final class WindowScene: HostScene {
         case let .appearanceChanged(appearance):
             applyColorScheme(system: appearance)
             applySystemAccentAndContrast()
+            let layout = Self.buttonLayout
+            updateWindowControls { $0.buttonLayout = layout }
         case .windowStateChanged:
-            break
+            applyWindowState()
+        }
+    }
+
+    /// The window buttons the desktop asks for: Cacao's when it doesn't say.
+    private static var buttonLayout: WindowButtonLayout {
+        HostRuntime.windowButtonLayout.map(WindowButtonLayout.init(setting:)) ?? .standard
+    }
+
+    /// Shows whether the window is the key window, and maximized, to the
+    /// views drawing its title bar and selections.
+    private func applyWindowState() {
+        guard let window else { return }
+        let isActive = window.isKey
+        if graph.environment.appearsActive != isActive {
+            graph.environment.appearsActive = isActive
+        }
+        updateWindowControls { $0.isMaximized = window.isMaximized }
+    }
+
+    /// Changes what the window's title bar shows, if the scene draws one.
+    private func updateWindowControls(_ change: (inout WindowControls) -> Void) {
+        guard var controls = graph.environment.windowControls else { return }
+        let old = (controls.title, controls.buttonLayout, controls.isMaximized)
+        change(&controls)
+        if old != (controls.title, controls.buttonLayout, controls.isMaximized) {
+            graph.environment.windowControls = controls
         }
     }
 
@@ -395,6 +456,9 @@ final class WindowScene: HostScene {
         if graph.needsUpdate {
             graph.update()
             needsLayout = true
+            // A document's name is the title its title bar shows.
+            let title = graph.windowTitle ?? sceneTitle
+            updateWindowControls { $0.title = title }
             if graph.preferredColorScheme != lastPreferredColorScheme {
                 lastPreferredColorScheme = graph.preferredColorScheme
                 applyColorScheme(system: HostRuntime.systemAppearance)

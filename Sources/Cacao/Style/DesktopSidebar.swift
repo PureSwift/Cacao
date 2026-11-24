@@ -22,14 +22,17 @@ internal enum DesktopSidebar {
         Color(environment.styleTokens.sidebar.background)
     }
 
-    /// The selected row's fill.
+    /// The selected row's fill: tinted with the accent in the key window,
+    /// neutral in others.
     static func selection(in environment: EnvironmentValues) -> Color {
-        Color(environment.styleTokens.sidebar.selection)
+        let sidebar = environment.styleTokens.sidebar
+        return Color(environment.appearsActive ? sidebar.selection : sidebar.inactiveSelection)
     }
 
     /// The selected row's label.
     static func selectionText(in environment: EnvironmentValues) -> Color {
-        Color(environment.styleTokens.sidebar.selectionText)
+        let sidebar = environment.styleTokens.sidebar
+        return Color(environment.appearsActive ? sidebar.selectionText : sidebar.inactiveSelectionText)
     }
 }
 

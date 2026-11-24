@@ -119,6 +119,10 @@ struct ContentView: View {
     /// The first screen, from `CACAO_DEMO_SCREEN`, for screenshots.
     private let initial = ProcessInfo.processInfo.environment["CACAO_DEMO_SCREEN"].flatMap(Screen.init(rawValue:)) ?? .controls
 
+    @State private var search = ""
+
+    @State private var favorites = 0
+
     var body: some View {
         NavigationSplitView {
             List {
@@ -132,6 +136,18 @@ struct ContentView: View {
             .navigationDestination(for: Screen.self) { ScreenView(screen: $0) }
         } detail: {
             ScreenView(screen: initial)
+                // In the desktop's look, the toolbar is the title bar too.
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            favorites += 1
+                        } label: {
+                            Label("Favorite", systemImage: favorites > 0 ? "star.fill" : "star")
+                                .labelStyle(.iconOnly)
+                        }
+                    }
+                }
+                .searchable(text: $search, prompt: "Search the catalog")
         }
     }
 }
@@ -181,6 +197,17 @@ struct ControlsScreen: View {
 
     var body: some View {
         Form {
+                Section("Buttons") {
+                    HStack {
+                        Button("Cancel") { lastAction = "Cancel" }
+                        Button("Save") { lastAction = "Save" }
+                            .buttonStyle(.borderedProminent)
+                        Button("Disabled") { }
+                            .disabled(true)
+                        Button("Small") { lastAction = "Small" }
+                            .controlSize(.small)
+                    }
+                }
                 Section("Toggles") {
                     Toggle("Notifications", isOn: $notifications)
                     Toggle("I agree to the terms", isOn: $agree)
