@@ -3,8 +3,9 @@
 # Builds what Cacao's CMake build takes from the Swift resource directory
 # on a system image, into one directory for it to find with
 # `-I <dir> -L <dir>`: Silica (with its own CMake build), the Swift modules
-# Silica's Cairo backend imports, and PureSwift/SDL's `SDL3Swift` module
-# with the `CSDL3` C module it wraps.
+# Silica's Cairo backend imports, PureSwift/SDL's `SDL3Swift` module
+# with the `CSDL3` C module it wraps, and on Linux PureSwift/DBus with the
+# PureSwift/Socket and apple/swift-system libraries it links.
 #
 #   build-cmake-dependencies.sh <output directory> [<work directory>]
 #
@@ -62,3 +63,75 @@ swiftc -emit-library -emit-module -parse-as-library -swift-version 6 -O \
   -I "$out" \
   $(xcc sdl3) $(pkg-config --libs-only-L sdl3) \
   "$work/SDL/Sources/SDL3"/*.swift
+
+# MARK: D-Bus
+
+# On Linux, PureSwift/DBus, which `CacaoDBus` imports. It and the libraries
+# it links have no installable CMake build of their own, so their sources
+# are compiled directly, at the revisions SwiftPM resolves. Skipped when
+# the directory already has them, as when the shell's script built them.
+if [ "$(uname -s)" = Darwin ] || [ -e "$out/DBus.swiftmodule" ]; then
+  exit 0
+fi
+
+mkdir -p "$work/objects"
+
+# Compiles a C module's sources into objects and copies its headers and
+# module map to <out>/<module>, where `-I <out>` finds them.
+c_module() { # c_module <module> <source directory>
+  mkdir -p "$out/$1"
+  cp -R "$2/include/." "$out/$1/"
+  for source in "$2"/*.c; do
+    clang -c -fPIC -O2 -I "$2/include" -o "$work/objects/$1-$(basename "$source" .c).o" "$source"
+  done
+}
+
+# Compiles a Swift module into a shared library and its module.
+swift_library() { # swift_library <module> <source directory> [<swiftc argument>...]
+  module=$1
+  sources=$2
+  shift 2
+  # shellcheck disable=SC2046
+  swiftc -emit-library -emit-module -parse-as-library -O \
+    -module-name "$module" -module-link-name "$module" \
+    -emit-module-path "$out/$module.swiftmodule" \
+    -o "$out/lib$module.$suffix" \
+    -I "$out" -L "$out" \
+    "$@" \
+    $(find "$sources" -name '*.swift' | sort)
+}
+
+[ -d "$work/swift-system" ] || git -c advice.detachedHead=false clone --depth 1 --branch 1.9.0 https://github.com/apple/swift-system.git "$work/swift-system"
+system="$work/swift-system"
+c_module CSystem "$system/Sources/CSystem"
+mkdir -p "$out/CSystemStatFS"
+cp "$system/Sources/CSystemStatFS/"* "$out/CSystemStatFS/"
+rm -f "$out/CSystemStatFS/CMakeLists.txt"
+
+# The availability macros swift-system's Package.swift defines, with the
+# versions its CMake build lists. Each has spaces, so they're collected as
+# positional arguments.
+set --
+for version in 0.0.1 0.0.2 0.0.3 1.1.0 1.1.1 1.2.0 1.2.1 1.3.0 1.3.1 1.3.2 1.4.0 1.7.0 1.9.0 199; do
+  set -- "$@" -enable-experimental-feature \
+    "AvailabilityMacro=System $version:macOS 10.10, iOS 8.0, watchOS 2.0, tvOS 9.0, visionOS 1.0"
+done
+swift_library SystemPackage "$system/Sources/System" \
+  -swift-version 6 -package-name swift-system \
+  -D SYSTEM_PACKAGE \
+  -enable-experimental-feature Lifetimes \
+  -enable-upcoming-feature MemberImportVisibility \
+  "$@" \
+  "$work"/objects/CSystem-*.o
+
+[ -d "$work/Socket" ] || git clone --depth 1 --branch main https://github.com/PureSwift/Socket.git "$work/Socket"
+c_module CSocket "$work/Socket/Sources/CSocket"
+swift_library Socket "$work/Socket/Sources/Socket" \
+  -swift-version 6 \
+  -lSystemPackage \
+  "$work"/objects/CSocket-*.o
+
+[ -d "$work/DBus" ] || git clone --depth 1 --branch master https://github.com/PureSwift/DBus.git "$work/DBus"
+swift_library DBus "$work/DBus/Sources/DBus" \
+  -swift-version 6 \
+  -lSocket -lSystemPackage
