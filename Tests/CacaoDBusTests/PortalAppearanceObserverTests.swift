@@ -7,6 +7,7 @@
 //
 
 import CacaoDBus
+import CacaoTokens
 import DBus
 import Foundation
 import Testing
@@ -55,10 +56,12 @@ struct PortalAppearanceObserverTests {
 
         /// The value a `Read` or `ReadOne` call asks for.
         private static func value(of call: DBusMethodCall, in values: [String: DBusMessageArgument]) throws -> DBusMessageArgument {
-            guard call.arguments.count == 2,
-                  case .string("org.freedesktop.appearance") = call.arguments[0],
+            // Keys in the appearance namespace are named alone, others after
+        // their namespace and a space.
+        guard call.arguments.count == 2,
+                  case let .string(namespace) = call.arguments[0],
                   case let .string(key) = call.arguments[1],
-                  let value = values[key]
+                  let value = values[namespace == "org.freedesktop.appearance" ? key : namespace + " " + key]
             else {
                 throw DBusError(name: .init(rawValue: "org.freedesktop.portal.Error.NotFound")!, message: "Not found")
             }
@@ -132,6 +135,26 @@ struct PortalAppearanceObserverTests {
     @Test func withNoBusThereIsNoObserver() async {
         let started = await PortalAppearanceObserver.start(address: "unix:path=/nonexistent/cacao-bus") { _ in }
         #expect(started == nil)
+    }
+
+    @Test func readsTheButtonLayout() async throws {
+        let bus = try await PrivateBus.start()
+        defer { bus.stop() }
+        let portal = try await FakePortal(address: bus.address, values: [
+            "color-scheme": .uint32(1),
+            "org.gnome.desktop.wm.preferences button-layout": .string("close,minimize:maximize"),
+        ])
+        let (observer, appearance, changes) = try await observe(bus)
+        #expect(appearance == PortalAppearance(
+            colorScheme: .dark,
+            buttonLayout: WindowButtonLayout(leading: [.close, .minimize], trailing: [.maximize])
+        ))
+
+        try await portal.change("button-layout", to: .string("appmenu:close"), in: "org.gnome.desktop.wm.preferences")
+        var iterator = changes.makeAsyncIterator()
+        #expect(await iterator.next()?.buttonLayout == WindowButtonLayout(leading: [], trailing: [.close]))
+        await observer.stop()
+        await portal.connection.close()
     }
 
     @Test func hearsChanges() async throws {
