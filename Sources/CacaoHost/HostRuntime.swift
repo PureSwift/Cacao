@@ -43,6 +43,26 @@ public enum HostRuntime {
     /// variable.
     public static var rendererName: String? = ProcessInfo.processInfo.environment["CACAO_RENDERER"]
 
+    /// The app's identifier, such as `com.example.Notes`: the Wayland
+    /// `app_id` and X11 window class of the windows opened after it's set,
+    /// which docks match to desktop entries. Defaults to the main bundle's
+    /// identifier; with none, SDL uses the executable's name.
+    public static var appIdentifier: String? = Bundle.main.bundleIdentifier
+
+    /// The identifier SDL was last given.
+    private static var appliedAppIdentifier: String?
+
+    /// Gives SDL the app's identifier, for windows about to be made.
+    static func applyAppIdentifier() {
+        guard appIdentifier != appliedAppIdentifier else { return }
+        do {
+            try SDL.setAppMetadataProperty("SDL.app.metadata.identifier", appIdentifier)
+            appliedAppIdentifier = appIdentifier
+        } catch {
+            print("Cacao: the app identifier wasn't set: \(error)")
+        }
+    }
+
     // MARK: Video
 
     /// Initializes SDL's video subsystem, runs `body`, then shuts SDL down.
@@ -69,14 +89,17 @@ public enum HostRuntime {
         windows.first(where: \.isKey)
     }
 
-    /// Opens a window showing the scene `makeScene` returns for it.
+    /// Opens a window showing the scene `makeScene` returns for it: among
+    /// the other windows, or in a layer of the screen if `layer` is given
+    /// and the system has layers.
     @discardableResult
     public static func openWindow(
         title: String,
         size: CGSize,
+        layer: HostLayerSurface? = nil,
         makeScene: (HostWindow) -> any HostScene
     ) -> HostWindow? {
-        guard let textEngine, let window = HostWindow(title: title, size: size, textEngine: textEngine) else {
+        guard let textEngine, let window = HostWindow(title: title, size: size, textEngine: textEngine, layer: layer) else {
             return nil
         }
         window.scene = makeScene(window)
@@ -165,7 +188,13 @@ public enum HostRuntime {
                     wakeEvent = 0
                     wakeHooks = []
                     textEngine = nil
+                    appliedAppIdentifier = nil
                 }
+                #if os(Linux)
+                // Bound when a window first asks, and let go of after the
+                // windows close.
+                defer { WaylandLayerShell.stop() }
+                #endif
                 setup()
                 guard !windows.isEmpty || runsWithoutWindows() else {
                     print("Cacao: no windows to show: \(SDLError.current()?.errorMessage ?? "none were opened")")
@@ -201,6 +230,11 @@ public enum HostRuntime {
             }
             #if os(Linux)
             WaylandGestures.dispatch()
+            WaylandLayerShell.dispatch()
+            // Windows in a layer the compositor took away.
+            for window in windows where window.isLayerClosed {
+                close(window)
+            }
             #endif
             drainMainQueue()
             for hook in wakeHooks {
