@@ -13,6 +13,7 @@ import CacaoRender
 import CacaoCompositor
 import CacaoSDLRenderer
 import SDL3Swift
+internal import CSDL3
 #if os(macOS)
 import AppKit
 #endif
@@ -50,10 +51,50 @@ public final class HostWindow {
 
     private let backend: SDLBackend
 
-    /// Whether the window has keyboard focus.
+    /// Whether the window has keyboard focus, itself or through one of its
+    /// popups.
     public var isKey: Bool {
-        window.hasKeyboardFocus
+        window.hasKeyboardFocus || HostRuntime.popups.contains { $0.parentWindow === self && $0.isKey }
     }
+
+    // MARK: Popups
+
+    /// The window a popup belongs to; `nil` for a window.
+    public private(set) weak var parentWindow: HostWindow?
+
+    /// Where the popup was asked to go; `nil` for a window.
+    public private(set) var popupPlacement: HostPopupPlacement?
+
+    /// Whether this is a popup: a menu or popover of another window.
+    public var isPopup: Bool {
+        popupPlacement != nil
+    }
+
+    /// Where the system put the popup in its parent: the rectangle inside
+    /// its margins, which it may have moved or made shorter to keep it on
+    /// the screen.
+    public var popupFrame: CGRect? {
+        #if os(Linux)
+        if let waylandPopup, waylandPopup.frame.width > 0 {
+            return waylandPopup.frame
+        }
+        #endif
+        return popupPlacement?.frame
+    }
+
+    /// Called when the system dismisses the popup, as when the user clicks
+    /// outside the app. Close it then.
+    public var onPopupDismissed: (() -> Void)?
+
+    #if os(Linux)
+    /// The window's surface as a popup, if it's one on Wayland.
+    private(set) var waylandPopup: WaylandPopup?
+
+    /// The window's surface in a layer, for its popups.
+    var waylandLayerSurface: WaylandLayerSurface? {
+        layerSurface
+    }
+    #endif
 
     /// Where the mouse is, for pinches.
     private var mouseLocation = CGPoint(x: 0, y: 0)
@@ -195,6 +236,115 @@ public final class HostWindow {
         applyMenuAddress()
     }
 
+    /// A popup of a window: on Wayland a surface with the popup role, else
+    /// an SDL popup menu window. Returns nil where the window can't have
+    /// popups of its own.
+    init?(popupOf parent: HostWindow, placement: HostPopupPlacement, textEngine: SilicaTextEngine) {
+        var driver = SDLRenderer.Driver.default
+        if let name = HostRuntime.rendererName {
+            guard let named = SDLRenderer.Driver(name: name) else { return nil }
+            driver = named
+        }
+        let size = placement.surfaceSize
+        var made: SDLWindow?
+        #if os(Linux)
+        var popup: WaylandPopup?
+        if SDL.currentVideoDriver == "wayland" {
+            guard let created = WaylandPopups.makeWindow(parent: parent, placement: placement) else { return nil }
+            made = created.window
+            popup = created.popup
+        }
+        #endif
+        if made == nil {
+            // SDL's popup menu, placed in the parent, without flipping.
+            let frame = placement.frame
+            made = try? SDLWindow { properties throws(SDLError) in
+                try properties.setPointer("SDL.window.create.parent", UnsafeMutableRawPointer(parent.sdlWindow))
+                try properties.setBoolean(placement.grabsInput ? "SDL.window.create.menu" : "SDL.window.create.tooltip", true)
+                try properties.setNumber("SDL.window.create.x", Int64((frame.minX - placement.margins.left).rounded()))
+                try properties.setNumber("SDL.window.create.y", Int64((frame.minY - placement.margins.top).rounded()))
+                try properties.setNumber("SDL.window.create.width", Int64(max(size.width.rounded(.up), 1)))
+                try properties.setNumber("SDL.window.create.height", Int64(max(size.height.rounded(.up), 1)))
+                try properties.setBoolean("SDL.window.create.high_pixel_density", true)
+                try properties.setBoolean("SDL.window.create.transparent", true)
+                // Made for the renderer from the start: SDL would otherwise
+                // hide it and make it again.
+                if let api = HostWindow.renderingAPI {
+                    try properties.setBoolean(api, true)
+                }
+            }
+        }
+        guard let window = made, let renderer = try? SDLRenderer(window: window, driver: driver) else {
+            #if os(Linux)
+            popup?.destroy()
+            #endif
+            return nil
+        }
+        #if os(Linux)
+        self.waylandPopup = popup
+        #endif
+        try? renderer.setVSync(.every(1))
+        self.decorations = .system
+        self.window = window
+        self.renderer = renderer
+        self.id = UInt32(window.id)
+        self.backend = SDLBackend(renderer: renderer)
+        self.compositor = Compositor(backend: backend, textEngine: textEngine)
+        self.showsAppMenu = false
+        self.parentWindow = parent
+        self.popupPlacement = placement
+        // Transparent around the popup, for its shadow.
+        compositor.backgroundColor = ResolvedColor(red: 0, green: 0, blue: 0, opacity: 0)
+        #if os(Linux)
+        popup?.onDone = { [weak self] in
+            self?.onPopupDismissed?()
+        }
+        #endif
+    }
+
+    /// The window flag the renderer needs, for windows made for it from
+    /// the start.
+    static var renderingAPI: String? {
+        switch HostRuntime.rendererName {
+        case "vulkan", "gpu":
+            return "SDL.window.create.vulkan"
+        case "software":
+            return nil
+        case "metal":
+            return "SDL.window.create.metal"
+        case nil:
+            #if os(macOS) || os(iOS)
+            return "SDL.window.create.metal"
+            #else
+            return "SDL.window.create.opengl"
+            #endif
+        default:
+            return "SDL.window.create.opengl"
+        }
+    }
+
+    /// Moves the popup next to a new anchor, or gives it a new size.
+    public func movePopup(to placement: HostPopupPlacement) {
+        guard popupPlacement != nil, placement != popupPlacement else { return }
+        popupPlacement = placement
+        let size = placement.surfaceSize
+        #if os(Linux)
+        if let waylandPopup {
+            // The compositor places it, and gives it its size.
+            if !waylandPopup.move(to: placement) {
+                window.size = (Int(size.width.rounded(.up)), Int(size.height.rounded(.up)))
+            }
+            return
+        }
+        #endif
+        window.size = (Int(size.width.rounded(.up)), Int(size.height.rounded(.up)))
+        let frame = placement.frame
+        try? window.setPosition(
+            x: Int32((frame.minX - placement.margins.left).rounded()),
+            y: Int32((frame.minY - placement.margins.top).rounded())
+        )
+    }
+
     /// Ties the window to the app's menu at `HostRuntime.menuAddress`, or
     /// unties it when there's none.
     func applyMenuAddress() {
@@ -233,8 +383,11 @@ public final class HostWindow {
         }
         #endif
         #if os(Linux)
-        // The layer role and the menu go before SDL destroys the surface.
+        // The layer and popup roles and the menu go before SDL destroys the
+        // surface.
         layerSurface?.destroy()
+        waylandPopup?.destroy()
+        waylandPopup = nil
         windowMenu?.destroy()
         windowMenu = nil
         #endif
@@ -253,6 +406,15 @@ public final class HostWindow {
     /// Pixels per point.
     public var scale: CGFloat {
         CGFloat(window.pixelDensity)
+    }
+
+    /// The size of the screen the window is on, in points, less what the
+    /// system keeps for itself where it says.
+    public var screenSize: CGSize? {
+        let display = SDL_GetDisplayForWindow(sdlWindow)
+        var rect = SDL_Rect()
+        guard display != 0, SDL_GetDisplayUsableBounds(display, &rect), rect.w > 0, rect.h > 0 else { return nil }
+        return CGSize(width: CGFloat(rect.w), height: CGFloat(rect.h))
     }
 
     /// Whether the window needs frames even without events.
