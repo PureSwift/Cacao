@@ -22,11 +22,24 @@ package extension PortalAppearance {
     /// The namespace the appearance keys are in.
     static let namespace = "org.freedesktop.appearance"
 
+    /// The namespace of GNOME's window manager settings, which the portal
+    /// serves too.
+    static let windowManagerNamespace = "org.gnome.desktop.wm.preferences"
+
     /// The keys this reads.
     enum Key: String, CaseIterable, Sendable {
         case colorScheme = "color-scheme"
         case accentColor = "accent-color"
         case contrast = "contrast"
+        case buttonLayout = "button-layout"
+
+        /// The namespace the key is in.
+        var namespace: String {
+            switch self {
+            case .colorScheme, .accentColor, .contrast: PortalAppearance.namespace
+            case .buttonLayout: PortalAppearance.windowManagerNamespace
+            }
+        }
     }
 
     /// Sets the value a key names from what the portal sent: a reply to
@@ -42,6 +55,8 @@ package extension PortalAppearance {
             accentColor = Self.accentColor(from: value)
         case .contrast:
             contrast = Self.contrast(from: value)
+        case .buttonLayout:
+            buttonLayout = Self.buttonLayout(from: value)
         }
         return self != old
     }
@@ -53,9 +68,9 @@ package extension PortalAppearance {
     mutating func apply(settingChanged arguments: [DBusMessageArgument]) -> Bool {
         guard arguments.count == 3,
               case let .string(namespace) = arguments[0],
-              namespace == Self.namespace,
               case let .string(name) = arguments[1],
-              let key = Key(rawValue: name)
+              let key = Key(rawValue: name),
+              key.namespace == namespace
         else {
             return false
         }
@@ -101,6 +116,14 @@ package extension PortalAppearance {
             return nil
         }
         return AccentColor(red: components[0], green: components[1], blue: components[2])
+    }
+
+    /// A `button-layout` value, an `s` such as `close,minimize,maximize:`.
+    static func buttonLayout(from value: DBusMessageArgument) -> WindowButtonLayout? {
+        guard case let .string(setting) = unwrapped(value) else {
+            return nil
+        }
+        return WindowButtonLayout(setting: setting)
     }
 
     /// The value inside any variants. `ReadOne` replies with the value in a

@@ -245,9 +245,20 @@ private struct _Checkbox: View {
 
     @Environment(\.labelsHidden) private var labelsHidden
 
+    @Environment(\.interfaceLook) private var look
+
     var body: some View {
+        if look.value == .desktop {
+            _DesktopCheckbox(configuration: configuration)
+        } else {
+            stock
+        }
+    }
+
+    /// The checkbox in the stock look.
+    private var stock: some View {
         let isOn = configuration.$isOn
-        HStack(spacing: 6) {
+        return HStack(spacing: 6) {
             ZStack {
                 if isOn.wrappedValue {
                     RoundedRectangle(cornerRadius: 4).fill(Color.accentColor)

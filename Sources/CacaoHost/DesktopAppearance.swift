@@ -12,12 +12,13 @@ import SDL3Swift
 internal import CacaoDBus
 #endif
 
-/// Whether the desktop shows light or dark windows, and the accent color
-/// and contrast it asks for.
+/// Whether the desktop shows light or dark windows, and the accent color,
+/// contrast and window buttons it asks for.
 ///
 /// On Linux the freedesktop settings portal says, over D-Bus: its
 /// `org.freedesktop.appearance` `color-scheme`, `accent-color` and
-/// `contrast`, followed as they change. Where no portal answers, SDL says
+/// `contrast`, and `org.gnome.desktop.wm.preferences` `button-layout`,
+/// followed as they change. Where no portal answers, SDL says
 /// what it can, else GNOME's `org.gnome.desktop.interface` `color-scheme`
 /// is asked through `gsettings`, else windows are light. Elsewhere SDL
 /// says. `CACAO_APPEARANCE=dark` or `light` overrides them all.
@@ -65,6 +66,17 @@ package enum DesktopAppearance {
         return portal?.contrast == .high
         #else
         return false
+        #endif
+    }
+
+    /// The window buttons the desktop asks title bars for, as GNOME's
+    /// `button-layout` setting has them, if it says.
+    @MainActor
+    static var windowButtonLayout: String? {
+        #if os(Linux)
+        return portal?.buttonLayout?.setting
+        #else
+        return nil
         #endif
     }
 

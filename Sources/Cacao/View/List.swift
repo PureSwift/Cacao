@@ -35,6 +35,10 @@ public struct List<SelectionValue: Hashable, Content: View>: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
+    @Environment(\.interfaceLook) private var look
+
+    @Environment(\.self) private var environment
+
     public var body: some View {
         ScrollView {
             _ListRows(content: content, style: style, selection: selection.map { binding in
@@ -45,7 +49,17 @@ public struct List<SelectionValue: Hashable, Content: View>: View {
             })
             .padding(.vertical, style.isGrouped ? 8 : 0)
         }
-        .background(style.isGrouped && backgroundVisibility != .hidden ? Color.groupedBackground(colorScheme) : Color.clear)
+        .background(background)
+    }
+
+    /// The color behind the rows: the desktop's sidebar, the grouped
+    /// background, or none.
+    private var background: Color {
+        guard backgroundVisibility != .hidden else { return .clear }
+        if style == .sidebar, look.value == .desktop {
+            return DesktopSidebar.background(in: environment)
+        }
+        return style.isGrouped ? Color.groupedBackground(colorScheme) : Color.clear
     }
 }
 
@@ -187,10 +201,13 @@ internal struct _ListRows<Content: View>: View, PrimitiveView {
             }
         }
         let margin = style.margin + (style.isGrouped ? 4 : 0)
+        let isDesktopSidebar = style == .sidebar && context.environment.usesDesktopLook
         return LazyStack(axis: .vertical, alignment: HorizontalAlignment.leading.key, spacing: 0, rowTransform: { view, id, position -> any View in
             switch position.kind {
             case .row:
                 return _ListRow(content: AnyView(view), id: id, selection: selection, style: style, position: position)
+            case .header where isDesktopSidebar:
+                return _DesktopSidebarHeader(label: AnyView(view), leading: margin + style.rowInsets.leading)
             case .header:
                 return AnyView(view)
                     .font(.footnote.weight(.semibold))
@@ -279,18 +296,29 @@ internal struct _ListRow: View {
 
     @State private var traits = ListRowTraits()
 
+    @Environment(\.interfaceLook) private var look
+
+    @Environment(\.self) private var environment
+
     var body: some View {
         let isSelected = selection?.wrappedValue == id
+        let isDesktopSidebar = style == .sidebar && look.value == .desktop
         let insets = traits.insets ?? style.rowInsets
         let hidesSeparator = traits.hiddenSeparators?.contains(.bottom) ?? false
         let showsSeparator = style.showsSeparators && !hidesSeparator && !(style.isGrouped && position.isLast)
         let traits = $traits
         VStack(alignment: .leading, spacing: 0) {
-            _ListRowContent(content: content, badge: self.traits.badge)
+            _ListRowContent(
+                content: content,
+                badge: self.traits.badge,
+                foreground: isSelected && isDesktopSidebar ? DesktopSidebar.selectionText(in: environment) : nil
+            )
                 .padding(insets)
                 .background(_ListRowFill(
                     background: self.traits.background,
-                    highlight: isSelected ? Color.accentColor.opacity(0.2) : nil,
+                    highlight: isSelected
+                        ? isDesktopSidebar ? DesktopSidebar.selection(in: environment) : Color.accentColor.opacity(0.2)
+                        : nil,
                     radius: style.highlightRadius
                 ))
                 .contentShape(Rectangle())
@@ -317,12 +345,19 @@ private struct _ListRowContent: View, PrimitiveView {
 
     let badge: Text?
 
+    /// The color of the row's text, if not the list's: a selected row's in
+    /// the desktop's sidebar.
+    var foreground: Color? = nil
+
     func resolve(in context: ResolveContext) -> Resolution {
         let content = self.content.frame(maxWidth: .infinity, minHeight: 24, alignment: .leading)
-        guard let badge else {
-            return Resolution(children: [ChildView(key: "content", view: content)])
-        }
         var environment = context.environment
+        if let foreground {
+            environment.foregroundColor = foreground
+        }
+        guard let badge else {
+            return Resolution(children: [ChildView(key: "content", view: content, environment: foreground == nil ? nil : environment)])
+        }
         environment.stackOrientation = .horizontal
         return Resolution(
             behavior: LayoutBehavior(layout: HStackLayout(alignment: .center, spacing: 8)),

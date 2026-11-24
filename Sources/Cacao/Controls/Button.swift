@@ -195,13 +195,14 @@ extension View {
 
 // MARK: - Styles
 
-/// The default button style: borderless.
+/// The default button style: in the desktop's look, a push button, or a
+/// toolbar button in a toolbar; in the stock look, borderless.
 public struct DefaultButtonStyle: ButtonStyle {
 
     public init() { }
 
     public func makeBody(configuration: Configuration) -> some View {
-        BorderlessButtonStyle().makeBody(configuration: configuration)
+        _AutomaticButton(configuration: configuration)
     }
 }
 
@@ -228,7 +229,7 @@ public struct BorderlessButtonStyle: ButtonStyle {
     }
 }
 
-private struct _BorderlessButton: View {
+internal struct _BorderlessButton: View {
 
     let configuration: ButtonStyleConfiguration
 
@@ -282,7 +283,19 @@ private struct _BorderedButton: View {
 
     @Environment(\.buttonBorderShape) private var shape
 
+    @Environment(\.interfaceLook) private var look
+
     var body: some View {
+        if look.value == .desktop {
+            _DesktopPushButton(configuration: configuration, isProminent: isProminent)
+        } else {
+            stock
+        }
+    }
+
+    /// The button in the stock look.
+    @ViewBuilder
+    private var stock: some View {
         let metrics = Self.metrics(controlSize)
         configuration.label
             .font(font ?? metrics.font)
