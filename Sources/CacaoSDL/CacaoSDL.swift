@@ -36,6 +36,16 @@ public enum SDLHost {
         HostRuntime.sdlVersion
     }
 
+    /// The app's identifier, such as `com.example.Notes`: the Wayland
+    /// `app_id` and X11 window class of its windows, which docks match to
+    /// desktop entries. Defaults to the main bundle's identifier; with
+    /// none, the executable's name is used. Set it in the app's `init()`
+    /// to name the first window too.
+    public static var appIdentifier: String? {
+        get { HostRuntime.appIdentifier }
+        set { HostRuntime.appIdentifier = newValue }
+    }
+
     /// Initializes SDL's video subsystem, runs `body`, then shuts SDL down.
     public static func withVideo<T>(_ body: () throws -> T) throws -> T {
         try HostRuntime.withVideo(body)
@@ -86,7 +96,8 @@ public enum SDLHost {
         guard let textEngine = HostRuntime.textEngine else { return nil }
         return HostRuntime.openWindow(
             title: description.title,
-            size: description.defaultSize ?? CGSize(width: 800, height: 600)
+            size: description.defaultSize ?? CGSize(width: 800, height: 600),
+            layer: description.layer.map(HostLayerSurface.init)
         ) { window in
             WindowScene(description: description, value: value, window: window, textEngine: textEngine)
         }
@@ -142,3 +153,40 @@ public enum SDLHost {
 
 /// An error starting SDL.
 public typealias SDLHostError = HostError
+
+extension HostLayerSurface {
+
+    /// The host's placement for a scene's: leading and trailing are the
+    /// screen's left and right.
+    init(_ placement: WindowLayerPlacement) {
+        var edges: Edges = []
+        if placement.edges.contains(.top) { edges.insert(.top) }
+        if placement.edges.contains(.bottom) { edges.insert(.bottom) }
+        if placement.edges.contains(.leading) { edges.insert(.left) }
+        if placement.edges.contains(.trailing) { edges.insert(.right) }
+        let layer: Layer = switch placement.layer {
+        case .background: .background
+        case .bottom: .bottom
+        case .top: .top
+        case .overlay: .overlay
+        }
+        let keyboard: KeyboardInteractivity = switch placement.keyboardInteractivity {
+        case .none: .none
+        case .exclusive: .exclusive
+        case .onDemand: .onDemand
+        }
+        self.init(
+            layer: layer,
+            edges: edges,
+            exclusiveZone: placement.exclusiveZone,
+            margins: HostInsets(
+                top: placement.margins.top,
+                left: placement.margins.leading,
+                bottom: placement.margins.bottom,
+                right: placement.margins.trailing
+            ),
+            keyboardInteractivity: keyboard,
+            namespace: placement.namespace
+        )
+    }
+}
