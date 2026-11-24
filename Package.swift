@@ -192,6 +192,7 @@ let package = Package(
             name: "CacaoSDL",
             dependencies: [
                 "Cacao",
+                "CacaoTokens",
                 "CacaoCompositor",
                 "CacaoHost",
                 "CacaoScrollPhysics",
