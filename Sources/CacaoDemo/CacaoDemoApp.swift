@@ -56,14 +56,43 @@ struct DemoBar: View {
 
     @Environment(\.openWindow) private var openWindow
 
+    /// The last menu item chosen.
+    @State private var chosen = ""
+
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 0) {
             Image(systemName: "bolt.fill")
-            Text("Cacao")
-                .bold()
+                .padding(.trailing, 4)
+            // Menu bar titles: their menus open below the bar.
+            Menu("Cacao") {
+                Button("Open Catalog") { openWindow(id: "catalog") }
+                OpenSettingsButton(title: "Settings…")
+                Divider()
+                Button("About Cacao") { chosen = "About Cacao" }
+            }
+            Menu("Edit") {
+                Button("Undo") { chosen = "Undo" }
+                Button("Redo") { chosen = "Redo" }
+                Divider()
+                Menu("Transformations") {
+                    Button("Make Upper Case") { chosen = "Make Upper Case" }
+                    Button("Make Lower Case") { chosen = "Make Lower Case" }
+                    Button("Capitalize") { chosen = "Capitalize" }
+                }
+                Button("Select All") { chosen = "Select All" }
+            }
+            Menu("Window") {
+                ForEach(1...30, id: \.self) { index in
+                    Button("Window \(index)") { chosen = "Window \(index)" }
+                }
+            }
             Spacer()
+            Text(chosen)
+                .foregroundStyle(.secondary)
+                .padding(.trailing, 12)
             Button("Catalog") { openWindow(id: "catalog") }
         }
+        .menuStyle(.borderlessButton)
         .padding(.horizontal, 12)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.orange.opacity(0.25))

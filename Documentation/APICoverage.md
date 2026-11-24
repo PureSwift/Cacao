@@ -82,6 +82,7 @@ tests.
 | `Button` and styles, `Toggle` and styles, `Slider`, `Stepper` | ✅ | |
 | `TextField`, `SecureField`, `TextEditor` | ✅ | Moves and deletes by characters and words; undo and redo; the caret blinks. |
 | `Picker` (menu, segmented, inline), `Menu` | ✅ | A `Menu` in a menu is a submenu, opened by hovering, clicking or the right arrow. Arrow keys move through a menu's items; Return chooses. |
+| `menuStyle` (`automatic`, `button`, `borderlessButton`), `menuIndicator` | ✅ | A borderless menu is plain text, highlighted while open, as a menu bar's titles are; while one is open, moving onto another opens its menu. |
 | `ProgressView`, `Label`, `Link`, `DisclosureGroup` | ✅ | |
 | `LabeledContent`, `ContentUnavailableView` | ✅ | |
 | `DatePicker` | ◐ | Compact (popovers) and graphical styles; other styles show as one of these. |

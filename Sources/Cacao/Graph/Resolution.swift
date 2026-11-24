@@ -129,6 +129,10 @@ internal struct NodeAttributes {
     /// Menu items shown on a secondary click.
     var contextMenu: AnyView?
 
+    /// Opens the node's menu, as a menu bar's title does when the pointer
+    /// moves onto it while another title's menu is open.
+    var opensMenuOnHover: (@MainActor () -> Void)?
+
     /// How the node animates in and out.
     var transition: AnyTransition?
 
