@@ -33,9 +33,21 @@ internal struct _DesktopToolbar: View {
 
     @Environment(\.styleTokens) private var tokens
 
+    /// The room to leave for the window buttons, when the toolbar is at
+    /// the top of a window and so is its title bar too.
+    @Environment(\.titleBarInsets) private var titleBarInsets
+
+    @Environment(\.appearsActive) private var isActive
+
+    /// Whether the toolbar is at the top of the window's content, where it
+    /// can be the title bar: not a stack's lower in the window.
+    @State private var isAtTop = true
+
     var body: some View {
         let colors = tokens.toolbar
         let metrics = tokens.metrics
+        let joinsTitleBar = titleBarInsets != nil && isAtTop
+        let insets = (joinsTitleBar ? titleBarInsets : nil) ?? TitleBarInsets(leading: 0, trailing: 0)
         // The title sits between the items on either side, truncated
         // rather than over them.
         HStack(spacing: metrics.spacingTight) {
@@ -56,7 +68,7 @@ internal struct _DesktopToolbar: View {
             } else if !title.isEmpty {
                 Text(title)
                     .font(Font(token: tokens.fonts.windowTitle))
-                    .foregroundStyle(Color(tokens.titleBar.text))
+                    .foregroundStyle(Color(isActive ? tokens.titleBar.text : tokens.titleBar.inactiveText))
                     .lineLimit(1)
             }
             Spacer(minLength: metrics.spacing)
@@ -69,16 +81,27 @@ internal struct _DesktopToolbar: View {
             }
         }
         .environment(\.isInToolbar, true)
-        .padding(.horizontal, metrics.spacing)
-        .frame(minHeight: metrics.toolbarHeight)
+        .padding(.leading, max(metrics.spacing, insets.leading))
+        .padding(.trailing, max(metrics.spacing, insets.trailing))
+        .frame(minHeight: joinsTitleBar ? metrics.unifiedToolbarHeight : metrics.toolbarHeight)
         .background {
-            Rectangle().fill(token: colors.background)
+            Rectangle().fill(token: isActive ? colors.background : colors.inactiveBackground)
         }
         .overlay(alignment: .bottom) {
             Rectangle()
                 .fill(Color(colors.separator))
                 .frame(height: metrics.separatorWidth)
         }
+        // Joined with the title bar, it moves the window too.
+        .windowDragArea(joinsTitleBar)
+        .preference(key: UnifiedToolbarKey.self, value: joinsTitleBar)
+        .onGeometryChange(for: Bool.self, of: { proxy in
+            proxy.frame(in: .named(WindowChromeSpace.name)).minY < 1
+        }, action: { atTop in
+            if isAtTop != atTop {
+                isAtTop = atTop
+            }
+        })
     }
 }
 
