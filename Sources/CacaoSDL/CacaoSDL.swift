@@ -46,6 +46,27 @@ public enum SDLHost {
         set { HostRuntime.appIdentifier = newValue }
     }
 
+    /// Whether the app's menus are served to the desktop's global menu bar
+    /// on Linux, over `com.canonical.dbusmenu`. Set it to `false` in the
+    /// app's `init()` for an app that shows no menus, such as a panel.
+    /// Apps whose windows are all in layers of the screen serve none.
+    public static var exportsMenus = true
+
+    /// Whether a menu bar outside the app's windows shows the app's menus:
+    /// the system's on macOS, and on Linux a global menu bar, where the
+    /// compositor ties windows to their menus or a menu bar owns
+    /// `com.canonical.AppMenu.Registrar` on the session bus. Known once the
+    /// app runs, and it can change while it does.
+    public static var menusShownByDesktop: Bool {
+        #if os(macOS)
+        true
+        #elseif os(Linux)
+        DBusMainMenu.isShownByDesktop
+        #else
+        false
+        #endif
+    }
+
     /// Initializes SDL's video subsystem, runs `body`, then shuts SDL down.
     public static func withVideo<T>(_ body: () throws -> T) throws -> T {
         try HostRuntime.withVideo(body)
@@ -78,8 +99,16 @@ public enum SDLHost {
             MainMenu.install {
                 (HostRuntime.keyWindow?.scene as? WindowScene)?.graph ?? scenes.first?.graph ?? launchGraph
             }
+            #elseif os(Linux)
+            // Apps with only panels and docks have no menus to serve.
+            if exportsMenus, descriptions.contains(where: { $0.layer == nil }) {
+                DBusMainMenu.install()
+            }
             #endif
         }
+        #if os(Linux)
+        DBusMainMenu.stop()
+        #endif
         statusItems.forEach { $0.close() }
         statusItems = []
         descriptions = []
