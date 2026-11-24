@@ -159,6 +159,8 @@ private struct _Switch: View {
 
     @Environment(\.labelsHidden) private var labelsHidden
 
+    @Environment(\.self) private var environment
+
     /// Where a drag has the knob, from the track's leading end, while it's
     /// being dragged.
     @State private var dragPosition: CGFloat?
@@ -188,7 +190,7 @@ private struct _Switch: View {
             }
             ZStack(alignment: .leading) {
                 Capsule()
-                    .fill(showsOn ? Color.green : Color.controlFill)
+                    .fill(showsOn ? GroupedColors.switchOn(in: environment) : Color.controlFill)
                 // A circle takes all the space it's offered, so without a
                 // size of its own it would fill the track and sit in its
                 // middle.
