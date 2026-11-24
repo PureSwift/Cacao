@@ -65,6 +65,9 @@ internal struct SceneModifiers {
 
     /// The layer of the screen windows go in, if not among the windows.
     var layer: WindowLayerPlacement?
+
+    /// Who draws the windows' title bars, if a modifier says.
+    var windowStyle: WindowStyleKind?
 }
 
 /// A window a host should open for an app.
@@ -94,6 +97,9 @@ package struct WindowDescription {
     /// The layer of the screen the window goes in, if not among the
     /// windows.
     package var layer: WindowLayerPlacement? = nil
+
+    /// Who draws the window's title bar.
+    package var windowStyle = WindowStyleKind(.automatic)
 }
 
 extension Scene {
@@ -122,12 +128,15 @@ extension Scene {
 @MainActor
 internal func sceneWindows<S: Scene>(of scene: S, modifiers: SceneModifiers) -> [WindowDescription] {
     if let primitive = scene as? any PrimitiveScene {
-        // Placement in a layer applies to every kind of window; the
-        // innermost modifier wins.
+        // Placement in a layer, and the window style, apply to every kind
+        // of window; the innermost modifier wins.
         return primitive.windows(modifiers: modifiers).map { window in
             var window = window
             if window.layer == nil {
                 window.layer = modifiers.layer
+            }
+            if let style = modifiers.windowStyle, window.windowStyle.value == .automatic {
+                window.windowStyle = style
             }
             return window
         }

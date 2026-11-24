@@ -231,6 +231,8 @@ internal struct _GestureModifier<G: Gesture>: ViewModifier, PrimitiveViewModifie
                 gesture.recognizer(in: context)
             }]
         }
+        // The system moves the window from here, enabled or not.
+        attributes.isWindowDragArea = gesture is WindowDragGesture
         return Resolution(children: [ChildView(key: 0, view: content)], attributes: attributes)
     }
 

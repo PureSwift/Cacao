@@ -44,6 +44,14 @@ public protocol HostScene: AnyObject {
 
     /// The window is closing.
     func detach()
+
+    /// What a press at a point does: moves the window, from a title bar
+    /// the scene draws, or goes to the scene. Asked whenever the system
+    /// asks, which may be on any pointer motion, so it's quick.
+    ///
+    /// A window without decorations is resized from its edges whatever
+    /// the scene says.
+    func hitTest(at point: CGPoint) -> HostHitTestResult
 }
 
 extension HostScene {
@@ -53,6 +61,8 @@ extension HostScene {
     public var statistics: String { "" }
 
     public func detach() { }
+
+    public func hitTest(at point: CGPoint) -> HostHitTestResult { .normal }
 }
 
 /// The time and geometry of a frame.
@@ -198,6 +208,11 @@ public enum HostEvent {
 
     /// The window's size or scale changed.
     case geometryChanged
+
+    /// The window became the key window or stopped being it, or was
+    /// maximized, minimized or restored: see `HostWindow.isKey`,
+    /// `isMaximized` and `isMinimized`.
+    case windowStateChanged
 
     /// The system's appearance changed: it switched between light and
     /// dark, or changed its accent color or contrast
