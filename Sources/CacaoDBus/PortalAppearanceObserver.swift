@@ -56,13 +56,13 @@ public final class PortalAppearanceObserver: Sendable {
             return nil
         }
         // Subscribed before reading, so a change between the two isn't
-        // missed.
-        var rule = DBusMatchRule.signal(
+        // missed. The keys are in two namespaces, so every setting's
+        // changes are heard, and those of others ignored.
+        let rule = DBusMatchRule.signal(
             interface: PortalSettings.interface,
             member: PortalSettings.settingChanged,
             path: PortalSettings.path
         )
-        rule.arguments[0] = PortalAppearance.namespace
         let signals = try? await connection.signals(matching: rule)
 
         let appearance = await PortalSettings(connection: connection, timeout: timeout).readAppearance()
@@ -112,8 +112,15 @@ internal struct PortalSettings: Sendable {
         async let colorScheme = read(.colorScheme)
         async let accentColor = read(.accentColor)
         async let contrast = read(.contrast)
+        async let buttonLayout = read(.buttonLayout)
         var appearance = PortalAppearance()
-        for (key, value) in await [(PortalAppearance.Key.colorScheme, colorScheme), (.accentColor, accentColor), (.contrast, contrast)] {
+        let values = await [
+            (PortalAppearance.Key.colorScheme, colorScheme),
+            (.accentColor, accentColor),
+            (.contrast, contrast),
+            (.buttonLayout, buttonLayout),
+        ]
+        for (key, value) in values {
             if let value {
                 appearance.apply(value, for: key)
             }
@@ -125,7 +132,7 @@ internal struct PortalSettings: Sendable {
     /// answer. Portals before version 2 have only `Read`, which wraps the
     /// value in a second variant.
     func read(_ key: PortalAppearance.Key) async -> DBusMessageArgument? {
-        let arguments: [DBusMessageArgument] = [.string(PortalAppearance.namespace), .string(key.rawValue)]
+        let arguments: [DBusMessageArgument] = [.string(key.namespace), .string(key.rawValue)]
         do {
             return try await call(Self.readOne, arguments: arguments)
         } catch let error as DBusError where error.name.rawValue == "org.freedesktop.DBus.Error.UnknownMethod" {
