@@ -24,6 +24,18 @@ extension EnvironmentValues {
         get { self[TintKey.self] }
         set { self[TintKey.self] = newValue }
     }
+
+    /// The accent color the system asks for, which `Color.accentColor`
+    /// resolves to where no tint is set. The host sets it; with none,
+    /// the accent is blue.
+    package var systemAccentColor: Color.Resolved? {
+        get { self[SystemAccentColorKey.self] }
+        set { self[SystemAccentColorKey.self] = newValue }
+    }
+}
+
+private struct SystemAccentColorKey: EnvironmentKey {
+    static let defaultValue: Color.Resolved? = nil
 }
 
 extension View {
