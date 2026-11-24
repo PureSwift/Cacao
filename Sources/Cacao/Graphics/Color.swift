@@ -104,6 +104,9 @@ public struct Color: Hashable, Sendable, CustomStringConvertible {
             if let tint = environment.tint, tint.storage != .system(.accent) {
                 return tint.resolve(in: environment)
             }
+            if let accent = environment.systemAccentColor {
+                return accent
+            }
             return SystemColor.blue.resolve(in: environment.colorScheme)
         case let .system(color):
             return color.resolve(in: environment.colorScheme)
@@ -222,6 +225,18 @@ public enum ColorScheme: Hashable, CaseIterable, Sendable {
     case light
 
     case dark
+}
+
+// MARK: - ColorSchemeContrast
+
+/// The contrast between the app's foreground and background colors.
+public enum ColorSchemeContrast: Hashable, CaseIterable, Sendable {
+
+    /// The usual contrast.
+    case standard
+
+    /// More contrast, as the system asks for when the user wants it.
+    case increased
 }
 
 // MARK: - View
