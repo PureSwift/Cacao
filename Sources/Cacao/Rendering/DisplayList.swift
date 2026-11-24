@@ -35,11 +35,17 @@ extension ViewNode {
         if let content = behavior?.displayContent(node: self) {
             items.append(DisplayList.Item(frame: frame, identity: id, version: version, value: .content(content)))
         }
-        let ordered = orderedChildren
+        var ordered = orderedChildren
+        // Popups in surfaces of their own aren't drawn in the window.
+        let isRoot = self === graph.root
+        if isRoot, graph.presentations.contains(where: \.isDetached) {
+            let detached = graph.detachedNodeIDs
+            ordered.removeAll { detached.contains($0.id) }
+        }
         var childItems: [[DisplayList.Item]] = ordered.map { $0.displayItems() }
         // Removed children still transitioning out, where they were.
         if let ghosts = graph.ghosts[id] {
-            for ghost in ghosts.sorted(by: { $0.index > $1.index }) {
+            for ghost in ghosts.sorted(by: { $0.index > $1.index }) where !(isRoot && ViewGraph.isDetached(ghost.frame)) {
                 let progress = ghost.animation.values(at: graph.time).values[0]
                 let effect = ghost.transition.effect(progress: progress, frame: ghost.frame, container: graph.size, isInsertion: false)
                 let wrapped = Self.wrap(ghost.items, opacity: effect.opacity, transform: effect.transform, identity: ghost.identity, frame: ghost.frame)
