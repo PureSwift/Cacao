@@ -259,7 +259,7 @@ extension View {
     ) -> some View {
         modifier(_PresentationModifier(
             isPresented: isPresented,
-            style: { node in .popup(anchor: node.windowFrame) },
+            style: { node in .popup(anchor: node.windowFrame, edge: .bottom) },
             presentation: AnyView(_PopoverContent(content: AnyView(content()))),
             onDismiss: nil
         ))

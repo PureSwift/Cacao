@@ -24,8 +24,10 @@ internal struct _DesktopMenuContent: View {
         let colors = tokens.menu
         let metrics = tokens.metrics
         let shape = RoundedRectangle(cornerRadius: tokens.radii.menu)
-        VStack(alignment: .leading, spacing: 0) {
-            content
+        _MenuItems {
+            VStack(alignment: .leading, spacing: 0) {
+                content
+            }
         }
         .buttonStyle(_DesktopMenuItemStyle())
         .padding(metrics.menuInset)
@@ -41,8 +43,8 @@ internal struct _DesktopMenuContent: View {
     }
 }
 
-/// A menu item: highlighted with the accent while the pointer is over it
-/// or it's pressed.
+/// A menu item: highlighted with the accent while the pointer is over it,
+/// it's pressed or focused, or its submenu is open.
 internal struct _DesktopMenuItemStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
@@ -58,12 +60,16 @@ private struct _DesktopMenuItem: View {
 
     @Environment(\.isEnabled) private var isEnabled
 
+    @Environment(\.isFocused) private var isFocused
+
+    @Environment(\.isMenuItemOpen) private var isOpen
+
     @State private var isHovered = false
 
     var body: some View {
         let colors = tokens.menu
         let metrics = tokens.metrics
-        let isHighlighted = isEnabled && (isHovered || configuration.isPressed)
+        let isHighlighted = isEnabled && (isHovered || configuration.isPressed || isFocused || isOpen)
         let text = !isEnabled ? colors.disabledText : isHighlighted ? colors.highlightText : colors.text
         configuration.label
             .font(Font(token: tokens.fonts.menu))

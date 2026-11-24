@@ -81,7 +81,7 @@ tests.
 | `LinearGradient`, `RadialGradient`, `EllipticalGradient`, `AngularGradient`, `Color.gradient` | ✅ | As views, fills and strokes of shapes, and text styles. |
 | `Button` and styles, `Toggle` and styles, `Slider`, `Stepper` | ✅ | |
 | `TextField`, `SecureField`, `TextEditor` | ✅ | Moves and deletes by characters and words; undo and redo; the caret blinks. |
-| `Picker` (menu, segmented, inline), `Menu` | ✅ | |
+| `Picker` (menu, segmented, inline), `Menu` | ✅ | A `Menu` in a menu is a submenu, opened by hovering, clicking or the right arrow. Arrow keys move through a menu's items; Return chooses. |
 | `ProgressView`, `Label`, `Link`, `DisclosureGroup` | ✅ | |
 | `LabeledContent`, `ContentUnavailableView` | ✅ | |
 | `DatePicker` | ◐ | Compact (popovers) and graphical styles; other styles show as one of these. |
@@ -102,7 +102,7 @@ tests.
 | `TabView`, `Tab`, `tabItem` | ✅ | Tab items set in custom views' bodies too. |
 | `toolbar`, `ToolbarItem`, `ToolbarItemGroup`, `navigationTitle`, `searchable` | ✅ | |
 | `toolbar(removing:)` | ◐ | Removes the sidebar toggle; `.title` has no effect. |
-| `sheet`, `fullScreenCover`, `alert`, `confirmationDialog`, `popover`, `contextMenu` | ✅ | Presentations animate in and out. |
+| `sheet`, `fullScreenCover`, `alert`, `confirmationDialog`, `popover`, `contextMenu` | ✅ | Presentations animate in and out. With Wayland, menus, pickers' menus, context menus and popovers open as surfaces of their own outside the window: `xdg_popup`s (a layer surface's too), which the compositor keeps on the screen and dismisses on a click in another app. Elsewhere they're drawn in the window; `CACAO_POPUP_WINDOWS=1` opens them as SDL's popup windows instead, which with X11 can't yet be clicked. |
 | `swipeActions` | ◐ | In the row's context menu, as on the Mac; there's no swipe. |
 | `onExitCommand` | ✅ | Escape while the view or a descendant has focus. |
 | `presentationDetents`, `interactiveDismissDisabled` | ○ | |

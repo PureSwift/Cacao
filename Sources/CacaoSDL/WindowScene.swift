@@ -80,6 +80,12 @@ final class WindowScene: HostScene {
     /// Who draws the window's title bar.
     let chrome: WindowChrome
 
+    /// The surfaces of the popups shown outside the window, by presentation.
+    var popupWindows: [Int: HostWindow] = [:]
+
+    /// Counts the window's drawings, for its popups to draw when it does.
+    private(set) var displayGeneration = 0
+
     /// The window's title, as the scene describes it.
     private let sceneTitle: String
 
@@ -130,6 +136,8 @@ final class WindowScene: HostScene {
             rootView = AnyView(_WindowChrome(content: rootView, chrome: chrome))
         }
         self.graph = ViewGraph(rootView: rootView, environment: environment, textEngine: textEngine)
+        // Menus and popovers open outside the window, where the host can.
+        graph.opensPopupSurfaces = HostRuntime.opensPopupWindows
         graph.onNeedsDisplay = { [weak window] in
             window?.setNeedsDisplay()
         }
@@ -495,6 +503,14 @@ final class WindowScene: HostScene {
         if revealsFocus {
             graph.revealFocusedView()
         }
+        if graph.opensPopupSurfaces {
+            // About as tall as the screen; the system makes one shorter if
+            // it must.
+            if let screen = window?.screenSize {
+                graph.popupMaximumHeight = max(screen.height - 40, 100)
+            }
+            syncPopups()
+        }
         if graph.needsDisplay {
             changed = true
         }
@@ -502,7 +518,12 @@ final class WindowScene: HostScene {
     }
 
     func displayList() -> DisplayList {
-        graph.displayList()
+        displayGeneration += 1
+        return graph.displayList()
+    }
+
+    func detach() {
+        closePopups()
     }
 
     func didRender(time: Double) {

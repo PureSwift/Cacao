@@ -203,6 +203,10 @@ extension ViewGraph {
             focus(nodes[next])
             return true
         case .left, .right, .up, .down:
+            // In a menu, from item to item.
+            if moveInTopPopup(key) {
+                return true
+            }
             return moveFocus(key)
         case .escape:
             if isPresenting {
