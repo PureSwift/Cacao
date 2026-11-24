@@ -24,6 +24,7 @@ tests.
 | `Window` | ✅ | Unique: opening it again brings it to the front. |
 | `openWindow`, `dismissWindow` | ✅ | |
 | `defaultSize` | ✅ | |
+| `windowStyle` (`.automatic`, `.titleBar`, `.hiddenTitleBar`, `.plain`) | ◐ | Hidden and plain windows have no system decorations: they move from views with a `WindowDragGesture` and resize from their edges. |
 | `commands`, `CommandMenu`, `CommandGroup` | ◐ | Shortcuts work in every window; macOS shows the menus in the menu bar. Group placements pick the menu, not the position in it. |
 | `Settings`, `SettingsLink`, `openSettings` | ✅ | The settings shortcut opens it. |
 | `MenuBarExtra` | ◐ | A tray icon with a menu of the content's buttons; the menu style only. |
@@ -138,6 +139,7 @@ tests.
 | `RotateGesture` | ◐ | Trackpads on macOS, touchpads under Wayland, and touch screens. Touchpads under X11 report no rotations. |
 | `simultaneously`, `sequenced`, `exclusively`, `onChanged`, `onEnded`, `updating`, `map` | ✅ | |
 | `gesture`, `highPriorityGesture`, `simultaneousGesture`, `GestureMask` | ✅ | |
+| `WindowDragGesture` | ✅ | The system moves the window; controls inside the view keep their presses. |
 | `onTapGesture(count:)`, `onLongPressGesture` | ✅ | |
 | `onHover`, `onContinuousHover` | ✅ | |
 | `pointerStyle` | ◐ | The system pointer closest to each style; no custom images. |
