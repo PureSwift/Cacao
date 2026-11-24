@@ -155,11 +155,57 @@ public enum HostRuntime {
         return window.snapshot(to: path, now: now)
     }
 
-    /// Closes a window.
+    /// Closes a window or a popup, and the popups that belong to it.
     public static func close(_ window: HostWindow) {
-        guard let index = windows.firstIndex(where: { $0 === window }) else { return }
-        windows.remove(at: index)
+        // A popup's own popups go first.
+        for popup in popups.reversed() where popup.parentWindow === window {
+            close(popup)
+        }
+        if let index = windows.firstIndex(where: { $0 === window }) {
+            windows.remove(at: index)
+        } else if let index = popups.firstIndex(where: { $0 === window }) {
+            popups.remove(at: index)
+        } else {
+            return
+        }
         window.close()
+    }
+
+    // MARK: Popups
+
+    /// The open popups, each after the window or popup it belongs to.
+    public private(set) static var popups: [HostWindow] = []
+
+    /// Opens a popup of a window or of another popup, showing the scene
+    /// `makeScene` returns for it, as a surface of its own that can extend
+    /// past the window's edges. Returns nil where it can't be one
+    /// (`opensPopupWindows` is false, or the system refused): then draw
+    /// the popup inside the window instead.
+    @discardableResult
+    public static func openPopup(
+        of parent: HostWindow,
+        placement: HostPopupPlacement,
+        makeScene: (HostWindow) -> any HostScene
+    ) -> HostWindow? {
+        guard opensPopupWindows, let textEngine,
+              windows.contains(where: { $0 === parent }) || popups.contains(where: { $0 === parent }),
+              let popup = HostWindow(popupOf: parent, placement: placement, textEngine: textEngine) else {
+            return nil
+        }
+        popup.scene = makeScene(popup)
+        popups.append(popup)
+        return popup
+    }
+
+    /// Dismisses SDL's popup menus once none of the app's windows has the
+    /// keyboard, as after a click in another app; on Wayland the
+    /// compositor does.
+    private static func dismissPopupsWithoutFocus() {
+        guard !popups.isEmpty, SDL.currentVideoDriver != "wayland" else { return }
+        guard !windows.contains(where: \.isKey) else { return }
+        for popup in popups where popup.parentWindow?.isPopup == false {
+            popup.onPopupDismissed?()
+        }
     }
 
     // MARK: Loop
@@ -228,6 +274,7 @@ public enum HostRuntime {
                 // Bound when a window first asks, and let go of after the
                 // windows close.
                 defer {
+                    WaylandPopups.stop()
                     WaylandLayerShell.stop()
                     WaylandAppMenu.stop()
                 }
@@ -242,6 +289,9 @@ public enum HostRuntime {
                 defer { WaylandGestures.stop() }
                 #endif
                 runLoop()
+                for popup in popups.reversed() {
+                    close(popup)
+                }
                 let remaining = windows
                 windows = []
                 remaining.forEach { $0.close() }
@@ -267,7 +317,7 @@ public enum HostRuntime {
         quitRequested = false
         defer { quitRequested = false }
         while (!windows.isEmpty || runsWithoutWindows()) && !quitRequested {
-            let animating = windows.contains { $0.isAnimating }
+            let animating = (windows + popups).contains { $0.isAnimating }
             // Idle: sleep until an event, waking periodically to run main
             // actor work (tasks, timers) scheduled outside of SDL.
             var next = animating ? SDL.pollEvent() : SDL.waitEvent(timeout: 16)
@@ -280,17 +330,20 @@ public enum HostRuntime {
             #if os(Linux)
             WaylandGestures.dispatch()
             WaylandLayerShell.dispatch()
+            WaylandPopups.dispatch()
             // Windows in a layer the compositor took away.
             for window in windows where window.isLayerClosed {
                 close(window)
             }
             #endif
+            dismissPopupsWithoutFocus()
             drainMainQueue()
             for hook in wakeHooks {
                 hook()
             }
             let now = now
-            for window in windows {
+            // Popups after their windows, whose scenes update first.
+            for window in windows + popups {
                 window.frame(now: now)
             }
             if windows.contains(where: \.didSaveScreenshot) {
@@ -308,6 +361,8 @@ public enum HostRuntime {
         case let .window(windowID, .closeRequested):
             if let window = windows.first(where: { $0.id == windowID }) {
                 close(window)
+            } else if let popup = popups.first(where: { $0.id == windowID }) {
+                popup.onPopupDismissed?()
             }
             return !windows.isEmpty || runsWithoutWindows()
         case .systemThemeChanged:
@@ -316,7 +371,8 @@ public enum HostRuntime {
             // A wake: the loop goes around, running its hooks.
             break
         default:
-            if let windowID = event.windowID, let window = windows.first(where: { $0.id == windowID }) {
+            if let windowID = event.windowID,
+               let window = windows.first(where: { $0.id == windowID }) ?? popups.first(where: { $0.id == windowID }) {
                 window.handle(event, now: now)
             }
         }
