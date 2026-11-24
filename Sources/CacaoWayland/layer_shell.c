@@ -11,9 +11,9 @@
 #include <string.h>
 #include <wayland-client.h>
 
-// The protocol's `get_popup` takes an xdg_popup, which Cacao doesn't make:
-// an interface of our own name stands in for xdg-shell's, so this library
-// needn't carry xdg-shell's code or clash with a copy elsewhere.
+// The protocol's `get_popup` takes an xdg_popup, which popup.c makes: an
+// interface of our own name stands in for xdg-shell's here, as only the
+// object's id is sent.
 __attribute__((visibility("hidden")))
 const struct wl_interface cacao_layer_shell_xdg_popup_interface = { "xdg_popup", 1, 0, NULL, 0, NULL };
 #define xdg_popup_interface cacao_layer_shell_xdg_popup_interface
@@ -170,6 +170,12 @@ void cacao_wayland_layer_surface_destroy(CacaoWaylandLayerSurface *surface) {
     free(surface);
 }
 
+void cacao_wayland_layer_surface_attach_popup(CacaoWaylandLayerSurface *surface, void *xdg_popup) {
+    if (surface && surface->layer_surface && xdg_popup) {
+        zwlr_layer_surface_v1_get_popup(surface->layer_surface, xdg_popup);
+    }
+}
+
 void cacao_wayland_layer_shell_destroy(CacaoWaylandLayerShell *shell) {
     if (!shell) {
         return;
@@ -204,5 +210,7 @@ void cacao_wayland_layer_shell_dispatch(CacaoWaylandLayerShell *shell) { }
 void cacao_wayland_layer_surface_destroy(CacaoWaylandLayerSurface *surface) { }
 
 void cacao_wayland_layer_shell_destroy(CacaoWaylandLayerShell *shell) { }
+
+void cacao_wayland_layer_surface_attach_popup(CacaoWaylandLayerSurface *surface, void *xdg_popup) { }
 
 #endif
