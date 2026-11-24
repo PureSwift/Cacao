@@ -46,8 +46,9 @@ extension Menu where Label == Text {
     }
 }
 
-/// A button that opens a popup: bordered, with a chevron, below itself; or
-/// in a menu, a submenu item that opens its menu beside itself.
+/// A button that opens a popup below itself: bordered, with a chevron, or
+/// plain text with `.menuStyle(.borderlessButton)`; or in a menu, a
+/// submenu item that opens its menu beside itself.
 internal struct _PopupButton: View, PrimitiveView {
 
     let label: AnyView
@@ -90,23 +91,38 @@ internal struct _PopupButton: View, PrimitiveView {
                 node.graph.focusFirstItem(inPresentation: id)
             }
         }
+        let showsIndicator = context.environment.menuIndicatorVisibility != .hidden
         let view: AnyView
         if isInMenu {
             view = AnyView(_SubmenuItem(label: label, isOpen: isOpen, open: open))
+        } else if context.environment.menuStyle == .borderlessButton {
+            // Plain text, highlighted while open: a menu bar's title. A
+            // click while it's open lands on the menu's backdrop, which
+            // closes it.
+            view = AnyView(
+                Button { open(false) } label: { label }
+                    .buttonStyle(_BorderlessMenuButtonStyle(isOpen: isOpen, showsIndicator: context.environment.menuIndicatorVisibility == .visible))
+            )
         } else {
             view = AnyView(
                 Button { open(false) } label: {
                     HStack(spacing: 6) {
                         label
-                        _ChevronShape()
-                            .stroke(Color.secondary, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
-                            .frame(width: 10, height: 10)
+                        if showsIndicator {
+                            _ChevronShape()
+                                .stroke(Color.secondary, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
+                                .frame(width: 10, height: 10)
+                        }
                     }
                 }
                 .buttonStyle(.bordered)
             )
         }
-        return Resolution(children: [ChildView(key: 0, view: view)])
+        var attributes = NodeAttributes()
+        if !isInMenu, context.environment.menuStyle == .borderlessButton {
+            attributes.opensMenuOnHover = { open(false) }
+        }
+        return Resolution(children: [ChildView(key: 0, view: view)], attributes: attributes)
     }
 
     typealias Body = Never
