@@ -29,6 +29,9 @@ import CompilerPluginSupport
 /// - `CacaoDBus`: the desktop's services over D-Bus, with PureSwift/DBus:
 ///   the settings portal's appearance. No SwiftUI and no SDL; `CacaoHost`
 ///   uses it on Linux.
+/// - `CacaoDBusMenu`: menus over `com.canonical.dbusmenu`: a model of menu
+///   items, an exporter for apps and a reader for menu bars. Only
+///   PureSwift/DBus, so Cacao apps, Perry and the shell share it.
 /// - `SwiftUI` and `Combine` (Linux only): re-export Cacao so `import SwiftUI`
 ///   and `import Combine` compile.
 let package = Package(
@@ -73,6 +76,10 @@ let package = Package(
         .library(
             name: "CacaoDBus",
             targets: ["CacaoDBus"]
+        ),
+        .library(
+            name: "CacaoDBusMenu",
+            targets: ["CacaoDBusMenu"]
         ),
         .executable(
             name: "CacaoDemo",
@@ -225,6 +232,19 @@ let package = Package(
             ],
             exclude: ["CMakeLists.txt"]
         ),
+        // Menus over com.canonical.dbusmenu, for apps that export them and
+        // menu bars that show them. Only D-Bus, so other UI frameworks and
+        // the shell can use it.
+        .target(
+            name: "CacaoDBusMenu",
+            dependencies: [
+                .product(
+                    name: "DBus",
+                    package: "DBus"
+                )
+            ],
+            exclude: ["CMakeLists.txt"]
+        ),
         .executableTarget(
             name: "CacaoDemo",
             dependencies: [
@@ -253,6 +273,7 @@ let package = Package(
             name: "CacaoDBusTests",
             dependencies: [
                 "CacaoDBus",
+                "CacaoDBusMenu",
                 "CacaoTokens",
                 .product(
                     name: "DBus",
