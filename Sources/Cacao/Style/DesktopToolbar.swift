@@ -36,38 +36,36 @@ internal struct _DesktopToolbar: View {
     var body: some View {
         let colors = tokens.toolbar
         let metrics = tokens.metrics
-        let hasItems = !leading.isEmpty || !trailing.isEmpty || backTitle != nil || search != nil
-        ZStack {
-            HStack(spacing: metrics.spacingTight) {
-                if let backTitle {
-                    Button(action: back) {
-                        HStack(spacing: metrics.spacingTight) {
-                            _ChevronShape(pointsDown: false, pointsLeft: true)
-                                .stroke(style: StrokeStyle(lineWidth: 1.75, lineCap: .round, lineJoin: .round))
-                                .frame(width: 10, height: 14)
-                            Text(backTitle)
-                        }
+        // The title sits between the items on either side, truncated
+        // rather than over them.
+        HStack(spacing: metrics.spacingTight) {
+            if let backTitle {
+                Button(action: back) {
+                    HStack(spacing: metrics.spacingTight) {
+                        _ChevronShape(pointsDown: false, pointsLeft: true)
+                            .stroke(style: StrokeStyle(lineWidth: 1.75, lineCap: .round, lineJoin: .round))
+                            .frame(width: 10, height: 14)
+                        Text(backTitle)
                     }
                 }
-                ForEach(leading.indices, id: \.self) { leading[$0] }
-                Spacer(minLength: 0)
-                ForEach(trailing.indices, id: \.self) { trailing[$0] }
-                if let search {
-                    TextField("Search", text: search.text, prompt: search.prompt ?? Text("Search"))
-                        .environment(\.isSearchField, true)
-                        .frame(width: 200)
-                        .padding(.leading, metrics.spacing)
-                }
             }
+            ForEach(leading.indices, id: \.self) { leading[$0] }
+            Spacer(minLength: metrics.spacing)
             if !principal.isEmpty {
                 HStack(spacing: metrics.spacing) { ForEach(principal.indices, id: \.self) { principal[$0] } }
             } else if !title.isEmpty {
-                // Clear of the items on either side.
                 Text(title)
                     .font(Font(token: tokens.fonts.windowTitle))
                     .foregroundStyle(Color(tokens.titleBar.text))
                     .lineLimit(1)
-                    .padding(.horizontal, hasItems ? 120 : 0)
+            }
+            Spacer(minLength: metrics.spacing)
+            ForEach(trailing.indices, id: \.self) { trailing[$0] }
+            if let search {
+                TextField("Search", text: search.text, prompt: search.prompt ?? Text("Search"))
+                    .environment(\.isSearchField, true)
+                    .frame(minWidth: 120, maxWidth: 200)
+                    .padding(.leading, metrics.spacing)
             }
         }
         .environment(\.isInToolbar, true)
