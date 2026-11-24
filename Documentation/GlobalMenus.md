@@ -36,7 +36,7 @@ let exporter = DBusMenuExporter(connection: connection, menu: .root([
 await exporter.export()                        // at /MenuBar
 try await AppMenuDiscovery.claimName(forAppID: appID, on: connection)
 // Then tie each window to (connection.uniqueName, "/MenuBar") with the
-// appmenu protocol.
+// appmenu protocol: cacao_wayland_appmenu_create in CacaoWayland.
 ```
 
 Identifiers must stay with their items across updates, so a click finds the item it was meant for. The exporter serves version 3 of the interface, with the `Version`, `TextDirection`, `Status` and `IconThemePath` properties, and sends `LayoutUpdated` when items come, go or move and `ItemsPropertiesUpdated` when only their properties change. `AboutToShow` answers whether the menu changed while the handler ran.
@@ -71,6 +71,13 @@ A second instance of an app queues for the name and gets it when the first leave
 
 An app hides its in-window menu bar when either is true:
 
-- The compositor offers `org_kde_kwin_appmenu_manager` in its registry.
+- The compositor offers `org_kde_kwin_appmenu_manager` (`HostRuntime.compositorShowsMenus` in Cacao, `cacao_wayland_appmenu_manager_create` returning non-NULL elsewhere).
 - `com.canonical.AppMenu.Registrar` has an owner on the session bus (`AppMenuDiscovery.isMenuBarPresent(on:)`, or `menuBarPresence(on:)` to follow it). The menu bar owns this name while it runs, as Unity's and KDE's do; Qt apps check the same name.
 
+`SDLHost.menusShownByDesktop` combines both for Cacao apps.
+
+## Cacao apps
+
+On Linux, `SDLHost` serves the key window's commands as the app's menu: an app menu named after the app (the scene's app menu commands, such as Settings…, and Quit), File (the scene's File commands and Close Window), Edit (Undo, Redo, Cut, Copy, Paste and Select All, which press the same keys in the key window, then the scene's Edit commands), the app's `CommandMenu`s, Window (Minimize, Zoom, the scene's Window commands and the open windows) and Help when the scene adds to it. The menu is made again when the key window changes, every half second, and before a menu opens; a click runs the command in the key window. Shortcuts show Control where a command uses Command, as Cacao's views match them on Linux.
+
+Apps whose windows are all in layers of the screen, such as the shell's panels, serve no menu, and `SDLHost.exportsMenus = false` turns it off for others.

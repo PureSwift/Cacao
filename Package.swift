@@ -209,6 +209,15 @@ let package = Package(
                 "CacaoCompositor",
                 "CacaoHost",
                 "CacaoScrollPhysics",
+                .target(
+                    name: "CacaoDBusMenu",
+                    condition: .when(platforms: [.linux])
+                ),
+                .product(
+                    name: "DBus",
+                    package: "DBus",
+                    condition: .when(platforms: [.linux])
+                ),
                 .product(
                     name: "SDL3Swift",
                     package: "SDL"

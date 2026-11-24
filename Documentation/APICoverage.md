@@ -25,7 +25,7 @@ tests.
 | `openWindow`, `dismissWindow` | ✅ | |
 | `defaultSize` | ✅ | |
 | `windowStyle` (`.automatic`, `.titleBar`, `.hiddenTitleBar`, `.plain`) | ◐ | On Linux, in the desktop's look, automatic windows draw the desktop's title bar, with the window buttons where the desktop's `button-layout` puts them, and a toolbar at the top of the window joins it; elsewhere they have the system's. Hidden title bars show only the window buttons, plain windows nothing. Windows without system decorations move from the title bar or views with a `WindowDragGesture`, and resize from their edges. Double-clicking the title bar doesn't maximize yet. |
-| `commands`, `CommandMenu`, `CommandGroup` | ◐ | Shortcuts work in every window; macOS shows the menus in the menu bar. Group placements pick the menu, not the position in it. |
+| `commands`, `CommandMenu`, `CommandGroup` | ◐ | Shortcuts work in every window; macOS shows the menus in the menu bar, and Linux serves them to the desktop's global menu bar over `com.canonical.dbusmenu` (see [GlobalMenus.md](GlobalMenus.md)). Group placements pick the menu, not the position in it. |
 | `Settings`, `SettingsLink`, `openSettings` | ✅ | The settings shortcut opens it. |
 | `MenuBarExtra` | ◐ | A tray icon with a menu of the content's buttons; the menu style only. |
 | `DocumentGroup`, `FileDocument`, `ReferenceFileDocument` | ◐ | New, Open…, Save and Save As… in the File menu, through the system's dialogs; the window's title shows the file and whether it's edited. No autosave, prompt to save on close, recent documents or undo. |

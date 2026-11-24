@@ -15,3 +15,9 @@ target_link_libraries(CacaoSDL
     CacaoCompositor
     CacaoScrollPhysics
     SDL3::SDL3)
+
+if(CMAKE_SYSTEM_NAME STREQUAL Linux)
+  # The app's menus, served to the desktop's menu bar over D-Bus.
+  target_link_libraries(CacaoSDL PRIVATE
+    CacaoDBusMenu)
+endif()

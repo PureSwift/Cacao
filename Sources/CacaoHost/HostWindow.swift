@@ -95,7 +95,14 @@ public final class HostWindow {
     #if os(Linux)
     /// The window's surface in a layer of the screen, if it's in one.
     private var layerSurface: WaylandLayerSurface?
+
+    /// The window's tie to the app's menu, through the compositor.
+    private var windowMenu: WaylandWindowMenu?
     #endif
+
+    /// Whether the window is tied to the app's menu: windows among the
+    /// others are, and those in layers or never shown aren't.
+    private let showsAppMenu: Bool
 
     /// Whether the window is in a layer of the screen, such as a panel or
     /// dock, rather than among the windows.
@@ -180,10 +187,30 @@ public final class HostWindow {
         #if os(macOS)
         installRotationMonitor()
         #endif
+        self.showsAppMenu = !isInLayer && !isHidden
         // Scenes say where windows move from, decorated or not.
         if !isInLayer, !isHidden {
             installHitTest()
         }
+        applyMenuAddress()
+    }
+
+    /// Ties the window to the app's menu at `HostRuntime.menuAddress`, or
+    /// unties it when there's none.
+    func applyMenuAddress() {
+        #if os(Linux)
+        guard showsAppMenu else { return }
+        guard let address = HostRuntime.menuAddress else {
+            windowMenu?.destroy()
+            windowMenu = nil
+            return
+        }
+        if let windowMenu {
+            windowMenu.setAddress(address)
+        } else if let surface = waylandSurface {
+            windowMenu = WaylandWindowMenu(surface: surface, address: address)
+        }
+        #endif
     }
 
     /// Brings the window to the front.
@@ -206,8 +233,10 @@ public final class HostWindow {
         }
         #endif
         #if os(Linux)
-        // The layer role goes before SDL destroys the surface.
+        // The layer role and the menu go before SDL destroys the surface.
         layerSurface?.destroy()
+        windowMenu?.destroy()
+        windowMenu = nil
         #endif
         // The renderer and the window are destroyed with this object, which
         // the host has let go of.
