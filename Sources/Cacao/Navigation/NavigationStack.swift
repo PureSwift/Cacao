@@ -447,7 +447,7 @@ internal struct _NavigationStack: View, PrimitiveView {
         let entries = navigation.entries
         // Pushed screens are opaque, so the screen below doesn't show
         // through while they slide in.
-        let background = environment.screenBackground ?? Color.windowBackground(environment.colorScheme)
+        let background = environment.screenBackground ?? Color(environment.windowBackgroundColor)
         var children = [ChildView(
             key: "root",
             view: _NavigationScreen(content: root, depth: 0, navigation: navigation, isDetailRoot: column?.isDetail ?? false),
@@ -727,7 +727,26 @@ private struct _NavigationBarContent: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
+    @Environment(\.interfaceLook) private var look
+
     var body: some View {
+        if look.value == .desktop {
+            _DesktopToolbar(
+                title: title,
+                backTitle: backTitle,
+                back: back,
+                leading: leading,
+                principal: principal,
+                trailing: trailing,
+                search: search
+            )
+        } else {
+            stock
+        }
+    }
+
+    /// The bar in the stock look.
+    private var stock: some View {
         VStack(spacing: 0) {
             ZStack {
                 HStack(spacing: 12) {
@@ -1097,6 +1116,7 @@ internal struct _Searchable<Content: View>: View, PrimitiveView {
         }
         let view = VStack(spacing: 8) {
             TextField("Search", text: text, prompt: prompt ?? Text("Search"))
+                .environment(\.isSearchField, true)
                 .padding(.horizontal)
             searched
         }
@@ -1450,7 +1470,6 @@ private struct _NavigationSplit: View, PrimitiveView {
                 }
                 .frame(width: link.width(of: key, default: width))
         }
-        let colorScheme = context.environment.colorScheme
         // In a compact width the columns collapse into one stack: the
         // sidebar, with the detail and what links show pushed above it.
         if context.environment.horizontalSizeClass == .compact {
@@ -1462,7 +1481,7 @@ private struct _NavigationSplit: View, PrimitiveView {
                         _NavigationStack(path: nil, root: sidebar, column: (link, false), collapsedDetail: detail),
                         width: nil
                     )
-                    .background(Color.barBackground(colorScheme))
+                    .modifier(_SidebarColumnModifier())
                 ),
             ])
         }
@@ -1470,7 +1489,7 @@ private struct _NavigationSplit: View, PrimitiveView {
             ChildView(
                 key: "sidebar",
                 view: column("sidebar", _NavigationStack(path: nil, root: sidebar, column: (link, false)), width: 240)
-                    .background(Color.barBackground(colorScheme))
+                    .modifier(_SidebarColumnModifier())
             ),
             ChildView(key: "sidebar-divider", view: _SplitDivider(link: link, column: "sidebar", defaultWidth: 240)),
         ]
