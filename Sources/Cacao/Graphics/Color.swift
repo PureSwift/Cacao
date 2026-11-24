@@ -6,6 +6,7 @@
 //
 
 import CacaoRender
+internal import CacaoTokens
 import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
@@ -107,7 +108,7 @@ public struct Color: Hashable, Sendable, CustomStringConvertible {
             if let accent = environment.systemAccentColor {
                 return accent
             }
-            return SystemColor.blue.resolve(in: environment.colorScheme)
+            return SystemColor.accent.resolve(in: environment.colorScheme)
         case let .system(color):
             return color.resolve(in: environment.colorScheme)
         case let .adaptive(light, dark):
@@ -159,7 +160,8 @@ extension Color {
 internal enum SystemColor: String, Hashable, Sendable {
     case red, orange, yellow, green, mint, teal, cyan, blue, indigo, purple, pink, brown, gray
     case primary, secondary, separator
-    /// The tint from the environment, or blue.
+    /// The tint from the environment, or the system's accent, or the
+    /// default accent.
     case accent
 
     func resolve(in colorScheme: ColorScheme) -> Color.Resolved {
@@ -181,8 +183,19 @@ internal enum SystemColor: String, Hashable, Sendable {
         case .primary: return isDark ? .init(255, 255, 255) : .init(0, 0, 0)
         case .secondary: return isDark ? .init(235, 235, 245, 0.6) : .init(60, 60, 67, 0.6)
         case .separator: return isDark ? .init(84, 84, 88, 0.6) : .init(60, 60, 67, 0.29)
-        case .accent: return SystemColor.blue.resolve(in: colorScheme)
+        case .accent: return Self.defaultAccent(in: colorScheme)
         }
+    }
+
+    /// The accent where neither a tint nor the system names one. On Linux,
+    /// where Cacao draws the desktop, the desktop's own default accent;
+    /// elsewhere blue, as on Apple's platforms.
+    static func defaultAccent(in colorScheme: ColorScheme) -> Color.Resolved {
+        #if os(Linux)
+        return StyleTokens.defaultAccentColor
+        #else
+        return SystemColor.blue.resolve(in: colorScheme)
+        #endif
     }
 }
 

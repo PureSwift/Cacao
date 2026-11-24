@@ -1,4 +1,5 @@
 import CacaoRender
+import CacaoTokens
 import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
@@ -13,7 +14,25 @@ import Testing
         let graph = layout(Color.accentColor.frame(width: 10, height: 10).tint(.red))
         #expect(graph.colorItems.first?.color == Color.red.resolve(in: EnvironmentValues()))
         let untinted = layout(Color.accentColor.frame(width: 10, height: 10))
+        #if os(Linux)
+        #expect(untinted.colorItems.first?.color == StyleTokens.defaultAccentColor)
+        #else
         #expect(untinted.colorItems.first?.color == Color.blue.resolve(in: EnvironmentValues()))
+        #endif
+    }
+
+    @Test func styleTokensFollowTheEnvironment() {
+        var environment = EnvironmentValues()
+        #expect(environment.styleTokens.isDark == false)
+        #expect(environment.styleTokens.isHighContrast == false)
+        #expect(environment.styleTokens.accentColor == Color.accentColor.resolve(in: environment))
+        environment.colorScheme = .dark
+        environment.colorSchemeContrast = .increased
+        let orange = Color.Resolved(red: 1, green: 0.5, blue: 0)
+        environment.systemAccentColor = orange
+        #expect(environment.styleTokens == StyleTokens(isDark: true, accentColor: orange, isHighContrast: true))
+        environment.tint = .red
+        #expect(environment.styleTokens.accentColor == Color.red.resolve(in: environment))
     }
 
     @Test func theSystemsAccentColorIsTheAccentWithoutATint() {

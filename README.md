@@ -30,6 +30,7 @@ so scrolling and animation never repaint.
 | Module | |
 |---|---|
 | `CacaoRender` | The display list and the values it's made of: paths, colors, text, images, effects. No SwiftUI. |
+| `CacaoTokens` | The desktop's look as values: colors, gradients, radii, fonts and metrics, light and dark, tinted by the accent, for the appearance the settings portal serves. No SwiftUI, so other UI frameworks match Cacao's styles. See [style tokens](Documentation/StyleTokens.md). |
 | `Cacao` | The SwiftUI API: views, state, environment and layout, which build display lists. Platform-neutral, builds headless. |
 | `CacaoMacros` | The `@Entry` macro. |
 | `CacaoCompositor` | Draws display lists with Silica and composites them on the GPU. |

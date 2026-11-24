@@ -5,6 +5,7 @@
 //  Created by Alsey Coleman Miller on 11/23/26.
 //
 
+public import CacaoTokens
 internal import DBus
 
 /// Reads the appearance from the freedesktop settings portal,

@@ -9,6 +9,9 @@ import CompilerPluginSupport
 /// - `CacaoRender`: the display list and the values it's made of (paths,
 ///   colors, text, images, effects). No SwiftUI, so other UI frameworks can
 ///   draw through the compositor too.
+/// - `CacaoTokens`: the colors, gradients, radii, fonts and metrics of the
+///   desktop's look, for an appearance. No SwiftUI, so other UI frameworks
+///   can match Cacao's styles.
 /// - `Cacao`: the public SwiftUI API, evaluation and layout, which builds
 ///   display lists. No SDL and no GPU, so it builds and tests headless anywhere.
 /// - `CacaoMacros`: the `@Entry` macro.
@@ -42,6 +45,10 @@ let package = Package(
         .library(
             name: "CacaoRender",
             targets: ["CacaoRender"]
+        ),
+        .library(
+            name: "CacaoTokens",
+            targets: ["CacaoTokens"]
         ),
         .library(
             name: "CacaoCompositor",
@@ -95,9 +102,17 @@ let package = Package(
             name: "CacaoRender",
             exclude: ["CMakeLists.txt"]
         ),
+        // The desktop's look as values: colors, gradients, radii, fonts and
+        // metrics. Kept apart so other UI frameworks can read it without
+        // SwiftUI.
+        .target(
+            name: "CacaoTokens",
+            dependencies: ["CacaoRender"],
+            exclude: ["CMakeLists.txt"]
+        ),
         .target(
             name: "Cacao",
-            dependencies: ["CacaoRender", "CacaoMacros"],
+            dependencies: ["CacaoRender", "CacaoTokens", "CacaoMacros"],
             exclude: ["CMakeLists.txt"]
         ),
         .macro(
@@ -201,6 +216,7 @@ let package = Package(
         .target(
             name: "CacaoDBus",
             dependencies: [
+                "CacaoTokens",
                 .product(
                     name: "DBus",
                     package: "DBus"
@@ -219,6 +235,10 @@ let package = Package(
         .testTarget(
             name: "CacaoTests",
             dependencies: ["Cacao"]
+        ),
+        .testTarget(
+            name: "CacaoTokensTests",
+            dependencies: ["CacaoTokens"]
         ),
         .testTarget(
             name: "CacaoScrollPhysicsTests",
