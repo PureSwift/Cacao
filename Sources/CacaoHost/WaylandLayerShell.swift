@@ -99,6 +99,9 @@ final class WaylandLayerSurface {
 
     private var surface: OpaquePointer?
 
+    /// The layer surface, for its popups.
+    var pointer: OpaquePointer? { surface }
+
     private let window: SDLWindow
 
     /// Whether the compositor took the surface away.
