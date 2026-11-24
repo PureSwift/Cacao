@@ -22,7 +22,7 @@ import CompilerPluginSupport
 ///   showing whatever implements `HostScene`.
 /// - `CacaoSDL`: SwiftUI on the host: a view graph as each window's scene.
 /// - `CacaoWayland` (Linux): touchpad pinch rotations from Wayland, which SDL
-///   doesn't report.
+///   doesn't report, and layer-shell surfaces for panels and docks.
 /// - `SwiftUI` and `Combine` (Linux only): re-export Cacao so `import SwiftUI`
 ///   and `import Combine` compile.
 let package = Package(
@@ -173,7 +173,7 @@ let package = Package(
             exclude: ["CMakeLists.txt"]
         ),
         // Touchpad pinch rotations from Wayland compositors, which SDL
-        // doesn't report.
+        // doesn't report, and layer-shell surfaces for panels and docks.
         .target(
             name: "CacaoWayland",
             exclude: ["protocol", "CMakeLists.txt"],
