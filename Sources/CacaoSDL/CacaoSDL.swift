@@ -97,7 +97,8 @@ public enum SDLHost {
         return HostRuntime.openWindow(
             title: description.title,
             size: description.defaultSize ?? CGSize(width: 800, height: 600),
-            layer: description.layer.map(HostLayerSurface.init)
+            layer: description.layer.map(HostLayerSurface.init),
+            decorations: description.windowStyle.drawsOwnDecorations ? .none : .system
         ) { window in
             WindowScene(description: description, value: value, window: window, textEngine: textEngine)
         }
