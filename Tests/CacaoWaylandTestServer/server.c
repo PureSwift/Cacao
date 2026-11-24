@@ -14,12 +14,15 @@
 #include <wayland-client.h>
 #include "protocol/pointer-gestures-unstable-v1-server-protocol.h"
 #include "protocol/wlr-layer-shell-unstable-v1-server-protocol.h"
+#include "protocol/appmenu-server-protocol.h"
 
 // The interfaces, from CacaoWayland's protocol code.
 extern const struct wl_interface zwp_pointer_gestures_v1_interface;
 extern const struct wl_interface zwp_pointer_gesture_pinch_v1_interface;
 extern const struct wl_interface zwlr_layer_shell_v1_interface;
 extern const struct wl_interface zwlr_layer_surface_v1_interface;
+extern const struct wl_interface org_kde_kwin_appmenu_manager_interface;
+extern const struct wl_interface org_kde_kwin_appmenu_interface;
 
 /// The screen the test compositor pretends to have.
 #define SCREEN_WIDTH 1280
@@ -40,6 +43,8 @@ struct CacaoTestServer {
     uint32_t pending_height;
     int pending_configure;
     int pending_close;
+    struct wl_resource *appmenu;
+    CacaoTestAppMenuState appmenu_state;
 };
 
 static void destroy_resource(struct wl_client *client, struct wl_resource *resource) {
@@ -246,6 +251,59 @@ static void bind_layer_shell(struct wl_client *client, void *data, uint32_t vers
     wl_resource_set_implementation(resource, &layer_shell_implementation, data, NULL);
 }
 
+// MARK: App menu
+
+static void appmenu_set_address(struct wl_client *client, struct wl_resource *resource,
+                                const char *service_name, const char *object_path) {
+    CacaoTestServer *server = wl_resource_get_user_data(resource);
+    pthread_mutex_lock(&server->lock);
+    if (server->appmenu == resource) {
+        server->appmenu_state.addresses_set += 1;
+        strncpy(server->appmenu_state.service_name, service_name, sizeof(server->appmenu_state.service_name) - 1);
+        strncpy(server->appmenu_state.object_path, object_path, sizeof(server->appmenu_state.object_path) - 1);
+    }
+    pthread_mutex_unlock(&server->lock);
+}
+
+static void appmenu_destroyed(struct wl_resource *resource) {
+    CacaoTestServer *server = wl_resource_get_user_data(resource);
+    pthread_mutex_lock(&server->lock);
+    if (server->appmenu == resource) {
+        server->appmenu = NULL;
+        server->appmenu_state.exists = 0;
+    }
+    pthread_mutex_unlock(&server->lock);
+}
+
+static const struct org_kde_kwin_appmenu_interface appmenu_implementation = {
+    .set_address = appmenu_set_address,
+    .release = destroy_resource,
+};
+
+static void appmenu_manager_create(struct wl_client *client, struct wl_resource *resource, uint32_t id,
+                                   struct wl_resource *surface) {
+    CacaoTestServer *server = wl_resource_get_user_data(resource);
+    struct wl_resource *appmenu = wl_resource_create(client, &org_kde_kwin_appmenu_interface,
+                                                     wl_resource_get_version(resource), id);
+    wl_resource_set_implementation(appmenu, &appmenu_implementation, server, appmenu_destroyed);
+    pthread_mutex_lock(&server->lock);
+    server->appmenu = appmenu;
+    memset(&server->appmenu_state, 0, sizeof(server->appmenu_state));
+    server->appmenu_state.exists = 1;
+    server->appmenu_state.is_for_surface = surface == server->surface;
+    pthread_mutex_unlock(&server->lock);
+}
+
+static const struct org_kde_kwin_appmenu_manager_interface appmenu_manager_implementation = {
+    .create = appmenu_manager_create,
+    .release = destroy_resource,
+};
+
+static void bind_appmenu_manager(struct wl_client *client, void *data, uint32_t version, uint32_t id) {
+    struct wl_resource *resource = wl_resource_create(client, &org_kde_kwin_appmenu_manager_interface, version, id);
+    wl_resource_set_implementation(resource, &appmenu_manager_implementation, data, NULL);
+}
+
 /// On the server's thread.
 static void send_layer_configure(CacaoTestServer *server, uint32_t width, uint32_t height) {
     if (!server->layer_surface) return;
@@ -312,6 +370,10 @@ CacaoTestServer *cacao_test_server_start(const char *socket_name) {
 }
 
 CacaoTestServer *cacao_test_server_start_with_layer_shell(const char *socket_name, int with_layer_shell) {
+    return cacao_test_server_start_with_features(socket_name, with_layer_shell ? CacaoTestServerFeatureLayerShell : 0);
+}
+
+CacaoTestServer *cacao_test_server_start_with_features(const char *socket_name, uint32_t features) {
     CacaoTestServer *server = calloc(1, sizeof(CacaoTestServer));
     server->display = wl_display_create();
     if (wl_display_add_socket(server->display, socket_name) != 0) {
@@ -322,8 +384,11 @@ CacaoTestServer *cacao_test_server_start_with_layer_shell(const char *socket_nam
     wl_global_create(server->display, &wl_compositor_interface, 4, server, bind_compositor);
     wl_global_create(server->display, &wl_seat_interface, 5, server, bind_seat);
     wl_global_create(server->display, &zwp_pointer_gestures_v1_interface, 1, server, bind_gestures);
-    if (with_layer_shell) {
+    if (features & CacaoTestServerFeatureLayerShell) {
         wl_global_create(server->display, &zwlr_layer_shell_v1_interface, 4, server, bind_layer_shell);
+    }
+    if (features & CacaoTestServerFeatureAppMenu) {
+        wl_global_create(server->display, &org_kde_kwin_appmenu_manager_interface, 2, server, bind_appmenu_manager);
     }
     pthread_mutex_init(&server->lock, NULL);
     server->running = 1;
@@ -337,6 +402,13 @@ void cacao_test_server_pinch(CacaoTestServer *server, const double *rotations, i
     memcpy(server->rotations, rotations, sizeof(double) * count);
     server->pending = count;
     pthread_mutex_unlock(&server->lock);
+}
+
+CacaoTestAppMenuState cacao_test_server_appmenu_state(CacaoTestServer *server) {
+    pthread_mutex_lock(&server->lock);
+    CacaoTestAppMenuState state = server->appmenu_state;
+    pthread_mutex_unlock(&server->lock);
+    return state;
 }
 
 CacaoTestLayerState cacao_test_server_layer_state(CacaoTestServer *server) {
@@ -416,6 +488,8 @@ void cacao_test_client_disconnect(void *display) {
 
 CacaoTestServer *cacao_test_server_start(const char *socket_name) { return 0; }
 CacaoTestServer *cacao_test_server_start_with_layer_shell(const char *socket_name, int with_layer_shell) { return 0; }
+CacaoTestServer *cacao_test_server_start_with_features(const char *socket_name, uint32_t features) { return 0; }
+CacaoTestAppMenuState cacao_test_server_appmenu_state(CacaoTestServer *server) { CacaoTestAppMenuState state = { 0 }; return state; }
 CacaoTestLayerState cacao_test_server_layer_state(CacaoTestServer *server) { CacaoTestLayerState state = { 0 }; return state; }
 void cacao_test_server_configure_layer(CacaoTestServer *server, uint32_t width, uint32_t height) { }
 void cacao_test_server_close_layer(CacaoTestServer *server) { }
