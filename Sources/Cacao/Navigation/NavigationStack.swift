@@ -444,6 +444,9 @@ internal struct _NavigationStack: View, PrimitiveView {
         }
         var environment = context.environment
         environment.navigationContext = navigation
+        // Only the stack's bar can join the title bar: not those of stacks
+        // in its screens.
+        environment.titleBarInsets = nil
         let entries = navigation.entries
         // Pushed screens are opaque, so the screen below doesn't show
         // through while they slide in.
@@ -685,8 +688,11 @@ internal struct _NavigationBar: View, PrimitiveView {
             .accessibilityLabel("Toggle Sidebar")
             items.insert(ToolbarItemEntry(placement: .navigation, content: AnyView(toggle)), at: 0)
         }
+        // A bar that joins the desktop's title bar shows, empty or not, so
+        // the window buttons sit on it.
+        let joinsTitleBar = context.environment.titleBarInsets != nil && context.environment.usesDesktopLook
         let hasContent = !screen.title.isEmpty || !items.isEmpty || screen.search != nil
-            || (depth > 0 && !position.isBackButtonHidden)
+            || (depth > 0 && !position.isBackButtonHidden) || joinsTitleBar
         guard hasContent else {
             return Resolution(children: [])
         }
@@ -1470,6 +1476,15 @@ private struct _NavigationSplit: View, PrimitiveView {
                 }
                 .frame(width: link.width(of: key, default: width))
         }
+        // Joined with the desktop's title bar, the first column's bar
+        // leaves room for the leading window buttons and the last's for
+        // the trailing ones.
+        let titleBarInsets = context.environment.titleBarInsets
+        let shows = link.currentVisibility.showsColumns(hasContent: content != nil)
+        func insets(first: Bool, last: Bool) -> TitleBarInsets? {
+            titleBarInsets.map { TitleBarInsets(leading: first ? $0.leading : 0, trailing: last ? $0.trailing : 0) }
+        }
+        let firstShown = shows.firstIndex(of: true)
         // In a compact width the columns collapse into one stack: the
         // sidebar, with the detail and what links show pushed above it.
         if context.environment.horizontalSizeClass == .compact {
@@ -1482,6 +1497,9 @@ private struct _NavigationSplit: View, PrimitiveView {
                         width: nil
                     )
                     .modifier(_SidebarColumnModifier())
+                    // The same views as a regular width's sidebar, so what
+                    // it shows survives the change.
+                    .environment(\.titleBarInsets, titleBarInsets)
                 ),
             ])
         }
@@ -1490,18 +1508,23 @@ private struct _NavigationSplit: View, PrimitiveView {
                 key: "sidebar",
                 view: column("sidebar", _NavigationStack(path: nil, root: sidebar, column: (link, false)), width: 240)
                     .modifier(_SidebarColumnModifier())
+                    .environment(\.titleBarInsets, insets(first: firstShown == 0, last: false))
             ),
             ChildView(key: "sidebar-divider", view: _SplitDivider(link: link, column: "sidebar", defaultWidth: 240)),
         ]
         if let content {
-            children.append(ChildView(key: "content", view: column("content", NavigationStack { content }, width: 280)))
+            children.append(ChildView(
+                key: "content",
+                view: column("content", NavigationStack { content }, width: 280)
+                    .environment(\.titleBarInsets, insets(first: firstShown == 1, last: false))
+            ))
             children.append(ChildView(key: "content-divider", view: _SplitDivider(link: link, column: "content", defaultWidth: 280)))
         }
         children.append(ChildView(
             key: "detail",
             view: column("detail", _NavigationStack(path: nil, root: detail, column: (link, true)), width: nil)
+                .environment(\.titleBarInsets, insets(first: firstShown == shows.count - 1, last: true))
         ))
-        let shows = link.currentVisibility.showsColumns(hasContent: content != nil)
         return Resolution(behavior: _SplitBehavior(shows: shows), children: children)
     }
 
