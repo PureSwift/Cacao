@@ -4,9 +4,9 @@
 //
 //  What Cacao asks of a Wayland compositor that SDL doesn't: touchpad pinch
 //  gestures with their rotation, layer-shell surfaces, for panels and docks
-//  anchored to the edges of a screen, and the KDE appmenu protocol, which
-//  ties a window to its menu on D-Bus. Linux only; elsewhere these do
-//  nothing.
+//  anchored to the edges of a screen, popups as surfaces of their own, and
+//  the KDE appmenu protocol, which ties a window to its menu on D-Bus. Linux
+//  only; elsewhere these do nothing.
 //
 
 #ifndef CACAO_WAYLAND_H
@@ -131,6 +131,109 @@ void cacao_wayland_layer_surface_destroy(CacaoWaylandLayerSurface *surface);
 
 /// Destroy the shell's surfaces first.
 void cacao_wayland_layer_shell_destroy(CacaoWaylandLayerShell *shell);
+
+/// Makes a layer surface the parent of a popup (a `struct xdg_popup *` made
+/// with no parent), before the popup's surface is first committed.
+void cacao_wayland_layer_surface_attach_popup(CacaoWaylandLayerSurface *surface, void *xdg_popup);
+
+// MARK: - Popups
+
+/// Where a popup goes, as an `xdg_positioner` says it: a rectangle in the
+/// parent's window geometry to anchor to, the popup's size, the anchor
+/// point on that rectangle and the direction the popup extends from it
+/// (`xdg_positioner`'s `anchor` and `gravity` values), and what the
+/// compositor may do when it wouldn't fit on the screen (its
+/// `constraint_adjustment` flags: slide, flip, resize). In surface
+/// coordinates (points).
+typedef struct CacaoPopupPositioner {
+    int32_t anchor_x;
+    int32_t anchor_y;
+    int32_t anchor_width;
+    int32_t anchor_height;
+    int32_t width;
+    int32_t height;
+    uint32_t anchor;
+    uint32_t gravity;
+    uint32_t constraint_adjustment;
+    int32_t offset_x;
+    int32_t offset_y;
+} CacaoPopupPositioner;
+
+/// The part of a popup's surface that is the popup, inside the transparent
+/// margins its shadow draws in: what it's positioned by.
+typedef struct CacaoPopupGeometry {
+    int32_t x;
+    int32_t y;
+    int32_t width;
+    int32_t height;
+} CacaoPopupGeometry;
+
+typedef struct CacaoWaylandPopups CacaoWaylandPopups;
+
+typedef struct CacaoWaylandPopup CacaoWaylandPopup;
+
+/// What a popup belongs to: one of a window's `struct xdg_surface *`, a
+/// layer surface, or another popup.
+typedef struct CacaoPopupParent {
+    void *xdg_surface;
+    CacaoWaylandLayerSurface *layer_surface;
+    CacaoWaylandPopup *popup;
+} CacaoPopupParent;
+
+/// The compositor placed the popup: its position relative to its parent's
+/// window geometry, and its size, in surface coordinates.
+typedef void (*CacaoPopupConfigureCallback)(void *context, int32_t x, int32_t y, int32_t width, int32_t height);
+
+/// The compositor dismissed the popup, as when the user clicked outside it.
+typedef void (*CacaoPopupDoneCallback)(void *context);
+
+/// Binds `xdg_wm_base` and a seat on a Wayland display (a
+/// `struct wl_display *`), with an event queue of their own. The seat's
+/// input gives the serial a popup's grab needs. Returns NULL if the
+/// compositor offers no xdg shell.
+CacaoWaylandPopups *cacao_wayland_popups_create(void *display);
+
+/// The serial of the last button press, key press or touch the seat sent;
+/// 0 if none yet.
+uint32_t cacao_wayland_popups_input_serial(CacaoWaylandPopups *popups);
+
+/// Calls back for the configure and done events the display has read, for
+/// every popup. Each configure is acknowledged before its callback, so the
+/// next commit applies it.
+void cacao_wayland_popups_dispatch(CacaoWaylandPopups *popups);
+
+/// Gives a surface with no role yet (a `struct wl_surface *`) the popup
+/// role, and waits for the compositor's first placement, which it calls
+/// back with before returning. With `grab`, the popup takes the seat's
+/// grab, for the last input it sent: it gets keyboard focus, and the
+/// compositor dismisses it when the user clicks a surface of another
+/// client. The surface must have no buffer attached until then. Returns
+/// NULL if the compositor didn't place it.
+CacaoWaylandPopup *cacao_wayland_popup_create(
+    CacaoWaylandPopups *popups,
+    void *surface,
+    const CacaoPopupParent *parent,
+    const CacaoPopupPositioner *positioner,
+    const CacaoPopupGeometry *geometry,
+    bool grab,
+    CacaoPopupConfigureCallback configure,
+    CacaoPopupDoneCallback done,
+    void *context);
+
+/// Places the popup again, as for a new size; the compositor answers with a
+/// configure. Returns false if the compositor can't, as before
+/// `xdg_wm_base` version 3: then make the popup again.
+bool cacao_wayland_popup_reposition(CacaoWaylandPopup *popup, const CacaoPopupPositioner *positioner, const CacaoPopupGeometry *geometry);
+
+/// Sets the part of the surface that is the popup, for the next commit.
+void cacao_wayland_popup_set_geometry(CacaoWaylandPopup *popup, const CacaoPopupGeometry *geometry);
+
+/// Removes the popup role. Destroy a popup's own popups first. The surface
+/// itself belongs to its creator.
+void cacao_wayland_popup_destroy(CacaoWaylandPopup *popup);
+
+/// Destroy the popups first.
+void cacao_wayland_popups_destroy(CacaoWaylandPopups *popups);
 
 // MARK: - App menus
 
