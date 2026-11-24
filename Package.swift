@@ -252,6 +252,7 @@ let package = Package(
             name: "CacaoDBusTests",
             dependencies: [
                 "CacaoDBus",
+                "CacaoTokens",
                 .product(
                     name: "DBus",
                     package: "DBus"
