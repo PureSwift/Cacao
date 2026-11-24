@@ -23,6 +23,9 @@ import CompilerPluginSupport
 /// - `CacaoSDL`: SwiftUI on the host: a view graph as each window's scene.
 /// - `CacaoWayland` (Linux): touchpad pinch rotations from Wayland, which SDL
 ///   doesn't report, and layer-shell surfaces for panels and docks.
+/// - `CacaoDBus`: the desktop's services over D-Bus, with PureSwift/DBus:
+///   the settings portal's appearance. No SwiftUI and no SDL; `CacaoHost`
+///   uses it on Linux.
 /// - `SwiftUI` and `Combine` (Linux only): re-export Cacao so `import SwiftUI`
 ///   and `import Combine` compile.
 let package = Package(
@@ -60,6 +63,10 @@ let package = Package(
             name: "CacaoScrollPhysics",
             targets: ["CacaoScrollPhysics"]
         ),
+        .library(
+            name: "CacaoDBus",
+            targets: ["CacaoDBus"]
+        ),
         .executable(
             name: "CacaoDemo",
             targets: ["CacaoDemo"]
@@ -77,6 +84,10 @@ let package = Package(
         .package(
             url: "https://github.com/swiftlang/swift-syntax.git",
             "602.0.0"..<"605.0.0"
+        ),
+        .package(
+            url: "https://github.com/PureSwift/DBus.git",
+            branch: "master"
         )
     ],
     targets: [
@@ -148,6 +159,10 @@ let package = Package(
                     name: "CacaoWayland",
                     condition: .when(platforms: [.linux])
                 ),
+                .target(
+                    name: "CacaoDBus",
+                    condition: .when(platforms: [.linux])
+                ),
                 .product(
                     name: "SDL3Swift",
                     package: "SDL"
@@ -181,6 +196,18 @@ let package = Package(
                 .linkedLibrary("wayland-client", .when(platforms: [.linux]))
             ]
         ),
+        // The desktop's services over D-Bus: the settings portal's
+        // appearance. Kept apart so `Cacao` stays free of D-Bus.
+        .target(
+            name: "CacaoDBus",
+            dependencies: [
+                .product(
+                    name: "DBus",
+                    package: "DBus"
+                )
+            ],
+            exclude: ["CMakeLists.txt"]
+        ),
         .executableTarget(
             name: "CacaoDemo",
             dependencies: [
@@ -200,6 +227,16 @@ let package = Package(
         .testTarget(
             name: "CacaoCompositorTests",
             dependencies: ["Cacao", "CacaoCompositor"]
+        ),
+        .testTarget(
+            name: "CacaoDBusTests",
+            dependencies: [
+                "CacaoDBus",
+                .product(
+                    name: "DBus",
+                    package: "DBus"
+                )
+            ]
         ),
         .testTarget(
             name: "CacaoSDLTests",
