@@ -221,7 +221,10 @@ package final class SDLBackend: CompositorBackend {
         targets.removeAll()
         try? renderer.setTarget(nil)
         try? renderer.setClipRect(nil)
-        try? renderer.setDrawColorFloat(red: clearColor.red, green: clearColor.green, blue: clearColor.blue, alpha: 1)
+        // Transparent where the window is, as around a popup's shadow:
+        // what's drawn over it blends to premultiplied alpha, as Wayland and
+        // AppKit composite it.
+        try? renderer.setDrawColorFloat(red: clearColor.red, green: clearColor.green, blue: clearColor.blue, alpha: clearColor.opacity)
         try? renderer.clear()
     }
 
