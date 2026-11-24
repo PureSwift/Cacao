@@ -138,6 +138,10 @@ internal struct NodeAttributes {
     /// Gestures attached to the node's views.
     var gestures: [GestureAttachment] = []
 
+    /// Whether dragging the node's views moves the window, from a
+    /// `WindowDragGesture`.
+    var isWindowDragArea = false
+
     /// The name of the node's coordinate space.
     var coordinateSpaceName: AnyHashable?
 
