@@ -1,4 +1,5 @@
 add_subdirectory(CacaoRender)
+add_subdirectory(CacaoTokens)
 add_subdirectory(Cacao)
 add_subdirectory(CacaoScrollPhysics)
 add_subdirectory(CacaoCompositor)
