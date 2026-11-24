@@ -281,6 +281,10 @@ struct ControlsScreen: View {
                         Menu("Actions") {
                             Button("Duplicate") { lastAction = "Duplicate" }
                             Button("Rename") { lastAction = "Rename" }
+                            Menu("Move To") {
+                                Button("Inbox") { lastAction = "Move to Inbox" }
+                                Button("Archive") { lastAction = "Move to Archive" }
+                            }
                             Divider()
                             Button("Delete", role: .destructive) { lastAction = "Delete" }
                         }
