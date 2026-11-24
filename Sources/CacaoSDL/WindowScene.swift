@@ -265,7 +265,14 @@ final class WindowScene: HostScene {
         case let .appearanceChanged(appearance):
             applyColorScheme(system: appearance)
             applySystemAccentAndContrast()
+        case .windowStateChanged:
+            break
         }
+    }
+
+    /// Presses on views with a `WindowDragGesture` move the window.
+    func hitTest(at point: CGPoint) -> HostHitTestResult {
+        graph.movesWindow(at: point) ? .draggable : .normal
     }
 
     /// Scrolls with a finger: the first one down, once it has moved far
