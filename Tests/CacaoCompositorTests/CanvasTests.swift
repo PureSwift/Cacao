@@ -6,7 +6,6 @@ import CoreGraphics
 import Testing
 @testable import Cacao
 @testable import CacaoCompositor
-import Silica
 
 @MainActor
 @Suite struct CanvasTests {
@@ -14,11 +13,11 @@ import Silica
     let engine = SilicaTextEngine()
 
     /// A canvas's drawing, rasterized at 1 pixel a point.
-    func render(size: CGSize = CGSize(width: 40, height: 40), _ renderer: @escaping (inout GraphicsContext, CGSize) -> Void) throws -> Silica.CGImage {
+    func render(size: CGSize = CGSize(width: 40, height: 40), _ renderer: @escaping (inout GraphicsContext, CGSize) -> Void) throws -> SilicaImage {
         try render(Canvas(renderer: renderer).frame(width: size.width, height: size.height), size: size)
     }
 
-    func render<V: View>(_ view: V, size: CGSize) throws -> Silica.CGImage {
+    func render<V: View>(_ view: V, size: CGSize) throws -> SilicaImage {
         let graph = ViewGraph(rootView: view, textEngine: engine)
         graph.layout(in: size)
         let content = try #require(graph.displayList().items.compactMap { item -> DisplayList.Content? in
@@ -28,7 +27,7 @@ import Silica
         return try #require(Rasterizer.rasterize(content, size: size, scale: 1, textEngine: engine))
     }
 
-    func pixel(_ image: Silica.CGImage, _ x: Int, _ y: Int) -> [Int] {
+    func pixel(_ image: SilicaImage, _ x: Int, _ y: Int) -> [Int] {
         image.data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
             let base = y * image.bytesPerRow + x * 4
             return (0..<4).map { (index: Int) -> Int in Int(bytes[base + index]) }
