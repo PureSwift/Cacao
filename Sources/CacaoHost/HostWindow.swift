@@ -786,7 +786,7 @@ public final class HostWindow {
         // Bytes in R, G, B, A order, as PNGs have them.
         let surface: SDLSurface
         do {
-            surface = try renderer.readPixels().converted(to: .abgr8888)
+            surface = try renderer.readPixels().converted(to: .rgba32)
         } catch {
             print("Cacao: screenshot failed: \(error)")
             return false

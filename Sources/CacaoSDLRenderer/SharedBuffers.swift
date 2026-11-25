@@ -88,7 +88,7 @@ enum SharedBuffers {
         guard let image = createImage(display, nil, 0x3270, nil, attributes) else { return nil }
         // Static access: SDL never writes to it.
         guard let texture = try? SDLTexture(
-            renderer: renderer, format: .abgr8888, access: .static, width: Int(buffer.width), height: Int(buffer.height)
+            renderer: renderer, format: .rgba32, access: .static, width: Int(buffer.width), height: Int(buffer.height)
         ) else {
             _ = destroyImage(display, image)
             return nil

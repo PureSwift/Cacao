@@ -91,7 +91,7 @@ final class StatusItemHost {
         let scale: CGFloat = 2
         // Bytes in R, G, B, A order, as the rasterizer draws them.
         guard let image = Rasterizer.rasterize(content, size: item.frame.size, scale: scale, textEngine: textEngine),
-              let surface = try? SDLSurface(format: .abgr8888, size: (width: image.width, height: image.height)) else {
+              let surface = try? SDLSurface(format: .rgba32, size: (width: image.width, height: image.height)) else {
             return nil
         }
         let pitch = surface.pitch
