@@ -10,7 +10,6 @@ import Foundation
 import CoreGraphics
 #endif
 import CacaoRender
-import Silica
 
 // MARK: - Flattening
 
@@ -155,7 +154,7 @@ struct PixelBuffer {
         self.pixels = [Float](repeating: 0, count: width * height * 4)
     }
 
-    init?(_ image: Silica.CGImage?, width: Int, height: Int) {
+    init?(_ image: SilicaImage?, width: Int, height: Int) {
         self.init(width: width, height: height)
         guard let image else { return nil }
         image.data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
@@ -171,14 +170,14 @@ struct PixelBuffer {
         }
     }
 
-    var image: Silica.CGImage {
+    var image: SilicaImage {
         var data = Data(count: width * height * 4)
         data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
             for index in 0..<(width * height * 4) {
                 bytes[index] = UInt8(max(0, min(255, (pixels[index] * 255).rounded())))
             }
         }
-        return Silica.CGImage(width: width, height: height, bytesPerRow: width * 4, data: data)
+        return SilicaImage(width: width, height: height, bytesPerRow: width * 4, data: data)
     }
 }
 
@@ -197,8 +196,8 @@ extension Rasterizer {
         pixels: CGSize,
         scale: CGFloat,
         textEngine: SilicaTextEngine,
-        base: @escaping (Silica.CGContext) -> Void
-    ) -> Silica.CGImage? {
+        base: @escaping (SilicaContext) -> Void
+    ) -> SilicaImage? {
         compositeBuffer(drawing, width: Int(pixels.width), height: Int(pixels.height), scale: scale, textEngine: textEngine, base: base).image
     }
 
@@ -209,7 +208,7 @@ extension Rasterizer {
         height: Int,
         scale: CGFloat,
         textEngine: SilicaTextEngine,
-        base: @escaping (Silica.CGContext) -> Void
+        base: @escaping (SilicaContext) -> Void
     ) -> PixelBuffer {
         var result = PixelBuffer(width: width, height: height)
         var plain: [DrawingContent.Operation] = []
@@ -385,7 +384,7 @@ extension Rasterizer {
 
     /// Blends a source over a destination, as the W3C compositing spec
     /// describes for blend modes, on premultiplied pixels.
-    static func blend(_ source: PixelBuffer, onto destination: inout PixelBuffer, mode: BlendMode, opacity: Float) {
+    static func blend(_ source: PixelBuffer, onto destination: inout PixelBuffer, mode: CacaoRender.BlendMode, opacity: Float) {
         for pixel in 0..<(destination.width * destination.height) {
             let index = pixel * 4
             let sa = source.pixels[index + 3] * opacity
@@ -426,7 +425,7 @@ extension Rasterizer {
     typealias RGB = (Float, Float, Float)
 
     /// A blend mode's function of the backdrop and source colors.
-    static func blendColor(_ cb: RGB, _ cs: RGB, mode: BlendMode) -> RGB {
+    static func blendColor(_ cb: RGB, _ cs: RGB, mode: CacaoRender.BlendMode) -> RGB {
         func each(_ f: (Float, Float) -> Float) -> RGB {
             (f(cb.0, cs.0), f(cb.1, cs.1), f(cb.2, cs.2))
         }
