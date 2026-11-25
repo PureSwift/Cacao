@@ -151,7 +151,7 @@ let package = Package(
                     package: "Silica"
                 ),
                 .product(
-                    name: "SilicaCoreGraphics",
+                    name: "SilicaQuartz",
                     package: "Silica",
                     condition: .when(platforms: [.macOS, .iOS])
                 ),
