@@ -6,13 +6,12 @@ import CoreGraphics
 import Testing
 @testable import Cacao
 @testable import CacaoCompositor
-import Silica
 
 @MainActor
 @Suite struct TextRenderingTests {
 
     /// The rows and columns that have ink in a premultiplied RGBA image.
-    static func inkBounds(_ image: Silica.CGImage) -> CGRect? {
+    static func inkBounds(_ image: SilicaImage) -> CGRect? {
         var minX = Int.max, minY = Int.max, maxX = -1, maxY = -1
         image.data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
             for y in 0..<image.height {

@@ -39,6 +39,7 @@ cmake -S "$silica" -B "$work/silica-build" -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_Swift_FLAGS="$flags" \
   -DCMAKE_INSTALL_PREFIX="$out" \
+  -DSILICA_BUILD_COREGRAPHICS=OFF \
   -DSILICA_INSTALL_LIBDIR=. \
   -DSILICA_INSTALL_SWIFTMODULEDIR=.
 cmake --build "$work/silica-build"

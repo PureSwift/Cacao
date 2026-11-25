@@ -6,12 +6,11 @@ import CoreGraphics
 import Testing
 @testable import Cacao
 @testable import CacaoCompositor
-import Silica
 
 @MainActor
 @Suite struct GradientTests {
 
-    static func pixel(_ image: Silica.CGImage, _ x: Int, _ y: Int) -> [Int] {
+    static func pixel(_ image: SilicaImage, _ x: Int, _ y: Int) -> [Int] {
         image.data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
             let base = y * image.bytesPerRow + x * 4
             return (0..<4).map { (index: Int) -> Int in Int(bytes[base + index]) }

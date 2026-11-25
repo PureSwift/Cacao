@@ -11,14 +11,9 @@ import CoreGraphics
 #endif
 import CacaoRender
 import Silica
-#if canImport(SilicaCoreGraphics)
-import SilicaCoreGraphics
-#elseif canImport(SilicaCairo)
-import SilicaCairo
-#endif
 
 /// Draws a layer's content into a bitmap with the platform's Silica backend:
-/// CoreGraphics on macOS, Cairo on Linux.
+/// Quartz on macOS, Cairo on Linux.
 ///
 /// The compositor calls this only when a layer's content changes; the
 /// resulting pixels are uploaded to a GPU texture and reused every frame.
@@ -26,28 +21,22 @@ package enum Rasterizer {
 
     /// The name of the Silica backend in use.
     package static var backendName: String {
-        #if canImport(SilicaCoreGraphics)
-        return "CoreGraphics"
-        #elseif canImport(SilicaCairo)
-        return "Cairo"
-        #else
-        return "None"
-        #endif
+        SilicaPlatform.backendName
     }
+
+    /// The platform's backend, registered once as Silica's default.
+    private static let backend: Void = SilicaPlatform.register()
 
     /// Draws into a new bitmap of `size` pixels and returns the image, whose
     /// pixels are premultiplied RGBA, rows top to bottom.
     package static func draw(
         size: CGSize,
-        _ body: (Silica.CGContext) throws -> Void
-    ) throws -> Silica.CGImage? {
-        #if canImport(SilicaCoreGraphics)
-        let context = try CoreGraphicsContext(bitmap: size)
-        #elseif canImport(SilicaCairo)
-        let context = try CairoContext(bitmap: size)
-        #else
-        #error("No Silica backend for this platform")
-        #endif
+        _ body: (SilicaContext) throws -> Void
+    ) throws -> SilicaImage? {
+        _ = backend
+        guard let context = BitmapContext(width: Double(size.width), height: Double(size.height)) else {
+            return nil
+        }
         try body(context)
         return context.makeImage()
     }
@@ -72,7 +61,7 @@ package enum Rasterizer {
         scale: CGFloat,
         region: CGRect? = nil,
         textEngine: SilicaTextEngine
-    ) -> Silica.CGImage? {
+    ) -> SilicaImage? {
         let outset = outset(of: content)
         let full = CGSize(
             width: max(1, ((size.width + 2 * outset) * scale).rounded(.up)),
@@ -127,23 +116,19 @@ package enum Rasterizer {
         }
     }
 
-    /// Draws an image with its first row at the top of a rectangle: Silica
-    /// draws images y-up, as Quartz does.
-    private static func drawUpright(_ image: Silica.CGImage, in rect: CGRect, context: Silica.CGContext) {
-        context.saveGState()
-        context.translateBy(x: rect.minX, y: rect.maxY)
-        context.scaleBy(x: 1, y: -1)
-        context.draw(image, in: CGRect(x: 0, y: 0, width: rect.width, height: rect.height))
-        context.restoreGState()
+    /// Draws an image with its first row at the top of a rectangle, as
+    /// Silica draws images.
+    private static func drawUpright(_ image: SilicaImage, in rect: CGRect, context: SilicaContext) {
+        context.draw(image, in: Silica.Rect(rect))
     }
 
     /// The gradient's colors at each pixel, at the coverage's alpha.
     /// `point` gives the point in the gradient's space of a pixel's center.
     package static func paint(
         _ gradient: GradientPaint,
-        through coverage: Silica.CGImage,
+        through coverage: SilicaImage,
         point: (Int, Int) -> CGPoint
-    ) -> Silica.CGImage {
+    ) -> SilicaImage {
         var data = coverage.data
         let width = coverage.width, height = coverage.height, bytesPerRow = coverage.bytesPerRow
         data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
@@ -162,15 +147,15 @@ package enum Rasterizer {
                 }
             }
         }
-        return Silica.CGImage(width: width, height: height, bytesPerRow: bytesPerRow, data: data)
+        return SilicaImage(width: width, height: height, bytesPerRow: bytesPerRow, data: data)
     }
 
     /// A gradient drawn over a rectangle, in pixels of `scale` a point.
-    private static func gradientImage(_ gradient: GradientPaint, in rect: CGRect, scale: CGFloat) -> Silica.CGImage? {
+    private static func gradientImage(_ gradient: GradientPaint, in rect: CGRect, scale: CGFloat) -> SilicaImage? {
         let width = Int(min(4096, max(1, (rect.width * scale).rounded(.up))))
         let height = Int(min(4096, max(1, (rect.height * scale).rounded(.up))))
         let opaque = Data(repeating: 255, count: width * height * 4)
-        let coverage = Silica.CGImage(width: width, height: height, bytesPerRow: width * 4, data: opaque)
+        let coverage = SilicaImage(width: width, height: height, bytesPerRow: width * 4, data: opaque)
         return paint(gradient, through: coverage) { column, row in
             CGPoint(
                 x: rect.minX + (CGFloat(column) + 0.5) * rect.width / CGFloat(width),
@@ -181,7 +166,7 @@ package enum Rasterizer {
 
     /// Draws a canvas's commands, each with its transform, opacity and clips.
     @MainActor
-    static func draw(_ drawing: DrawingContent, in context: Silica.CGContext, scale: CGFloat, textEngine: SilicaTextEngine) {
+    static func draw(_ drawing: DrawingContent, in context: SilicaContext, scale: CGFloat, textEngine: SilicaTextEngine) {
         for operation in drawing.operations {
             let state = operation.state
             guard state.opacity > 0 else { continue }
@@ -189,16 +174,16 @@ package enum Rasterizer {
             defer { context.restoreGState() }
             for clip in state.clips {
                 context.saveGState()
-                context.concatenate(Silica.CGAffineTransform(clip.transform))
+                context.concatenate(Silica.AffineTransform(clip.transform))
                 addPath(clip.path, to: context)
                 if clip.isInverse {
                     // Outside the path: the path within a very large rectangle.
-                    context.addRect(CGRect(x: -1e5, y: -1e5, width: 2e5, height: 2e5))
+                    context.addRect(Silica.Rect(x: -1e5, y: -1e5, width: 2e5, height: 2e5))
                 }
                 context.restoreGState()
                 context.clip(using: clip.isEOFilled || clip.isInverse ? .evenOdd : .winding)
             }
-            context.concatenate(Silica.CGAffineTransform(state.transform))
+            context.concatenate(Silica.AffineTransform(state.transform))
             // Opacity goes into colors: not every backend applies a
             // context's alpha to fills.
             let opacity = Float(state.opacity)
@@ -250,10 +235,10 @@ package enum Rasterizer {
                 for index in text.runs.indices {
                     text.runs[index].color.opacity *= opacity
                 }
-                context.translateBy(x: rect.minX, y: rect.minY)
+                context.translateBy(x: Double(rect.minX), y: Double(rect.minY))
                 textEngine.draw(text, size: rect.size, in: context)
             case let .image(image, rect, _):
-                context.alpha = CGFloat(opacity)
+                context.setAlpha(Double(opacity))
                 if let decoded = decode(image) {
                     drawUpright(decoded, in: rect, context: context)
                 }
@@ -264,7 +249,7 @@ package enum Rasterizer {
                 guard tile.width > 0.5, tile.height > 0.5, !bounds.isNull else { continue }
                 addPath(path, to: context)
                 context.clip(using: isEOFilled ? .evenOdd : .winding)
-                context.alpha = CGFloat(opacity)
+                context.setAlpha(Double(opacity))
                 let firstColumn = Int(((bounds.minX - origin.x) / tile.width).rounded(.down))
                 let firstRow = Int(((bounds.minY - origin.y) / tile.height).rounded(.down))
                 let columns = Int(((bounds.maxX - origin.x) / tile.width).rounded(.up))
@@ -283,36 +268,36 @@ package enum Rasterizer {
         }
     }
 
-    private static func addPath(_ path: Path, to context: Silica.CGContext) {
+    private static func addPath(_ path: CacaoRender.Path, to context: SilicaContext) {
         context.beginPath()
         path.forEach { element in
             switch element {
             case let .move(to):
-                context.move(to: to)
+                context.move(to: Silica.Point(to))
             case let .line(to):
-                context.addLine(to: to)
+                context.addLine(to: Silica.Point(to))
             case let .quadCurve(to, control):
-                context.addQuadCurve(to: to, control: control)
+                context.addQuadCurve(to: Silica.Point(to), control: Silica.Point(control))
             case let .curve(to, control1, control2):
-                context.addCurve(to: to, control1: control1, control2: control2)
+                context.addCurve(to: Silica.Point(to), control1: Silica.Point(control1), control2: Silica.Point(control2))
             case .closeSubpath:
                 context.closePath()
             }
         }
     }
 
-    private static func draw(_ shape: ShapeContent, in context: Silica.CGContext) {
+    private static func draw(_ shape: ShapeContent, in context: SilicaContext) {
         context.beginPath()
         shape.path.forEach { element in
             switch element {
             case let .move(to):
-                context.move(to: to)
+                context.move(to: Silica.Point(to))
             case let .line(to):
-                context.addLine(to: to)
+                context.addLine(to: Silica.Point(to))
             case let .quadCurve(to, control):
-                context.addQuadCurve(to: to, control: control)
+                context.addQuadCurve(to: Silica.Point(to), control: Silica.Point(control))
             case let .curve(to, control1, control2):
-                context.addCurve(to: to, control1: control1, control2: control2)
+                context.addCurve(to: Silica.Point(to), control1: Silica.Point(control1), control2: Silica.Point(control2))
             case .closeSubpath:
                 context.closePath()
             }
@@ -320,49 +305,43 @@ package enum Rasterizer {
         let color = shape.color
         switch shape.drawing {
         case let .fill(style):
-            context.setFillColor(
-                red: CGFloat(color.red), green: CGFloat(color.green),
-                blue: CGFloat(color.blue), alpha: CGFloat(color.opacity)
-            )
+            context.setFillColor(Silica.Color(color))
             context.fillPath(using: style.isEOFilled ? .evenOdd : .winding)
         case let .stroke(style):
-            context.setStrokeColor(
-                red: CGFloat(color.red), green: CGFloat(color.green),
-                blue: CGFloat(color.blue), alpha: CGFloat(color.opacity)
-            )
-            context.lineWidth = style.lineWidth
-            context.lineCap = Silica.CGLineCap(style.lineCap)
-            context.lineJoin = Silica.CGLineJoin(style.lineJoin)
-            context.miterLimit = style.miterLimit
-            context.lineDash = (style.dashPhase, style.dash)
+            context.setStrokeColor(Silica.Color(color))
+            context.setLineWidth(Double(style.lineWidth))
+            context.setLineCap(Silica.LineCap(style.lineCap))
+            context.setLineJoin(Silica.LineJoin(style.lineJoin))
+            context.setMiterLimit(Double(style.miterLimit))
+            context.setLineDash(phase: Double(style.dashPhase), lengths: style.dash.map { Double($0) })
             context.strokePath()
         }
     }
 
     /// Encodes premultiplied RGBA pixels, rows top to bottom, as PNG.
     package static func encodePNG(width: Int, height: Int, bytesPerRow: Int, pixels: Data) -> Data? {
-        let image = Silica.CGImage(width: width, height: height, bytesPerRow: bytesPerRow, data: pixels)
-        #if canImport(SilicaCoreGraphics)
-        return CoreGraphicsBackend.encodePNG(image)
-        #elseif canImport(SilicaCairo)
-        return CairoBackend.encodePNG(image)
-        #else
-        return nil
-        #endif
+        _ = backend
+        return SilicaImage(width: width, height: height, bytesPerRow: bytesPerRow, data: pixels).pngData()
     }
 
     /// Decodes an image's PNG data, or takes its pixels, replacing its color
     /// with `tint` if set, then transforming its colors by its matrix if set.
-    package static func decode(_ content: ImageContent) -> Silica.CGImage? {
-        let image: Silica.CGImage
+    /// Decodes PNG data with the platform's backend.
+    private static func decodePNG(_ data: Data) -> SilicaImage? {
+        _ = backend
+        return SilicaImage(png: data)
+    }
+
+    package static func decode(_ content: ImageContent) -> SilicaImage? {
+        let image: SilicaImage
         if let pixels = content.source.pixels {
-            image = Silica.CGImage(
+            image = SilicaImage(
                 width: Int(content.source.pixelSize.width),
                 height: Int(content.source.pixelSize.height),
                 bytesPerRow: pixels.bytesPerRow,
                 data: pixels.data
             )
-        } else if let decoded = CGImageSourcePNG(data: content.source.data)?.createImage(at: 0) {
+        } else if let decoded = decodePNG(content.source.data) {
             image = decoded
         } else {
             return nil
@@ -405,7 +384,7 @@ package enum Rasterizer {
                 }
             }
         }
-        return Silica.CGImage(width: image.width, height: image.height, bytesPerRow: image.bytesPerRow, data: data)
+        return SilicaImage(width: image.width, height: image.height, bytesPerRow: image.bytesPerRow, data: data)
     }
 }
 
@@ -417,7 +396,7 @@ private typealias StrokeLineCap = CacaoRender.CGLineCap
 private typealias StrokeLineJoin = CacaoRender.CGLineJoin
 #endif
 
-private extension Silica.CGLineCap {
+private extension Silica.LineCap {
 
     init(_ cap: StrokeLineCap) {
         switch cap {
@@ -428,7 +407,7 @@ private extension Silica.CGLineCap {
     }
 }
 
-private extension Silica.CGLineJoin {
+private extension Silica.LineJoin {
 
     init(_ join: StrokeLineJoin) {
         switch join {
@@ -436,12 +415,5 @@ private extension Silica.CGLineJoin {
         case .bevel: self = .bevel
         default: self = .miter
         }
-    }
-}
-
-extension Silica.CGAffineTransform {
-
-    init(_ transform: Transform2D) {
-        self.init(a: transform.a, b: transform.b, c: transform.c, d: transform.d, tx: transform.tx, ty: transform.ty)
     }
 }

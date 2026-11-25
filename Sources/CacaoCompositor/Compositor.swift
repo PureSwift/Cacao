@@ -10,7 +10,6 @@ import Foundation
 import CoreGraphics
 #endif
 import CacaoRender
-import Silica
 
 // MARK: - Backend
 
@@ -1101,7 +1100,7 @@ package final class Compositor {
         return texture
     }
 
-    private func upload(_ image: Silica.CGImage) -> TextureID? {
+    private func upload(_ image: SilicaImage) -> TextureID? {
         frameStatistics.uploads += 1
         return backend.makeTexture(
             width: image.width,

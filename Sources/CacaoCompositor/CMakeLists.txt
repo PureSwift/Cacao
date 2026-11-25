@@ -1,7 +1,7 @@
 # The layer tree, drawn with Silica and composited on the GPU.
 #
 # Silica's modules come from the Swift resource directory (or from search
-# paths in CMAKE_Swift_FLAGS): its Cairo backend on Linux, its Core Graphics
+# paths in CMAKE_Swift_FLAGS): its Cairo backend on Linux, its Quartz (Core Graphics)
 # backend on macOS.
 
 file(GLOB sources CONFIGURE_DEPENDS *.swift)
@@ -14,7 +14,7 @@ target_link_libraries(CacaoCompositor PUBLIC
 if(CMAKE_SYSTEM_NAME STREQUAL Darwin)
   target_link_libraries(CacaoCompositor PRIVATE
     Silica
-    SilicaCoreGraphics)
+    SilicaQuartz)
 else()
   target_link_libraries(CacaoCompositor PRIVATE
     Silica

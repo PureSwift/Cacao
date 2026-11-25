@@ -283,7 +283,7 @@ with no changes, and run in a native window on Linux and macOS.
 | `CacaoTokens` | The desktop's look as values: colors, gradients, corner radii, fonts and metrics, light and dark, tinted by the accent, resolved for the settings portal's `Appearance` (see [StyleTokens.md](StyleTokens.md)). **No SwiftUI**, so Perry's AppKit reads the same values as Cacao's styles. | `CacaoRender` |
 | `Cacao` | Public SwiftUI API, evaluator, `ViewGraph`, layout, building `DisplayList`s, layer tree model, animation, scroll physics, gestures, focus, text model. **No SDL, no GPU** – builds and tests headless anywhere. Geometry types (`CGPoint`/`CGSize`/`CGRect`/`CGAffineTransform`) from Foundation. | `CacaoRender`, `CacaoTokens`, Foundation, Observation |
 | `CacaoScrollPhysics` | Velocity tracking, deceleration, rubber band, spring‑back (ported from Perry's `PerryScrollPhysics`; pure Swift, no deps) | – |
-| `CacaoCompositor` | Layer tree → GPU: texture cache keyed by layer + content version, compositing pass, offscreen passes for group opacity / rounded clips / masks; layer‑content drawing through Silica; `TextEngine` over Silica fonts | `CacaoRender`, Silica (`SilicaCairo` on Linux, `SilicaCoreGraphics` on macOS) |
+| `CacaoCompositor` | Layer tree → GPU: texture cache keyed by layer + content version, compositing pass, offscreen passes for group opacity / rounded clips / masks; layer‑content drawing through Silica; `TextEngine` over Silica fonts | `CacaoRender`, Silica (`SilicaCairo` on Linux, `SilicaQuartz` on macOS) |
 | `CacaoHost` | SDL3 window(s), main loop + vsync frame clock, wake hooks, event translation (precise trackpad deltas, touch, every mouse button, keys down and up), clipboard, IME, cursor, file dialogs, display scale; SDL3 renderer backend of the compositor. Shows whatever implements `HostScene`; **no SwiftUI**. | `CacaoRender`, `CacaoCompositor`, `SDL3Swift` |
 | `CacaoSDL` | SwiftUI on the host: a `ViewGraph` as each window's `HostScene`, scroll physics, menus, status items, accessibility, input routed to external content; implements `App.main()` | `Cacao`, `CacaoHost`, `CacaoCompositor`, `CacaoScrollPhysics`, `SDL3Swift` |
 | `SwiftUI` (Linux only, optional) | `@_exported import Cacao` + `CacaoSDL`, so unmodified sources `import SwiftUI` | `Cacao`, `CacaoSDL` |
@@ -359,7 +359,7 @@ compositing, `PerryScrollPhysics` for scrolling):
   `compositingGroup`/`drawingGroup`, and large subtrees.
 - **Content is rasterized only when its version changes**: each layer's
   content is drawn once with Silica (`SilicaCairo` on Linux,
-  `SilicaCoreGraphics` on macOS) into a pixel buffer at
+  `SilicaQuartz` on macOS) into a pixel buffer at
   `displayScale`, uploaded to a GPU texture, and cached. Plain rectangular
   fills skip textures entirely (`SDL_RenderFillRect`).
 - **Every frame, the compositor only draws textures**: walks the layer tree
@@ -479,7 +479,7 @@ driven by the host's frame clock.
 - Delete: `Sources/Cacao/**` (UIKit), `Sources/CacaoDemo/**`,
   `Tests/CacaoTests/**`, `iOS/` Xcode project, `Resources/PaintCode`,
   `Resources/ReadmeImages` (replaced with new screenshots).
-- Dependencies: keep Silica (move to the `SilicaCairo` / `SilicaCoreGraphics`
+- Dependencies: keep Silica (move to the `SilicaCairo` / `SilicaQuartz`
   products), replace direct `Cairo` + `SDL` (SDL2) with `SDL3Swift`; drop the
   `Cairo` direct dependency.
 - Rewrite `README.md`: what Cacao is now, build instructions
