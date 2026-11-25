@@ -9,7 +9,7 @@ import Silica
 
     @Test func backend() {
         #if os(macOS)
-        #expect(Rasterizer.backendName == "CoreGraphics")
+        #expect(Rasterizer.backendName == "Quartz")
         #elseif os(Linux)
         #expect(Rasterizer.backendName == "Cairo")
         #endif
@@ -20,7 +20,7 @@ import Silica
     @Test func fillBitmap() throws {
         let image = try #require(try Rasterizer.draw(size: CGSize(width: 8, height: 4)) { context in
             context.setFillColor(red: 1, green: 0, blue: 0, alpha: 1)
-            context.addRect(CGRect(x: 0, y: 0, width: 8, height: 4))
+            context.addRect(Silica.Rect(x: 0, y: 0, width: 8, height: 4))
             context.fillPath()
         })
         #expect(image.width == 8)
