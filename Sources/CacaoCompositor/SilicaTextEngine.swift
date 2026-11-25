@@ -248,10 +248,13 @@ package final class SilicaTextEngine: TextEngine {
 
     /// The glyphs from `start` to the end of the text, cut around an
     /// ellipsis to fit a width: keeping the start (tail truncation), the end
-    /// (head) or both (middle).
+    /// (head) or both (middle). Text kept from the start ends at its first
+    /// newline, and text kept from the end begins after its last, so lines
+    /// cut off aren't run together.
     private func truncated(_ shaped: Shaped, from start: Int, width: CGFloat, mode: TruncationMode) -> Line {
-        let indices = Array(start..<shaped.scalars.count).filter { shaped.scalars[$0] != "\n" }
-        let ellipsisRun = shaped.runs[indices.last ?? start]
+        let indices = Array(start..<shaped.scalars.count)
+        let lastGlyph = indices.last { shaped.scalars[$0] != "\n" }
+        let ellipsisRun = shaped.runs[lastGlyph ?? start]
         let ellipsis = ellipsisAdvance(shaped, run: ellipsisRun)
         let budget = max(width - ellipsis, 0)
         func prefix(_ budget: CGFloat) -> [Int] {
@@ -268,6 +271,10 @@ package final class SilicaTextEngine: TextEngine {
         func suffix(_ budget: CGFloat) -> [Int] {
             var taken: [Int] = [], used: CGFloat = 0
             for index in indices.reversed() {
+                if shaped.scalars[index] == "\n" {
+                    // Trailing newlines end no text: past them, it's cut.
+                    if taken.isEmpty { continue } else { break }
+                }
                 guard used + shaped.advances[index] <= budget + 0.01 else { break }
                 used += shaped.advances[index]
                 taken.insert(index, at: 0)
@@ -288,7 +295,7 @@ package final class SilicaTextEngine: TextEngine {
         }
         let pieces = head.map(Piece.glyph) + [.ellipsis(run: ellipsisRun)] + tail.map(Piece.glyph)
         let used = (head + tail).reduce(0) { $0 + shaped.advances[$1] }
-        return Line(range: start..<(indices.last.map { $0 + 1 } ?? start), width: used + ellipsis, pieces: pieces)
+        return Line(range: start..<(lastGlyph.map { $0 + 1 } ?? start), width: used + ellipsis, pieces: pieces)
     }
 
     /// The width of an ellipsis in a run's font.

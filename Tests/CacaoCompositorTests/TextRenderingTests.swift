@@ -179,6 +179,24 @@ extension TextRenderingTests {
         #expect(image.flatMap(Self.inkBounds).map { $0.maxX <= tail.size.width } == true)
     }
 
+    @Test func truncatesAtANewline() {
+        let engine = SilicaTextEngine()
+        var text = Self.text("Notepad\nWrite the release notes.", size: 20)
+        text.lineLimit = 1
+        let wide = ProposedViewSize(width: 400, height: nil)
+        // The line cut off isn't run into the one kept.
+        #expect(engine.layout(text, in: wide).lines == ["Notepad\u{2026}"])
+        text.truncationMode = .head
+        #expect(engine.layout(text, in: wide).lines == ["\u{2026}Write the release notes."])
+        text.truncationMode = .middle
+        #expect(engine.layout(text, in: wide).lines == ["Notepad\u{2026}Write the release notes."])
+        // A proposal one line high cuts it the same way.
+        text.lineLimit = 2
+        text.truncationMode = .tail
+        let oneLine = engine.layout(text, in: ProposedViewSize(width: 400, height: nil)).size.height / 2
+        #expect(engine.layout(text, in: ProposedViewSize(width: 400, height: oneLine)).lines == ["Notepad\u{2026}"])
+    }
+
     @Test func shrinksTextToFit() {
         let engine = SilicaTextEngine()
         var text = Self.text("Shrinking text", size: 20)
