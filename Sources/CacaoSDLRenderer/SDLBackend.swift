@@ -46,7 +46,7 @@ package final class SDLBackend: CompositorBackend {
     }
 
     package func makeTexture(width: Int, height: Int, bytesPerRow: Int, pixels: Data) -> TextureID? {
-        guard let texture = try? SDLTexture(renderer: renderer, format: .abgr8888, access: .static, width: width, height: height) else {
+        guard let texture = try? SDLTexture(renderer: renderer, format: .rgba32, access: .static, width: width, height: height) else {
             return nil
         }
         pixels.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
@@ -58,7 +58,7 @@ package final class SDLBackend: CompositorBackend {
     }
 
     package func makeLayer(width: Int, height: Int) -> TextureID? {
-        guard let texture = try? SDLTexture(renderer: renderer, format: .abgr8888, access: .target, width: width, height: height) else {
+        guard let texture = try? SDLTexture(renderer: renderer, format: .rgba32, access: .target, width: width, height: height) else {
             return nil
         }
         try? texture.setBlendMode(Self.premultipliedBlend)
@@ -71,11 +71,11 @@ package final class SDLBackend: CompositorBackend {
     // MARK: External surfaces
 
     package func makeExternalTexture(width: Int, height: Int, format: ExternalSurface.PixelFormat) -> TextureID? {
-        // SDL names formats by the order in a 32-bit value: the bytes
-        // R, G, B, A are ABGR8888 on little-endian machines.
+        // SDL names packed formats by the order in a 32-bit value; RGBA32
+        // and BGRA32 are the bytes in memory, whatever the byte order.
         guard let texture = try? SDLTexture(
             renderer: renderer,
-            format: format == .bgra ? .argb8888 : .abgr8888,
+            format: format == .bgra ? .bgra32 : .rgba32,
             access: .streaming,
             width: width,
             height: height
@@ -106,7 +106,7 @@ package final class SDLBackend: CompositorBackend {
         let area = SDLRect(x: Int32(rect.minX), y: Int32(rect.minY), width: Int32(rect.width), height: Int32(rect.height))
         // R, G, B, A bytes, whatever the target's format is.
         guard area.width > 0, area.height > 0,
-              let surface = try? renderer.readPixels(area).converted(to: .abgr8888) else {
+              let surface = try? renderer.readPixels(area).converted(to: .rgba32) else {
             return nil
         }
         let width = surface.width, height = surface.height, pitch = surface.pitch
