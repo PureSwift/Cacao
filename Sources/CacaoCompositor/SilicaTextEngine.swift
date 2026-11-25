@@ -11,11 +11,6 @@ import CoreGraphics
 #endif
 import CacaoRender
 import Silica
-#if canImport(SilicaCoreGraphics)
-import SilicaCoreGraphics
-#elseif canImport(SilicaCairo)
-import SilicaCairo
-#endif
 
 /// Measures, wraps and draws text with the platform's fonts through Silica:
 /// CoreText on macOS, FreeType and fontconfig on Linux.
@@ -25,22 +20,18 @@ import SilicaCairo
 @MainActor
 package final class SilicaTextEngine: TextEngine {
 
-    private var fonts: [ResolvedFont: Silica.CGFont] = [:]
+    private var fonts: [ResolvedFont: any FontFace] = [:]
 
     private var shapedCache: [ResolvedText: Shaped] = [:]
 
     package init() {
-        #if canImport(SilicaCoreGraphics)
-        CoreGraphicsBackend.register()
-        #elseif canImport(SilicaCairo)
-        CairoBackend.register()
-        #endif
+        SilicaPlatform.register()
     }
 
     // MARK: Fonts
 
     /// The platform font for a resolved font.
-    func font(for resolved: ResolvedFont) -> Silica.CGFont? {
+    func font(for resolved: ResolvedFont) -> (any FontFace)? {
         if let font = fonts[resolved] {
             return font
         }
@@ -55,7 +46,7 @@ package final class SilicaTextEngine: TextEngine {
         candidates.append(Self.systemFamily(resolved.design) + traits)
         candidates.append(Self.systemFamily(.default))
         for name in candidates {
-            if let font = Silica.CGFont(name: name) {
+            if let font = SilicaBackend.fontFace(named: name) {
                 fonts[resolved] = font
                 return font
             }
@@ -64,7 +55,7 @@ package final class SilicaTextEngine: TextEngine {
     }
 
     private static func systemFamily(_ design: FontDesign) -> String {
-        #if canImport(SilicaCoreGraphics)
+        #if canImport(SilicaQuartz)
         switch design {
         case .default, .rounded: "HelveticaNeue"
         case .serif: "TimesNewRoman"
@@ -85,10 +76,10 @@ package final class SilicaTextEngine: TextEngine {
     /// Text as glyphs: one per Unicode scalar, with advances and run indices.
     struct Shaped {
         var scalars: [Unicode.Scalar] = []
-        var glyphs: [CGGlyph] = []
+        var glyphs: [Silica.Glyph] = []
         var advances: [CGFloat] = []
         var runs: [Int] = []
-        var fonts: [Silica.CGFont?] = []
+        var fonts: [(any FontFace)?] = []
         /// The distance from a line's top to its baseline.
         var ascent: CGFloat = 0
         /// A line's height.
@@ -136,7 +127,7 @@ package final class SilicaTextEngine: TextEngine {
                 shaped.scalars.append(scalar)
                 shaped.glyphs.append(glyph)
                 shaped.runs.append(runIndex)
-                let advance = font?.advances(for: [glyph], fontSize: size).first?.width ?? size * 0.5
+                let advance = font?.advances(for: [glyph]).first.map { CGFloat($0) * size } ?? size * 0.5
                 shaped.advances.append(scalar == "\n" ? 0 : advance + run.tracking)
             }
         }
@@ -303,7 +294,7 @@ package final class SilicaTextEngine: TextEngine {
         let size = run < shaped.sizes.count ? shaped.sizes[run] : 0
         guard let font = shaped.fonts[run] else { return size * 0.8 }
         let glyph = font.glyph(for: "\u{2026}")
-        return font.advances(for: [glyph], fontSize: size).first?.width ?? size * 0.8
+        return font.advances(for: [glyph]).first.map { CGFloat($0) * size } ?? size * 0.8
     }
 
     // MARK: TextEngine
@@ -338,7 +329,7 @@ package final class SilicaTextEngine: TextEngine {
 
     /// Draws text in a frame of `size` points, with the context's origin at
     /// the frame's top-leading corner.
-    func draw(_ text: ResolvedText, size: CGSize, in context: Silica.CGContext) {
+    func draw(_ text: ResolvedText, size: CGSize, in context: SilicaContext) {
         let text = fitted(text, in: ProposedViewSize(size))
         let shaped = shape(text)
         let lines = visibleLines(text, shaped, in: ProposedViewSize(size))
@@ -364,7 +355,7 @@ package final class SilicaTextEngine: TextEngine {
                 let run = text.runs[runIndex]
                 let runBaseline = baseline - run.baselineOffset
                 let start = position
-                var glyphs: [(glyph: CGGlyph, position: CGPoint)] = []
+                var glyphs: [(glyph: Silica.Glyph, position: CGPoint)] = []
                 while pieceIndex < pieces.count, runOf(pieces[pieceIndex]) == runIndex {
                     switch pieces[pieceIndex] {
                     case let .glyph(index):
@@ -391,35 +382,24 @@ package final class SilicaTextEngine: TextEngine {
                     drawLine(strikethrough, from: start, to: end, y: runBaseline - run.font.size * 0.3, thickness: thickness, in: context)
                 }
                 guard let font = shaped.fonts[runIndex], !glyphs.isEmpty else { continue }
-                context.setFont(font)
-                context.fontSize = run.font.size
-                context.setFillColor(
-                    red: CGFloat(run.color.red),
-                    green: CGFloat(run.color.green),
-                    blue: CGFloat(run.color.blue),
-                    alpha: CGFloat(run.color.opacity)
-                )
-                context.draw(glyphs: glyphs)
+                context.setFont(Silica.Font(face: font, size: Double(run.font.size)))
+                context.setFillColor(Silica.Color(run.color))
+                context.showGlyphs(glyphs.map(\.glyph), at: glyphs.map { Silica.Point($0.position) })
             }
         }
     }
 
     /// Strokes an underline or strikethrough.
-    private func drawLine(_ line: ResolvedText.Line, from start: CGFloat, to end: CGFloat, y: CGFloat, thickness: CGFloat, in context: Silica.CGContext) {
+    private func drawLine(_ line: ResolvedText.Line, from start: CGFloat, to end: CGFloat, y: CGFloat, thickness: CGFloat, in context: SilicaContext) {
         guard end > start else { return }
         context.saveGState()
         context.beginPath()
-        context.move(to: CGPoint(x: start, y: y))
-        context.addLine(to: CGPoint(x: end, y: y))
-        context.setStrokeColor(
-            red: CGFloat(line.color.red),
-            green: CGFloat(line.color.green),
-            blue: CGFloat(line.color.blue),
-            alpha: CGFloat(line.color.opacity)
-        )
-        context.lineWidth = thickness
-        context.lineCap = .butt
-        context.lineDash = (0, line.dashes(thickness: thickness))
+        context.move(to: Silica.Point(x: Double(start), y: Double(y)))
+        context.addLine(to: Silica.Point(x: Double(end), y: Double(y)))
+        context.setStrokeColor(Silica.Color(line.color))
+        context.setLineWidth(Double(thickness))
+        context.setLineCap(.butt)
+        context.setLineDash(phase: 0, lengths: line.dashes(thickness: thickness).map { Double($0) })
         context.strokePath()
         context.restoreGState()
     }
