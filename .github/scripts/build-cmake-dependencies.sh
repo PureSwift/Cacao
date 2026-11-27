@@ -69,9 +69,8 @@ swiftc -emit-library -emit-module -parse-as-library -swift-version 6 -O \
 
 # On Linux, PureSwift/DBus, which `CacaoDBus` imports. It and the libraries
 # it links have no installable CMake build of their own, so their sources
-# are compiled directly, at the versions SwiftPM resolves. Skipped when
-# the directory already has them, as when the shell's script built them.
-if [ "$(uname -s)" = Darwin ] || [ -e "$out/DBus.swiftmodule" ]; then
+# are compiled directly, at the versions SwiftPM resolves.
+if [ "$(uname -s)" = Darwin ]; then
   exit 0
 fi
 
@@ -102,37 +101,48 @@ swift_library() { # swift_library <module> <source directory> [<swiftc argument>
     $(find "$sources" -name '*.swift' | sort)
 }
 
-[ -d "$work/swift-system" ] || git -c advice.detachedHead=false clone --depth 1 --branch 1.9.0 https://github.com/apple/swift-system.git "$work/swift-system"
-system="$work/swift-system"
-c_module CSystem "$system/Sources/CSystem"
-mkdir -p "$out/CSystemStatFS"
-cp "$system/Sources/CSystemStatFS/"* "$out/CSystemStatFS/"
-rm -f "$out/CSystemStatFS/CMakeLists.txt"
-
-# The availability macros swift-system's Package.swift defines, with the
-# versions its CMake build lists. Each has spaces, so they're collected as
-# positional arguments.
-set --
-for version in 0.0.1 0.0.2 0.0.3 1.1.0 1.1.1 1.2.0 1.2.1 1.3.0 1.3.1 1.3.2 1.4.0 1.7.0 1.9.0 199; do
-  set -- "$@" -enable-experimental-feature \
-    "AvailabilityMacro=System $version:macOS 10.10, iOS 8.0, watchOS 2.0, tvOS 9.0, visionOS 1.0"
-done
-swift_library SystemPackage "$system/Sources/System" \
-  -swift-version 6 -package-name swift-system \
-  -D SYSTEM_PACKAGE \
-  -enable-experimental-feature Lifetimes \
-  -enable-upcoming-feature MemberImportVisibility \
-  "$@" \
-  "$work"/objects/CSystem-*.o
-
-[ -d "$work/Socket" ] || git -c advice.detachedHead=false clone --depth 1 --branch 0.7.0 https://github.com/PureSwift/Socket.git "$work/Socket"
-c_module CSocket "$work/Socket/Sources/CSocket"
-swift_library Socket "$work/Socket/Sources/Socket" \
-  -swift-version 6 \
-  -lSystemPackage \
-  "$work"/objects/CSocket-*.o
-
 [ -d "$work/DBus" ] || git -c advice.detachedHead=false clone --depth 1 --branch 0.3.1 https://github.com/PureSwift/DBus.git "$work/DBus"
-swift_library DBus "$work/DBus/Sources/DBus" \
-  -swift-version 6 \
-  -lSocket -lSystemPackage
+
+# A caller can provide the core DBus module, for example when the shell's
+# build has already compiled it. The generated clients still need modules.
+if [ ! -e "$out/DBus.swiftmodule" ]; then
+  [ -d "$work/swift-system" ] || git -c advice.detachedHead=false clone --depth 1 --branch 1.9.0 https://github.com/apple/swift-system.git "$work/swift-system"
+  system="$work/swift-system"
+  c_module CSystem "$system/Sources/CSystem"
+  mkdir -p "$out/CSystemStatFS"
+  cp "$system/Sources/CSystemStatFS/"* "$out/CSystemStatFS/"
+  rm -f "$out/CSystemStatFS/CMakeLists.txt"
+
+  # The availability macros swift-system's Package.swift defines, with the
+  # versions its CMake build lists. Each has spaces, so they're collected as
+  # positional arguments.
+  set --
+  for version in 0.0.1 0.0.2 0.0.3 1.1.0 1.1.1 1.2.0 1.2.1 1.3.0 1.3.1 1.3.2 1.4.0 1.7.0 1.9.0 199; do
+    set -- "$@" -enable-experimental-feature \
+      "AvailabilityMacro=System $version:macOS 10.10, iOS 8.0, watchOS 2.0, tvOS 9.0, visionOS 1.0"
+  done
+  swift_library SystemPackage "$system/Sources/System" \
+    -swift-version 6 -package-name swift-system \
+    -D SYSTEM_PACKAGE \
+    -enable-experimental-feature Lifetimes \
+    -enable-upcoming-feature MemberImportVisibility \
+    "$@" \
+    "$work"/objects/CSystem-*.o
+
+  [ -d "$work/Socket" ] || git -c advice.detachedHead=false clone --depth 1 --branch 0.7.0 https://github.com/PureSwift/Socket.git "$work/Socket"
+  c_module CSocket "$work/Socket/Sources/CSocket"
+  swift_library Socket "$work/Socket/Sources/Socket" \
+    -swift-version 6 \
+    -lSystemPackage \
+    "$work"/objects/CSocket-*.o
+
+  swift_library DBus "$work/DBus/Sources/DBus" \
+    -swift-version 6 \
+    -lSocket -lSystemPackage
+fi
+
+for module in FreedesktopPortal StatusNotifier; do
+  if [ ! -e "$out/$module.swiftmodule" ]; then
+    swift_library "$module" "$work/DBus/Sources/$module" -swift-version 6 -lDBus
+  fi
+done

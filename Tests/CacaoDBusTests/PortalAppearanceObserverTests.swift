@@ -84,16 +84,17 @@ struct PortalAppearanceObserverTests {
     private static let accent = DBusMessageArgument.struct(.init([.double(0.2), .double(0.4), .double(0.6)])!)
 
     /// Starts an observer on the bus, with its changes as a stream.
-    private func observe(_ bus: PrivateBus) async throws -> (PortalAppearanceObserver, PortalAppearance, AsyncStream<PortalAppearance>) {
+    private func observe(_ bus: PrivateBus, timeout: Duration = .seconds(2)) async throws -> (PortalAppearanceObserver, PortalAppearance, AsyncStream<PortalAppearance>) {
         let (changes, continuation) = AsyncStream<PortalAppearance>.makeStream()
-        let started = await PortalAppearanceObserver.start(address: bus.address) { appearance in
+        let started = await PortalAppearanceObserver.start(address: bus.address, timeout: timeout) { appearance in
             continuation.yield(appearance)
         }
         let (observer, appearance) = try #require(started)
         return (observer, appearance, changes)
     }
 
-    @Test func readsTheAppearance() async throws {
+    @Test(arguments: [Duration.seconds(2), DBusConnection.defaultTimeout])
+    func readsTheAppearance(timeout: Duration) async throws {
         let bus = try await PrivateBus.start()
         defer { bus.stop() }
         let portal = try await FakePortal(address: bus.address, values: [
@@ -101,7 +102,7 @@ struct PortalAppearanceObserverTests {
             "accent-color": Self.accent,
             "contrast": .uint32(1),
         ])
-        let (observer, appearance, _) = try await observe(bus)
+        let (observer, appearance, _) = try await observe(bus, timeout: timeout)
         #expect(appearance == PortalAppearance(
             colorScheme: .dark,
             accentColor: .init(red: 0.2, green: 0.4, blue: 0.6),
@@ -111,14 +112,15 @@ struct PortalAppearanceObserverTests {
         await portal.connection.close()
     }
 
-    @Test func readsAnOlderPortalWithRead() async throws {
+    @Test(arguments: [Duration.seconds(2), DBusConnection.defaultTimeout])
+    func readsAnOlderPortalWithRead(timeout: Duration) async throws {
         let bus = try await PrivateBus.start()
         defer { bus.stop() }
         let portal = try await FakePortal(address: bus.address, values: [
             "color-scheme": .uint32(2),
             "accent-color": Self.accent,
         ], hasReadOne: false)
-        let (observer, appearance, _) = try await observe(bus)
+        let (observer, appearance, _) = try await observe(bus, timeout: timeout)
         #expect(appearance == PortalAppearance(colorScheme: .light, accentColor: .init(red: 0.2, green: 0.4, blue: 0.6)))
         await observer.stop()
         await portal.connection.close()

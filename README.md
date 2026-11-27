@@ -138,8 +138,9 @@ cmake --install build
 ```
 
 Silica's modules, the `CSDL3` module from [PureSwift/SDL](https://github.com/PureSwift/SDL)
-and, on Linux, [PureSwift/DBus](https://github.com/PureSwift/DBus) must be in
-the resource directory, or on search paths in `CMAKE_Swift_FLAGS`.
+and, on Linux, the `DBus`, `FreedesktopPortal`, and `StatusNotifier` modules
+from [PureSwift/DBus](https://github.com/PureSwift/DBus) must be in the resource
+directory, or on search paths in `CMAKE_Swift_FLAGS`.
 `.github/scripts/build-cmake-dependencies.sh` builds them into one directory.
 The `@Entry` macro's compiler plugin runs on the machine that compiles: when
 cross compiling, build `Sources/CacaoMacros` on its own with the host's

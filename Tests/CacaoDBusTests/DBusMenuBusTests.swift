@@ -61,6 +61,7 @@ struct DBusMenuBusTests {
 
     private func setUp(
         menu: DBusMenuItem = DBusMenuBusTests.menu,
+        timeout: Duration = .seconds(2),
         onAboutToShow: (@Sendable (DBusMenuExporter, Int32) async -> Void)? = nil
     ) async throws -> Setup {
         let bus = try await PrivateBus.start()
@@ -79,7 +80,7 @@ struct DBusMenuBusTests {
         await box.set(exporter)
         await exporter.export()
         let service = try #require(await app.uniqueName)
-        let reader = DBusMenuReader(connection: bar, service: service)
+        let reader = DBusMenuReader(connection: bar, service: service, timeout: timeout)
         try await reader.start()
         return Setup(bus: bus, app: app, bar: bar, exporter: exporter, reader: reader, log: log)
     }
@@ -191,8 +192,9 @@ struct DBusMenuBusTests {
 
     // MARK: Events
 
-    @Test func clicksReachTheApp() async throws {
-        let setup = try await setUp()
+    @Test(arguments: [Duration.seconds(2), DBusConnection.defaultTimeout])
+    func clicksReachTheApp(timeout: Duration) async throws {
+        let setup = try await setUp(timeout: timeout)
         try await setup.reader.click(4, timestamp: 42)
         try await setup.reader.opened(1)
         try await setup.reader.closed(1)
@@ -208,8 +210,9 @@ struct DBusMenuBusTests {
         await setup.stop()
     }
 
-    @Test func aboutToShowLetsTheAppUpdate() async throws {
-        let setup = try await setUp { exporter, id in
+    @Test(arguments: [Duration.seconds(2), DBusConnection.defaultTimeout])
+    func aboutToShowLetsTheAppUpdate(timeout: Duration) async throws {
+        let setup = try await setUp(timeout: timeout) { exporter, id in
             // Like validateMenuItem: as View opens, Sidebar is turned off.
             guard id == 5 else { return }
             var menu = await exporter.menu

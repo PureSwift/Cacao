@@ -6,6 +6,7 @@
 //
 
 public import DBus
+internal import StatusNotifier
 
 /// Reads an app's menu from its `com.canonical.dbusmenu` object, follows
 /// its changes, and tells the app what the user did: what a global menu
@@ -173,9 +174,15 @@ public actor DBusMenuReader {
     /// changed.
     @discardableResult
     public func aboutToShow(_ id: Int32) async throws -> Bool {
-        let reply = try await call(DBusMenuInterface.aboutToShow, [.int32(id)])
-        guard let needsUpdate = reply.first?.boolean else {
-            throw DBusMenuError.invalidReply("AboutToShow didn't answer with a b")
+        let needsUpdate: Bool
+        if timeout == DBusConnection.defaultTimeout {
+            needsUpdate = try await client().aboutToShow(id: id)
+        } else {
+            let reply = try await call(DBusMenuInterface.aboutToShow, [.int32(id)])
+            guard let value = reply.first?.boolean else {
+                throw DBusMenuError.invalidReply("AboutToShow didn't answer with a b")
+            }
+            needsUpdate = value
         }
         if needsUpdate {
             try await refresh(id)
@@ -202,6 +209,10 @@ public actor DBusMenuReader {
 
     /// Tells the app about an event.
     public func send(_ event: DBusMenuEvent) async throws {
+        if timeout == DBusConnection.defaultTimeout {
+            try await client().event(id: event.id, eventId: event.kind.rawValue, data: .init(event.data), timestamp: event.timestamp)
+            return
+        }
         try await call(DBusMenuInterface.event, [
             .int32(event.id),
             .string(event.kind.rawValue),
@@ -284,6 +295,10 @@ public actor DBusMenuReader {
     /// The layout of an item and all its submenus, with every property.
     private func layout(of id: Int32) async throws -> (UInt32, DBusMenuItem) {
         let empty = DBusMessageArgument.Array(type: .string)
+        if timeout == DBusConnection.defaultTimeout {
+            let (revision, layout) = try await client().getLayout(parentId: id, recursionDepth: -1, propertyNames: empty)
+            return (revision, try DBusMenuItem(layout: .struct(layout)))
+        }
         let reply = try await call(DBusMenuInterface.getLayout, [.int32(id), .int32(-1), .array(empty)])
         guard reply.count == 2, let revision = reply[0].uint32 else {
             throw DBusMenuError.invalidReply("GetLayout didn't answer with a u(ia{sv}av)")
@@ -294,7 +309,7 @@ public actor DBusMenuReader {
     /// Reads `Version`, `Status` and `TextDirection`, leaving those the app
     /// doesn't serve as they are.
     private func readProperties() async {
-        guard let all = try? await connection.getAllProperties(destination: owner ?? service, path: path, interface: DBusMenuInterface.name) else {
+        guard let all = try? await client().properties() else {
             return
         }
         for (name, value) in all {
@@ -319,6 +334,11 @@ public actor DBusMenuReader {
         }
     }
 
+    private func client() throws -> StatusNotifier.Menu {
+        try StatusNotifier.Menu(connection: connection, destination: (owner ?? service).rawValue, path: path.rawValue)
+    }
+
+    // The generated methods use DBusConnection.defaultTimeout.
     @discardableResult
     private func call(_ method: DBusMember, _ arguments: [DBusMessageArgument]) async throws -> [DBusMessageArgument] {
         try await connection.callMethod(
