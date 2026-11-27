@@ -248,7 +248,8 @@ let package = Package(
                 .product(
                     name: "DBus",
                     package: "DBus"
-                )
+                ),
+                .product(name: "FreedesktopPortal", package: "DBus")
             ],
             exclude: ["CMakeLists.txt"]
         ),
@@ -261,7 +262,8 @@ let package = Package(
                 .product(
                     name: "DBus",
                     package: "DBus"
-                )
+                ),
+                .product(name: "StatusNotifier", package: "DBus")
             ],
             exclude: ["CMakeLists.txt"]
         ),
