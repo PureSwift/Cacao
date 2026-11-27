@@ -7,6 +7,7 @@
 
 public import CacaoTokens
 internal import DBus
+internal import FreedesktopPortal
 
 /// Reads the appearance from the freedesktop settings portal,
 /// `org.freedesktop.portal.Settings` on `org.freedesktop.portal.Desktop`,
@@ -55,17 +56,21 @@ public final class PortalAppearanceObserver: Sendable {
         } catch {
             return nil
         }
+        guard let client = try? FreedesktopPortal.Settings(connection: connection) else {
+            await connection.close()
+            return nil
+        }
         // Subscribed before reading, so a change between the two isn't
         // missed. The keys are in two namespaces, so every setting's
         // changes are heard, and those of others ignored.
         let rule = DBusMatchRule.signal(
-            interface: PortalSettings.interface,
+            interface: client.proxy.interface,
             member: PortalSettings.settingChanged,
-            path: PortalSettings.path
+            path: client.proxy.path
         )
         let signals = try? await connection.signals(matching: rule)
 
-        let appearance = await PortalSettings(connection: connection, timeout: timeout).readAppearance()
+        let appearance = await PortalSettings(client: client, timeout: timeout).readAppearance()
 
         let following = Task {
             guard let signals else { return }
@@ -91,19 +96,9 @@ public final class PortalAppearanceObserver: Sendable {
 /// Calls to the settings portal.
 internal struct PortalSettings: Sendable {
 
-    static let destination = DBusBusName(rawValue: "org.freedesktop.portal.Desktop")!
-
-    static let path = DBusObjectPath(rawValue: "/org/freedesktop/portal/desktop")!
-
-    static let interface = DBusInterface(rawValue: "org.freedesktop.portal.Settings")!
-
     static let settingChanged = DBusMember(rawValue: "SettingChanged")!
 
-    static let readOne = DBusMember(rawValue: "ReadOne")!
-
-    static let read = DBusMember(rawValue: "Read")!
-
-    let connection: DBusConnection
+    let client: FreedesktopPortal.Settings
 
     let timeout: Duration
 
@@ -132,23 +127,33 @@ internal struct PortalSettings: Sendable {
     /// answer. Portals before version 2 have only `Read`, which wraps the
     /// value in a second variant.
     func read(_ key: PortalAppearance.Key) async -> DBusMessageArgument? {
-        let arguments: [DBusMessageArgument] = [.string(key.namespace), .string(key.rawValue)]
         do {
-            return try await call(Self.readOne, arguments: arguments)
+            return try await read(key, legacy: false)
         } catch let error as DBusError where error.name.rawValue == "org.freedesktop.DBus.Error.UnknownMethod" {
-            return try? await call(Self.read, arguments: arguments)
+            return try? await read(key, legacy: true)
         } catch {
             return nil
         }
     }
 
-    private func call(_ method: DBusMember, arguments: [DBusMessageArgument]) async throws -> DBusMessageArgument? {
-        try await connection.callMethod(
-            destination: Self.destination,
-            path: Self.path,
-            interface: Self.interface,
+    private func read(_ key: PortalAppearance.Key, legacy: Bool) async throws -> DBusMessageArgument? {
+        if timeout == DBusConnection.defaultTimeout {
+            let value = try await (legacy
+                ? client.read(namespace: key.namespace, key: key.rawValue)
+                : client.readOne(namespace: key.namespace, key: key.rawValue))
+            return .variant(value)
+        }
+
+        // Generated methods use DBusConnection.defaultTimeout. Keep the
+        // observer's caller-supplied deadline on the same endpoint.
+        let proxy = client.proxy
+        let method = DBusMember(rawValue: legacy ? "Read" : "ReadOne")!
+        return try await proxy.connection.callMethod(
+            destination: proxy.destination,
+            path: proxy.path,
+            interface: proxy.interface,
             method: method,
-            arguments: arguments,
+            arguments: [.string(key.namespace), .string(key.rawValue)],
             timeout: timeout
         ).first
     }
