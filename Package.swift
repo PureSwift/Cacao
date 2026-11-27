@@ -96,19 +96,21 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/PureSwift/Silica.git",
+            // SilicaQuartz was added after the 3.0.0 tag.
             branch: "master"
         ),
         .package(
             url: "https://github.com/PureSwift/SDL.git",
-            branch: "master"
+            exact: "3.3.0"
         ),
         .package(
             url: "https://github.com/swiftlang/swift-syntax.git",
-            "602.0.0"..<"605.0.0"
+            // Silica's JavaScriptKit dependency requires SwiftSyntax below 604.
+            "602.0.0"..<"604.0.0"
         ),
         .package(
             url: "https://github.com/PureSwift/DBus.git",
-            branch: "master"
+            exact: "0.3.1"
         )
     ],
     targets: [
