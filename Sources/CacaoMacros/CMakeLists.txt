@@ -28,7 +28,7 @@ if(NOT SwiftSyntax_FOUND)
   include(FetchContent)
   FetchContent_Declare(SwiftSyntax
     GIT_REPOSITORY https://github.com/swiftlang/swift-syntax.git
-    GIT_TAG 602.0.0)
+    GIT_TAG 604.0.0)
   FetchContent_MakeAvailable(SwiftSyntax)
 endif()
 
