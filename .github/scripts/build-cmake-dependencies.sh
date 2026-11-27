@@ -31,6 +31,16 @@ fi
 
 flags="-I $out -L $out"
 if [ "$(uname -s)" != Darwin ]; then
+  # Silica's helper expects Cairo's bundled CFreeType module. Later Cairo
+  # revisions use swift-freetype, which the helper does not build yet.
+  cairo_revision=28be67ca057b01a14feca44358dd3b4dd5992229
+  mkdir -p "$work/cairo"
+  if [ ! -d "$work/cairo/Cairo" ]; then
+    git init "$work/cairo/Cairo"
+    git -C "$work/cairo/Cairo" remote add origin https://github.com/PureSwift/Cairo.git
+  fi
+  git -C "$work/cairo/Cairo" fetch --depth 1 origin "$cairo_revision"
+  git -C "$work/cairo/Cairo" checkout --detach "$cairo_revision"
   "$silica/.github/scripts/build-cairo-modules.sh" "$out" "$work/cairo"
   flags="$flags $(xcc cairo fontconfig freetype2)"
 fi
