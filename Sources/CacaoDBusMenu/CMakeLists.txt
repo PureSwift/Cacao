@@ -13,4 +13,6 @@ cacao_add_library(CacaoDBusMenu ${sources})
 # Public: the exporter and reader take and give D-Bus connections and names.
 target_link_libraries(CacaoDBusMenu
   PUBLIC
-    DBus)
+    DBus
+  PRIVATE
+    StatusNotifier)
