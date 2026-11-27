@@ -18,7 +18,7 @@ import Silica
 /// Measuring and drawing share one line breaker, so text drawn in the frame
 /// it was measured for wraps the same way.
 @MainActor
-package final class SilicaTextEngine: TextEngine {
+package final class SilicaTextEngine: TextEngine, TextMeasurementService {
 
     private var fonts: [ResolvedFont: any FontFace] = [:]
 
@@ -323,6 +323,62 @@ package final class SilicaTextEngine: TextEngine {
                 }.joined()
             }
         )
+    }
+
+    // MARK: Public measurement backing
+
+    package func measure(_ text: ResolvedText, in proposal: ProposedViewSize) -> TextMeasurement {
+        let text = fitted(text, in: proposal)
+        let shaped = shape(text)
+        // Even empty editable text has an insertion position and font metrics.
+        let visible = shaped.scalars.isEmpty
+            ? [Line(range: 0..<0, width: 0)]
+            : visibleLines(text, shaped, in: proposal)
+        let width = proposal.width.flatMap { $0.isFinite ? $0 : nil }
+            ?? (visible.map(\.width).max() ?? 0).rounded(.up)
+        return TextMeasurement(lines: visible.enumerated().map { lineIndex, line in
+            let origin: CGFloat = switch text.alignment {
+            case .leading: 0
+            case .center: (width - line.width) / 2
+            case .trailing: width - line.width
+            }
+            var x = origin
+            var boundaries: [TextMeasurement.Boundary] = []
+            let pieces = line.pieces ?? line.range.map(Piece.glyph)
+            for (pieceIndex, piece) in pieces.enumerated() {
+                switch piece {
+                case let .glyph(index):
+                    if boundaries.last?.offset != index {
+                        boundaries.append(.init(offset: index, x: x))
+                    }
+                    x += shaped.advances[index]
+                    boundaries.append(.init(offset: index + 1, x: x))
+                case let .ellipsis(run):
+                    // Only the edges of the hidden range can be selected.
+                    if boundaries.isEmpty {
+                        boundaries.append(.init(offset: line.range.lowerBound, x: x))
+                    }
+                    x += ellipsisAdvance(shaped, run: run)
+                    let next: Int
+                    if pieceIndex + 1 < pieces.count,
+                       case let .glyph(index) = pieces[pieceIndex + 1] {
+                        next = index
+                    } else {
+                        next = line.range.upperBound
+                    }
+                    boundaries.append(.init(offset: next, x: x))
+                }
+            }
+            if boundaries.isEmpty {
+                boundaries.append(.init(offset: line.range.lowerBound, x: x))
+            }
+            let top = CGFloat(lineIndex) * shaped.pitch
+            return TextMeasurement.Line(
+                frame: CGRect(x: origin, y: top, width: line.width, height: shaped.lineHeight),
+                baseline: top + shaped.ascent,
+                boundaries: boundaries
+            )
+        })
     }
 
     // MARK: Drawing
