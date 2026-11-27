@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     container: swift:6.4-noble
     env:
-      SDL_VERSION: release-3.4.8
+      SDL_VERSION: release-3.4.20
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
@@ -109,7 +109,7 @@ jobs:
     runs-on: ubuntu-latest
     container: swift:6.4-noble
     env:
-      SDL_VERSION: release-3.4.8
+      SDL_VERSION: release-3.4.20
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
