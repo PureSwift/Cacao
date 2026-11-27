@@ -103,7 +103,7 @@ sudo apt-get install cmake ninja-build pkg-config fonts-dejavu-core libcairo2-de
 ```
 
 ```bash
-git clone --depth 1 --branch release-3.4.8 https://github.com/libsdl-org/SDL.git
+git clone --depth 1 --branch release-3.4.20 https://github.com/libsdl-org/SDL.git
 ```
 
 ```bash
