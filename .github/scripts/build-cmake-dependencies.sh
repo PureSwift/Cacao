@@ -47,7 +47,7 @@ cmake --install "$work/silica-build"
 
 # PureSwift/SDL has no CMake build of its own, so this compiles its SDL3
 # module's sources directly, next to the C module they wrap.
-[ -d "$work/SDL" ] || git clone --depth 1 https://github.com/PureSwift/SDL.git "$work/SDL"
+[ -d "$work/SDL" ] || git -c advice.detachedHead=false clone --depth 1 --branch 3.3.0 https://github.com/PureSwift/SDL.git "$work/SDL"
 mkdir -p "$out/CSDL3"
 cp "$work/SDL/Sources/CSDL3/module.modulemap" "$work/SDL/Sources/CSDL3/shim.h" "$out/CSDL3/"
 
@@ -69,7 +69,7 @@ swiftc -emit-library -emit-module -parse-as-library -swift-version 6 -O \
 
 # On Linux, PureSwift/DBus, which `CacaoDBus` imports. It and the libraries
 # it links have no installable CMake build of their own, so their sources
-# are compiled directly, at the revisions SwiftPM resolves. Skipped when
+# are compiled directly, at the versions SwiftPM resolves. Skipped when
 # the directory already has them, as when the shell's script built them.
 if [ "$(uname -s)" = Darwin ] || [ -e "$out/DBus.swiftmodule" ]; then
   exit 0
@@ -125,14 +125,14 @@ swift_library SystemPackage "$system/Sources/System" \
   "$@" \
   "$work"/objects/CSystem-*.o
 
-[ -d "$work/Socket" ] || git clone --depth 1 --branch main https://github.com/PureSwift/Socket.git "$work/Socket"
+[ -d "$work/Socket" ] || git -c advice.detachedHead=false clone --depth 1 --branch 0.7.0 https://github.com/PureSwift/Socket.git "$work/Socket"
 c_module CSocket "$work/Socket/Sources/CSocket"
 swift_library Socket "$work/Socket/Sources/Socket" \
   -swift-version 6 \
   -lSystemPackage \
   "$work"/objects/CSocket-*.o
 
-[ -d "$work/DBus" ] || git clone --depth 1 --branch master https://github.com/PureSwift/DBus.git "$work/DBus"
+[ -d "$work/DBus" ] || git -c advice.detachedHead=false clone --depth 1 --branch 0.3.1 https://github.com/PureSwift/DBus.git "$work/DBus"
 swift_library DBus "$work/DBus/Sources/DBus" \
   -swift-version 6 \
   -lSocket -lSystemPackage
