@@ -13,4 +13,5 @@ target_link_libraries(CacaoDBus
   PUBLIC
     CacaoTokens
   PRIVATE
-    DBus)
+    DBus
+    FreedesktopPortal)
