@@ -47,6 +47,10 @@ public final class HostWindow {
     /// Who draws the window's title bar and borders.
     public let decorations: HostWindowDecorations
 
+    /// Font measurement for this window's scene, available inside `makeScene`.
+    /// Uses the same engine as the window's compositor, including popups and snapshots.
+    public let textMeasurement: any TextMeasurementService
+
     package let compositor: Compositor
 
     private let backend: SDLBackend
@@ -224,6 +228,7 @@ public final class HostWindow {
         self.renderer = renderer
         self.id = UInt32(window.id)
         self.backend = SDLBackend(renderer: renderer)
+        self.textMeasurement = textEngine
         self.compositor = Compositor(backend: backend, textEngine: textEngine)
         self.showsAppMenu = !isInLayer && !isHidden
         #if os(macOS)
@@ -289,6 +294,7 @@ public final class HostWindow {
         self.renderer = renderer
         self.id = UInt32(window.id)
         self.backend = SDLBackend(renderer: renderer)
+        self.textMeasurement = textEngine
         self.compositor = Compositor(backend: backend, textEngine: textEngine)
         self.showsAppMenu = false
         self.parentWindow = parent
